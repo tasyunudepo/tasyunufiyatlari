@@ -159,7 +159,7 @@ export default function Home() {
                                 <span className="text-brand">Nakliye dahil</span> mantolama setinizi saniyeler içinde PDF olarak alın.
                             </h1>
                             <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-text/85 leading-relaxed">
-                                Şehir, metraj, kalın seç, 8 kalem sistem PDF olarak hazır.
+                                Şehir, metraj, kalınlık seç, 3 farklı kalitede teklif PDF olarak hazır. Seç indir.
                             </p>
                             <div className="mt-5 sm:mt-7 lg:hidden">
                                 <HeroSystemVisual />
