@@ -151,17 +151,17 @@ export default function Home() {
                             'radial-gradient(900px 400px at 70% -10%, rgba(198,158,84,0.10), transparent 60%), radial-gradient(700px 300px at 10% 110%, rgba(212,132,90,0.06), transparent 60%)',
                     }}
                 />
-                <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-6 sm:pb-8">
+                <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 pt-5 sm:pt-10 pb-6 sm:pb-8">
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.82fr)] xl:grid-cols-[minmax(0,1.16fr)_minmax(420px,0.84fr)] lg:items-end">
                         <div>
-                            <Eyebrow className="mb-4">Fabrika Çıkışlı Mantolama</Eyebrow>
+                            <Eyebrow className="mb-2.5 sm:mb-4">Fabrika Çıkışlı Mantolama</Eyebrow>
                             <h1 className="max-w-[980px] font-heading font-extrabold text-[40px] sm:text-[52px] lg:text-[64px] leading-[1.05] tracking-tight text-fe-text">
                                 <span className="text-brand">Kapı teslim</span> mantolama setinizi saniyeler içinde çıkarın, PDF teklifinizi alın.
                             </h1>
-                            <p className="mt-5 max-w-[650px] text-base sm:text-lg text-fe-muted leading-relaxed">
+                            <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-muted leading-relaxed">
                                 Şehir, metraj ve kalınlık verin — sistemin 8 kalemi (levha, sıva, dübel, file, profil) ve nakliye saniyeler içinde resmi PDF teklif olarak elinizde.
                             </p>
-                            <div className="mt-7 lg:hidden">
+                            <div className="mt-5 sm:mt-7 lg:hidden">
                                 <HeroSystemVisual />
                             </div>
                             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
