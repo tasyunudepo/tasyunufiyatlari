@@ -78,10 +78,7 @@ export function WizardStep1({
         >
             {/* Malzeme Tipi */}
             <div className="mb-5">
-                <label className="block text-sm font-semibold text-white mb-2">Malzeme Tipi</label>
-                <p className="mb-4 text-xs text-fe-text/70 leading-relaxed">
-                    Taşyünü ısıya ve sese karşı daha güçlü; EPS daha hafif ve ekonomik. Marka seçimi paket fiyatını ±%10 değiştirir, sistem aynıdır.
-                </p>
+                <label className="block text-sm font-semibold text-white mb-3">Malzeme Tipi</label>
                 <div className="grid grid-cols-2 gap-3">
                     {([
                         { value: "tasyunu", label: "Taşyünü", img: "/images/ikonlar/tas-yunu-levha.webp" },
@@ -99,9 +96,9 @@ export function WizardStep1({
                             <img src={img} alt={label} className="w-9 h-9 object-contain shrink-0" />
                             <div className="text-left min-w-0">
                                 <div className={`font-bold text-sm leading-tight ${selectedMalzeme === value ? "text-white" : "text-fe-text"}`}>{label}</div>
-                                <span className="mt-1 inline-block rounded-full bg-brand/12 px-2 py-0.5 text-[10px] font-medium leading-snug text-brand">
+                                <div className="mt-0.5 text-[11px] text-brand/85 leading-tight">
                                     {MALZEME_CHIPS[value]}
-                                </span>
+                                </div>
                             </div>
                             {selectedMalzeme === value && (
                                 <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
