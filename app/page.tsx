@@ -18,6 +18,8 @@ import { ProofBlock } from '@/components/cro/ProofBlock';
 import { BrandStrip } from '@/components/cro/BrandStrip';
 import { Truck, Package, Check, ArrowRight, CaretRight, Star } from "@phosphor-icons/react";
 import { ICON_WEIGHT } from "@/lib/design/tokens";
+import { BUSINESS_INFO, WHATSAPP_URL } from "@/lib/business/info";
+import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 
 const faqItems = [
     {
@@ -46,45 +48,31 @@ const faqItems = [
     },
 ];
 
-const jsonLdOrg = {
-    "@context": "https://schema.org",
-    "@type": ["Organization", "LocalBusiness"],
-    name: "Taşyünü Fiyatları — ÖZERGRUP YALITIM ve İZOLASYON AŞ.",
-    url: "https://www.tasyunufiyatlari.com",
-    telephone: "+905322041825",
-    address: {
-        "@type": "PostalAddress",
-        streetAddress: "Mescit Mah. Ulugüney Sk. Harman Plaza Blok K2 No:15",
-        addressLocality: "Tuzla",
-        addressRegion: "İstanbul",
-        addressCountry: "TR",
+// Home page schema — Organization/LocalBusiness + WebApplication + FAQPage
+// hepsi tek @graph altında, BUSINESS_INFO sözlüğünden besleniyor.
+// Org node'u buildBusinessNode'dan, diğerleri burada inline tanımlı.
+const jsonLdGraph = buildBusinessGraph([
+    {
+        "@type": "WebApplication",
+        name: "Mantolama Maliyet Hesaplayıcı",
+        url: BUSINESS_INFO.url,
+        applicationCategory: "BusinessApplication",
+        description: "8 kalem mantolama setini metraj, kalınlık ve bölgeye göre hesaplayın. Nakliye ve iskonto dahil 3 farklı paket seçeneğini karşılaştırıp PDF teklif alın.",
+        offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "TRY",
+        },
     },
-    description: "Türkiye genelinde taşyünü ve EPS mantolama malzemesi fiyat hesaplama ve teklif platformu.",
-};
-
-const jsonLdWebApp = {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: "Mantolama Maliyet Hesaplayıcı",
-    url: "https://www.tasyunufiyatlari.com",
-    applicationCategory: "BusinessApplication",
-    description: "8 kalem mantolama setini metraj, kalınlık ve bölgeye göre hesaplayın. Nakliye ve iskonto dahil 3 farklı paket seçeneğini karşılaştırıp PDF teklif alın.",
-    offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "TRY",
+    {
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+        })),
     },
-};
-
-const jsonLdFaq = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-};
+]);
 
 const HOW_STEPS = [
     {
@@ -127,15 +115,7 @@ export default function Home() {
         <div className="min-h-screen flex flex-col bg-fe-bg">
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }}
-            />
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-            />
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
             />
 
             <SiteHeader tone="dark" />
@@ -472,7 +452,7 @@ export default function Home() {
                             <ArrowRight size={18} weight={ICON_WEIGHT} />
                         </Link>
                         <WhatsappLink
-                            href="https://wa.me/905322041825"
+                            href={WHATSAPP_URL}
                             source="site_general"
                             className="inline-flex items-center gap-2 text-base font-medium text-fe-muted transition hover:text-fe-text"
                         >

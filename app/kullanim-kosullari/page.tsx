@@ -6,13 +6,16 @@ import Eyebrow from '@/components/shared/Eyebrow';
 import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 
-const COMPANY = 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.';
-const ADDRESS_LINE = 'Mescit Mah. Ulugüney Sk. Harman Plaza A1 Blok K2 No:15';
-const ADDRESS_CITY = 'Tuzla / İstanbul';
-const EMAIL = 'bilgi@tasyunufiyatlari.com';
-const PHONE_DISPLAY = '0 532 204 18 25';
-const SITE = 'tasyunufiyatlari.com';
-const LAST_UPDATED = '11 Mayıs 2026';
+import { BUSINESS_INFO } from '@/lib/business/info';
+
+const COMPANY       = BUSINESS_INFO.legalName;
+// Kullanım Koşulları işletmecinin kurumsal merkezini gösterir (kanonik ofis).
+const ADDRESS_LINE  = BUSINESS_INFO.address.streetAddress;
+const ADDRESS_CITY  = `${BUSINESS_INFO.address.addressLocality} / ${BUSINESS_INFO.address.addressRegion}`;
+const EMAIL         = BUSINESS_INFO.email;
+const PHONE_DISPLAY = BUSINESS_INFO.phone.display;
+const SITE          = 'tasyunufiyatlari.com';
+const LAST_UPDATED  = '11 Mayıs 2026';
 
 export const metadata: Metadata = {
   title: 'Kullanım Koşulları',

@@ -6,10 +6,12 @@ import Eyebrow from '@/components/shared/Eyebrow';
 import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 
-const COMPANY = 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.';
-const EMAIL = 'bilgi@tasyunufiyatlari.com';
-const SITE = 'tasyunufiyatlari.com';
-const GA_ID = 'G-VCHRKVJCEN';
+import { BUSINESS_INFO } from '@/lib/business/info';
+
+const COMPANY      = BUSINESS_INFO.legalName;
+const EMAIL        = BUSINESS_INFO.email;
+const SITE         = 'tasyunufiyatlari.com';
+const GA_ID        = 'G-VCHRKVJCEN';
 const LAST_UPDATED = '11 Mayıs 2026';
 
 export const metadata: Metadata = {

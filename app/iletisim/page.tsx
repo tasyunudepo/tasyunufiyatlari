@@ -8,7 +8,8 @@ import RevealOnScroll from '@/components/shared/RevealOnScroll';
 import WhatsappLink from '@/components/shared/WhatsappLink';
 import PhoneCallLink from '@/components/shared/PhoneCallLink';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
-import { buildLocalBusiness } from '@/lib/seo/buildLocalBusiness';
+import { buildBusinessGraph } from '@/lib/seo/buildBusinessNode';
+import { BUSINESS_INFO, BUSINESS_REF, WAREHOUSE_INFO, WHATSAPP_URL } from '@/lib/business/info';
 import {
   Phone,
   WhatsappLogo,
@@ -23,14 +24,14 @@ import {
 } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 
-const PHONE = '0 532 204 18 25';
-const PHONE_TEL = '+905322041825';
-const WHATSAPP_URL = 'https://wa.me/905322041825';
-const EMAIL = 'bilgi@tasyunufiyatlari.com';
-const ADDRESS_LINE = 'Orhanlı Mescit Mh. Demokrasi Cd. No:5';
-const ADDRESS_CITY = 'Tuzla / İstanbul';
-const MAPS_DIRECTIONS_URL =
-  'https://www.google.com/maps/dir/?api=1&destination=40.8933583,29.3547698';
+const PHONE             = BUSINESS_INFO.phone.display;
+const PHONE_TEL         = BUSINESS_INFO.phone.tel;
+const EMAIL             = BUSINESS_INFO.email;
+// İletişim sayfasında konum kartı DEPO adresini gösterir (ofis adresinden
+// daha çok ziyaret edilen lokasyon — Tuzla Tepeören Orhanlı).
+const ADDRESS_LINE      = WAREHOUSE_INFO.addressLine;
+const ADDRESS_CITY      = WAREHOUSE_INFO.cityLine;
+const MAPS_DIRECTIONS_URL = WAREHOUSE_INFO.mapsDirectionsUrl;
 
 export const metadata: Metadata = buildMetadata({
   title: 'İletişim',
@@ -40,25 +41,13 @@ export const metadata: Metadata = buildMetadata({
   type: 'website',
 });
 
-const contactPageJsonLd = {
-  '@context': 'https://schema.org',
+// ContactPage — mainEntity Organization node'una @id pointer ile bağlı,
+// inline tekrarlanmaz. @graph içinde Organization buildBusinessNode'dan gelir.
+const contactPageNode = {
   '@type': 'ContactPage',
-  name: 'İletişim — Taşyünü Fiyatları',
-  url: 'https://www.tasyunufiyatlari.com/iletisim',
-  mainEntity: {
-    '@type': 'Organization',
-    name: 'Taşyünü Fiyatları',
-    legalName: 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
-    telephone: PHONE_TEL,
-    email: EMAIL,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: ADDRESS_LINE,
-      addressLocality: 'Tuzla',
-      addressRegion: 'İstanbul',
-      addressCountry: 'TR',
-    },
-  },
+  name: `İletişim — ${BUSINESS_INFO.brandName}`,
+  url: `${BUSINESS_INFO.url}/iletisim`,
+  mainEntity: BUSINESS_REF,
 };
 
 const OPS_METRICS = [
@@ -297,11 +286,7 @@ export default function IletisimPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildLocalBusiness()) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBusinessGraph([contactPageNode])) }}
       />
     </div>
   );

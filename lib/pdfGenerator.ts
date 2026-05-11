@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { BUSINESS_INFO } from '@/lib/business/info';
 
 export interface QuotePDFResult {
     blobUrl: string;
@@ -221,10 +222,12 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             border: '#cbd5e1',   // Genel border (Açık Lacivert/Gri)
         };
 
+        // SELLER bilgileri — adres BUSINESS_INFO'dan, ikincil sabit hat sadece
+        // PDF'de gösterilir (siteye yansıtılmaz, schema'da geçmez).
         const SELLER = {
-            name: 'ÖZERGRUP YALITIM ve İZOLASYON AŞ.',
-            address: 'Mescit Mah. Ulugüney Sk. Harman Plaza Blok K2 No:15 Tuzla / İstanbul',
-            phones: '0 532 204 18 25 - 0 216 507 11 25',
+            name: BUSINESS_INFO.legalName.toLocaleUpperCase('tr-TR'),
+            address: `${BUSINESS_INFO.address.streetAddress} ${BUSINESS_INFO.address.addressLocality} / ${BUSINESS_INFO.address.addressRegion}`,
+            phones: `${BUSINESS_INFO.phone.display} - 0 216 507 11 25`,
             website: 'www.ozeryapiinsaat.com',
         };
 

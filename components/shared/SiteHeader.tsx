@@ -8,6 +8,7 @@ import { List, X, Phone, WhatsappLogo, ArrowRight } from '@phosphor-icons/react'
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { notifyWhatsappIntent } from '@/lib/notifyWhatsappIntent';
 import { notifyPhoneCall } from '@/lib/notifyPhoneCall';
+import { BUSINESS_INFO, WHATSAPP_URL } from '@/lib/business/info';
 
 type Tone = 'dark' | 'warm';
 
@@ -30,8 +31,7 @@ const NAV_MOBILE = [
   ...NAV,
 ];
 
-const PHONE_TEL = '+905322041825';
-const WHATSAPP_URL = 'https://wa.me/905322041825';
+const PHONE_TEL = BUSINESS_INFO.phone.tel;
 
 function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;

@@ -7,16 +7,16 @@ import SiteFooter from '@/components/shared/SiteFooter';
 import WhatsappLink from '@/components/shared/WhatsappLink';
 import PhoneCallLink from '@/components/shared/PhoneCallLink';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
+import { BUSINESS_INFO, WAREHOUSE_INFO, WHATSAPP_URL } from '@/lib/business/info';
+import { buildBusinessGraph } from '@/lib/seo/buildBusinessNode';
 
-const PHONE = '0 532 204 18 25';
-const PHONE_TEL = '+905322041825';
-const WHATSAPP_URL = 'https://wa.me/905322041825';
+const PHONE     = BUSINESS_INFO.phone.display;
+const PHONE_TEL = BUSINESS_INFO.phone.tel;
 const MAPS_EMBED_SRC =
   'https://www.google.com/maps/embed?pb=!4v1777522409877!6m8!1m7!1sdJGTz08OAxTO63W6MPsmXQ!2m2!1d40.89335830980431!2d29.35476984828961!3f281.97!4f2.6700000000000017!5f0.4125900490817119';
-const MAPS_DIRECTIONS_URL =
-  'https://www.google.com/maps/dir/?api=1&destination=40.8933583,29.3547698';
-const ADDRESS_LINE = 'Orhanlı Mescit Mh. Demokrasi Cd. No:5';
-const ADDRESS_CITY = 'Tuzla / İstanbul';
+const MAPS_DIRECTIONS_URL = WAREHOUSE_INFO.mapsDirectionsUrl;
+const ADDRESS_LINE        = WAREHOUSE_INFO.addressLine;
+const ADDRESS_CITY        = WAREHOUSE_INFO.cityLine;
 
 export const metadata: Metadata = {
   title: 'Depomuz Tuzla Tepeören',
@@ -25,35 +25,10 @@ export const metadata: Metadata = {
   alternates: { canonical: '/depomuz' },
 };
 
-const localBusinessJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: 'Taşyünü Fiyatları — Tuzla Tepeören Deposu',
-  legalName: 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
-  telephone: PHONE_TEL,
-  url: 'https://www.tasyunufiyatlari.com/depomuz',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: ADDRESS_LINE,
-    addressLocality: 'Tuzla',
-    addressRegion: 'İstanbul',
-    addressCountry: 'TR',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 40.8933583,
-    longitude: 29.3547698,
-  },
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-      opens: '08:00',
-      closes: '18:00',
-    },
-  ],
-  areaServed: { '@type': 'Country', name: 'Türkiye' },
-};
+// /depomuz @graph — kanonik Organization + Warehouse Place node'u.
+// Hardcoded LocalBusiness şeması yerine buildBusinessGraph kullanılır;
+// Place'in containedInPlace alanı Organization @id'sine pointer'lar.
+const depomuzGraph = buildBusinessGraph([], { includeWarehouse: true });
 
 export default function DepomuzPage() {
   return (
@@ -191,7 +166,7 @@ export default function DepomuzPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(depomuzGraph) }}
       />
     </div>
   );

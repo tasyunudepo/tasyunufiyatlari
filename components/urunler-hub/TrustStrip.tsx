@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import PhoneCallLink from '@/components/shared/PhoneCallLink';
+import { BUSINESS_INFO, TEL_URL } from '@/lib/business/info';
 
 export default function TrustStrip() {
   return (
@@ -19,11 +20,11 @@ export default function TrustStrip() {
         </div>
         <div className="flex items-center gap-4">
           <PhoneCallLink
-            href="tel:+905322041825"
+            href={TEL_URL}
             source="topbar_phone"
             className="text-hub-warm font-medium hover:text-hub-gold-soft transition-colors"
           >
-            0 532 204 18 25
+            {BUSINESS_INFO.phone.display}
           </PhoneCallLink>
           <Link
             href="/#mantolama-hesaplayici"

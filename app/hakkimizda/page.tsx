@@ -9,7 +9,7 @@ import Timeline, { type Milestone } from '@/components/about/Timeline';
 import { Handshake, Truck, Medal, ArrowRight } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
-import { buildLocalBusiness } from '@/lib/seo/buildLocalBusiness';
+import { buildBusinessGraph } from '@/lib/seo/buildBusinessNode';
 
 
 export const metadata: Metadata = buildMetadata({
@@ -181,7 +181,7 @@ export default function HakkimizdaPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildLocalBusiness({ foundingDate: '2006', founder: 'Muhammet Öztürk' })) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBusinessGraph([], { includeWarehouse: true })) }}
       />
     </div>
   );

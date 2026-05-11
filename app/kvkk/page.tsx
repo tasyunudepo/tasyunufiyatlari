@@ -6,15 +6,17 @@ import Eyebrow from '@/components/shared/Eyebrow';
 import PhoneCallLink from '@/components/shared/PhoneCallLink';
 import { ArrowRight, EnvelopeSimple, Phone, MapPin } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
+import { BUSINESS_INFO, WAREHOUSE_INFO } from '@/lib/business/info';
 
-const COMPANY = 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.';
-const ADDRESS_LINE = 'Orhanlı Mescit Mh. Demokrasi Cd. No:5';
-const ADDRESS_CITY = 'Tuzla / İstanbul';
-const PHONE_DISPLAY = '0 532 204 18 25';
-const PHONE_TEL = '+905322041825';
-const EMAIL = 'bilgi@tasyunufiyatlari.com';
-const SITE = 'tasyunufiyatlari.com';
-const LAST_UPDATED = '30 Nisan 2026';
+const COMPANY       = BUSINESS_INFO.legalName;
+// KVKK başvuru kanalı olarak depo adresi (sahaya yakın iletişim) tercih ediliyor.
+const ADDRESS_LINE  = WAREHOUSE_INFO.addressLine;
+const ADDRESS_CITY  = WAREHOUSE_INFO.cityLine;
+const PHONE_DISPLAY = BUSINESS_INFO.phone.display;
+const PHONE_TEL     = BUSINESS_INFO.phone.tel;
+const EMAIL         = BUSINESS_INFO.email;
+const SITE          = 'tasyunufiyatlari.com';
+const LAST_UPDATED  = '30 Nisan 2026';
 
 export const metadata: Metadata = {
   title: 'KVKK Aydınlatma Metni',
