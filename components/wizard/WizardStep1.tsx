@@ -2,10 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { Check, WhatsappLogo } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
 import type { Brand } from "@/lib/types";
-import { WHATSAPP_ORDER } from "@/lib/config";
-import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
 
 const DIS_CEPHE_MODELLER = [
     'SW035', 'Premium', 'HD150', 'LD125', 'TR7.5',
@@ -21,6 +19,28 @@ const MARKA_LOGOLARI: Record<string, string> = {
     'Knauf':      '/images/markalogolar/Knauf Mineral yünleri.webp',
     'Tekno':      '/images/markalogolar/Tekno Taşyünü ve EPs Fiyatları.webp',
     'Filli Boya': '/images/markalogolar/filli-boya-mantolama.webp',
+};
+
+// Chip etiketleri — hesaplayıcı seçimine bağlamsal kısa ipucu.
+// Mevcut sub-label'ı (Yüksek Yangın Dayanımı / Uygun Fiyat) değiştirir.
+const MALZEME_CHIPS: Record<'tasyunu' | 'eps', string> = {
+    tasyunu: 'Yangın / Isı / Ses Yalıtımı',
+    eps:     'Ekonomik Isı ve Ses Yalıtımı',
+};
+
+const BRAND_CHIPS: Record<string, string> = {
+    'Dalmaçyalı': 'PREMIUM',
+    'Expert':     'Endüstriyel',
+    'Optimix':    'Ekonomik',
+};
+
+// Model meta — chip (kullanım alanı) opsiyonel; desc (yoğunluk) ana bilgidir.
+const MODEL_META: Record<string, { chip?: string; desc: string }> = {
+    'SW035':   { chip: 'Konut · Villa', desc: '120 kg/m³ yoğunluk' },
+    'LD125':   {                         desc: '125 kg/m³ yoğunluk' },
+    'HD150':   {                         desc: '150 kg/m³ yoğunluk' },
+    'Premium': {                         desc: '120 kg/m³ yoğunluk' },
+    'TR7.5':   {                         desc: '120 kg/m³ yoğunluk' },
 };
 
 interface WizardStep1Props {
@@ -48,10 +68,6 @@ export function WizardStep1({
 
     const filteredModels = availableModels.filter(m => DIS_CEPHE_MODELLER.includes(m));
 
-    const helpHref = `https://wa.me/${WHATSAPP_ORDER}?text=${encodeURIComponent(
-        'Merhaba, hesaplayıcıda ne seçeceğimden emin değilim, yardımcı olur musunuz?'
-    )}`;
-
     return (
         <motion.div
             key="step1"
@@ -60,35 +76,17 @@ export function WizardStep1({
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.25 }}
         >
-            {/* Erken yardım kapısı — kararsız kullanıcı için kaçış kapısı */}
-            <a
-                href={helpHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => notifyWhatsappIntent({ source: 'wizard_help_step1' })}
-                className="mb-4 flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-[#25D366]/25 bg-[#25D366]/5 hover:bg-[#25D366]/10 transition-colors"
-            >
-                <span className="text-xs sm:text-sm text-fe-text/85 leading-snug">
-                    <span className="font-medium text-white">Ne seçeceğinizi bilmiyor musunuz?</span>{' '}
-                    <span className="text-fe-muted">WhatsApp&apos;tan yardımcı olalım.</span>
-                </span>
-                <span className="inline-flex items-center gap-1 shrink-0 text-[#25D366] text-xs font-semibold">
-                    <WhatsappLogo weight="fill" size={16} />
-                    <span className="hidden sm:inline">Yardım</span>
-                </span>
-            </a>
-
             {/* Malzeme Tipi */}
             <div className="mb-5">
-                <label className="block text-sm font-semibold text-white mb-3">Malzeme Tipi</label>
-                <p className="mt-2 text-sm text-fe-muted leading-relaxed">
+                <label className="block text-sm font-semibold text-white mb-2">Malzeme Tipi</label>
+                <p className="mb-4 text-xs text-fe-text/70 leading-relaxed">
                     Taşyünü ısıya ve sese karşı daha güçlü; EPS daha hafif ve ekonomik. Marka seçimi paket fiyatını ±%10 değiştirir, sistem aynıdır.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                     {([
-                        { value: "tasyunu", label: "Taşyünü", sub: "Yüksek Yangın Dayanımı", img: "/images/ikonlar/tas-yunu-levha.webp" },
-                        { value: "eps",     label: "EPS",     sub: "Uygun Fiyat",             img: "/images/ikonlar/EPS Levha.webp" },
-                    ] as const).map(({ value, label, sub, img }) => (
+                        { value: "tasyunu", label: "Taşyünü", img: "/images/ikonlar/tas-yunu-levha.webp" },
+                        { value: "eps",     label: "EPS",     img: "/images/ikonlar/EPS Levha.webp" },
+                    ] as const).map(({ value, label, img }) => (
                         <button
                             key={value}
                             onClick={() => { setSelectedMalzeme(value); setSelectedModel(null); }}
@@ -98,10 +96,12 @@ export function WizardStep1({
                                     : "bg-fe-surface border-fe-border hover:border-fe-muted/50"
                             }`}
                         >
-                            <img src={img} alt={label} className="w-9 h-9 object-contain" />
-                            <div className="text-left">
+                            <img src={img} alt={label} className="w-9 h-9 object-contain shrink-0" />
+                            <div className="text-left min-w-0">
                                 <div className={`font-bold text-sm leading-tight ${selectedMalzeme === value ? "text-white" : "text-fe-text"}`}>{label}</div>
-                                <div className="text-[11px] text-fe-muted leading-tight">{sub}</div>
+                                <span className="mt-1 inline-block rounded-full bg-brand/12 px-2 py-0.5 text-[10px] font-medium leading-snug text-brand">
+                                    {MALZEME_CHIPS[value]}
+                                </span>
                             </div>
                             {selectedMalzeme === value && (
                                 <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
@@ -121,7 +121,7 @@ export function WizardStep1({
                             <button
                                 key={brand.id}
                                 onClick={() => setSelectedBrandId(brand.id)}
-                                className={`relative p-2 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center h-16 bg-fe-bg/40 ${
+                                className={`relative p-2 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center min-h-[5.5rem] bg-fe-bg/40 ${
                                     selectedBrandId === brand.id
                                         ? "border-brand-500 ring-2 ring-brand-500/20"
                                         : "border-fe-border hover:border-fe-muted/50"
@@ -133,6 +133,11 @@ export function WizardStep1({
                                     <span className="font-bold text-white text-sm">{brand.name}</span>
                                 )}
                                 <span className="mt-0.5 text-[11px] font-semibold text-fe-text">{brand.name}</span>
+                                {BRAND_CHIPS[brand.name] && (
+                                    <span className="mt-1 inline-block rounded-full bg-brand/12 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-brand leading-snug whitespace-nowrap">
+                                        {BRAND_CHIPS[brand.name]}
+                                    </span>
+                                )}
                                 {selectedBrandId === brand.id && (
                                     <div className="absolute -top-2 -right-2 bg-brand-500 text-[#1a0f08] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
                                         <Check size={12} weight="bold" />
@@ -149,19 +154,33 @@ export function WizardStep1({
                     <div>
                         <label className="block text-sm font-semibold text-white mb-3">Levha Modeli</label>
                         <div className="grid grid-cols-3 gap-2">
-                            {filteredModels.map(model => (
-                                <button
-                                    key={model}
-                                    onClick={() => setSelectedModel(model)}
-                                    className={`px-3 py-2.5 rounded-xl border-2 font-bold text-sm transition-all ${
-                                        selectedModel === model
-                                            ? "bg-fe-surface border-brand-500 text-white shadow-lg shadow-brand-500/10"
-                                            : "bg-fe-surface border-fe-border text-fe-text hover:border-fe-muted/50"
-                                    }`}
-                                >
-                                    {model}
-                                </button>
-                            ))}
+                            {filteredModels.map(model => {
+                                const meta = MODEL_META[model];
+                                const isSelected = selectedModel === model;
+                                return (
+                                    <button
+                                        key={model}
+                                        onClick={() => setSelectedModel(model)}
+                                        className={`flex flex-col items-center justify-center text-center px-2 py-2.5 rounded-xl border-2 transition-all min-h-[5rem] ${
+                                            isSelected
+                                                ? "bg-fe-surface border-brand-500 text-white shadow-lg shadow-brand-500/10"
+                                                : "bg-fe-surface border-fe-border text-fe-text hover:border-fe-muted/50"
+                                        }`}
+                                    >
+                                        <span className="font-bold text-sm leading-tight">{model}</span>
+                                        {meta?.chip && (
+                                            <span className="mt-1 inline-block rounded-full bg-brand/12 px-2 py-0.5 text-[9px] font-medium leading-snug text-brand whitespace-nowrap">
+                                                {meta.chip}
+                                            </span>
+                                        )}
+                                        {meta?.desc && (
+                                            <span className="mt-1 text-[10px] text-fe-muted leading-snug">
+                                                {meta.desc}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
