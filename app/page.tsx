@@ -158,8 +158,8 @@ export default function Home() {
                             <h1 className="max-w-[980px] font-heading font-extrabold text-[40px] sm:text-[52px] lg:text-[64px] leading-[1.05] tracking-tight text-fe-text">
                                 <span className="text-brand">Nakliye dahil</span> mantolama setinizi saniyeler içinde PDF olarak alın.
                             </h1>
-                            <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-muted leading-relaxed">
-                                Şehir, metraj ve kalınlık verin — sistemin 8 kalemi (levha, sıva, dübel, file, profil) ve nakliye saniyeler içinde resmi PDF teklif olarak elinizde.
+                            <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-text/85 leading-relaxed">
+                                Şehir, metraj, kalın seç, 8 kalem sistem PDF olarak hazır.
                             </p>
                             <div className="mt-5 sm:mt-7 lg:hidden">
                                 <HeroSystemVisual />
