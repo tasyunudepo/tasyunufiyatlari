@@ -6,12 +6,14 @@ const BASE_URL = 'https://www.tasyunufiyatlari.com';
 
 // Statik sayfalar — her zaman sitemap'te
 const STATIC_PATHS = [
-  { path: '/',           priority: 1.0,  changeFrequency: 'weekly' as const },
-  { path: '/urunler',    priority: 0.9,  changeFrequency: 'weekly' as const },
-  { path: '/hakkimizda', priority: 0.7,  changeFrequency: 'monthly' as const },
-  { path: '/iletisim',   priority: 0.7,  changeFrequency: 'monthly' as const },
-  { path: '/depomuz',    priority: 0.6,  changeFrequency: 'monthly' as const },
-  { path: '/kvkk',       priority: 0.3,  changeFrequency: 'yearly' as const },
+  { path: '/',                   priority: 1.0,  changeFrequency: 'weekly' as const },
+  { path: '/urunler',            priority: 0.9,  changeFrequency: 'weekly' as const },
+  { path: '/hakkimizda',         priority: 0.7,  changeFrequency: 'monthly' as const },
+  { path: '/iletisim',           priority: 0.7,  changeFrequency: 'monthly' as const },
+  { path: '/depomuz',            priority: 0.6,  changeFrequency: 'monthly' as const },
+  { path: '/kvkk',               priority: 0.3,  changeFrequency: 'yearly' as const },
+  { path: '/cerez-politikasi',   priority: 0.3,  changeFrequency: 'yearly' as const },
+  { path: '/kullanim-kosullari', priority: 0.3,  changeFrequency: 'yearly' as const },
 ];
 
 // Marka detay sayfaları — BRAND_MAP ile aynı slug listesi

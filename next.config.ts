@@ -74,6 +74,14 @@ const nextConfig: NextConfig = {
       { source: '/shop/page/:n*',         destination: '/urunler', permanent: true },
       { source: '/tasyunu-eps-depo',      destination: '/depomuz', permanent: true },
       { source: '/tasyunu-eps-depo/:rest*', destination: '/depomuz', permanent: true },
+
+      // ─── /bolge geçici kapama (Sprint 0 / Faz 5) ───────
+      // 302 (permanent: false) — Sprint 4-5'te Tier 1/2 bölge sayfaları
+      // gerçek içerikle yeniden açılacak. 301 yapılırsa Google ileride
+      // yeni sayfaları kabul ederken zorlanır.
+      { source: '/bolge/:sehir/:ilce', destination: '/iletisim', permanent: false },
+      { source: '/bolge/:sehir',       destination: '/iletisim', permanent: false },
+      { source: '/bolge',              destination: '/iletisim', permanent: false },
     ];
   },
 };

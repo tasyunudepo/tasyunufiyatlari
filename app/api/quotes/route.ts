@@ -5,7 +5,10 @@ import { apiQuoteSchema } from '@/lib/schemas/quote.schema'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sendNotification, type LeadEventType } from '@/lib/notifications'
 
-function mapQuotePayload(payload: ReturnType<typeof apiQuoteSchema.parse>) {
+function mapQuotePayload(
+  payload: ReturnType<typeof apiQuoteSchema.parse>,
+  req: NextRequest,
+) {
   return {
     customer_name: payload.customerName,
     // PDF teklif akışında e-posta opsiyonel. Boş alanları null yerine
@@ -47,6 +50,15 @@ function mapQuotePayload(payload: ReturnType<typeof apiQuoteSchema.parse>) {
     quote_code: payload.quoteCode || null,
     pdf_url: payload.pdfUrl || null,
     pdf_storage_path: payload.pdfStoragePath || null,
+
+    // KVKK rıza persist — apiQuoteSchema validation sonrası
+    // payload.kvkkConsent === true garantili. Defansif kontrol yine de.
+    kvkk_consent: payload.kvkkConsent === true,
+    consent_timestamp: payload.kvkkConsent ? new Date().toISOString() : null,
+    consent_ip:
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      req.headers.get('x-real-ip') ??
+      null,
   }
 }
 
@@ -86,7 +98,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const insertPayload = mapQuotePayload(payload)
+    const insertPayload = mapQuotePayload(payload, req)
 
     const { data, error } = await supabase
       .from('quotes')

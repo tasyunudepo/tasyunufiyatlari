@@ -94,6 +94,12 @@ export const apiQuoteSchema = z.object({
   quoteCode: z.string().optional().nullable(),
   pdfUrl: z.string().url().optional().nullable(),
   pdfStoragePath: z.string().optional().nullable(),
+
+  // KVKK rıza — frontend Zod (quoteSchema) zorunlu işaretliyor; API tarafı da
+  // doğrulamalı ki bot/API client'lar consent'siz POST yapamasın.
+  kvkkConsent: z.boolean().refine(val => val === true, {
+    message: 'KVKK rızası alınmadan teklif kaydedilemez',
+  }),
 })
 
 export type ApiQuoteData = z.infer<typeof apiQuoteSchema>

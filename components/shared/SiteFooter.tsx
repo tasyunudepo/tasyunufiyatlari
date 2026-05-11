@@ -38,8 +38,8 @@ const GROUPS = [
     eyebrow: 'Yasal',
     links: [
       { href: '/kvkk', label: 'KVKK Aydınlatma' },
-      { href: '/iletisim', label: 'Çerez Politikası' },
-      { href: '/iletisim', label: 'Kullanım Koşulları' },
+      { href: '/cerez-politikasi', label: 'Çerez Politikası' },
+      { href: '/kullanim-kosullari', label: 'Kullanım Koşulları' },
     ],
   },
 ];
