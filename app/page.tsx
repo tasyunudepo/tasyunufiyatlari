@@ -151,7 +151,7 @@ export default function Home() {
                             'radial-gradient(900px 400px at 70% -10%, rgba(198,158,84,0.10), transparent 60%), radial-gradient(700px 300px at 10% 110%, rgba(212,132,90,0.06), transparent 60%)',
                     }}
                 />
-                <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 pt-5 sm:pt-10 pb-6 sm:pb-8">
+                <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 pt-2.5 sm:pt-10 pb-6 sm:pb-8">
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.82fr)] xl:grid-cols-[minmax(0,1.16fr)_minmax(420px,0.84fr)] lg:items-end">
                         <div>
                             <Eyebrow className="mb-2.5 sm:mb-4">Fabrika Çıkışlı Mantolama</Eyebrow>
