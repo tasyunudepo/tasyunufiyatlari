@@ -17,6 +17,9 @@ const ofisControl = "rounded-xl border border-[rgba(92,98,108,0.24)] bg-[rgba(18
 const ofisChip = "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.16)]";
 
 type OfficeQuote = QuoteRow & {
+    // DB: quotes.request_type text NOT NULL DEFAULT 'whatsapp_order'
+    // QuoteRow defansif olarak string | null tutar; burada non-null'a daraltıyoruz.
+    request_type: string;
     quote_code?: string | null;
     priority?: string | null;
     pdf_url?: string | null;
@@ -34,7 +37,8 @@ type OfficeQuote = QuoteRow & {
 type QuoteEvent = {
     id: number | string;
     quote_id?: number | string | null;
-    event_type?: string | null;
+    // DB: quote_funnel_events.event_type text NOT NULL — non-null tipi.
+    event_type: string;
     brand_name?: string | null;
     package_name?: string | null;
     metadata?: Record<string, string | number | boolean | null | undefined>;
@@ -70,7 +74,10 @@ export function QuotesTab() {
         setLoading(false);
     }
 
-    async function deleteQuote(quoteId: number) {
+    async function deleteQuote(quoteId: number | string) {
+        // QuoteRow.id `number | string`; URL template literal her ikisini de string'e
+        // çevirir. API tarafı (app/api/admin/quotes/[id]/route.ts) Number(id) ile coerce
+        // eder, dolayısıyla burada cast gereksiz.
         const res = await fetch(`/api/admin/quotes/${quoteId}`, { method: "DELETE" });
         const payload = await res.json().catch(() => null);
         if (res.ok && payload?.ok) {
@@ -87,7 +94,7 @@ export function QuotesTab() {
         return () => window.clearTimeout(timer);
     }, []);
 
-    async function updateQuoteStatus(quoteId: number, newStatus: string) {
+    async function updateQuoteStatus(quoteId: number | string, newStatus: string) {
         const res = await fetch(`/api/admin/quotes/${quoteId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -102,7 +109,7 @@ export function QuotesTab() {
         }
     }
 
-    async function updateQuotePriority(quoteId: number, newPriority: string) {
+    async function updateQuotePriority(quoteId: number | string, newPriority: string) {
         const res = await fetch(`/api/admin/quotes/${quoteId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -538,7 +545,7 @@ export function QuotesTab() {
                                                             <div className="text-xl font-semibold text-white">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</div>
                                                             <div className="text-xs text-slate-500">{(quote.price_per_m2 ?? 0).toFixed(2)} ₺/m²</div>
                                                         </div>
-                                                        <select value={quote.status ?? "pending"} onChange={(e) => updateQuoteStatus(Number(quote.id), e.target.value)}
+                                                        <select value={quote.status ?? "pending"} onChange={(e) => updateQuoteStatus(quote.id, e.target.value)}
                                                             aria-label={`${quote.customer_name} teklif durumu`}
                                                             className={`${ofisControl} px-3 py-2 text-xs min-w-[130px]`}>
                                                             <option value="pending">Bekliyor</option>
@@ -548,7 +555,7 @@ export function QuotesTab() {
                                                             <option value="rejected">Reddedildi</option>
                                                             <option value="completed">Tamamlandı</option>
                                                         </select>
-                                                        <select value={quote.priority ?? "normal"} onChange={(e) => updateQuotePriority(Number(quote.id), e.target.value)}
+                                                        <select value={quote.priority ?? "normal"} onChange={(e) => updateQuotePriority(quote.id, e.target.value)}
                                                             aria-label={`${quote.customer_name} teklif önceliği`}
                                                             className={`${ofisControl} px-3 py-2 text-xs min-w-[100px]`}>
                                                             <option value="low">Düşük</option>
@@ -571,7 +578,7 @@ export function QuotesTab() {
                                                             className={`${ofisControl} border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-4 py-2 text-xs text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.14)] whitespace-nowrap`}>
                                                             Detay →
                                                         </button>
-                                                        <button onClick={() => { if (confirm(`"${quote.customer_name}" teklifini silmek istiyor musunuz?\nBu işlem geri alınamaz.`)) { deleteQuote(Number(quote.id)); } }}
+                                                        <button onClick={() => { if (confirm(`"${quote.customer_name}" teklifini silmek istiyor musunuz?\nBu işlem geri alınamaz.`)) { deleteQuote(quote.id); } }}
                                                             className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-2 text-red-400/70 transition-colors hover:bg-red-500/15 hover:text-red-300 hover:border-red-500/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/25" title="Teklifi sil" aria-label="Teklifi sil">
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </button>
@@ -644,7 +651,7 @@ export function QuotesTab() {
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div><span className="text-slate-400">Paket:</span><div className="font-medium text-white">{selectedQuote.package_name}</div></div>
                                     <div><span className="text-slate-400">Marka:</span><div className="font-medium text-white">{selectedQuote.brand_name}</div></div>
-                                    <div><span className="text-slate-400">Talep Türü:</span><div className="mt-1">{getRequestTypeBadge(selectedQuote.request_type ?? "")}</div></div>
+                                    <div><span className="text-slate-400">Talep Türü:</span><div className="mt-1">{getRequestTypeBadge(selectedQuote.request_type)}</div></div>
                                     <div><span className="text-slate-400">Malzeme:</span><div className="font-medium text-white">{selectedQuote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {selectedQuote.thickness_cm}cm</div></div>
                                     <div><span className="text-slate-400">Metraj:</span><div className="font-medium text-white">{selectedQuote.area_m2} m²</div></div>
                                     <div><span className="text-slate-400">Şehir:</span><div className="font-medium text-white">{selectedQuote.city_name}</div></div>
@@ -677,7 +684,7 @@ export function QuotesTab() {
                                     {selectedQuoteEvents.length > 0 ? selectedQuoteEvents.map((event) => (
                                         <div key={event.id} className="flex items-start justify-between gap-4 rounded-xl border border-[rgba(92,98,108,0.20)] bg-[rgba(255,255,255,0.025)] p-4">
                                             <div>
-                                                <p className="font-medium text-slate-100">{getEventLabel(event.event_type ?? "")}</p>
+                                                <p className="font-medium text-slate-100">{getEventLabel(event.event_type)}</p>
                                                 <p className="mt-1 text-xs text-slate-500">{event.brand_name || selectedQuote.brand_name || "Marka yok"} • {event.package_name || selectedQuote.package_name || "Paket yok"}</p>
                                                 {event.metadata && Object.keys(event.metadata).length > 0 && (
                                                     <p className="mt-2 text-xs text-slate-500">Kanal: {event.metadata.sourceChannel || "bilinmiyor"}</p>
