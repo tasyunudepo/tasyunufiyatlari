@@ -1,27 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Trash2, ChevronDown, Layers } from "lucide-react";
 import { buildBrandRanking, formatCurrency } from "@/lib/admin/utils";
+import {
+    groupQuotesIntoSeries,
+    formatSeriesDuration,
+    formatThicknesses,
+    type QuoteRow,
+    type QuoteSeries,
+} from "@/lib/admin/groupQuotesIntoSeries";
 
 const ofisPanel = "rounded-2xl border border-[var(--nx-border)] bg-[rgba(13,15,18,0.72)] shadow-[0_18px_44px_rgba(0,0,0,0.24)]";
 const ofisInner = "rounded-xl border border-[rgba(92,98,108,0.18)] bg-[rgba(255,255,255,0.025)]";
 const ofisControl = "rounded-xl border border-[rgba(92,98,108,0.24)] bg-[rgba(18,20,24,0.82)] text-[var(--nx-text-soft)] transition-colors focus:outline-none focus-visible:border-[var(--nx-border-accent)] focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.14)]";
 const ofisChip = "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.16)]";
 
+type OfficeQuote = QuoteRow & {
+    quote_code?: string | null;
+    priority?: string | null;
+    pdf_url?: string | null;
+    price_per_m2?: number | null;
+    total_price?: number | null;
+    price_without_vat?: number | null;
+    vat_amount?: number | null;
+    vehicle_type?: string | null;
+    package_count?: number | null;
+    lorry_fill_percentage?: number | null;
+    truck_fill_percentage?: number | null;
+    customer_address?: string | null;
+};
+
+type QuoteEvent = {
+    id: number | string;
+    quote_id?: number | string | null;
+    event_type?: string | null;
+    brand_name?: string | null;
+    package_name?: string | null;
+    metadata?: Record<string, string | number | boolean | null | undefined>;
+    created_at: string;
+};
+
 export function QuotesTab() {
-    const [quotes, setQuotes] = useState<any[]>([]);
-    const [quoteEventsById, setQuoteEventsById] = useState<Record<string, any[]>>({});
+    const [quotes, setQuotes] = useState<OfficeQuote[]>([]);
+    const [quoteEventsById, setQuoteEventsById] = useState<Record<string, QuoteEvent[]>>({});
     const [funnelSummary, setFunnelSummary] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
-    const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
+    const [selectedQuote, setSelectedQuote] = useState<OfficeQuote | null>(null);
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [requestTypeFilter, setRequestTypeFilter] = useState<string>("all");
     const [searchTerm, setSearchTerm] = useState("");
-
-    useEffect(() => {
-        loadQuotes();
-    }, []);
+    // Seri açıklık state — varsayılan kapalı, çok teklifli serilerde toggle.
+    // Tek teklifli seriler her zaman açık görünür.
+    const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({});
 
     async function loadQuotes() {
         setLoading(true);
@@ -47,6 +78,14 @@ export function QuotesTab() {
             loadQuotes();
         }
     }
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void loadQuotes();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, []);
 
     async function updateQuoteStatus(quoteId: number, newStatus: string) {
         const res = await fetch(`/api/admin/quotes/${quoteId}`, {
@@ -131,6 +170,18 @@ export function QuotesTab() {
         const matchesSearch = searchTerm.trim().length === 0 || haystack.includes(searchTerm.trim().toLocaleLowerCase("tr-TR"));
         return matchesStatus && matchesRequestType && matchesSearch;
     });
+
+    // Filtrelenmiş quote'ları "teklif serileri" olarak grupla.
+    // Filtre quote seviyesinde uygulanır → seri içinde sadece filtreyi
+    // geçen teklifler kalır. Bu yüzden bir seri kısmen filtrelenmiş
+    // görünebilir; sürpriz değil, beklenen davranış.
+    // Generic any: orijinal quote shape'i loose tutuluyor; helper sadece
+    // gerekli alanları okuyor, geri kalan alanlar olduğu gibi geçiyor.
+    const filteredSeries = useMemo<QuoteSeries<OfficeQuote>[]>(
+        () => groupQuotesIntoSeries<OfficeQuote>(filteredQuotes),
+        [filteredQuotes]
+    );
+    const multiQuoteSeriesCount = filteredSeries.filter(s => s.quoteCount > 1).length;
 
     const approvedCount = quotes.filter((q) => q.status === "approved").length;
     const onayOrani = quoteSummary.total > 0 ? Math.round((approvedCount / quoteSummary.total) * 100) : 0;
@@ -335,7 +386,12 @@ export function QuotesTab() {
                     <div>
                         <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Operasyon</div>
                         <h2 className="mt-1.5 text-xl font-semibold">Teklif Masası</h2>
-                        <p className="mt-1 text-xs text-slate-500">{filteredQuotes.length} / {quotes.length} teklif gösteriliyor</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                            {filteredSeries.length} seri • {filteredQuotes.length} / {quotes.length} teklif gösteriliyor
+                            {multiQuoteSeriesCount > 0 && (
+                                <span className="ml-1 text-[var(--nx-gold)]">· {multiQuoteSeriesCount} çoklu seri</span>
+                            )}
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-2 text-sm">
                         {[
@@ -370,79 +426,164 @@ export function QuotesTab() {
                     </div>
                 </div>
                 <div className="space-y-3">
-                    {filteredQuotes.length === 0 ? (
+                    {filteredSeries.length === 0 ? (
                         <div className={`${ofisInner} p-8 text-center text-slate-500`}>Seçili filtrelerde teklif talebi bulunmuyor.</div>
-                    ) : filteredQuotes.map((quote) => (
-                        <div key={quote.id} className={`${ofisInner} px-5 py-4 transition-colors hover:bg-[rgba(255,255,255,0.045)]`}>
-                            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                                <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-base font-semibold text-white">{quote.customer_name}</span>
-                                        {quote.quote_code && (
-                                            <span className="rounded-md px-2 py-0.5 text-xs font-mono bg-[rgba(255,255,255,0.04)] text-slate-400 border border-[rgba(92,98,108,0.22)]">
-                                                {quote.quote_code}
-                                            </span>
-                                        )}
-                                        <span className={`rounded-full px-2.5 py-0.5 text-xs border ${urgencyStyle[quote.priority] ?? urgencyStyle.normal}`}>
-                                            {urgencyLabel[quote.priority] ?? "Normal"}
-                                        </span>
-                                        <span className={`rounded-full px-2.5 py-0.5 text-xs border ${quote.request_type === "pdf_quote" ? "border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] text-[var(--nx-gold)]" : "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"}`}>
-                                            {quote.request_type === "pdf_quote" ? "PDF" : "WhatsApp"}
-                                        </span>
-                                    </div>
-                                    <div className="mt-1 text-sm text-slate-400 truncate">
-                                        {quote.brand_name || "Marka yok"} • {quote.package_name || "Paket yok"} • {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm}cm • {quote.area_m2} m² • {quote.city_name || "—"}
-                                    </div>
-                                    <div className="mt-0.5 text-xs text-slate-600">
-                                        {new Date(quote.created_at).toLocaleDateString("tr-TR")} {new Date(quote.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-5 flex-shrink-0">
-                                    <div className="text-right">
-                                        <div className="text-xl font-semibold text-white">{quote.total_price.toLocaleString("tr-TR")} ₺</div>
-                                        <div className="text-xs text-slate-500">{quote.price_per_m2.toFixed(2)} ₺/m²</div>
-                                    </div>
-                                    <select value={quote.status} onChange={(e) => updateQuoteStatus(quote.id, e.target.value)}
-                                        aria-label={`${quote.customer_name} teklif durumu`}
-                                        className={`${ofisControl} px-3 py-2 text-xs min-w-[130px]`}>
-                                        <option value="pending">Bekliyor</option>
-                                        <option value="contacted">İletişimde</option>
-                                        <option value="quoted">Teklif Verildi</option>
-                                        <option value="approved">Onaylandı</option>
-                                        <option value="rejected">Reddedildi</option>
-                                        <option value="completed">Tamamlandı</option>
-                                    </select>
-                                    <select value={quote.priority} onChange={(e) => updateQuotePriority(quote.id, e.target.value)}
-                                        aria-label={`${quote.customer_name} teklif önceliği`}
-                                        className={`${ofisControl} px-3 py-2 text-xs min-w-[100px]`}>
-                                        <option value="low">Düşük</option>
-                                        <option value="normal">Normal</option>
-                                        <option value="high">Yüksek</option>
-                                        <option value="urgent">Acil</option>
-                                    </select>
-                                    {quote.pdf_url && (
-                                        <a
-                                            href={quote.pdf_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={`${ofisControl} px-3 py-2 text-xs text-sky-300 hover:bg-sky-400/10 whitespace-nowrap`}
-                                            title="PDF Görüntüle"
-                                        >
-                                            PDF
-                                        </a>
-                                    )}
-                                    <button onClick={() => setSelectedQuote(quote)}
-                                        className={`${ofisControl} border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-4 py-2 text-xs text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.14)] whitespace-nowrap`}>
-                                        Detay →
+                    ) : filteredSeries.map((series) => {
+                        const isMulti = series.quoteCount > 1;
+                        // Tek teklifli seriler default açık; çok teklifliler default kapalı.
+                        const isOpen = isMulti ? (expandedSeries[series.seriesKey] ?? false) : true;
+                        const requestTypes = Array.from(new Set(series.quotes.map(q => q.request_type).filter(Boolean)));
+                        const matLabel = series.materialType === "tasyunu"
+                            ? "Taşyünü"
+                            : series.materialType === "eps"
+                                ? "EPS"
+                                : (series.materialType ?? "");
+                        return (
+                            <div key={series.seriesKey} className={`${ofisInner}`}>
+                                {/* ── Seri başlık satırı ── */}
+                                {isMulti && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setExpandedSeries(prev => ({ ...prev, [series.seriesKey]: !isOpen }))}
+                                        aria-expanded={isOpen}
+                                        aria-controls={`series-body-${series.seriesKey}`}
+                                        className="w-full text-left px-5 py-4 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between hover:bg-[rgba(255,255,255,0.025)] transition-colors rounded-xl"
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Layers className="w-4 h-4 text-[var(--nx-gold)]" />
+                                                <span className="text-base font-semibold text-white">
+                                                    {series.customerCompany || series.customerName || "Müşteri yok"}
+                                                </span>
+                                                <span className="rounded-full border border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-2.5 py-0.5 text-xs text-[var(--nx-gold)]">
+                                                    Teklif Serisi · {series.quoteCount} teklif
+                                                </span>
+                                                {series.durationMinutes > 0 && (
+                                                    <span className="rounded-full border border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] px-2.5 py-0.5 text-xs text-slate-300">
+                                                        {formatSeriesDuration(series.durationMinutes)}
+                                                    </span>
+                                                )}
+                                                {requestTypes.map((rt) => (
+                                                    <span key={String(rt)} className={`rounded-full px-2.5 py-0.5 text-xs border ${rt === "pdf_quote" ? "border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] text-[var(--nx-gold)]" : "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"}`}>
+                                                        {rt === "pdf_quote" ? "PDF" : "WhatsApp"}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <div className="mt-1 text-sm text-slate-400 truncate">
+                                                {series.customerPhone === "no_phone" ? "Telefon yok" : series.customerPhone}
+                                                {series.cityName ? ` • ${series.cityName}` : ""}
+                                                {matLabel ? ` • ${matLabel}` : ""}
+                                                {series.thicknesses.length > 0 ? ` • ${formatThicknesses(series.thicknesses)}` : ""}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-slate-600">
+                                                {series.brands.length > 0 ? series.brands.join(" / ") : "—"}
+                                                {series.packageNames.length > 0 ? ` · ${series.packageNames.join(" / ")}` : ""}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-slate-600">
+                                                Son teklif: {new Date(series.endedAt).toLocaleDateString("tr-TR")} {new Date(series.endedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 flex-shrink-0">
+                                            <div className="text-right">
+                                                <div className="text-xs text-slate-500">
+                                                    {series.minPrice != null && series.maxPrice != null && series.minPrice !== series.maxPrice
+                                                        ? "Teklif aralığı"
+                                                        : "Teklif tutarı"}
+                                                </div>
+                                                <div className="text-lg font-semibold text-white">
+                                                    {series.minPrice != null && series.maxPrice != null
+                                                        ? series.minPrice === series.maxPrice
+                                                            ? `${Math.round(series.maxPrice).toLocaleString("tr-TR")} ₺`
+                                                            : `${Math.round(series.minPrice).toLocaleString("tr-TR")} – ${Math.round(series.maxPrice).toLocaleString("tr-TR")} ₺`
+                                                        : "—"}
+                                                </div>
+                                            </div>
+                                            <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                                        </div>
                                     </button>
-                                    <button onClick={() => { if (confirm(`"${quote.customer_name}" teklifini silmek istiyor musunuz?\nBu işlem geri alınamaz.`)) { deleteQuote(quote.id); } }}
-                                        className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-2 text-red-400/70 transition-colors hover:bg-red-500/15 hover:text-red-300 hover:border-red-500/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/25" title="Teklifi sil" aria-label="Teklifi sil">
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
+                                )}
+
+                                {/* ── Seri içindeki teklif satırları ── */}
+                                {isOpen && (
+                                    <div id={`series-body-${series.seriesKey}`} className={isMulti ? "border-t border-[rgba(92,98,108,0.18)] divide-y divide-[rgba(92,98,108,0.12)]" : ""}>
+                                        {series.quotes.map((quote) => {
+                                            const priorityKey = quote.priority ?? "normal";
+                                            return (
+                                            <div key={quote.id} className={`${isMulti ? "px-5 py-4" : "px-5 py-4"} transition-colors hover:bg-[rgba(255,255,255,0.045)]`}>
+                                                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                                                    <div className="min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="text-base font-semibold text-white">{quote.customer_name}</span>
+                                                            {quote.quote_code && (
+                                                                <span className="rounded-md px-2 py-0.5 text-xs font-mono bg-[rgba(255,255,255,0.04)] text-slate-400 border border-[rgba(92,98,108,0.22)]">
+                                                                    {quote.quote_code}
+                                                                </span>
+                                                            )}
+                                                            <span className={`rounded-full px-2.5 py-0.5 text-xs border ${urgencyStyle[priorityKey] ?? urgencyStyle.normal}`}>
+                                                                {urgencyLabel[priorityKey] ?? "Normal"}
+                                                            </span>
+                                                            <span className={`rounded-full px-2.5 py-0.5 text-xs border ${quote.request_type === "pdf_quote" ? "border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] text-[var(--nx-gold)]" : "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"}`}>
+                                                                {quote.request_type === "pdf_quote" ? "PDF" : "WhatsApp"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="mt-1 text-sm text-slate-400 truncate">
+                                                            {quote.brand_name || "Marka yok"} • {quote.package_name || "Paket yok"} • {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm}cm • {quote.area_m2} m² • {quote.city_name || "—"}
+                                                        </div>
+                                                        <div className="mt-0.5 text-xs text-slate-600">
+                                                            {new Date(quote.created_at).toLocaleDateString("tr-TR")} {new Date(quote.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-5 flex-shrink-0">
+                                                        <div className="text-right">
+                                                            <div className="text-xl font-semibold text-white">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</div>
+                                                            <div className="text-xs text-slate-500">{(quote.price_per_m2 ?? 0).toFixed(2)} ₺/m²</div>
+                                                        </div>
+                                                        <select value={quote.status ?? "pending"} onChange={(e) => updateQuoteStatus(Number(quote.id), e.target.value)}
+                                                            aria-label={`${quote.customer_name} teklif durumu`}
+                                                            className={`${ofisControl} px-3 py-2 text-xs min-w-[130px]`}>
+                                                            <option value="pending">Bekliyor</option>
+                                                            <option value="contacted">İletişimde</option>
+                                                            <option value="quoted">Teklif Verildi</option>
+                                                            <option value="approved">Onaylandı</option>
+                                                            <option value="rejected">Reddedildi</option>
+                                                            <option value="completed">Tamamlandı</option>
+                                                        </select>
+                                                        <select value={quote.priority ?? "normal"} onChange={(e) => updateQuotePriority(Number(quote.id), e.target.value)}
+                                                            aria-label={`${quote.customer_name} teklif önceliği`}
+                                                            className={`${ofisControl} px-3 py-2 text-xs min-w-[100px]`}>
+                                                            <option value="low">Düşük</option>
+                                                            <option value="normal">Normal</option>
+                                                            <option value="high">Yüksek</option>
+                                                            <option value="urgent">Acil</option>
+                                                        </select>
+                                                        {quote.pdf_url && (
+                                                            <a
+                                                                href={quote.pdf_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className={`${ofisControl} px-3 py-2 text-xs text-sky-300 hover:bg-sky-400/10 whitespace-nowrap`}
+                                                                title="PDF Görüntüle"
+                                                            >
+                                                                PDF
+                                                            </a>
+                                                        )}
+                                                        <button onClick={() => setSelectedQuote(quote)}
+                                                            className={`${ofisControl} border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-4 py-2 text-xs text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.14)] whitespace-nowrap`}>
+                                                            Detay →
+                                                        </button>
+                                                        <button onClick={() => { if (confirm(`"${quote.customer_name}" teklifini silmek istiyor musunuz?\nBu işlem geri alınamaz.`)) { deleteQuote(Number(quote.id)); } }}
+                                                            className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-2 text-red-400/70 transition-colors hover:bg-red-500/15 hover:text-red-300 hover:border-red-500/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/25" title="Teklifi sil" aria-label="Teklifi sil">
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )})}
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
@@ -503,7 +644,7 @@ export function QuotesTab() {
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div><span className="text-slate-400">Paket:</span><div className="font-medium text-white">{selectedQuote.package_name}</div></div>
                                     <div><span className="text-slate-400">Marka:</span><div className="font-medium text-white">{selectedQuote.brand_name}</div></div>
-                                    <div><span className="text-slate-400">Talep Türü:</span><div className="mt-1">{getRequestTypeBadge(selectedQuote.request_type)}</div></div>
+                                    <div><span className="text-slate-400">Talep Türü:</span><div className="mt-1">{getRequestTypeBadge(selectedQuote.request_type ?? "")}</div></div>
                                     <div><span className="text-slate-400">Malzeme:</span><div className="font-medium text-white">{selectedQuote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {selectedQuote.thickness_cm}cm</div></div>
                                     <div><span className="text-slate-400">Metraj:</span><div className="font-medium text-white">{selectedQuote.area_m2} m²</div></div>
                                     <div><span className="text-slate-400">Şehir:</span><div className="font-medium text-white">{selectedQuote.city_name}</div></div>
@@ -513,10 +654,10 @@ export function QuotesTab() {
                             <div className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 p-4">
                                 <h4 className="font-semibold text-green-300 mb-3">Fiyat Bilgileri</h4>
                                 <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div><span className="text-slate-400">KDV Hariç:</span><div className="font-medium text-white">{selectedQuote.price_without_vat.toLocaleString("tr-TR")} ₺</div></div>
-                                    <div><span className="text-slate-400">KDV:</span><div className="font-medium text-white">{selectedQuote.vat_amount.toLocaleString("tr-TR")} ₺</div></div>
-                                    <div><span className="text-slate-400">Toplam:</span><div className="font-bold text-green-400 text-lg">{selectedQuote.total_price.toLocaleString("tr-TR")} ₺</div></div>
-                                    <div><span className="text-slate-400">m² Fiyatı:</span><div className="font-medium text-white">{selectedQuote.price_per_m2.toFixed(2)} ₺/m²</div></div>
+                                    <div><span className="text-slate-400">KDV Hariç:</span><div className="font-medium text-white">{(selectedQuote.price_without_vat ?? 0).toLocaleString("tr-TR")} ₺</div></div>
+                                    <div><span className="text-slate-400">KDV:</span><div className="font-medium text-white">{(selectedQuote.vat_amount ?? 0).toLocaleString("tr-TR")} ₺</div></div>
+                                    <div><span className="text-slate-400">Toplam:</span><div className="font-bold text-green-400 text-lg">{(selectedQuote.total_price ?? 0).toLocaleString("tr-TR")} ₺</div></div>
+                                    <div><span className="text-slate-400">m² Fiyatı:</span><div className="font-medium text-white">{(selectedQuote.price_per_m2 ?? 0).toFixed(2)} ₺/m²</div></div>
                                 </div>
                             </div>
                             {selectedQuote.vehicle_type && (
@@ -536,7 +677,7 @@ export function QuotesTab() {
                                     {selectedQuoteEvents.length > 0 ? selectedQuoteEvents.map((event) => (
                                         <div key={event.id} className="flex items-start justify-between gap-4 rounded-xl border border-[rgba(92,98,108,0.20)] bg-[rgba(255,255,255,0.025)] p-4">
                                             <div>
-                                                <p className="font-medium text-slate-100">{getEventLabel(event.event_type)}</p>
+                                                <p className="font-medium text-slate-100">{getEventLabel(event.event_type ?? "")}</p>
                                                 <p className="mt-1 text-xs text-slate-500">{event.brand_name || selectedQuote.brand_name || "Marka yok"} • {event.package_name || selectedQuote.package_name || "Paket yok"}</p>
                                                 {event.metadata && Object.keys(event.metadata).length > 0 && (
                                                     <p className="mt-2 text-xs text-slate-500">Kanal: {event.metadata.sourceChannel || "bilinmiyor"}</p>

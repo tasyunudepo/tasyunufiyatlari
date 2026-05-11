@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s | Taşyünü Fiyatları",
   },
   description:
-    "Türkiye geneli taşyünü ve EPS fiyatları. Lojistik dahil mantolama maliyetinizi hesaplayın.",
+    "Fabrika çıkışlı taşyünü ve EPS mantolama. Kapı teslim setinizi saniyeler içinde hesaplayın, KDV hariç net fiyatla resmi PDF teklifinizi anında alın.",
   alternates: {
     canonical: "/",
   },
@@ -43,13 +43,13 @@ export const metadata: Metadata = {
     url: "https://www.tasyunufiyatlari.com",
     title: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
     description:
-      "Türkiye geneli taşyünü ve EPS fiyatları. Lojistik dahil mantolama maliyetinizi hesaplayın.",
+      "Fabrika çıkışlı taşyünü ve EPS mantolama. Kapı teslim setinizi saniyeler içinde hesaplayın, KDV hariç net fiyatla resmi PDF teklifinizi anında alın.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
+        alt: "Fabrika çıkışlı taşyünü ve EPS mantolama — Kapı teslim PDF teklif",
       },
     ],
   },
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
     description:
-      "Türkiye geneli taşyünü ve EPS fiyatları. Lojistik dahil mantolama maliyetinizi hesaplayın.",
+      "Fabrika çıkışlı taşyünü ve EPS mantolama. Kapı teslim setinizi saniyeler içinde hesaplayın, KDV hariç net fiyatla resmi PDF teklifinizi anında alın.",
     images: ["/og-image.png"],
   },
   icons: {
