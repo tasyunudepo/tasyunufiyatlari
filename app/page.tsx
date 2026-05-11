@@ -156,7 +156,7 @@ export default function Home() {
                         <div>
                             <Eyebrow className="mb-2.5 sm:mb-4">Fabrika Çıkışlı Mantolama</Eyebrow>
                             <h1 className="max-w-[980px] font-heading font-extrabold text-[40px] sm:text-[52px] lg:text-[64px] leading-[1.05] tracking-tight text-fe-text">
-                                <span className="text-brand">Kapı teslim</span> mantolama setinizi saniyeler içinde çıkarın, PDF teklifinizi alın.
+                                <span className="text-brand">Nakliye dahil</span> mantolama setinizi saniyeler içinde PDF olarak alın.
                             </h1>
                             <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-muted leading-relaxed">
                                 Şehir, metraj ve kalınlık verin — sistemin 8 kalemi (levha, sıva, dübel, file, profil) ve nakliye saniyeler içinde resmi PDF teklif olarak elinizde.
