@@ -1266,13 +1266,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                 </p>
                             </div>
 
-                            {/* Tek ghost CTA: katalog linki (eski hero secondary CTA) */}
-                            <a
-                                href="/urunler"
-                                className="btn-ghost mt-5 !text-hub-gold-soft hover:!text-hub-gold"
-                            >
-                                Ürün kataloğunu gör →
-                            </a>
                         </div>
 
                         {/* Sağ Taraf - Wizard (CTA scroll target burası) */}
@@ -1280,6 +1273,15 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             id="mantolama-hesaplayici"
                             className="bg-fe-surface/85 backdrop-blur-md border border-hub-gold-soft/25 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_-30px_rgba(198,158,84,0.25)] scroll-mt-24"
                         >
+                            {/* Hesaplama aracı başlığı — mobilde bilişsel friction azaltma */}
+                            <div className="mb-6 sm:mb-7">
+                                <h2 className="font-heading font-bold text-white text-xl sm:text-2xl tracking-tight leading-tight">
+                                    Mantolama Hesaplama Aracı
+                                </h2>
+                                <p className="mt-1.5 text-sm text-fe-muted leading-relaxed">
+                                    4 adımda paket, fiyat ve nakliye dahil teklifiniz.
+                                </p>
+                            </div>
 
                             {/* Step Progress Bar */}
                             {(() => {

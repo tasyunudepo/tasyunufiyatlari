@@ -103,17 +103,24 @@ export function SituationSelector() {
             Seçiminiz hesaplayıcıyı doğru yönlendirir.
           </p>
         </div>
-        <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {SITUATIONS.map((s) => (
             <li key={s.key}>
               <button
                 type="button"
                 onClick={() => onSelect(s)}
-                className="group h-full w-full text-left rounded-2xl border border-fe-border/50 bg-fe-raised/40 p-5 transition hover:border-brand/60 hover:bg-fe-raised/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                className="group h-full w-full text-left rounded-2xl border border-fe-border/50 bg-fe-raised/40 p-4 sm:p-5 transition hover:border-brand/60 hover:bg-fe-raised/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 flex items-start gap-3.5 sm:block"
               >
-                <s.Icon size={28} weight={ICON_WEIGHT} className="text-brand" aria-hidden />
-                <p className="mt-4 text-base font-semibold text-fe-text">{s.label}</p>
-                <p className="mt-1.5 text-xs text-fe-muted leading-relaxed">{s.helper}</p>
+                <s.Icon
+                  size={26}
+                  weight={ICON_WEIGHT}
+                  className="text-brand shrink-0 mt-0.5 sm:mt-0 sm:mb-0"
+                  aria-hidden
+                />
+                <div className="flex-1 min-w-0 sm:mt-4">
+                  <p className="text-[15px] sm:text-base font-semibold text-fe-text leading-snug">{s.label}</p>
+                  <p className="mt-1 sm:mt-1.5 text-xs text-fe-muted leading-relaxed">{s.helper}</p>
+                </div>
               </button>
             </li>
           ))}
