@@ -36,7 +36,7 @@ export default async function KategoriPage({ params }: Props) {
     info.accessoryTypeSlug ? { accessoryTypeSlug: info.accessoryTypeSlug } : undefined
   );
 
-  const breadcrumbSchema = buildBreadcrumbList(
+  const breadcrumbNode = buildBreadcrumbList(
     [
       { name: 'Anasayfa', path: '/' },
       { name: 'Ürünler', path: '/urunler' },
@@ -45,11 +45,16 @@ export default async function KategoriPage({ params }: Props) {
     SITE_ORIGIN,
   );
 
+  const jsonLdGraph = {
+    '@context': 'https://schema.org' as const,
+    '@graph': [breadcrumbNode],
+  };
+
   return (
     <div className="min-h-screen bg-fe-bg flex flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
       />
       <SiteHeader />
 

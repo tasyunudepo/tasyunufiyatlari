@@ -97,11 +97,72 @@ export const WAREHOUSE_INFO = {
 export const BUSINESS_ID  = `${BUSINESS_INFO.url}/#organization` as const;
 export const WAREHOUSE_ID = `${BUSINESS_INFO.url}/#warehouse`    as const;
 export const WEBSITE_ID   = `${BUSINESS_INFO.url}/#website`      as const;
+export const PERSON_ID    = `${BUSINESS_INFO.url}/#founder`      as const;
 
 /** publisher / provider / seller alanları için pointer. */
 export const BUSINESS_REF  = { '@id': BUSINESS_ID }  as const;
 export const WAREHOUSE_REF = { '@id': WAREHOUSE_ID } as const;
 export const WEBSITE_REF   = { '@id': WEBSITE_ID }   as const;
+export const PERSON_REF    = { '@id': PERSON_ID }    as const;
+
+// ============================================================
+// BRAND_INFO — Marka metadata + sameAs URL'leri
+// ============================================================
+//
+// Sprint 1 / Madde 3 — Brand standalone schema'sı için canonical
+// kaynak. Marka sayfalarındaki Brand node ve ürün detay sayfalarındaki
+// Product.brand pointer buradan beslenir.
+//
+// sameAs URL'leri Knowledge Graph entity füzyonu için kritik — Google
+// "Dalmaçyalı" markasını dalmacyali.com.tr ile aynı entity sayar.
+//
+// Fawori (Optimix + Expert) Filli Boya'nın markaları olduğundan her
+// ikisi de hem fawori.com hem filliboya.com URL'leriyle bağlanır.
+// ============================================================
+
+export type BrandSlug = 'dalmacyali' | 'filli-boya' | 'optimix' | 'tekno';
+
+export interface BrandMeta {
+  /** UI'da gösterilen marka adı */
+  name: string;
+  /** Schema @id — marka entity zinciri için */
+  id: string;
+  /** Resmi web siteleri (Knowledge Graph entity bağı) */
+  sameAs: readonly string[];
+  /** Opsiyonel: parent organization (ör. Fawori → Filli Boya) */
+  parentName?: string;
+}
+
+export const BRAND_INFO: Record<BrandSlug, BrandMeta> = {
+  'dalmacyali': {
+    name:   'Dalmaçyalı',
+    id:     `${BUSINESS_INFO.url}/#brand-dalmacyali`,
+    sameAs: ['https://www.dalmacyali.com.tr/'],
+  },
+  'filli-boya': {
+    // /marka/filli-boya rotası "Fawori Expert" (Filli Boya'nın taşyünü markası)
+    name:   'Fawori Expert',
+    id:     `${BUSINESS_INFO.url}/#brand-fawori-expert`,
+    sameAs: ['https://www.fawori.com/', 'https://www.filliboya.com/'],
+    parentName: 'Filli Boya',
+  },
+  'optimix': {
+    name:   'Fawori Optimix',
+    id:     `${BUSINESS_INFO.url}/#brand-fawori-optimix`,
+    sameAs: ['https://www.fawori.com/', 'https://www.filliboya.com/'],
+    parentName: 'Filli Boya',
+  },
+  'tekno': {
+    name:   'TEKNO',
+    id:     `${BUSINESS_INFO.url}/#brand-tekno`,
+    sameAs: ['https://teknoyapikimyasallari.com/', 'https://teknoyapi.com.tr/'],
+  },
+};
+
+/** Marka slug → @id pointer (Product.brand veya marka sayfası schema'sı için). */
+export function brandRef(slug: BrandSlug) {
+  return { '@id': BRAND_INFO[slug].id };
+}
 
 // ============================================================
 // UI helper'ları — bileşenlerin pratik kullanımı için

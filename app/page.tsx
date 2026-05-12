@@ -20,6 +20,8 @@ import { Truck, Package, Check, ArrowRight, CaretRight, Star } from "@phosphor-i
 import { ICON_WEIGHT } from "@/lib/design/tokens";
 import { BUSINESS_INFO, WHATSAPP_URL } from "@/lib/business/info";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
+import { buildHowToNode } from "@/lib/seo/buildHowTo";
+import { buildCalculationServiceNode, buildShippingServiceNode } from "@/lib/seo/buildService";
 
 const faqItems = [
     {
@@ -48,32 +50,6 @@ const faqItems = [
     },
 ];
 
-// Home page schema — Organization/LocalBusiness + WebApplication + FAQPage
-// hepsi tek @graph altında, BUSINESS_INFO sözlüğünden besleniyor.
-// Org node'u buildBusinessNode'dan, diğerleri burada inline tanımlı.
-const jsonLdGraph = buildBusinessGraph([
-    {
-        "@type": "WebApplication",
-        name: "Mantolama Maliyet Hesaplayıcı",
-        url: BUSINESS_INFO.url,
-        applicationCategory: "BusinessApplication",
-        description: "8 kalem mantolama setini metraj, kalınlık ve bölgeye göre hesaplayın. Nakliye ve iskonto dahil 3 farklı paket seçeneğini karşılaştırıp PDF teklif alın.",
-        offers: {
-            "@type": "Offer",
-            price: "0",
-            priceCurrency: "TRY",
-        },
-    },
-    {
-        "@type": "FAQPage",
-        mainEntity: faqItems.map((item) => ({
-            "@type": "Question",
-            name: item.q,
-            acceptedAnswer: { "@type": "Answer", text: item.a },
-        })),
-    },
-]);
-
 const HOW_STEPS = [
     {
         n: 1,
@@ -91,6 +67,53 @@ const HOW_STEPS = [
         desc: "Resmi PDF teklif anında oluşur, WhatsApp ile sipariş onayı tek mesaj uzakta.",
     },
 ];
+
+// Home page schema — tek @graph altında 7 entity:
+//   Organization+LocalBusiness, Person (founder), WebApplication,
+//   FAQPage (speakable), HowTo, Service (Hesaplama), Service (Sevkiyat).
+// Tüm pointer'lar @id zinciri ile bağlı — Knowledge Graph entity füzyonu.
+const jsonLdGraph = buildBusinessGraph([
+    {
+        "@type": "WebApplication",
+        "@id": `${BUSINESS_INFO.url}/#webapp-hesaplayici`,
+        name: "Mantolama Maliyet Hesaplayıcı",
+        url: BUSINESS_INFO.url,
+        applicationCategory: "BusinessApplication",
+        description: "8 kalem mantolama setini metraj, kalınlık ve bölgeye göre hesaplayın. Nakliye ve iskonto dahil 3 farklı paket seçeneğini karşılaştırıp PDF teklif alın.",
+        offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "TRY",
+        },
+    },
+    {
+        "@type": "FAQPage",
+        "@id": `${BUSINESS_INFO.url}/#faq`,
+        // Voice search / Google Assistant için Speakable işaretleme.
+        // cssSelector hedefleri HTML'deki <details>/.faq-question/.faq-answer class'ları.
+        speakable: {
+            "@type": "SpeakableSpecification",
+            cssSelector: [".faq-question", ".faq-answer"],
+        },
+        mainEntity: faqItems.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+        })),
+    },
+    buildHowToNode({
+        name: "Mantolama Hesaplaması ve PDF Teklif Nasıl Alınır?",
+        description:
+            "3 adımda paket, fiyat ve nakliye dahil resmi PDF teklif. " +
+            "Şehir, metraj ve kalınlık girin; 8 kalem set otomatik hesaplansın; " +
+            "PDF teklifinizi anında indirin.",
+        totalTime: "PT2M",
+        estimatedCost: { currency: "TRY", value: "0" },
+        steps: HOW_STEPS.map((s) => ({ name: s.title, text: s.desc })),
+    }),
+    buildCalculationServiceNode(),
+    buildShippingServiceNode(),
+]);
 
 const HIGHLIGHTS = [
     {
@@ -479,13 +502,13 @@ export default function Home() {
                                 key={item.q}
                                 className="group bg-fe-surface border border-fe-border rounded-xl overflow-hidden hover:border-hub-gold-soft/30 transition-colors"
                             >
-                                <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none font-semibold text-white text-base sm:text-lg select-none">
+                                <summary className="faq-question flex items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none font-semibold text-white text-base sm:text-lg select-none">
                                     {item.q}
                                     <span className="text-fe-text/70 text-xl flex-shrink-0 transition-transform group-open:rotate-45">
                                         +
                                     </span>
                                 </summary>
-                                <div className="px-6 pb-5 text-fe-text/85 text-base leading-relaxed border-t border-fe-border pt-4">
+                                <div className="faq-answer px-6 pb-5 text-fe-text/85 text-base leading-relaxed border-t border-fe-border pt-4">
                                     {item.a}
                                 </div>
                             </details>

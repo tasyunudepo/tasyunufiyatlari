@@ -12,7 +12,7 @@ export default function TrustStrip() {
         <div className="flex items-center gap-x-5 gap-y-1 flex-wrap text-hub-warm">
           <span><span className="text-hub-gold-soft font-medium">Fabrika çıkışlı</span> satış</span>
           <span className="text-hub-warm/30">·</span>
-          <span>Depo: Tuzla &amp; Gebze</span>
+          <span>Depo: İstanbul / Tuzla</span>
           <span className="text-hub-warm/30">·</span>
           <span>Bölgeye göre iskonto</span>
           <span className="text-hub-warm/30">·</span>

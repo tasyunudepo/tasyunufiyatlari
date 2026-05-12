@@ -13,6 +13,8 @@ import {
   BUSINESS_ID,
   WAREHOUSE_INFO,
   WAREHOUSE_ID,
+  PERSON_ID,
+  PERSON_REF,
 } from '@/lib/business/info';
 
 // ─── Kanonik Organization + LocalBusiness ────────────────────
@@ -31,7 +33,6 @@ export interface BuildBusinessNodeOptions {
  */
 export function buildBusinessNode(opts: BuildBusinessNodeOptions = {}) {
   const foundingDate = opts.foundingDate ?? BUSINESS_INFO.foundingDate;
-  const founder      = opts.founder      ?? BUSINESS_INFO.founder;
 
   return {
     '@type': ['Organization', 'LocalBusiness'] as const,
@@ -60,7 +61,36 @@ export function buildBusinessNode(opts: BuildBusinessNodeOptions = {}) {
     }],
     priceRange: BUSINESS_INFO.priceRange,
     foundingDate,
-    founder: { '@type': 'Person' as const, name: founder },
+    // Founder artık standalone Person node'a pointer — buildPersonNode()
+    // ile @graph'ta ayrı entity olarak yer alır (E-E-A-T sinyali).
+    founder: PERSON_REF,
+  };
+}
+
+// ─── Person (founder) node ───────────────────────────────────
+
+export interface BuildPersonNodeOptions {
+  /** Founder adı (default BUSINESS_INFO.founder). */
+  name?: string;
+  /** Founder'ın açıklayıcı rolü. */
+  jobTitle?: string;
+  /** LinkedIn / kişisel web vs. — Knowledge Graph entity bağı (opsiyonel). */
+  sameAs?: readonly string[];
+}
+
+/**
+ * Standalone Person node — founder bilgisi. Organization.founder
+ * alanı bu node'a `@id` ile pointer'lar (PERSON_REF üzerinden).
+ */
+export function buildPersonNode(opts: BuildPersonNodeOptions = {}) {
+  const name = opts.name ?? BUSINESS_INFO.founder;
+  return {
+    '@type': 'Person' as const,
+    '@id':   PERSON_ID,
+    name,
+    jobTitle: opts.jobTitle ?? 'Kurucu',
+    worksFor: { '@id': BUSINESS_ID },
+    ...(opts.sameAs && opts.sameAs.length > 0 ? { sameAs: [...opts.sameAs] } : {}),
   };
 }
 
@@ -115,7 +145,10 @@ export function buildBusinessGraph(
   extraNodes: object[] = [],
   opts: BuildBusinessGraphOptions = {},
 ) {
-  const graph: object[] = [buildBusinessNode(opts)];
+  // Organization + Person (founder) her @graph'ta standart.
+  // Person standalone olduğu için Organization.founder = PERSON_REF
+  // dangling pointer olarak kalmaz.
+  const graph: object[] = [buildBusinessNode(opts), buildPersonNode()];
 
   if (opts.includeWarehouse) {
     graph.push(buildWarehouseNode());

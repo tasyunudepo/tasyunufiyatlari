@@ -126,7 +126,7 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
             © {new Date().getFullYear()} Taşyünü Fiyatları. Tüm hakları saklıdır.
           </p>
           <p className={`${copyText} text-xs`}>
-            Fabrika çıkışlı satış · İstanbul / Tuzla &amp; Gebze depo
+            Fabrika çıkışlı satış · İstanbul / Tuzla depo
           </p>
         </div>
       </div>

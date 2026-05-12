@@ -12,6 +12,8 @@ import { getCatalogProduct } from '@/lib/catalog/server';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
 import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
+import { BUSINESS_REF, BRAND_INFO, type BrandSlug } from '@/lib/business/info';
+import { buildBrandNode, brandSlugByName } from '@/lib/seo/buildBrand';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { unstable_cache } from 'next/cache';
 import SiteHeader from '@/components/shared/SiteHeader';
@@ -159,28 +161,40 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
     ? (product.image_cover.startsWith('http') ? product.image_cover : `${SITE_ORIGIN}${product.image_cover}`)
     : `${SITE_ORIGIN}/og-image.png`;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+  // ─── Schema.org @graph ──────────────────────────────────
+  // Product + Brand + BreadcrumbList tek script tag içinde.
+  // Brand BRAND_INFO'da varsa standalone Brand node + Product.brand
+  // @id pointer; yoksa inline fallback (Product.brand içinde name).
+  const brandSlug: BrandSlug | null = brandSlugByName(product.brand.name);
+  const brandNode = brandSlug ? buildBrandNode(brandSlug) : null;
+
+  const productNode = {
+    '@type': 'Product' as const,
+    '@id':   `${productUrl}#product`,
     name: product.name,
     sku: slug,
     image: [productImage],
     url: productUrl,
     description: product.catalog_description ?? undefined,
-    brand: { '@type': 'Brand', name: product.brand.name },
+    // Brand: @id pointer (standalone Brand node varsa) veya inline.
+    brand: brandSlug
+      ? { '@id': BRAND_INFO[brandSlug].id }
+      : { '@type': 'Brand' as const, name: product.brand.name },
     category: product.category.name,
     ...(product.base_price ? {
       offers: {
-        '@type': 'Offer',
+        '@type': 'Offer' as const,
         priceCurrency: 'TRY',
         price: product.base_price,
         availability: 'https://schema.org/InStock',
         url: productUrl,
+        // seller Organization'a pointer — Knowledge Graph entity füzyonu.
+        seller: BUSINESS_REF,
       },
     } : {}),
   };
 
-  const breadcrumbSchema = buildBreadcrumbList(
+  const breadcrumbNode = buildBreadcrumbList(
     [
       { name: 'Anasayfa', path: '/' },
       { name: 'Ürünler', path: '/urunler' },
@@ -190,10 +204,19 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
     SITE_ORIGIN,
   );
 
+  const jsonLdGraph = {
+    '@context': 'https://schema.org' as const,
+    '@graph': brandNode
+      ? [productNode, brandNode, breadcrumbNode]
+      : [productNode, breadcrumbNode],
+  };
+
   return (
     <div className="min-h-screen bg-fe-bg flex flex-col">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+      />
       <SiteHeader />
 
       {/* Breadcrumb */}

@@ -54,7 +54,7 @@ const OPS_METRICS = [
   { Icon: Clock,  label: 'Mesai',         value: 'Pzt–Cmt  08:00–18:00' },
   { Icon: Timer,  label: 'Ortalama Yanıt', value: '30 dk içinde' },
   { Icon: Truck,  label: 'Sevkiyat',      value: 'Türkiye geneli 81 il' },
-  { Icon: MapPin, label: 'Depo',          value: 'Tuzla & Gebze' },
+  { Icon: MapPin, label: 'Depo',          value: 'Tuzla / Tepeören' },
 ];
 
 export default function IletisimPage() {

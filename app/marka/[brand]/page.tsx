@@ -6,6 +6,10 @@ import ProductCard from '@/components/catalog/ProductCard';
 import { getCatalogProductsByBrand } from '@/lib/catalog/server';
 import { KATEGORI_LIST } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
+import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
+import { buildBrandNode } from '@/lib/seo/buildBrand';
+import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
+import { BRAND_INFO, type BrandSlug } from '@/lib/business/info';
 import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 
@@ -65,6 +69,28 @@ export default async function MarkaPage({ params }: Props) {
 
   const { plates, accessories } = await getCatalogProductsByBrand(info.id);
 
+  // ─── Schema.org @graph ───────────────────────────────────
+  // BRAND_INFO'da kayıtlı markalar için Brand node + sameAs üretilir.
+  // 'oem' (Ekonomik 2.Kalite) gibi BRAND_INFO'da olmayanlar inline fallback.
+  const brandNode =
+    brand in BRAND_INFO
+      ? buildBrandNode(brand as BrandSlug)
+      : { '@type': 'Brand' as const, name: info.displayName };
+
+  const breadcrumbNode = buildBreadcrumbList(
+    [
+      { name: 'Anasayfa', path: '/' },
+      { name: 'Ürünler',  path: '/urunler' },
+      { name: info.displayName, path: `/marka/${brand}` },
+    ],
+    SITE_ORIGIN,
+  );
+
+  const jsonLdGraph = {
+    '@context': 'https://schema.org' as const,
+    '@graph': [brandNode, breadcrumbNode],
+  };
+
   // Bu markada hangi kategorilerde ürün var? Chip nav için.
   const categoriesWithProducts = new Set<string>();
   plates.forEach((p) => {
@@ -79,6 +105,10 @@ export default async function MarkaPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-fe-bg flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+      />
       <SiteHeader />
 
       <div className="bg-fe-surface border-b border-fe-border">

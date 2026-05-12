@@ -103,7 +103,7 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
         <div className="hidden bg-fe-surface border-b border-fe-border text-center sm:block sm:py-2 sm:text-sm sm:px-4">
           <span className="font-semibold text-white">Fabrika Çıkışlı Satış</span>
           <span className="hidden sm:inline mx-2 sm:mx-4 text-fe-muted">|</span>
-          <span className="hidden sm:inline text-fe-text/80">Depo: İstanbul/Tuzla &amp; Gebze</span>
+          <span className="hidden sm:inline text-fe-text/80">Depo: İstanbul / Tuzla</span>
           <span className="mx-2 sm:mx-4 text-fe-muted">|</span>
           <span className="text-hub-gold-soft font-semibold">Bölgeye Göre İskonto</span>
         </div>

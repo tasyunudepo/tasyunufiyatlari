@@ -55,7 +55,7 @@ const REASONS = [
     Icon: Truck,
     eyebrow: '81 İl Lojistik',
     title: 'Fabrika çıkışlı sevkiyat, Türkiye geneli',
-    body: 'Tuzla & Gebze depolarımızdan parsiyel veya tam araç (kamyon/TIR) sevkiyat. Bölgesel iskonto ve nakliye doluluk oranı tek hesapta otomatik birleşir.',
+    body: 'Tuzla Tepeören depomuzdan parsiyel veya tam araç (kamyon/TIR) sevkiyat. Bölgesel iskonto ve nakliye doluluk oranı tek hesapta otomatik birleşir.',
   },
   {
     Icon: Medal,
@@ -82,7 +82,7 @@ export default function HakkimizdaPage() {
                 </h1>
                 <p className="text-hub-ink-2 text-lg leading-relaxed max-w-xl">
                   20 yıldır yalıtım sektöründe. Bugün <span className="text-hub-gold font-semibold">36+ marka resmi bayiliği</span>,
-                  Tuzla & Gebze depo ağı ve <span className="text-hub-gold font-semibold">81 il sevkiyat</span> kapasitesiyle
+                  Tuzla Tepeören deposu ve <span className="text-hub-gold font-semibold">81 il sevkiyat</span> kapasitesiyle
                   taşyünü ve EPS pazarının dijital tarafını yürütüyoruz.
                 </p>
               </div>
