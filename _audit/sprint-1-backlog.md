@@ -1,9 +1,20 @@
 # Sprint 1 — Backlog
 
 **Hazırlık tarihi:** 2026-05-11 (Sprint 0 / Faz 4 sırasında oluşturuldu)
+**Son güncelleme:** 2026-05-12 — madde 1, 2 ve 3 tamamlandı.
 
 > Bu dosya Sprint 0 sırasında yan yola düşen ama Sprint 0 kapsamı dışındaki teknik
-> borçları toplar. Sprint 1 planlamada bu liste önceliklendirilip işe dönüştürülecek.
+> borçları toplar. Sprint 1 planlamada bu liste önceliklendirilip işe dönüştürüldü.
+
+## Sprint 1 Durum Özeti
+
+| # | Konu | Durum | Commit |
+|---|---|:---:|---|
+| 1 | TypeScript Strict Cleanup | ✅ | `5fa0a8e` |
+| 2 | NAP + `@graph` + BUSINESS_REF | ✅ | `799c7dd` |
+| 3 | Schema zenginleştirme (HowTo, Service, Person, Speakable, Brand) | ✅ | `1efa09c` |
+| 4 | Marka × kategori sitemap + footer hub | ⏳ | — |
+| 5 | Robots disallow + audit 30 gün kalan | ⏳ | — |
 
 ---
 
@@ -120,14 +131,89 @@ Sprint 0 dışı kalan, audit raporunda işaretli maddeler — Sprint 1+ için:
 
 ---
 
-## Sprint 1 Hedef Sıralaması (taslak)
+## Sprint 1 Hedef Sıralaması (uygulandı)
 
-1. **TypeScript Strict Cleanup** (madde 1) — temel temizlik, sonraki tüm refactor'ları kolaylaştırır
-2. **NAP + `@graph` + BUSINESS_REF** (madde 2 + audit §"30 Gün" #8) — kritik SEO/Knowledge Graph kaybı
-3. **Yasal cevaplar** (madde 3) — Sprint 0 ürününün production-ready hâle gelmesi için zorunlu
-4. **Schema zenginleştirme** (audit §"30 Gün" #9–13) — AIO sinyalleri
-5. **Marka × kategori sitemap + footer hub** (audit §"30 Gün" #14–15)
+1. **TypeScript Strict Cleanup** (madde 1) — ✅ 2026-05-12, commit `5fa0a8e`
+2. **NAP + `@graph` + BUSINESS_REF** (madde 2 + audit §"30 Gün" #8) — ✅ 2026-05-12, commit `799c7dd`
+3. **Yasal cevaplar** (madde 3) — ✅ Sprint 0'da tamamlandı
+4. **Schema zenginleştirme** (audit §"30 Gün" #9–13) — ✅ 2026-05-12, commit `1efa09c`
+5. **Marka × kategori sitemap + footer hub** (audit §"30 Gün" #14–15) — ⏳ aşağıda detay
+6. **Robots disallow + audit 30 gün kalan** — ⏳ aşağıda detay
 
 ---
 
-— Backlog sonu. Sprint 1 kick-off'ta önceliklendirme yapılacak.
+## 6. Madde 4 — Marka × Kategori Sitemap + Footer Hub
+
+### 6.1 `app/sitemap.ts` — eksik marka × kategori URL'leri
+
+`/marka/[brand]/[kategori]` route mevcut ([app/marka/[brand]/[kategori]/page.tsx](app/marka/[brand]/[kategori]/page.tsx)) ama sitemap'te bu kombinasyonlar yok. Audit raporu §3 buna dikkat çekti.
+
+**Plan:**
+- `BRAND_INFO` (4 marka: dalmacyali, filli-boya, optimix, tekno) × `KATEGORI_MAP` (9 kategori) → maksimum 36 URL.
+- Ama her marka her kategoride ürün barındırmıyor — `getCatalogProductsByBrand(brandId)` ile DB'den **gerçek varlığı doğrula**, sadece boş olmayan kombinasyonları sitemap'e ekle.
+- Pattern: `app/sitemap.ts`'te plate/accessory döngüsünden sonra `for (brand × kategori)` döngüsü, `priority: 0.5, changeFrequency: 'monthly'`.
+
+### 6.2 `components/shared/SiteFooter.tsx` — marka hub
+
+Footer'da "Kurumsal" grubunda sadece `/marka/dalmacyali` linki var ([SiteFooter.tsx:23-28](components/shared/SiteFooter.tsx#L23-L28)). 4 markanın tamamı eklenmeli + "Tüm markalar" linki ya `/urunler` veya yeni `/marka` hub sayfasına.
+
+**Plan:**
+- 4 markayı ayrı satırlar olarak ekle.
+- Opsiyonel: `/marka` index sayfası oluştur (4 marka kartı, `BRAND_INFO`'dan beslen).
+
+### 6.3 Verifikasyon
+- `curl /sitemap.xml | grep "marka/.*?/" | wc -l` → 8-16 arası beklenir (kombinasyona göre).
+- `curl /` HTML'inde footer'da 4 marka linki görünür.
+
+---
+
+## 7. Madde 5 — Robots disallow + Audit 30 Gün Kalanlar
+
+### 7.1 Robots `?utm_*`, `?fbclid` disallow (audit §3 + 30 gün #17)
+
+[app/robots.ts](app/robots.ts) şu an sadece `/piyasa`, `/ofis`, `/api/admin` disallow ediyor.
+
+**Plan:** Marketing parametre dağılımı için canonical disiplini robots seviyesinde de pekiştir:
+```ts
+disallow: [
+  '/piyasa', '/ofis', '/api/admin',
+  '/*?utm_*', '/*?fbclid=*', '/*?gclid=*',
+  // /bolge zaten klasör silindi, gerek yok
+],
+```
+
+### 7.2 Production 404 telemetrisi (audit §2 + 30 gün #18)
+
+Sprint 0'da Sentry kurulu. Şu an Vercel + Next.js 404'leri Sentry'de event olarak görünmez (default). 
+
+**Plan:** `app/not-found.tsx` (yoksa oluştur) içinde `Sentry.captureException(new Error('404: ' + pathname))` ile 404'leri loglat. Eski WP URL'lerinden gelen trafiği yakalamak için.
+
+### 7.3 `unstable_cache` tag invalidation doğrulaması (audit 30 gün #20)
+
+Ürün detay sayfası `revalidate = 60` + `unstable_cache(... { tags: ['logistics'] })` ([app/urunler/[kategori]/[slug]/page.tsx:42-44](app/urunler/[kategori]/[slug]/page.tsx#L42-L44)).
+
+Admin update flow'unda `revalidateTag('logistics')` ya da `revalidatePath('/urunler/...')` çağrılıyor mu?
+
+**Plan:** Admin API route'larda (`app/api/admin/plates/[id]/route.ts`, `app/api/admin/material-types/[id]/route.ts`, vb.) update sonrası `revalidateTag` çağrısı eklenmemişse ekle. Aksi takdirde 60s'lik cache uzar.
+
+### 7.4 Home page `"use client"` ayrıştırması (audit 30 gün #16)
+
+[app/page.tsx](app/page.tsx) hâlâ tamamen client component. RSC streaming + server-rendered JSON-LD avantajı kayıp.
+
+**Plan (büyük iş, ayrı bir sprint olabilir):**
+- Hero, HIGHLIGHTS, HOW_STEPS, FAQ, schema script — server.
+- Calculator (`WizardCalculator`), `SituationSelector`, header mobile drawer — client.
+- `app/page.tsx`'i server bileşeni yap, client island'ları ayrı dosyalara çek.
+- LCP/TBT iyileşmesi beklenir.
+
+> **Karar gereken:** Bu madde Sprint 1 mi yoksa ayrı bir performans sprint'i mi? Refactor 200+ satır etkiler.
+
+### 7.5 `/depomuz` opening hours doğrulaması
+
+Sprint 1 / Madde 2'de `buildBusinessGraph([], { includeWarehouse: true })` Place node'u containedInPlace ile Organization'a bağlandı. Ama Place node `openingHoursSpecification` taşımıyor — Organization'dan miras almıyor (Schema.org pattern: ayrı entity'ler ayrı saatler).
+
+**Plan:** Depo da 08:00-18:00 ise `buildWarehouseNode()` içine de aynı `openingHoursSpecification` ekle (BUSINESS_INFO'dan). Aksi takdirde depo "her zaman açık" gibi yanlış sinyal verebilir.
+
+---
+
+— Sprint 1 backlog'u burada bitiyor. Sprint 2 ve sonrası için `_audit/sprint-2-and-beyond.md`'e bak.
