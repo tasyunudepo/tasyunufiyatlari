@@ -40,10 +40,6 @@ interface WizardState {
   ilceId: number | null;
   ilceAdi: string | null;
 
-  // ===== ADIM 3: Paket Seçimi =====
-  secilenPaket: any | null;
-  showResults: boolean;
-
   // ===== Niyet preseti (SituationSelector → WizardCalculator köprüsü) =====
   situationPreset: SituationPreset | null;
 
@@ -61,10 +57,6 @@ interface WizardState {
   // ----- Adım 2: Teslimat Bilgileri -----
   setSehir: (kod: number, adi: string) => void;
   setIlce: (id: number, adi: string) => void;
-
-  // ----- Adım 3: Paket Seçimi -----
-  setSecilenPaket: (paket: any) => void;
-  setShowResults: (show: boolean) => void;
 
   // ----- Wizard Navigasyon -----
   nextStep: () => void;
@@ -94,8 +86,6 @@ const initialState = {
   sehirAdi: null,
   ilceId: null,
   ilceAdi: null,
-  secilenPaket: null,
-  showResults: false,
   situationPreset: null as SituationPreset | null,
 };
 
@@ -207,25 +197,6 @@ export const useWizardStore = create<WizardState>()(
             },
             false,
             'setIlce'
-          ),
-
-        // ===== ADIM 3 ACTIONS =====
-        setSecilenPaket: (paket) =>
-          set(
-            {
-              secilenPaket: paket,
-            },
-            false,
-            'setSecilenPaket'
-          ),
-
-        setShowResults: (show) =>
-          set(
-            {
-              showResults: show,
-            },
-            false,
-            'setShowResults'
           ),
 
         // ===== WIZARD NAVİGASYON =====

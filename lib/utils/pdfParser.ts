@@ -83,7 +83,7 @@ export function parseTeknoProducts(pdfText: string): ParsedProduct[] {
       const dowelLength = detectDowelLength(productName);
 
       // Kısa ad oluştur
-      const shortName = generateShortName(productName, unitContent, unit);
+      const shortName = generateShortName(productName);
 
       products.push({
         name: productName,
@@ -204,7 +204,7 @@ function detectDowelLength(productName: string): number | undefined {
 /**
  * Kısa ürün adı oluşturur
  */
-function generateShortName(productName: string, unitContent: number, unit: string): string {
+function generateShortName(productName: string): string {
   const name = productName.toUpperCase();
 
   // Yaygın kısaltmalar
@@ -235,8 +235,9 @@ function generateShortName(productName: string, unitContent: number, unit: strin
 export async function parsePDFBuffer(buffer: Buffer): Promise<ParsedProduct[]> {
   try {
     // pdf-parse CommonJS modülü olduğu için dynamic import kullanıyoruz
-    const pdfParseModule = await import('pdf-parse');
-    const pdfParse = (pdfParseModule as any).default || pdfParseModule;
+    type PdfParseFn = (buffer: Buffer) => Promise<{ text: string }>;
+    const mod = await import('pdf-parse');
+    const pdfParse = ((mod as { default?: PdfParseFn }).default ?? mod) as PdfParseFn;
     const data = await pdfParse(buffer);
     return parseTeknoProducts(data.text);
   } catch (error) {

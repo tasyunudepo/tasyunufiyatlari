@@ -147,8 +147,9 @@ async function directInsertTekno() {
     console.log(`\n✅ Satış Fiyatı (Birim): ${finalPricePerUnit.toFixed(2)} TL/${firstProduct.unit}`);
     console.log(`✅ Paket Fiyatı (${firstProduct.unitContent} ${firstProduct.unit}): ${packagePrice.toFixed(2)} TL\n`);
 
-  } catch (error: any) {
-    console.error('❌ Beklenmeyen hata:', error.message);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ Beklenmeyen hata:', message);
     console.error(error);
   }
 }

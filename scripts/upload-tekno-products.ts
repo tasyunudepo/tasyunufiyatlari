@@ -95,9 +95,18 @@ async function uploadTeknoProducts() {
     console.log(`📊 ${result.inserted_count} ürün veritabanına eklendi\n`);
 
     // 5. Show inserted products with calculated prices
+    interface InsertedProduct {
+      id: number | string;
+      name: string;
+      base_price: number;
+      unit_content: number;
+      unit: string;
+      discount_1: number;
+      discount_2: number;
+    }
     if (result.products && result.products.length > 0) {
       console.log('💰 Eklenen Ürünler ve Fiyatlar:\n');
-      result.products.forEach((product: any, index: number) => {
+      result.products.forEach((product: InsertedProduct, index: number) => {
         const pricePerUnit = product.base_price / product.unit_content;
         console.log(`${index + 1}. ${product.name}`);
         console.log(`   Birim: ${product.unit_content} ${product.unit}/paket`);
@@ -110,8 +119,9 @@ async function uploadTeknoProducts() {
     }
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-  } catch (error: any) {
-    console.error('❌ Beklenmeyen hata:', error.message);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ Beklenmeyen hata:', message);
     console.error(error);
   }
 }
