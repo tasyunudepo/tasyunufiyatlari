@@ -1,5 +1,126 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const LEGACY_QUERY_PARAMS = [
+  'add_to_wishlist',
+  '_wpnonce',
+  'orderby',
+  'filter_paket_ici_m2',
+  'gridcookie',
+  'source_id',
+  'source_tax',
+  'pwb-brand',
+  'pwb-brand-filter',
+  'paged',
+  'product-page',
+  'min_price',
+  'max_price',
+  'wc-ajax',
+];
+
+const LEGACY_CATEGORY_DESTINATIONS: Record<string, string> = {
+  'tasyunu-levhalar': '/urunler/tasyunu-levha',
+  'eps-levhalar': '/urunler/eps-levha',
+  dubeller: '/urunler/dubel',
+  yapistiricilar: '/urunler/yapistirici',
+  fileler: '/urunler/file',
+  profiller: '/urunler/fileli-kose-profilleri',
+  sivalar: '/urunler/siva',
+  astarlar: '/urunler/astar',
+  kaplamalar: '/urunler/kaplama',
+  boyalar: '/marka/filli-boya',
+  'yardimci-urunler': '/urunler',
+};
+
+const LEGACY_BRAND_DESTINATIONS: Record<string, string> = {
+  dalmacyali: '/marka/dalmacyali',
+  fawori: '/marka/filli-boya',
+  'filli-boya': '/marka/filli-boya',
+  optimix: '/marka/optimix',
+  tekno: '/marka/tekno',
+  oem: '/marka/oem',
+};
+
+function gone() {
+  return new NextResponse('Gone', {
+    status: 410,
+    headers: {
+      'X-Robots-Tag': 'noindex, nofollow',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+}
+
+function legacyDestination(pathname: string): string | null {
+  if (
+    pathname.startsWith('/wp-admin') ||
+    pathname.startsWith('/wp-content') ||
+    pathname.startsWith('/wp-includes') ||
+    pathname === '/wp-login.php' ||
+    pathname === '/xmlrpc.php' ||
+    pathname.endsWith('.php') ||
+    pathname.endsWith('/feed') ||
+    pathname.includes('/feed/')
+  ) {
+    return 'GONE';
+  }
+
+  if (pathname.includes('//')) {
+    return pathname.replace(/\/{2,}/g, '/');
+  }
+
+  const shopMatch = pathname.match(/^\/shop(?:\/page\/\d+)?\/?$/);
+  if (shopMatch) return '/urunler';
+
+  if (pathname === '/urunler/aksesuar' || pathname === '/urunler/aksesuar/') {
+    return '/urunler';
+  }
+
+  if (pathname === '/tasyunu-eps-depo' || pathname.startsWith('/tasyunu-eps-depo/')) {
+    return '/depomuz';
+  }
+
+  const categoryMatch = pathname.match(/^\/kategori\/([^/]+)(?:\/page\/\d+)?\/?$/);
+  if (categoryMatch) {
+    return LEGACY_CATEGORY_DESTINATIONS[categoryMatch[1]] ?? '/urunler';
+  }
+
+  if (pathname === '/marka/fawori' || pathname.startsWith('/marka/fawori/')) {
+    return '/marka/filli-boya';
+  }
+  if (pathname === '/marka/filli-boya/expert' || pathname.startsWith('/marka/filli-boya/expert/')) {
+    return '/marka/filli-boya';
+  }
+
+  const brandMatch = pathname.match(/^\/marka\/([^/]+)(?:\/page\/\d+)?\/?$/);
+  if (brandMatch) {
+    return LEGACY_BRAND_DESTINATIONS[brandMatch[1]] ?? `/marka/${brandMatch[1]}`;
+  }
+
+  const productBrandMatch = pathname.match(/^\/product-brands\/([^/]+)\/?$/);
+  if (productBrandMatch) {
+    return LEGACY_BRAND_DESTINATIONS[productBrandMatch[1]] ?? '/urunler';
+  }
+
+  return null;
+}
+
+function canonicalizeLegacyUrl(req: NextRequest): NextResponse | null {
+  const destination = legacyDestination(req.nextUrl.pathname);
+  if (destination === 'GONE') return gone();
+
+  const hasLegacyQuery = LEGACY_QUERY_PARAMS.some((param) => req.nextUrl.searchParams.has(param));
+  if (destination === req.nextUrl.pathname && !hasLegacyQuery) return null;
+  if (!destination && !hasLegacyQuery) return null;
+
+  const url = req.nextUrl.clone();
+  if (destination) url.pathname = destination;
+  for (const param of LEGACY_QUERY_PARAMS) {
+    url.searchParams.delete(param);
+  }
+
+  return NextResponse.redirect(url, 301);
+}
+
 // HTTP Basic Auth — /ofis ve /api/admin/* rotalarını korur.
 // Next.js 16'da "proxy" convention'ı kullanılır (eski adı: middleware).
 // Edge runtime'da otomatik çalışır.
@@ -13,6 +134,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // basic-auth credential'larını bu sinyalle bırakır (logout pattern).
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  const legacyResponse = canonicalizeLegacyUrl(req);
+  if (legacyResponse) return legacyResponse;
 
   // Logout endpoint: yetkili olsa bile her zaman 401 döner.
   if (pathname === '/api/admin/logout') {
@@ -67,5 +191,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/ofis/:path*', '/api/admin/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|og-image.png).*)'],
 };

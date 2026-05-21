@@ -40,40 +40,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // ─── Levha kategorileri ────────────────────────────
-      { source: '/kategori/tasyunu-levhalar', destination: '/urunler/tasyunu-levha', permanent: true },
-      { source: '/kategori/eps-levhalar',     destination: '/urunler/eps-levha',     permanent: true },
-
-      // ─── Aksesuar alt-kategorileri (eski → yeni ayrı sayfalar) ──
-      { source: '/kategori/dubeller',         destination: '/urunler/dubel',                     permanent: true },
-      { source: '/kategori/yapistiricilar',   destination: '/urunler/yapistirici',               permanent: true },
-      { source: '/kategori/fileler',          destination: '/urunler/file',                      permanent: true },
-      { source: '/kategori/profiller',        destination: '/urunler/fileli-kose-profilleri',    permanent: true },
-      { source: '/kategori/sivalar',          destination: '/urunler/siva',                      permanent: true },
-      { source: '/kategori/astarlar',         destination: '/urunler/astar',                     permanent: true },
-      { source: '/kategori/kaplamalar',       destination: '/urunler/kaplama',                   permanent: true },
-
-      // ─── Boyalar (DB'de yok) → Filli Boya markasına ────
-      { source: '/kategori/boyalar',          destination: '/marka/filli-boya',                  permanent: true },
-
-      // ─── Yardımcı Ürünler (preventive) ─────────────────
-      { source: '/kategori/yardimci-urunler', destination: '/urunler',                           permanent: true },
-
-      // ─── Aksesuar landing kaldırılır ───────────────────
-      { source: '/urunler/aksesuar',          destination: '/urunler',                           permanent: true },
-
-      // ─── Marka alt yolları → ana marka sayfası ─────────
-      { source: '/marka/fawori',                   destination: '/marka/filli-boya', permanent: true },
-      { source: '/marka/fawori/:rest*',            destination: '/marka/filli-boya', permanent: true },
-      { source: '/marka/filli-boya/expert',        destination: '/marka/filli-boya', permanent: true },
-      { source: '/marka/filli-boya/expert/:rest*', destination: '/marka/filli-boya', permanent: true },
-      { source: '/marka/:brand/page/:n',           destination: '/marka/:brand',     permanent: true },
-
-      // ─── Eski WP shop & yardımcı sayfalar ──────────────
-      { source: '/shop',                  destination: '/urunler', permanent: true },
-      { source: '/shop/page/:n*',         destination: '/urunler', permanent: true },
-      { source: '/tasyunu-eps-depo',      destination: '/depomuz', permanent: true },
-      { source: '/tasyunu-eps-depo/:rest*', destination: '/depomuz', permanent: true },
+      // Eski WP kategori/shop/marka redirect'leri proxy.ts içinde query
+      // temizliğiyle birlikte yönetilir; next.config redirects query string'i
+      // koruduğu için burada tutmak faceted URL enkazını yaşatıyordu.
 
       // ─── /bolge geçici kapama (Sprint 0 / Faz 5) ───────
       // 302 (permanent: false) — Sprint 4-5'te Tier 1/2 bölge sayfaları

@@ -20,6 +20,8 @@ import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 import { ErrorBoundaryWrapper } from '@/components/shared/ErrorBoundaryWrapper';
 import BrandTrustLogos from '@/components/shared/BrandTrustLogos';
+import { computeM2Price } from '@/lib/catalog/pricing';
+import type { CatalogProductView } from '@/lib/catalog/types';
 
 // ISR: 60 sn cache, admin güncellemesinde revalidatePath ile invalidate edilebilir
 export const revalidate = 60;
@@ -80,6 +82,63 @@ const BADGE_MAP: Record<string, { label: string; cls: string }> = {
   quote_only:      { label: 'Teklif',         cls: 'bg-brand-900/50 text-brand-400 border-brand-800' },
   system_only:     { label: 'Sistem Ürünü',   cls: 'bg-fe-raised text-fe-muted border-fe-border'    },
 };
+
+function buildProductOffers({
+  product,
+  productUrl,
+  zone,
+  logisticsCapacity,
+}: {
+  product: CatalogProductView;
+  productUrl: string;
+  zone: { city_code: number; discount_tir: string | number } | null;
+  logisticsCapacity: Array<{ thickness: number; package_size_m2: string | number }>;
+}) {
+  const canExposePrice =
+    product.rules.pricing_visibility_mode === 'from_price' ||
+    product.rules.pricing_visibility_mode === 'exact_price';
+
+  if (!canExposePrice) return undefined;
+
+  if (product.thickness_prices && product.thickness_prices.length > 0) {
+    const prices = product.thickness_prices
+      .map((row) => computeM2Price({
+        product,
+        thickness: row.thickness,
+        zone,
+        logisticsCapacity,
+      }))
+      .filter((price): price is number => price !== null && Number.isFinite(price) && price > 0);
+
+    if (prices.length > 0) {
+      return {
+        '@type': 'AggregateOffer' as const,
+        priceCurrency: 'TRY',
+        lowPrice: Math.min(...prices).toFixed(2),
+        highPrice: Math.max(...prices).toFixed(2),
+        offerCount: prices.length,
+        availability: 'https://schema.org/InStock',
+        itemCondition: 'https://schema.org/NewCondition',
+        url: productUrl,
+        seller: BUSINESS_REF,
+      };
+    }
+  }
+
+  if (product.base_price !== null && product.base_price > 0) {
+    return {
+      '@type': 'Offer' as const,
+      priceCurrency: 'TRY',
+      price: product.base_price.toFixed(2),
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: productUrl,
+      seller: BUSINESS_REF,
+    };
+  }
+
+  return undefined;
+}
 
 // ─── Props ───────────────────────────────────────────────────
 
@@ -160,6 +219,12 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
   const productImage = product.image_cover
     ? (product.image_cover.startsWith('http') ? product.image_cover : `${SITE_ORIGIN}${product.image_cover}`)
     : `${SITE_ORIGIN}/og-image.png`;
+  const productOffers = buildProductOffers({
+    product,
+    productUrl,
+    zone: defaultZone,
+    logisticsCapacity,
+  });
 
   // ─── Schema.org @graph ──────────────────────────────────
   // Product + Brand + BreadcrumbList tek script tag içinde.
@@ -181,17 +246,7 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
       ? { '@id': BRAND_INFO[brandSlug].id }
       : { '@type': 'Brand' as const, name: product.brand.name },
     category: product.category.name,
-    ...(product.base_price ? {
-      offers: {
-        '@type': 'Offer' as const,
-        priceCurrency: 'TRY',
-        price: product.base_price,
-        availability: 'https://schema.org/InStock',
-        url: productUrl,
-        // seller Organization'a pointer — Knowledge Graph entity füzyonu.
-        seller: BUSINESS_REF,
-      },
-    } : {}),
+    ...(productOffers ? { offers: productOffers } : {}),
   };
 
   const breadcrumbNode = buildBreadcrumbList(
