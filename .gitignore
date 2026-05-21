@@ -48,6 +48,9 @@ next-env.d.ts
 .cursorignore
 .cursorrules
 
+# local supabase yedekleri — PII içerir, asla commit etme
+_audit/backup-*/
+
 # local oddities
 nul
 
@@ -81,3 +84,7 @@ scripts/generated/AUDITSFINAL/
 
 # UI/UX prototip dosyaları (production'a gitmez — local geliştirme artefaktı)
 /public/prototip/
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
