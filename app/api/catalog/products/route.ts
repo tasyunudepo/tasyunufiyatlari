@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { buildMinimumOrderLabel } from '@/lib/catalog/slug';
+import type { SupabasePlateRow, SupabaseAccessoryRow } from '@/lib/catalog/server';
 import type {
   CatalogProductView,
   CatalogProductsResponse,
@@ -23,12 +24,14 @@ export async function GET(req: NextRequest) {
   let platesQuery = supabase
     .from('plates')
     .select(`
-      id, name, short_name, slug, base_price,
-      thickness_options, sales_mode, pricing_visibility_mode,
+      id, name, short_name, slug, base_price, discount_2,
+      thickness_options, preferred_thickness, sales_mode, pricing_visibility_mode,
       minimum_order_type, minimum_order_value,
       requires_city_for_pricing, requires_system_context,
       recommended_bundle_family,
       catalog_description, meta_title, meta_description,
+      image_cover, image_gallery,
+      stock_tuzla, depot_discount, depot_min_m2,
       brands!inner ( id, name, tier ),
       material_types!inner ( id, name, slug )
     `)
@@ -52,7 +55,7 @@ export async function GET(req: NextRequest) {
   const fetchPlates = !material || material !== 'aksesuar';
 
   // ─── Accessories sorgusu (material=aksesuar) ─────────────────
-  let accessoriesResult: { data: any[] | null; error: any } = { data: [], error: null };
+  let accessoriesResult: { data: SupabaseAccessoryRow[] | null; error: unknown } = { data: [], error: null };
   if (material === 'aksesuar') {
     let accQuery = supabase
       .from('accessories')
@@ -62,6 +65,7 @@ export async function GET(req: NextRequest) {
         minimum_order_type, minimum_order_value,
         requires_system_context,
         recommended_bundle_family, catalog_description,
+        image_cover, brand_id,
         brands!inner ( id, name, tier ),
         accessory_types!inner ( id, name, slug )
       `)
@@ -73,7 +77,11 @@ export async function GET(req: NextRequest) {
       accQuery = accQuery.ilike('brands.name', `%${brand}%`);
     }
 
-    accessoriesResult = await accQuery;
+    const result = await accQuery;
+    accessoriesResult = {
+      data: (result.data ?? []) as unknown as SupabaseAccessoryRow[],
+      error: result.error,
+    };
   }
 
   const [platesResult] = await Promise.all([
@@ -85,7 +93,8 @@ export async function GET(req: NextRequest) {
   }
 
   // ─── plates → CatalogProductView[] ──────────────────────────
-  const products: CatalogProductView[] = (platesResult.data ?? []).map((row: any) => {
+  const platesRows = (platesResult.data ?? []) as unknown as SupabasePlateRow[];
+  const products: CatalogProductView[] = platesRows.map((row) => {
     const rules: ProductRules = {
       sales_mode:               row.sales_mode               ?? 'quote_only',
       pricing_visibility_mode:  row.pricing_visibility_mode  ?? 'quote_required',
@@ -154,7 +163,7 @@ export async function GET(req: NextRequest) {
   });
 
   // ─── accessories → CatalogProductView[] ─────────────────────
-  const accProducts: CatalogProductView[] = (accessoriesResult.data ?? []).map((row: any) => {
+  const accProducts: CatalogProductView[] = (accessoriesResult.data ?? []).map((row) => {
     const rules: ProductRules = {
       sales_mode:               row.sales_mode               ?? 'single_or_quote',
       pricing_visibility_mode:  row.pricing_visibility_mode  ?? 'quote_required',

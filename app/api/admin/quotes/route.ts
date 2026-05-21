@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     console.warn('Admin quote events fetch failed:', eventError.message)
   }
 
-  const eventsByQuoteId = (eventRows ?? []).reduce<Record<string, any[]>>((acc, event) => {
+  const eventsByQuoteId = (eventRows ?? []).reduce<Record<string, Record<string, unknown>[]>>((acc, event) => {
     const key = event.quote_id ? String(event.quote_id) : 'unlinked'
     if (!acc[key]) acc[key] = []
     acc[key].push(event)

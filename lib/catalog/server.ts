@@ -22,7 +22,8 @@ import type {
 const MATERIAL_IDS: Record<string, number> = { tasyunu: 2, eps: 1 };
 
 // Supabase'den dönen ham satır şekilleri — sadece okuduğumuz alanlar.
-type SupabasePlateRow = {
+// API route'ları aynı select() iskeletini paylaşıyor; tek kaynaktan tüketsinler.
+export type SupabasePlateRow = {
   id: number;
   name: string;
   short_name: string | null;
@@ -58,7 +59,7 @@ type SupabasePlateRow = {
   }> | null;
 };
 
-type SupabaseAccessoryRow = {
+export type SupabaseAccessoryRow = {
   id: number;
   name: string;
   short_name: string | null;
