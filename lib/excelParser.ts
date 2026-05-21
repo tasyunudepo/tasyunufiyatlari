@@ -27,22 +27,23 @@ export const parseExcelPriceFile = async (file: File): Promise<ExcelPriceRow[]> 
                 // Tüm sayfaları tara (Örn: "Kalem Bazında" ve "Optimix" farklı sayfalarda olabilir)
                 workbook.SheetNames.forEach(sheetName => {
                     const worksheet = workbook.Sheets[sheetName];
-                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+                    type Cell = string | number | boolean | null | undefined;
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as Cell[][];
 
                     const sheetStr = sheetName.toLowerCase();
                     // "Kalem Bazında" veya "Optimix" sayfaları KDV DAHİL gelir
                     const isKdvIncludedSheet = sheetStr.includes('kalem') || sheetStr.includes('bazında') || sheetStr.includes('optimix');
 
-                    rows.forEach((row, idx) => {
+                    rows.forEach((row, _idx) => {
                         if (!row || row.length === 0) return;
 
                         const rowStr = row.join(' ').toLowerCase();
                         if (rowStr.length < 5) return;
 
                         const numericCells = row.map(c => {
-                            const n = parseFloat(c);
+                            const n = parseFloat(String(c));
                             return isNaN(n) ? null : n;
-                        }).filter(n => n !== null && n > 5) as number[];
+                        }).filter((n): n is number => n !== null && n > 5);
 
                         if (numericCells.length === 0) return;
 
@@ -119,7 +120,11 @@ export const mapExcelToDatabase = (
     existingPlatePrices: PlatePrice[],
     existingAccessories: Accessory[]
 ) => {
-    const updates: { type: 'plate_price' | 'accessory', id: number, data: any }[] = [];
+    const updates: {
+        type: 'plate_price' | 'accessory';
+        id: number;
+        data: { base_price: number; is_kdv_included: boolean };
+    }[] = [];
 
     excelData.forEach(row => {
         if (row.type === 'plate') {

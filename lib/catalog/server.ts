@@ -14,9 +14,70 @@ import type {
   ProductRules,
   MinimumOrderSummary,
   WizardPrefill,
+  SalesMode,
+  PricingVisibilityMode,
+  MinimumOrderType,
 } from '@/lib/catalog/types';
 
 const MATERIAL_IDS: Record<string, number> = { tasyunu: 2, eps: 1 };
+
+// Supabase'den dönen ham satır şekilleri — sadece okuduğumuz alanlar.
+type SupabasePlateRow = {
+  id: number;
+  name: string;
+  short_name: string | null;
+  slug: string;
+  base_price: number | null;
+  discount_2: number | null;
+  thickness_options: number[] | null;
+  preferred_thickness: number | null;
+  sales_mode: SalesMode | null;
+  pricing_visibility_mode: PricingVisibilityMode | null;
+  minimum_order_type: MinimumOrderType | null;
+  minimum_order_value: number | null;
+  requires_city_for_pricing: boolean | null;
+  requires_system_context: boolean | null;
+  recommended_bundle_family: string | null;
+  catalog_description: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  image_cover: string | null;
+  image_gallery: string[] | null;
+  stock_tuzla: number | null;
+  depot_discount: number | null;
+  depot_min_m2: number | null;
+  brands: { id: number; name: string; tier: string } | null;
+  material_types: { id: number; name: string; slug: string } | null;
+  plate_prices: Array<{
+    thickness: number | null;
+    base_price: number | string | null;
+    is_kdv_included: boolean | null;
+    stock_tuzla: number | null;
+    package_m2: number | string | null;
+    discount_2?: number | null;
+  }> | null;
+};
+
+type SupabaseAccessoryRow = {
+  id: number;
+  name: string;
+  short_name: string | null;
+  slug: string;
+  base_price: number | null;
+  sales_mode: SalesMode | null;
+  pricing_visibility_mode: PricingVisibilityMode | null;
+  minimum_order_type: MinimumOrderType | null;
+  minimum_order_value: number | null;
+  requires_system_context: boolean | null;
+  recommended_bundle_family: string | null;
+  catalog_description: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  image_cover: string | null;
+  brand_id: number;
+  brands: { id: number; name: string; tier: string } | null;
+  accessory_types: { id: number; name: string; slug: string } | null;
+};
 
 // ─── Plates listesi ──────────────────────────────────────────
 
@@ -45,15 +106,15 @@ export async function getCatalogProducts(
 
     if (error) return { products: [], total: 0, filters_applied: { material } };
 
-    let rows = data ?? [];
+    let rows = (data ?? []) as unknown as SupabaseAccessoryRow[];
     if (options?.accessoryTypeSlug) {
-      rows = rows.filter((r: any) => r.accessory_types?.slug === options.accessoryTypeSlug);
+      rows = rows.filter((r) => r.accessory_types?.slug === options.accessoryTypeSlug);
     }
     if (options?.brandId != null) {
-      rows = rows.filter((r: any) => r.brand_id === options.brandId);
+      rows = rows.filter((r) => r.brand_id === options.brandId);
     }
 
-    const products: CatalogProductView[] = rows.map((row: any) => {
+    const products: CatalogProductView[] = rows.map((row) => {
       const rules = buildAccessoryRules(row);
       const minimum_order = buildMinOrder(rules);
       const base_price = rules.pricing_visibility_mode === 'hidden' ? null : (row.base_price ?? null);
@@ -115,7 +176,7 @@ export async function getCatalogProducts(
   const { data, error } = await query;
   if (error) return { products: [], total: 0, filters_applied: { material } };
 
-  const products: CatalogProductView[] = (data ?? []).map((row: any) =>
+  const products: CatalogProductView[] = ((data ?? []) as unknown as SupabasePlateRow[]).map((row) =>
     buildPlateView(row)
   );
 
@@ -183,7 +244,7 @@ export async function getCatalogProduct(
     const { data: plateRow } = await plateQuery.single();
 
     if (plateRow) {
-      const product = buildPlateView(plateRow as any);
+      const product = buildPlateView(plateRow as unknown as SupabasePlateRow);
       const decision = getDecisionContext(product.rules, product.wizard_prefill ?? undefined);
       return { product, decision };
     }
@@ -208,7 +269,7 @@ export async function getCatalogProduct(
       .single();
 
     if (accRow) {
-      const row = accRow as any;
+      const row = accRow as unknown as SupabaseAccessoryRow;
       const accTypeSlug = row.accessory_types?.slug ?? null;
 
       // Kategori bir aksesuar slug'ı ise, accessory_types.slug eşleşmek zorunda
@@ -216,8 +277,6 @@ export async function getCatalogProduct(
         return null;
       }
 
-      const brand = row.brands ?? {};
-      const accType = row.accessory_types ?? {};
       const rules = buildAccessoryRules(row);
       const minimum_order = buildMinOrder(rules);
       const base_price = rules.pricing_visibility_mode === 'hidden' ? null : (row.base_price ?? null);
@@ -226,10 +285,17 @@ export async function getCatalogProduct(
         id: row.id,
         slug: row.slug,
         name: row.name,
-        brand: { id: brand.id ?? 0, name: brand.name ?? '', tier: brand.tier ?? '' },
+        brand: {
+          id:   row.brands?.id   ?? 0,
+          name: row.brands?.name ?? '',
+          tier: row.brands?.tier ?? '',
+        },
         model: row.short_name ?? null,
         thickness_options: null,
-        category: { slug: accType.slug ?? 'aksesuar', name: accType.name ?? 'Aksesuar' },
+        category: {
+          slug: row.accessory_types?.slug ?? 'aksesuar',
+          name: row.accessory_types?.name ?? 'Aksesuar',
+        },
         material_type: 'aksesuar',
         product_type: 'accessory',
         base_price,
@@ -257,9 +323,9 @@ export async function getCatalogProduct(
 
 // ─── Yardımcılar ─────────────────────────────────────────────
 
-function buildPlateView(row: any): CatalogProductView {
-  const brand = row.brands ?? {};
-  const materialType = row.material_types ?? {};
+function buildPlateView(row: SupabasePlateRow): CatalogProductView {
+  const brand = row.brands;
+  const materialType = row.material_types;
 
   const rules: ProductRules = {
     sales_mode:               row.sales_mode               ?? 'quote_only',
@@ -286,14 +352,15 @@ function buildPlateView(row: any): CatalogProductView {
   const plateLevelDiscount2: number = row.discount_2 ?? 8;
   const thickness_prices: PriceRow[] | null = (() => {
     if (!Array.isArray(row.plate_prices) || row.plate_prices.length === 0) return null;
-    const rows = (row.plate_prices as any[])
-      .filter(p => p.thickness != null && p.base_price != null)
+    const rows = row.plate_prices
+      .filter((p): p is typeof p & { thickness: number; base_price: number | string } =>
+        p.thickness != null && p.base_price != null)
       .map(p => ({
-        thickness:       p.thickness       as number,
-        base_price:      parseFloat(p.base_price),
+        thickness:       p.thickness,
+        base_price:      parseFloat(String(p.base_price)),
         is_kdv_included: p.is_kdv_included ?? false,
         discount_2:      p.discount_2 ?? plateLevelDiscount2,
-        stock_tuzla:     (p.stock_tuzla as number) ?? 0,
+        stock_tuzla:     p.stock_tuzla ?? 0,
         package_m2:      p.package_m2 != null ? parseFloat(String(p.package_m2)) : null,
       }))
       .sort((a, b) => a.thickness - b.thickness);
@@ -319,9 +386,9 @@ function buildPlateView(row: any): CatalogProductView {
   })();
 
   const wizard_prefill: WizardPrefill = {
-    levhaTipi: (materialType.slug as 'tasyunu' | 'eps') ?? null,
-    markaId:   brand.id   ?? null,
-    markaAdi:  brand.name ?? null,
+    levhaTipi: (materialType?.slug as 'tasyunu' | 'eps') ?? null,
+    markaId:   brand?.id   ?? null,
+    markaAdi:  brand?.name ?? null,
     modelId:   row.id,
     modelAdi:  row.short_name ?? row.name,
     kalinlik:  dominantThickness,
@@ -331,11 +398,11 @@ function buildPlateView(row: any): CatalogProductView {
     id:   row.id,
     slug: row.slug,
     name: row.name,
-    brand: { id: brand.id ?? 0, name: brand.name ?? '', tier: brand.tier ?? '' },
+    brand: { id: brand?.id ?? 0, name: brand?.name ?? '', tier: brand?.tier ?? '' },
     model:             row.short_name ?? null,
     thickness_options: derivedThicknesses,
-    category: { slug: materialType.slug ?? '', name: materialType.name ?? '' },
-    material_type: materialType.slug ?? '',
+    category: { slug: materialType?.slug ?? '', name: materialType?.name ?? '' },
+    material_type: materialType?.slug ?? '',
     product_type:  'plate',
     base_price,
     thickness_prices,
@@ -355,7 +422,7 @@ function buildPlateView(row: any): CatalogProductView {
   };
 }
 
-function buildAccessoryRules(row: any): ProductRules {
+function buildAccessoryRules(row: SupabaseAccessoryRow): ProductRules {
   return {
     sales_mode:               row.sales_mode               ?? 'single_or_quote',
     pricing_visibility_mode:  row.pricing_visibility_mode  ?? 'quote_required',

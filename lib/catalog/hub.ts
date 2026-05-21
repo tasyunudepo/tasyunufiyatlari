@@ -90,10 +90,24 @@ export async function getUrunlerHubData(): Promise<HubData> {
         .in('brand_id', HUB_BRAND_IDS),
     ]);
 
-  const platesRows: any[]  = platesResult.data ?? [];
-  const accsRows:   any[]  = accessoriesResult.data ?? [];
-  const brandPlates: any[] = brandPlatesResult.data ?? [];
-  const brandAccs:   any[] = brandAccsResult.data ?? [];
+  type HubPlateRow = {
+    brand_id: number | null;
+    image_cover: string | null;
+    thickness_options: number[] | null;
+    material_types: { id: number; slug: string } | null;
+  };
+  type HubAccessoryRow = {
+    brand_id: number | null;
+    image_cover: string | null;
+    sales_mode: string | null;
+    accessory_types: { id: number; slug: string } | null;
+  };
+  type BrandIdRow = { brand_id: number };
+
+  const platesRows  = (platesResult.data ?? []) as unknown as HubPlateRow[];
+  const accsRows    = (accessoriesResult.data ?? []) as unknown as HubAccessoryRow[];
+  const brandPlates = (brandPlatesResult.data ?? []) as unknown as BrandIdRow[];
+  const brandAccs   = (brandAccsResult.data ?? []) as unknown as BrandIdRow[];
 
   // ── Plates aggregate per material ──────────────────────────
   const platesByMaterial: Record<string, {

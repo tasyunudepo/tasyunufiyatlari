@@ -19,7 +19,10 @@ export function canonicalBrandName(names: string[]): string {
 }
 
 // Tüm quote listesinden normalize edilmiş marka sıralaması üret
-export function buildBrandRanking(quotes: any[], limit = 4): [string, number][] {
+export function buildBrandRanking(
+    quotes: Array<{ brand_name?: string | null }>,
+    limit = 4,
+): [string, number][] {
     const map: Record<string, { count: number; names: string[] }> = {};
     for (const q of quotes) {
         const raw = q.brand_name || "Belirsiz";
