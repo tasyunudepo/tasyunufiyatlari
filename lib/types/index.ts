@@ -58,6 +58,8 @@ export interface ShippingZone {
     optimix_levha_discount: number;
     eps_toz_region_discount?: number;
     is_active: boolean;
+    // Bölge sınıflandırması — WizardStep3 ve DiscountsTab görselleştirir.
+    zone?: 'green' | 'yellow' | 'red';
 }
 
 // ==========================================

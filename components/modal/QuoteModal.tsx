@@ -6,11 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ClipboardText, X } from '@phosphor-icons/react';
 import { quoteSchema, type QuoteFormData } from '@/lib/schemas/quote.schema';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
+import type { CalculatedPackage } from '@/lib/types';
 
 interface QuoteModalProps {
     isOpen: boolean;
     onClose: () => void;
-    selectedPackage: any;
+    selectedPackage: CalculatedPackage;
     metraj: number;
     selectedMalzeme: string;
     selectedKalinlik: string;

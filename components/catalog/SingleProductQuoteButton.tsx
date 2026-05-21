@@ -37,7 +37,7 @@ export default function SingleProductQuoteButton({
   neededM2,
   cityCode,
   cityName,
-  tierLabel,
+  tierLabel: _tierLabel,
   isShippingIncluded,
   vehicleType,
   label,

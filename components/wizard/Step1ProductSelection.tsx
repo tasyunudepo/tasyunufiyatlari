@@ -89,9 +89,9 @@ export function Step1ProductSelection({
     shippingZones,
     selectedCityCode,
     onCityChange,
-    isLoadingLogistics,
+    isLoadingLogistics: _isLoadingLogistics,
     currentLogistics,
-    getSliderMetrics,
+    getSliderMetrics: _getSliderMetrics,
     getDowelLength,
 }: Step1Props) {
     // Marka değiştiğinde otomatik olarak ilk modeli seç

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { CalculatedPackage } from '@/lib/types';
 
@@ -14,7 +13,7 @@ interface PackageCardProps {
     onDownloadPDF: (pkg: CalculatedPackage) => void;
     getOfferValidityDate: () => string;
     getTruckMeterColor: (percentage: number) => string;
-    getSmartAdvice: (logistics: any) => string | null;
+    getSmartAdvice: (logistics: CalculatedPackage['logistics']) => string | null;
 }
 
 export function PackageCard({

@@ -72,7 +72,7 @@ export default function ProductPricePanel({
   const [neededM2, setNeededM2] = useState<string>("");
   const [debouncedM2, setDebouncedM2] = useState<string>("");
   type MetrajMode = "custom" | "lorry" | "truck";
-  const [metrajMode, setMetrajMode] = useState<MetrajMode>("custom");
+  const [, setMetrajMode] = useState<MetrajMode>("custom");
 
   // Debounce: senaryo hesapları 350ms bekler — "400" yazarken "40" uyarısı tetiklenmez
   useEffect(() => {

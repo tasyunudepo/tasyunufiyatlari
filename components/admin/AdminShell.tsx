@@ -8,8 +8,6 @@ interface Props {
     activeSection: string;
     onNavigate: (id: string) => void;
     children: ReactNode;
-    quotes?: any[];
-    stats?: { plateCount: number; accessoryCount: number; priceCount: number; cityCount: number };
 }
 
 export function AdminShell({ activeSection, onNavigate, children }: Props) {

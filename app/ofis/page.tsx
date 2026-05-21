@@ -23,7 +23,6 @@ export default function AdminPanel() {
         priceCount: 0,
         cityCount: 0,
     });
-    const [shellQuotes, setShellQuotes] = useState<any[]>([]);
 
     useEffect(() => {
         async function loadStats() {
@@ -40,13 +39,7 @@ export default function AdminPanel() {
                 cityCount: citiesRes.count || 0,
             });
         }
-        async function loadShellQuotes() {
-            const res = await fetch("/api/admin/quotes", { cache: "no-store" });
-            const payload = await res.json().catch(() => null);
-            if (res.ok && payload?.ok) setShellQuotes(payload.quotes ?? []);
-        }
         loadStats();
-        loadShellQuotes();
     }, []);
 
     return (
@@ -55,8 +48,6 @@ export default function AdminPanel() {
             <AdminShell
                 activeSection={activeTab}
                 onNavigate={setActiveTab}
-                quotes={shellQuotes}
-                stats={stats}
             >
                 <div className="space-y-6">
                     {activeTab === "dashboard"     && <DashboardTab stats={stats} onNavigate={setActiveTab} />}

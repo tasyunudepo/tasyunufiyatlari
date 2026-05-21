@@ -19,7 +19,7 @@ const PRIORITY_CITIES = ["İstanbul", "Kocaeli", "Bolu", "Sakarya", "Düzce", "T
 
 export function WizardStep3({ shippingZones, selectedCityCode, onCityChange }: WizardStep3Props) {
     const selectedZone = shippingZones.find(z => z.city_code === selectedCityCode);
-    const zoneKey = selectedZone ? ((selectedZone as any).zone as keyof typeof ZONE_CONFIG) : null;
+    const zoneKey = selectedZone?.zone ?? null;
     const cfg = zoneKey ? (ZONE_CONFIG[zoneKey] ?? ZONE_CONFIG.green) : null;
 
     return (
