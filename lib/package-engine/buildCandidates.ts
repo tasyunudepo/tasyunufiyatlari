@@ -16,7 +16,6 @@
  * Sıralama: sales_priority ASC → id ASC (deterministik, stabil)
  */
 
-import type { QualityBand } from '@/lib/types';
 import { WIZARD_TIERS } from './constants';
 import type {
     AccessoryCandidateItem,

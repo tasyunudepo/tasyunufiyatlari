@@ -13,7 +13,6 @@
  *   - rationale: kısa açıklama (TIER_CONFIG'den)
  */
 
-import type { LogisticsCapacity } from '@/lib/types';
 import { TIER_CONFIG } from './constants';
 import type {
     PackageCard,

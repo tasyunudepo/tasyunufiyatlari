@@ -16,6 +16,20 @@ const eslintConfig = defineConfig([
     "scripts/**/*.js",
     "*.js",
   ]),
+  {
+    // Respect the `_` prefix convention for intentionally-unused params/vars.
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

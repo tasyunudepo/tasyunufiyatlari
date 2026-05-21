@@ -64,7 +64,7 @@ export function calculatePackagePricing(
     const items: SlotPricingItem[] = [];
     for (const [slot, recipeSlot] of recipe) {
         const quantity = qtyMap.get(slot) ?? 0;
-        items.push(buildSlotPricingItem(slot, recipeSlot, quantity, warnings));
+        items.push(buildSlotPricingItem(slot, recipeSlot, quantity));
     }
 
     const productTotalNet   = items.reduce((sum, i) => sum + i.totalPriceNet,   0);
@@ -111,7 +111,6 @@ function buildSlotPricingItem(
     slot:       import('@/lib/types').PackageSlot,
     recipeSlot: RecipeSlot,
     quantity:   number,
-    warnings:   string[],
 ): SlotPricingItem {
     if (recipeSlot.kind === 'plate') {
         return buildPlatePricingItem(slot, recipeSlot, quantity);
