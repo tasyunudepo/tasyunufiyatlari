@@ -194,10 +194,10 @@ export const config = {
   matcher: [
     '/ofis/:path*',
     '/api/admin/:path*',
-    '/urun/:path*',
     '/kategori/:path*',
     '/shop/:path*',
     '/tasyunu-eps-depo/:path*',
+    '/marka/:brand/page/:page*',
     '/marka/fawori/:path*',
     '/marka/filli-boya/expert/:path*',
     '/product-brands/:path*',
@@ -206,5 +206,8 @@ export const config = {
     '/wp-includes/:path*',
     '/wp-login.php',
     '/xmlrpc.php',
+    '/:path*.php',
+    '/:path*/feed',
+    '/:path*/feed/:path*',
   ],
 };
