@@ -14,6 +14,14 @@ interface Props {
   params: Promise<{ brand: string; kategori: string }>;
 }
 
+export const revalidate = 2592000;
+
+export function generateStaticParams() {
+  return Object.keys(BRAND_MAP).flatMap((brand) =>
+    Object.keys(KATEGORI_MAP).map((kategori) => ({ brand, kategori }))
+  );
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { brand, kategori } = await params;
   const brandInfo = BRAND_MAP[brand];

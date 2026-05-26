@@ -5,6 +5,8 @@ import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 
 const BASE_URL = 'https://www.tasyunufiyatlari.com';
 
+export const revalidate = 2592000;
+
 // Statik sayfalar — her zaman sitemap'te
 const STATIC_PATHS = [
   { path: '/',                   priority: 1.0,  changeFrequency: 'weekly' as const },

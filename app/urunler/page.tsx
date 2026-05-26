@@ -19,6 +19,8 @@ export const metadata: Metadata = buildMetadata({
   path: '/urunler',
 });
 
+export const revalidate = 2592000;
+
 export default async function UrunlerPage() {
   const data = await getUrunlerHubData();
 

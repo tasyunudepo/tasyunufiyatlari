@@ -50,6 +50,12 @@ interface Props {
   params: Promise<{ brand: string }>;
 }
 
+export const revalidate = 2592000;
+
+export function generateStaticParams() {
+  return Object.keys(BRAND_MAP).map((brand) => ({ brand }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { brand } = await params;
   const info = BRAND_MAP[brand];

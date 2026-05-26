@@ -15,6 +15,12 @@ interface Props {
   params: Promise<{ kategori: string }>;
 }
 
+export const revalidate = 2592000;
+
+export function generateStaticParams() {
+  return Object.keys(KATEGORI_MAP).map((kategori) => ({ kategori }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { kategori } = await params;
   const info = KATEGORI_MAP[kategori];
