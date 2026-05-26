@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
+import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 
 const BASE_URL = 'https://www.tasyunufiyatlari.com';
 
@@ -60,11 +61,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: plates } = await supabase
       .from('plates')
-      .select('slug, material_types(slug)')
+      .select('slug, thickness_options, material_types(slug)')
       .eq('is_active', true)
       .not('slug', 'is', null);
 
-    for (const row of (plates ?? []) as unknown as Array<{ slug: string; material_types: { slug: string } | null }>) {
+    for (const row of (plates ?? []) as unknown as Array<{ slug: string; thickness_options: number[] | null; material_types: { slug: string } | null }>) {
       const matSlug = row.material_types?.slug;
       if (!matSlug || !row.slug) continue;
       // tasyunu → tasyunu-levha, eps → eps-levha
@@ -76,6 +77,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly',
         priority: 0.7,
       });
+
+      for (const thickness of row.thickness_options ?? []) {
+        entries.push({
+          url: `${BASE_URL}/urunler/${kategoriSlug}/${row.slug}/${formatThicknessSegment(thickness)}`,
+          lastModified: now,
+          changeFrequency: 'monthly',
+          priority: 0.72,
+        });
+      }
     }
   } catch {
     /* DB erişilemezse statikler yine sitemap'te kalır */

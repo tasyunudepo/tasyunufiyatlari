@@ -7,8 +7,11 @@
 // Mobil özet kart, picker ve fiyat paneli bu state'e abone → şehir/kalınlık her
 // değiştiğinde tüm bağımlı bloklar anında reaktif.
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createContext, useCallback, useContext, useState } from "react";
+import { usePathname } from "next/navigation";
+import {
+  buildProductPathWithThickness,
+} from "@/lib/catalog/thickness-url";
 
 interface ContextValue {
   cityCode: number;
@@ -34,9 +37,7 @@ export function ProductInteractiveProvider({
   initialCityCode,
   initialThickness,
 }: ProviderProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [cityCode, setCityCodeState] = useState(initialCityCode);
   const [activeThickness, setActiveThicknessState] = useState<number | null>(initialThickness);
@@ -45,30 +46,23 @@ export function ProductInteractiveProvider({
     setHeroPriceState(price);
   }, []);
 
-  // URL'deki ?kalinlik= değişirse state'i sync et (dış navigasyon, geri/ileri vb.)
-  useEffect(() => {
-    const raw = searchParams.get("kalinlik");
-    if (!raw) return;
-    const parsed = parseFloat(raw);
-    if (!Number.isFinite(parsed)) return;
-    if (parsed !== activeThickness) {
-      setActiveThicknessState(parsed);
-    }
-    // sadece searchParams değişince çalışsın
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
   const setActiveThickness = useCallback(
     (thickness: number | null) => {
       setActiveThicknessState(thickness);
-      // URL'i de güncelle (history pollution önlemek için replace + scroll false)
-      if (thickness != null) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("kalinlik", `${thickness}cm`);
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      // URL'i de güncelle; sayfa yeniden render edilmez, fiyat paneli context'ten güncellenir.
+      if (thickness != null && typeof window !== "undefined") {
+        const nextPath = buildProductPathWithThickness(window.location.pathname || pathname, thickness);
+        const params = new URLSearchParams(window.location.search);
+        params.delete("kalinlik");
+        const queryString = params.toString();
+        window.history.replaceState(
+          window.history.state,
+          "",
+          `${nextPath}${queryString ? `?${queryString}` : ""}`
+        );
       }
     },
-    [pathname, router, searchParams]
+    [pathname]
   );
 
   const setCityCode = useCallback((code: number) => {

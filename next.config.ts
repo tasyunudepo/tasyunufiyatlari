@@ -48,6 +48,12 @@ const nextConfig: NextConfig = {
       // 302 (permanent: false) — Sprint 4-5'te Tier 1/2 bölge sayfaları
       // gerçek içerikle yeniden açılacak. 301 yapılırsa Google ileride
       // yeni sayfaları kabul ederken zorlanır.
+      {
+        source: '/urunler/:kategori/:slug',
+        has: [{ type: 'query', key: 'kalinlik', value: '(?<kalinlik>.*)' }],
+        destination: '/urunler/:kategori/:slug/:kalinlik',
+        permanent: true,
+      },
       { source: '/bolge/:sehir/:ilce', destination: '/iletisim', permanent: false },
       { source: '/bolge/:sehir',       destination: '/iletisim', permanent: false },
       { source: '/bolge',              destination: '/iletisim', permanent: false },

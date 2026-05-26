@@ -9,6 +9,8 @@ import ProductPricePanel from '@/components/catalog/ProductPricePanel';
 import MobileProductHero from '@/components/catalog/MobileProductHero';
 import { ProductInteractiveProvider } from '@/components/catalog/ProductInteractiveContext';
 import { getCatalogProduct } from '@/lib/catalog/server';
+import { getCatalogProducts } from '@/lib/catalog/server';
+import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
 import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
@@ -21,12 +23,13 @@ import SiteFooter from '@/components/shared/SiteFooter';
 import { ErrorBoundaryWrapper } from '@/components/shared/ErrorBoundaryWrapper';
 import BrandTrustLogos from '@/components/shared/BrandTrustLogos';
 import { computeM2Price } from '@/lib/catalog/pricing';
+import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 import type { CatalogProductView } from '@/lib/catalog/types';
 
-// ISR: 60 sn cache, admin güncellemesinde revalidatePath ile invalidate edilebilir
-export const revalidate = 60;
+// Fiyatlar aylık güncelleniyor; ay başı deploy'u metadata ve fiyat snapshot'ını yeniler.
+export const revalidate = 2592000;
 
-// logistics_capacity nadiren değişir — 1 saatlik server-side cache
+// logistics_capacity nadiren değişir; ay başı deploy'u ile yenilenir.
 const getLogisticsCapacity = unstable_cache(
   async () => {
     const supabase = createServerSupabaseClient();
@@ -44,7 +47,7 @@ const getLogisticsCapacity = unstable_cache(
     }[];
   },
   ['logistics_capacity'],
-  { revalidate: 3600, tags: ['logistics'] }
+  { revalidate: 2592000, tags: ['logistics'] }
 );
 
 // ─── Şehir öncelik sırası ────────────────────────────────────
@@ -74,6 +77,11 @@ const KATEGORI_LABELS: Record<string, string> = {
   'tasyunu-levha': 'Taşyünü Levha',
   'eps-levha':     'EPS Levha',
   aksesuar:        'Aksesuar',
+};
+
+const SEARCH_LABELS: Record<string, string> = {
+  'tasyunu-levha': 'Taş Yünü',
+  'eps-levha': 'EPS Levha',
 };
 
 const BADGE_MAP: Record<string, { label: string; cls: string }> = {
@@ -144,31 +152,117 @@ function buildProductOffers({
 
 interface Props {
   params:       Promise<{ kategori: string; slug: string }>;
-  searchParams: Promise<{ kalinlik?: string }>;
+}
+
+export async function generateStaticParams() {
+  const [tasyunu, eps, aksesuar] = await Promise.all([
+    getCatalogProducts('tasyunu'),
+    getCatalogProducts('eps'),
+    getCatalogProducts('aksesuar'),
+  ]);
+
+  return [...tasyunu.products, ...eps.products, ...aksesuar.products].flatMap((product) => {
+    if (product.material_type === 'tasyunu') {
+      return [{ kategori: 'tasyunu-levha', slug: product.slug }];
+    }
+
+    if (product.material_type === 'eps') {
+      return [{ kategori: 'eps-levha', slug: product.slug }];
+    }
+
+    const kategoriEntry = Object.entries(KATEGORI_MAP).find(
+      ([, info]) => info.accessoryTypeSlug === product.category.slug
+    );
+
+    return kategoriEntry ? [{ kategori: kategoriEntry[0], slug: product.slug }] : [];
+  });
+}
+
+function formatMonthYear(date = new Date()) {
+  return new Intl.DateTimeFormat('tr-TR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Istanbul',
+  }).format(date);
+}
+
+function buildProductPath(kategori: string, slug: string, thickness?: number | null) {
+  const base = `/urunler/${kategori}/${slug}`;
+  return thickness != null ? `${base}/${formatThicknessSegment(thickness)}` : base;
+}
+
+function buildThicknessMeta({
+  product,
+  kategori,
+  thickness,
+}: {
+  product: CatalogProductView;
+  kategori: string;
+  thickness: number;
+}) {
+  const monthYear = formatMonthYear();
+  const searchLabel = SEARCH_LABELS[kategori] ?? product.category.name;
+  const title = `${thickness} cm ${searchLabel} Fiyatları - ${monthYear} | ${product.name}`;
+  const description =
+    `${product.name} ${thickness} cm ${searchLabel.toLocaleLowerCase('tr-TR')} m2 fiyatı, paket metrajı ve teslimat seçenekleri. ${monthYear} güncel fiyatla şehir ve metraja göre PDF teklif alın.`;
+
+  return { title, description };
+}
+
+export async function generateProductMetadata({
+  kategori,
+  slug,
+  thickness,
+}: {
+  kategori: string;
+  slug: string;
+  thickness?: number | null;
+}): Promise<Metadata> {
+  const data = await getCatalogProduct(slug, kategori);
+  if (!data) return { title: 'Ürün Bulunamadı' };
+
+  const { product } = data;
+  const supportsThickness =
+    thickness != null &&
+    Array.isArray(product.thickness_options) &&
+    product.thickness_options.includes(thickness);
+
+  const thicknessMeta =
+    supportsThickness && thickness != null
+      ? buildThicknessMeta({ product, kategori, thickness })
+      : null;
+
+  return buildMetadata({
+    title: thicknessMeta?.title ?? product.meta_title ?? `${product.name} ${KATEGORI_LABELS[kategori] ?? product.category.name} Fiyatları`,
+    description:
+      thicknessMeta?.description ??
+      product.meta_description ??
+      product.catalog_description ??
+      `${product.brand.name} ${product.name} ürün detayları, fiyat ve teklif.`,
+    path: buildProductPath(kategori, slug, supportsThickness ? thickness : null),
+    image: product.image_cover,
+    type: 'product',
+  });
 }
 
 // ─── Metadata ───────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, kategori } = await params;
-  const data = await getCatalogProduct(slug);
-  if (!data) return { title: 'Ürün Bulunamadı' };
-  const { product } = data;
-  return buildMetadata({
-    title:       product.meta_title       ?? product.name,
-    description: product.meta_description ?? product.catalog_description ?? `${product.brand.name} ${product.name} ürün detayları, fiyat ve teklif.`,
-    path:        `/urunler/${kategori}/${slug}`,
-    image:       product.image_cover,
-    type:        'product',
-  });
+  return generateProductMetadata({ kategori, slug });
 }
 
 // ─── Page ────────────────────────────────────────────────────
 
-export default async function UrunDetayPage({ params, searchParams }: Props) {
-  const { slug, kategori }     = await params;
-  const { kalinlik: kalinlikParam } = await searchParams;
-
+export async function ProductDetailPage({
+  kategori,
+  slug,
+  selectedThickness,
+}: {
+  kategori: string;
+  slug: string;
+  selectedThickness?: number | null;
+}) {
   // Paralel veri çekimi (logistics ayrı cache'ten)
   const supabase = createServerSupabaseClient();
   const [productData, zonesResult, logisticsCapacity] = await Promise.all([
@@ -189,33 +283,35 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
     optimix_levha_discount: string | number; discount_kamyon: string | number; discount_tir: string | number;
   }[]);
 
-  // Seçili kalınlık (URL'den): "9cm" → 9, "7.5cm" → 7.5
-  const parsedThickness   = kalinlikParam ? parseFloat(kalinlikParam) : NaN;
-  const selectedThickness = Number.isFinite(parsedThickness) ? parsedThickness : null;
+  const selectedThicknessValue =
+    selectedThickness != null && Number.isFinite(selectedThickness)
+      ? selectedThickness
+      : null;
   const isValidThickness  =
-    selectedThickness !== null &&
+    selectedThicknessValue !== null &&
     Array.isArray(product.thickness_options) &&
-    product.thickness_options.includes(selectedThickness);
+    product.thickness_options.includes(selectedThicknessValue);
 
   const activePrefill = product.wizard_prefill
-    ? { ...product.wizard_prefill, kalinlik: isValidThickness ? selectedThickness : product.wizard_prefill.kalinlik }
+    ? { ...product.wizard_prefill, kalinlik: isValidThickness ? selectedThicknessValue : product.wizard_prefill.kalinlik }
     : null;
 
   const badge = BADGE_MAP[product.rules.sales_mode] ?? BADGE_MAP.quote_only;
   const kategoriLabel = KATEGORI_LABELS[kategori] ?? kategori;
   const defaultZone = shippingZones.find((zone) => zone.city_code === 34) ?? shippingZones[0] ?? null;
+  const pagePath = buildProductPath(kategori, slug, isValidThickness ? selectedThicknessValue : null);
 
   // Provider initial values (mobil hero + panel + picker hepsi context'ten beslenir)
   const initialCityCode = defaultZone?.city_code ?? 34;
   const initialThickness = isValidThickness
-    ? selectedThickness
+    ? selectedThicknessValue
     : (activePrefill?.kalinlik ??
        (Array.isArray(product.thickness_options) && product.thickness_options.length > 0
          ? product.thickness_options[0]
          : null));
 
   // ─── Schema.org JSON-LD ──────────────────────────────────────
-  const productUrl = `${SITE_ORIGIN}/urunler/${kategori}/${slug}`;
+  const productUrl = `${SITE_ORIGIN}${pagePath}`;
   const productImage = product.image_cover
     ? (product.image_cover.startsWith('http') ? product.image_cover : `${SITE_ORIGIN}${product.image_cover}`)
     : `${SITE_ORIGIN}/og-image.png`;
@@ -236,7 +332,7 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
   const productNode = {
     '@type': 'Product' as const,
     '@id':   `${productUrl}#product`,
-    name: product.name,
+    name: isValidThickness ? `${product.name} ${selectedThicknessValue} cm` : product.name,
     sku: slug,
     image: [productImage],
     url: productUrl,
@@ -255,6 +351,7 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
       { name: 'Ürünler', path: '/urunler' },
       { name: kategoriLabel, path: `/urunler/${kategori}` },
       { name: product.name, path: `/urunler/${kategori}/${slug}` },
+      ...(isValidThickness ? [{ name: `${selectedThicknessValue} cm`, path: pagePath }] : []),
     ],
     SITE_ORIGIN,
   );
@@ -445,7 +542,7 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
                 prefill={activePrefill}
                 shippingZones={shippingZones}
                 logisticsCapacity={logisticsCapacity}
-                selectedThickness={isValidThickness ? selectedThickness : null}
+                selectedThickness={isValidThickness ? selectedThicknessValue : null}
                 hideHeroPriceOnMobile
               />
             </Suspense>
@@ -465,6 +562,11 @@ export default async function UrunDetayPage({ params, searchParams }: Props) {
       <SiteFooter />
     </div>
   );
+}
+
+export default async function UrunDetayPage({ params }: Props) {
+  const { slug, kategori } = await params;
+  return <ProductDetailPage kategori={kategori} slug={slug} />;
 }
 
 // ─── Skeleton ────────────────────────────────────────────────

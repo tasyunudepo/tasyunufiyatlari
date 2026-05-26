@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import {
+  buildProductPathWithThickness,
+  getThicknessFromProductPath,
+  parseThicknessQueryValue,
+} from "@/lib/catalog/thickness-url";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 interface ThicknessSelectorProps {
@@ -29,7 +34,6 @@ export default function ThicknessSelector({
   popularThickness,
   mobileMode = "block",
 }: ThicknessSelectorProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const interactive = useProductInteractiveOptional();
@@ -38,15 +42,17 @@ export default function ThicknessSelector({
 
   // Provider varsa state context'ten; yoksa URL fallback (geri uyumlu)
   const ctxThickness = interactive?.activeThickness ?? null;
-  const currentRaw = searchParams.get("kalinlik");
-  const urlThickness = currentRaw ? parseFloat(currentRaw) : null;
+  const pathThickness = getThicknessFromProductPath(pathname);
+  const queryThickness = parseThicknessQueryValue(searchParams.get("kalinlik"));
 
   const candidate =
     ctxThickness != null && thicknessOptions.includes(ctxThickness)
       ? ctxThickness
-      : urlThickness != null && thicknessOptions.includes(urlThickness)
-        ? urlThickness
-        : null;
+      : pathThickness != null && thicknessOptions.includes(pathThickness)
+        ? pathThickness
+        : queryThickness != null && thicknessOptions.includes(queryThickness)
+          ? queryThickness
+          : null;
 
   const activeThickness =
     candidate ??
@@ -59,10 +65,16 @@ export default function ThicknessSelector({
       interactive.setActiveThickness(thickness);
       return;
     }
-    // Fallback: URL üzerinden
+    if (typeof window === "undefined") return;
+    const nextPath = buildProductPathWithThickness(pathname, thickness);
     const params = new URLSearchParams(searchParams.toString());
-    params.set("kalinlik", `${thickness}cm`);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    params.delete("kalinlik");
+    const queryString = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${nextPath}${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   if (thicknessOptions.length === 1) {

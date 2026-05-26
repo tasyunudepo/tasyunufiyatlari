@@ -48,7 +48,7 @@ const SITUATIONS: Situation[] = [
     Icon: House as IconType,
     label: 'Çatı/teras için doğru çözümü arıyorum',
     helper: 'Üst kat için VF80 toz grubu ürünümüze yönlendirelim.',
-    scrollTarget: '/urunler/tasyunu-levha/expert-vf80-tasyunu?kalinlik=8cm',
+    scrollTarget: '/urunler/tasyunu-levha/expert-vf80-tasyunu/8-cm',
   },
   {
     key: 'emin_degilim',

@@ -1,4 +1,5 @@
 import { permanentRedirect } from 'next/navigation';
+import { formatThicknessSegment, parseThicknessQueryValue } from '@/lib/catalog/thickness-url';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -49,10 +50,11 @@ function keywordFallback(slug: string): string {
   return '/urunler';
 }
 
-// "...-10-cm" / "...-5cm" / "...-6-cm-levha" → "10cm" / "5cm" / "6cm"
-function extractKalinlik(slug: string): string | null {
-  const match = slug.match(/(\d+)-?cm/i);
-  return match ? `${match[1]}cm` : null;
+// "...-10-cm" / "...-5cm" / "...-7-5-cm-levha" → "10-cm" / "5-cm" / "7-5-cm"
+function extractKalinlikSegment(slug: string): string | null {
+  const match = slug.match(/(\d+(?:[.,-]\d+)?)-?cm/i);
+  const thickness = parseThicknessQueryValue(match?.[1]?.replace('-', '.') ?? null);
+  return thickness == null ? null : formatThicknessSegment(thickness);
 }
 
 export default async function EskiUrunRedirect({ params }: Props) {
@@ -61,10 +63,10 @@ export default async function EskiUrunRedirect({ params }: Props) {
 
   for (const [prefix, dest] of PREFIX_MAP) {
     if (lower.startsWith(prefix)) {
-      const kalinlik = extractKalinlik(lower);
+      const kalinlikSegment = extractKalinlikSegment(lower);
       const isPlatePath =
         dest.includes('/urunler/tasyunu-levha/') || dest.includes('/urunler/eps-levha/');
-      const url = isPlatePath && kalinlik ? `${dest}?kalinlik=${kalinlik}` : dest;
+      const url = isPlatePath && kalinlikSegment ? `${dest}/${kalinlikSegment}` : dest;
       permanentRedirect(url);
     }
   }

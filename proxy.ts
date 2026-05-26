@@ -191,5 +191,20 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|og-image.png).*)'],
+  matcher: [
+    '/ofis/:path*',
+    '/api/admin/:path*',
+    '/urun/:path*',
+    '/kategori/:path*',
+    '/shop/:path*',
+    '/tasyunu-eps-depo/:path*',
+    '/marka/fawori/:path*',
+    '/marka/filli-boya/expert/:path*',
+    '/product-brands/:path*',
+    '/wp-admin/:path*',
+    '/wp-content/:path*',
+    '/wp-includes/:path*',
+    '/wp-login.php',
+    '/xmlrpc.php',
+  ],
 };
