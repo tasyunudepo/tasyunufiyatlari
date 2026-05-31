@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -61,25 +60,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry source map upload + tunneling — sadece SENTRY_AUTH_TOKEN varsa devreye girer.
-// DSN yoksa sentry.{client,server,edge}.config.ts no-op çalışır, çakışma yok.
-export default withSentryConfig(nextConfig, {
-  // Sentry org + project — DSN'den otomatik çıkarılabilir ama explicit yazmak güvenli
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-
-  // CI'de auth token varsa source map upload edilir; yoksa sessizce atlanır
-  silent: !process.env.CI,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-
-  // Production source map'leri client'a bundle etme; sadece Sentry'ye yükle
-  sourcemaps: {
-    deleteSourcemapsAfterUpload: true,
-  },
-
-  // Reklam-engelleyici tunelı için /monitoring rewrite (ücretsiz tier'da opsiyonel)
-  tunnelRoute: '/monitoring',
-
-  // Telemetry kapalı (build-time hız)
-  telemetry: false,
-});
+export default nextConfig;

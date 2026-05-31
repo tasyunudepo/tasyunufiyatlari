@@ -17,6 +17,18 @@ const LEGACY_QUERY_PARAMS = [
   'wc-ajax',
 ];
 
+function isPublicLegacyQueryPath(pathname: string): boolean {
+  return (
+    pathname === '/' ||
+    pathname.startsWith('/urunler') ||
+    pathname.startsWith('/marka') ||
+    pathname.startsWith('/kategori') ||
+    pathname.startsWith('/shop') ||
+    pathname.startsWith('/product-brands') ||
+    pathname.startsWith('/tasyunu-eps-depo')
+  );
+}
+
 const LEGACY_CATEGORY_DESTINATIONS: Record<string, string> = {
   'tasyunu-levhalar': '/urunler/tasyunu-levha',
   'eps-levhalar': '/urunler/eps-levha',
@@ -105,11 +117,14 @@ function legacyDestination(pathname: string): string | null {
 }
 
 function canonicalizeLegacyUrl(req: NextRequest): NextResponse | null {
-  const destination = legacyDestination(req.nextUrl.pathname);
+  const { pathname } = req.nextUrl;
+  const destination = legacyDestination(pathname);
   if (destination === 'GONE') return gone();
 
   const hasLegacyQuery = LEGACY_QUERY_PARAMS.some((param) => req.nextUrl.searchParams.has(param));
-  if (destination === req.nextUrl.pathname && !hasLegacyQuery) return null;
+  const shouldCleanQuery = hasLegacyQuery && isPublicLegacyQueryPath(pathname);
+  if (destination === pathname && !shouldCleanQuery) return null;
+  if (!destination && !shouldCleanQuery) return null;
   if (!destination && !hasLegacyQuery) return null;
 
   const url = req.nextUrl.clone();
@@ -209,5 +224,19 @@ export const config = {
     '/:path*.php',
     '/:path*/feed',
     '/:path*/feed/:path*',
+    { source: '/:path*', has: [{ type: 'query', key: 'add_to_wishlist' }] },
+    { source: '/:path*', has: [{ type: 'query', key: '_wpnonce' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'orderby' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'filter_paket_ici_m2' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'gridcookie' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'source_id' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'source_tax' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'pwb-brand' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'pwb-brand-filter' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'paged' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'product-page' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'min_price' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'max_price' }] },
+    { source: '/:path*', has: [{ type: 'query', key: 'wc-ajax' }] },
   ],
 };
