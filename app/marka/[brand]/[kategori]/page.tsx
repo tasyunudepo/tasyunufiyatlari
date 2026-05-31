@@ -14,7 +14,9 @@ interface Props {
   params: Promise<{ brand: string; kategori: string }>;
 }
 
-export const revalidate = 2592000;
+// Tam statik: build'de bir kez prerender → CDN'den servis (ISR read unit = 0).
+// İçerik tazeliği aylık cron redeploy ile sağlanır (.github/workflows/monthly-vercel-deploy.yml).
+export const dynamic = 'force-static';
 
 export function generateStaticParams() {
   return Object.keys(BRAND_MAP).flatMap((brand) =>
@@ -54,11 +56,11 @@ export default async function MarkaKategoriPage({ params }: Props) {
       <div className="bg-fe-surface border-b border-fe-border">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
           <nav className="flex items-center gap-1 text-xs text-fe-muted mb-4">
-            <Link href="/" className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
+            <Link href="/" prefetch={false} className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
             <ChevronRight className="w-3 h-3" />
-            <Link href="/urunler" className="hover:text-brand-400 transition-colors">Ürünler</Link>
+            <Link href="/urunler" prefetch={false} className="hover:text-brand-400 transition-colors">Ürünler</Link>
             <ChevronRight className="w-3 h-3" />
-            <Link href={`/marka/${brand}`} className="hover:text-brand-400 transition-colors">
+            <Link href={`/marka/${brand}`} prefetch={false} className="hover:text-brand-400 transition-colors">
               {brandInfo.displayName}
             </Link>
             <ChevronRight className="w-3 h-3" />
@@ -81,12 +83,14 @@ export default async function MarkaKategoriPage({ params }: Props) {
             <div className="flex flex-wrap gap-3 justify-center">
               <Link
                 href={`/marka/${brand}`}
+                prefetch={false}
                 className="text-brand-400 hover:text-brand-300 text-sm underline"
               >
                 {brandInfo.displayName} ana sayfası
               </Link>
               <Link
                 href={`/urunler/${kategori}`}
+                prefetch={false}
                 className="text-brand-400 hover:text-brand-300 text-sm underline"
               >
                 Tüm {catInfo.title.toLowerCase()} markaları

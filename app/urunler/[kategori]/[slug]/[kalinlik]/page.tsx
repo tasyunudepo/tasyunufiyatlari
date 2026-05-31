@@ -7,7 +7,9 @@ import {
   generateProductMetadata,
 } from '../page';
 
-export const revalidate = 2592000;
+// Tam statik (force-static): tüm kalınlık varyantları build'de prerender → CDN → ISR Read Unit = 0.
+// Fiyat tek kaynaktan (server product prop, client'ta canlı API yok); tazelik aylık redeploy ile.
+export const dynamic = 'force-static';
 
 interface Props {
   params: Promise<{ kategori: string; slug: string; kalinlik: string }>;

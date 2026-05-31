@@ -22,6 +22,7 @@ export default function ProductCard({ product, kategori }: ProductCardProps) {
   return (
     <Link
       href={href}
+      prefetch={false}
       className="block rounded-xl border border-fe-border hover:border-brand-500/50 bg-fe-raised/40 hover:bg-fe-raised/70 overflow-hidden transition-all duration-150 group"
     >
       {/* Görsel */}

@@ -142,6 +142,7 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     className={`relative hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium transition-colors ${
                       active ? activeText : linkBase
                     }`}
@@ -240,6 +241,7 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center justify-between px-3 py-3.5 rounded-lg text-base font-medium transition-colors ${
                   active

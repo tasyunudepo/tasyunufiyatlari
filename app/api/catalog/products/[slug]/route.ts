@@ -13,6 +13,12 @@ import type {
 
 export const dynamic = 'force-dynamic';
 
+// Public ürün detayı — kullanıcıya özel değil. CDN'de cache'lenebilir → tekrar eden
+// (özellikle bot) istekleri edge'de karşıla, origin/Supabase yükünü düşür.
+const PUBLIC_CATALOG_CACHE = {
+  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+} as const;
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -107,7 +113,9 @@ export async function GET(
       depot_min_m2:   null,
     };
     const decision = getDecisionContext(rules, null);
-    return NextResponse.json({ product, decision } as CatalogProductDetailResponse);
+    return NextResponse.json({ product, decision } as CatalogProductDetailResponse, {
+      headers: PUBLIC_CATALOG_CACHE,
+    });
   }
 
   const row = rawRow as unknown as SupabasePlateRow;
@@ -177,5 +185,5 @@ export async function GET(
 
   const decision = getDecisionContext(rules, wizard_prefill);
   const response: CatalogProductDetailResponse = { product, decision };
-  return NextResponse.json(response);
+  return NextResponse.json(response, { headers: PUBLIC_CATALOG_CACHE });
 }

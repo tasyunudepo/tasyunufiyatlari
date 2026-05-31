@@ -26,8 +26,11 @@ import { computeM2Price } from '@/lib/catalog/pricing';
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 import type { CatalogProductView } from '@/lib/catalog/types';
 
-// Fiyatlar aylık güncelleniyor; ay başı deploy'u metadata ve fiyat snapshot'ını yeniler.
-export const revalidate = 2592000;
+// Tam statik (force-static): tüm ürün detayları build'de prerender → CDN'den servis → ISR Read Unit = 0.
+// Fiyatlar aylık güncelleniyor; ay başı (otomatik) redeploy fiyat snapshot'ını ve metadata'yı yeniler.
+// Fiyat hesabı tek kaynaktan: server'dan gelen `product` prop, client'ta canlı API yok →
+// statikleştirme hesabı/tutarlılığı bozmaz, yalnızca veri anlık görüntüsünün alındığı zamanı build'e taşır.
+export const dynamic = 'force-static';
 
 // logistics_capacity nadiren değişir; ay başı deploy'u ile yenilenir.
 const getLogisticsCapacity = unstable_cache(
@@ -47,7 +50,9 @@ const getLogisticsCapacity = unstable_cache(
     }[];
   },
   ['logistics_capacity'],
-  { revalidate: 2592000, tags: ['logistics'] }
+  // Zaman bazlı revalidate yok → force-static ile sayfa tam statik (ISR Read Unit = 0).
+  // logistics kapasite verisi build'de bakılır; aylık redeploy veya revalidateTag('logistics') ile tazelenir.
+  { tags: ['logistics'] }
 );
 
 // ─── Şehir öncelik sırası ────────────────────────────────────
@@ -375,11 +380,11 @@ export async function ProductDetailPage({
       <div className="bg-fe-surface/80 border-b border-fe-border/60">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-2.5 sm:py-3.5">
           <nav className="flex items-center gap-1 text-xs text-fe-muted flex-wrap">
-            <Link href="/" className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
+            <Link href="/" prefetch={false} className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
             <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <Link href="/urunler" className="hover:text-brand-400 transition-colors">Ürünler</Link>
+            <Link href="/urunler" prefetch={false} className="hover:text-brand-400 transition-colors">Ürünler</Link>
             <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <Link href={`/urunler/${kategori}`} className="hover:text-brand-400 transition-colors">
+            <Link href={`/urunler/${kategori}`} prefetch={false} className="hover:text-brand-400 transition-colors">
               {kategoriLabel}
             </Link>
             <ChevronRight className="w-3 h-3 flex-shrink-0" />

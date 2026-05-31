@@ -12,6 +12,12 @@ import type {
 
 export const dynamic = 'force-dynamic';
 
+// Public katalog verisi — kullanıcıya özel değil. CDN'de cache'lenebilir → tekrar eden
+// (özellikle bot) istekleri edge'de karşıla, origin/Supabase yükünü düşür.
+const PUBLIC_CATALOG_CACHE = {
+  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+} as const;
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const material  = searchParams.get('material');  // 'tasyunu' | 'eps' | 'aksesuar'
@@ -228,5 +234,5 @@ export async function GET(req: NextRequest) {
     filters_applied,
   };
 
-  return NextResponse.json(response);
+  return NextResponse.json(response, { headers: PUBLIC_CATALOG_CACHE });
 }

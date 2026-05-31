@@ -50,7 +50,9 @@ interface Props {
   params: Promise<{ brand: string }>;
 }
 
-export const revalidate = 2592000;
+// Tam statik: build'de bir kez prerender → CDN'den servis (ISR read unit = 0).
+// İçerik tazeliği aylık cron redeploy ile sağlanır (.github/workflows/monthly-vercel-deploy.yml).
+export const dynamic = 'force-static';
 
 export function generateStaticParams() {
   return Object.keys(BRAND_MAP).map((brand) => ({ brand }));
@@ -120,9 +122,9 @@ export default async function MarkaPage({ params }: Props) {
       <div className="bg-fe-surface border-b border-fe-border">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
           <nav className="flex items-center gap-1 text-xs text-fe-muted mb-4">
-            <Link href="/" className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
+            <Link href="/" prefetch={false} className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
             <ChevronRight className="w-3 h-3" />
-            <Link href="/urunler" className="hover:text-brand-400 transition-colors">Ürünler</Link>
+            <Link href="/urunler" prefetch={false} className="hover:text-brand-400 transition-colors">Ürünler</Link>
             <ChevronRight className="w-3 h-3" />
             <span className="text-fe-text">{info.displayName}</span>
           </nav>
@@ -138,6 +140,7 @@ export default async function MarkaPage({ params }: Props) {
               <Link
                 key={slug}
                 href={`/marka/${brand}/${slug}`}
+                prefetch={false}
                 className="px-3 py-1.5 rounded-full bg-fe-surface border border-fe-border text-fe-text text-sm hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-colors"
               >
                 {catInfo.title}

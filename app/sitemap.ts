@@ -5,7 +5,9 @@ import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 
 const BASE_URL = 'https://www.tasyunufiyatlari.com';
 
-export const revalidate = 2592000;
+// Tam statik: build'de bir kez üret → CDN'den servis (ISR read unit = 0).
+// İçerik tazeliği aylık cron redeploy ile sağlanır.
+export const dynamic = 'force-static';
 
 // Statik sayfalar — her zaman sitemap'te
 const STATIC_PATHS = [

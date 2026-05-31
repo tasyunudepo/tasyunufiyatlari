@@ -19,7 +19,9 @@ export const metadata: Metadata = buildMetadata({
   path: '/urunler',
 });
 
-export const revalidate = 2592000;
+// Tam statik: build'de bir kez prerender → CDN'den servis (ISR read unit = 0).
+// İçerik tazeliği aylık cron redeploy ile sağlanır (.github/workflows/monthly-vercel-deploy.yml).
+export const dynamic = 'force-static';
 
 export default async function UrunlerPage() {
   const data = await getUrunlerHubData();

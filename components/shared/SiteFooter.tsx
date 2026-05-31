@@ -109,6 +109,7 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
                     ) : (
                       <Link
                         href={link.href}
+                        prefetch={false}
                         className={`${linkText} text-sm transition-colors`}
                       >
                         {link.label}
