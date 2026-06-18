@@ -192,8 +192,6 @@ Step 1: Fiyat_Gosterildi               ← Wizard'da fiyat ekranı görüldü
 ### .env değişkenleri
 
 ```
-CALLMEBOT_PHONE_1=905322041825      # Emrah
-CALLMEBOT_APIKEY_1=XXXXXXX
 CALLMEBOT_PHONE_2=905426084887      # Muhammet abi (opsiyonel)
 CALLMEBOT_APIKEY_2=XXXXXXX
 ```

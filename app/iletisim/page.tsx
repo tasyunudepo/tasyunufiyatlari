@@ -13,7 +13,6 @@ import { BUSINESS_INFO, BUSINESS_REF, WAREHOUSE_INFO, WHATSAPP_URL } from '@/lib
 import {
   Phone,
   WhatsappLogo,
-  EnvelopeSimple,
   Clock,
   Timer,
   Truck,
@@ -26,7 +25,6 @@ import { ICON_WEIGHT } from '@/lib/design/tokens';
 
 const PHONE             = BUSINESS_INFO.phone.display;
 const PHONE_TEL         = BUSINESS_INFO.phone.tel;
-const EMAIL             = BUSINESS_INFO.email;
 // İletişim sayfasında konum kartı DEPO adresini gösterir (ofis adresinden
 // daha çok ziyaret edilen lokasyon — Tuzla Tepeören Orhanlı).
 const ADDRESS_LINE      = WAREHOUSE_INFO.addressLine;
@@ -36,7 +34,7 @@ const MAPS_DIRECTIONS_URL = WAREHOUSE_INFO.mapsDirectionsUrl;
 export const metadata: Metadata = buildMetadata({
   title: 'İletişim',
   description:
-    'Soru, teklif ve bayilik için bize ulaşın. Telefon, WhatsApp, e-posta. Mesai içinde 30 dk dönüş garantisi.',
+    'Soru, teklif ve bayilik için bize ulaşın. Telefon ve WhatsApp üzerinden hızlıca bağlantı kurun. Mesai içinde 30 dk dönüş garantisi.',
   path: '/iletisim',
   type: 'website',
 });
@@ -157,42 +155,7 @@ export default function IletisimPage() {
                 </div>
               </div>
 
-              {/* E-posta — geniş, form-vari (full row) */}
-              <div className="md:col-span-12 rounded-2xl bg-hub-warm ring-1 ring-hub-rule p-7 sm:p-9">
-                <div className="grid md:grid-cols-12 gap-6 items-center">
-                  <div className="md:col-span-7">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-hub-cream ring-1 ring-hub-gold/30 text-hub-gold">
-                        <EnvelopeSimple weight={ICON_WEIGHT} size={20} />
-                      </span>
-                      <div className="font-mono text-xs uppercase tracking-[0.18em] text-hub-gold">
-                        E-posta · Detaylı projeler için
-                      </div>
-                    </div>
-                    <h3 className="font-heading font-bold text-hub-ink text-2xl sm:text-3xl tracking-tight leading-snug mb-2">
-                      Şartname / proje dökümanı varsa,
-                      <br className="hidden sm:inline" /> e-posta en uygun yol.
-                    </h3>
-                    <p className="text-hub-ink-2 text-base leading-relaxed max-w-xl">
-                      İhale tablosu, ürün listesi, teknik şartname gibi dosyaları ek olarak iletebilirsiniz. 1 iş günü içinde teklif döner.
-                    </p>
-                  </div>
-                  <div className="md:col-span-5 md:border-l md:border-hub-rule md:pl-6">
-                    <div className="text-xs uppercase tracking-[0.14em] text-hub-ink-2/70 mb-2">Adres</div>
-                    <a
-                      href={`mailto:${EMAIL}`}
-                      className="font-mono font-semibold text-hub-ink hover:text-hub-gold transition-colors text-base sm:text-lg break-all block mb-5"
-                    >
-                      {EMAIL}
-                    </a>
-                    <a href={`mailto:${EMAIL}`} className="btn-secondary !w-full !justify-center">
-                      E-posta Gönder
-                      <ArrowRight weight={ICON_WEIGHT} size={16} className="btn-arrow" />
-                    </a>
-                  </div>
-                </div>
               </div>
-            </div>
           </div>
         </section>
 

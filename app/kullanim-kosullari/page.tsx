@@ -12,7 +12,6 @@ const COMPANY       = BUSINESS_INFO.legalName;
 // Kullanım Koşulları işletmecinin kurumsal merkezini gösterir (kanonik ofis).
 const ADDRESS_LINE  = BUSINESS_INFO.address.streetAddress;
 const ADDRESS_CITY  = `${BUSINESS_INFO.address.addressLocality} / ${BUSINESS_INFO.address.addressRegion}`;
-const EMAIL         = BUSINESS_INFO.email;
 const PHONE_DISPLAY = BUSINESS_INFO.phone.display;
 const SITE          = 'tasyunufiyatlari.com';
 const LAST_UPDATED  = '11 Mayıs 2026';
@@ -55,9 +54,6 @@ export default function KullanimKosullariPage() {
                 <li><span className="font-semibold text-hub-ink">Unvan:</span> {COMPANY}</li>
                 <li><span className="font-semibold text-hub-ink">Adres:</span> {ADDRESS_LINE}, {ADDRESS_CITY}</li>
                 <li><span className="font-semibold text-hub-ink">Telefon:</span> {PHONE_DISPLAY}</li>
-                <li><span className="font-semibold text-hub-ink">E-posta:</span>{' '}
-                  <a href={`mailto:${EMAIL}`} className="text-hub-gold underline hover:text-hub-gold/80">{EMAIL}</a>
-                </li>
                 <li><span className="font-semibold text-hub-ink">Web:</span>{' '}
                   <Link href="/" className="text-hub-gold underline hover:text-hub-gold/80">{SITE}</Link>
                 </li>

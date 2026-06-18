@@ -222,12 +222,11 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             border: '#cbd5e1',   // Genel border (Açık Lacivert/Gri)
         };
 
-        // SELLER bilgileri — adres BUSINESS_INFO'dan, ikincil sabit hat sadece
-        // PDF'de gösterilir (siteye yansıtılmaz, schema'da geçmez).
+        // SELLER bilgileri — telefon ve adres BUSINESS_INFO'dan tek kaynaktan.
         const SELLER = {
             name: BUSINESS_INFO.legalName.toLocaleUpperCase('tr-TR'),
             address: `${BUSINESS_INFO.address.streetAddress} ${BUSINESS_INFO.address.addressLocality} / ${BUSINESS_INFO.address.addressRegion}`,
-            phones: `${BUSINESS_INFO.phone.display} - 0 216 507 11 25`,
+            phones: BUSINESS_INFO.phone.display,
             website: 'www.ozeryapiinsaat.com',
         };
 

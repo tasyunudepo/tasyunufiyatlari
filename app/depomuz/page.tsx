@@ -106,14 +106,6 @@ export default function DepomuzPage() {
                   <Row label="Çalışma Saatleri">
                     <span className="text-fe-text">Pzt–Cts 08:00–18:00 · Pazar Kapalı</span>
                   </Row>
-                  <Row label="E-posta">
-                    <a
-                      href="mailto:bilgi@tasyunufiyatlari.com"
-                      className="text-fe-text hover:text-brand-400 transition-colors"
-                    >
-                      bilgi@tasyunufiyatlari.com
-                    </a>
-                  </Row>
                 </dl>
 
                 <WhatsappLink

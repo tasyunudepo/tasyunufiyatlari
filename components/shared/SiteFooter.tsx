@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import WhatsappLink from './WhatsappLink';
-import { WHATSAPP_URL, MAILTO_URL } from '@/lib/business/info';
+import { WHATSAPP_URL } from '@/lib/business/info';
 
 type Tone = 'dark' | 'warm';
 
@@ -30,9 +30,8 @@ const GROUPS = [
   {
     eyebrow: 'İletişim',
     links: [
-      { href: '/iletisim',  label: 'Telefon · WhatsApp · E-posta' },
+      { href: '/iletisim',  label: 'Telefon · WhatsApp' },
       { href: WHATSAPP_URL, label: 'WhatsApp Destek', external: true },
-      { href: MAILTO_URL,   label: 'E-posta Yaz' },
     ],
   },
   {

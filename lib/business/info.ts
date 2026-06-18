@@ -2,10 +2,10 @@
 // BUSINESS_INFO — Tek Doğruluk Kaynağı (NAP)
 // ============================================================
 //
-// Şirket adı, adres, telefon, e-posta gibi NAP (Name-Address-Phone)
-// verilerinin TÜM site genelindeki tek kanonik kaynağı. Hardcoded
-// string'ler yerine bu sözlükten çekilir; böylece Google Business
-// Profile + Knowledge Graph + Schema.org @graph senkron kalır.
+// Şirket adı, adres, telefon gibi NAP (Name-Address-Phone) verilerinin
+// TÜM site genelindeki tek kanonik kaynağı. Hardcoded string'ler yerine
+// bu sözlükten çekilir; böylece Google Business Profile + Knowledge
+// Graph + Schema.org @graph senkron kalır.
 //
 // Audit raporundaki "NAP tutarsızlığı" maddesi (acil §1) bu dosyayla
 // çözüldü — 2026-05-11.
@@ -18,11 +18,10 @@ export const BUSINESS_INFO = {
   url: 'https://www.tasyunufiyatlari.com',
 
   // İletişim kanalları
-  email: 'bilgi@tasyunufiyatlari.com',
   phone: {
-    display:  '0 532 204 18 25',  // UI'da gösterilen format
-    tel:      '+905322041825',    // tel: linkleri (E.164)
-    whatsapp: '905322041825',     // wa.me URL'leri (ülke kodu + numara)
+    display:  '0 543 518 69 88',  // UI'da gösterilen format
+    tel:      '+905435186988',    // tel: linkleri (E.164)
+    whatsapp: '905435186988',     // wa.me URL'leri (ülke kodu + numara)
   },
 
   // Kanonik adres — kurumsal ofis (Tuzla / Mescit Mahallesi)
@@ -173,6 +172,3 @@ export const WHATSAPP_URL = `https://wa.me/${BUSINESS_INFO.phone.whatsapp}` as c
 
 /** tel: protokolü için tek doğruluk URI. */
 export const TEL_URL = `tel:${BUSINESS_INFO.phone.tel}` as const;
-
-/** mailto: protokolü için tek doğruluk URI. */
-export const MAILTO_URL = `mailto:${BUSINESS_INFO.email}` as const;

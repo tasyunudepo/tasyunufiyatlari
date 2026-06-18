@@ -41,7 +41,6 @@ export function buildBusinessNode(opts: BuildBusinessNodeOptions = {}) {
     legalName:   BUSINESS_INFO.legalName,
     url:         BUSINESS_INFO.url,
     telephone:   BUSINESS_INFO.phone.tel,
-    email:       BUSINESS_INFO.email,
     address: {
       '@type': 'PostalAddress' as const,
       streetAddress:   BUSINESS_INFO.address.streetAddress,

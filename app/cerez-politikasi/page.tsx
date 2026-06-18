@@ -9,7 +9,6 @@ import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { BUSINESS_INFO } from '@/lib/business/info';
 
 const COMPANY      = BUSINESS_INFO.legalName;
-const EMAIL        = BUSINESS_INFO.email;
 const SITE         = 'tasyunufiyatlari.com';
 const GA_ID        = 'G-VCHRKVJCEN';
 const LAST_UPDATED = '11 Mayıs 2026';
@@ -155,11 +154,7 @@ export default function CerezPolitikasiPage() {
                 <Link href="/kvkk" className="text-hub-gold underline hover:text-hub-gold/80">
                   KVKK Aydınlatma Metni
                 </Link>
-                {' '}üzerinden başvuru yöntemlerimizi inceleyin ve{' '}
-                <a href={`mailto:${EMAIL}`} className="text-hub-gold underline hover:text-hub-gold/80">
-                  {EMAIL}
-                </a>
-                {' '}adresine yazın. KVKK uyarınca talepleriniz en geç 30 gün içinde sonuçlandırılır.
+                {' '}üzerinden başvuru yöntemlerimizi inceleyin. KVKK uyarınca talepleriniz en geç 30 gün içinde sonuçlandırılır.
               </p>
             </Block>
 

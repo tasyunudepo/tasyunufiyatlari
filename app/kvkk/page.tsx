@@ -4,7 +4,7 @@ import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 import Eyebrow from '@/components/shared/Eyebrow';
 import PhoneCallLink from '@/components/shared/PhoneCallLink';
-import { ArrowRight, EnvelopeSimple, Phone, MapPin } from '@phosphor-icons/react/dist/ssr';
+import { ArrowRight, Phone, MapPin } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { BUSINESS_INFO, WAREHOUSE_INFO } from '@/lib/business/info';
 
@@ -14,7 +14,6 @@ const ADDRESS_LINE  = WAREHOUSE_INFO.addressLine;
 const ADDRESS_CITY  = WAREHOUSE_INFO.cityLine;
 const PHONE_DISPLAY = BUSINESS_INFO.phone.display;
 const PHONE_TEL     = BUSINESS_INFO.phone.tel;
-const EMAIL         = BUSINESS_INFO.email;
 const SITE          = 'tasyunufiyatlari.com';
 const LAST_UPDATED  = '30 Nisan 2026';
 
@@ -148,12 +147,6 @@ export default function KvkkPage() {
                   label="Telefon"
                   value={PHONE_DISPLAY}
                   href={`tel:${PHONE_TEL}`}
-                />
-                <ContactCard
-                  Icon={EnvelopeSimple}
-                  label="E-posta"
-                  value={EMAIL}
-                  href={`mailto:${EMAIL}`}
                 />
                 <ContactCard
                   Icon={MapPin}
