@@ -67,6 +67,9 @@ export const metadata: Metadata = {
     shortcut: ["/images/ikonlar/favicon.webp"],
     apple: ["/images/ikonlar/favicon.webp"],
   },
+  verification: {
+    google: "vEFFP8z6qzvl71kJzvBuuTZkOzUm3YBGf5qWQoQZqlw",
+  },
 };
 
 export default function RootLayout({
