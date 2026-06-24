@@ -130,6 +130,57 @@ export function WizardStep4({
     const selectedZone = shippingZones.find(z => z.city_code === selectedCityCode);
     const discTir    = selectedZone?.discount_tir    ?? null;
     const discKamyon = selectedZone?.discount_kamyon ?? null;
+    const isFullVehicleInvalid = !validation.isValid && validation.kind === 'full_vehicle';
+
+    const formatM2 = (value: number) => Math.round(value).toLocaleString('tr-TR');
+    const isWholeNumber = (value: number) => Math.abs(value - Math.round(value)) < 0.05;
+    const formatDeltaM2 = (value: number) => value.toLocaleString('tr-TR', {
+        minimumFractionDigits: isWholeNumber(value) ? 0 : 1,
+        maximumFractionDigits: 1,
+    });
+    const vehicleBenefitText = (label: string) => {
+        const upperLabel = label.toLocaleUpperCase('tr-TR');
+        if (upperLabel.includes('TIR')) {
+            return discTir != null
+                ? `%${discTir} TIR iskontosu · nakliye fiyata dahil`
+                : 'TIR dolusu · nakliye fiyata dahil';
+        }
+
+        return discKamyon != null
+            ? `%${discKamyon} kamyon iskontosu · nakliye fiyata dahil`
+            : 'Kamyon dolusu · nakliye fiyata dahil';
+    };
+    const vehiclePresets = selectedMalzeme === 'tasyunu'
+        ? [
+            {
+                key: 'kamyon',
+                label: 'Kamyon dolusu',
+                m2: Math.round(lorryM2),
+                benefit: discKamyon != null ? `%${discKamyon} bölge iskontosu` : 'Tam araç siparişi',
+            },
+            {
+                key: 'tir',
+                label: 'TIR dolusu',
+                m2: Math.round(truckM2),
+                benefit: discTir != null ? `%${discTir} bölge iskontosu` : 'Tam araç siparişi',
+            },
+        ]
+        : [];
+    const fullVehicleOptions = isFullVehicleInvalid
+        ? validation.suggestions
+            .map(opt => ({ ...opt, roundedM2: Math.round(opt.m2) }))
+            .sort((a, b) => a.m2 - b.m2)
+        : [];
+    const currentOrderM2 = hasVal ? roundedM2 : m2;
+    const primaryFullVehicleOption = fullVehicleOptions.find(opt => opt.m2 >= currentOrderM2 - 0.05)
+        ?? fullVehicleOptions[0]
+        ?? null;
+    const primaryDeltaM2 = primaryFullVehicleOption
+        ? Math.max(0, primaryFullVehicleOption.m2 - currentOrderM2)
+        : 0;
+    const secondaryFullVehicleOptions = fullVehicleOptions
+        .filter(opt => opt.roundedM2 !== primaryFullVehicleOption?.roundedM2)
+        .slice(0, 3);
 
     // Nudge mesajı
     type NudgeType =
@@ -168,10 +219,45 @@ export function WizardStep4({
                 </label>
                 <p className="mt-2 text-sm text-fe-muted leading-relaxed">
                     {selectedMalzeme === 'tasyunu' && suggestedStartM2 != null
-                        ? `${selectedKalinlik} cm levhada kamyon dolusu başlangıç metrajı ${suggestedStartM2.toLocaleString('tr-TR')} m². Ölçünüz farklıysa değiştirin; sistem uygun araç metrajını gösterir.`
+                        ? `${selectedKalinlik} cm levhada ${suggestedStartM2.toLocaleString('tr-TR')} m² kamyon dolusu seçili gelir. TIR dolusuna geçebilir veya kendi metrajınızı yazabilirsiniz.`
                         : 'Cephe alanınızı yazın; sistem paket metrajına göre sipariş miktarını hesaplar.'}
                 </p>
-                <div className="relative">
+                {vehiclePresets.length > 0 && (
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                        {vehiclePresets.map((preset) => {
+                            const isSelectedPreset = hasVal
+                                && validation.isValid
+                                && Math.abs(Math.round(roundedM2) - preset.m2) <= 1;
+
+                            return (
+                                <button
+                                    key={preset.key}
+                                    type="button"
+                                    onClick={() => setMetraj(String(preset.m2))}
+                                    className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                                        isSelectedPreset
+                                            ? 'border-brand-500 bg-brand-900/35 shadow-lg shadow-brand-600/10'
+                                            : 'border-fe-border bg-fe-surface hover:border-brand-600/60 hover:bg-fe-raised'
+                                    }`}
+                                >
+                                    <span className={`mb-1 flex items-center gap-1.5 text-xs font-bold ${
+                                        isSelectedPreset ? 'text-brand-200' : 'text-white'
+                                    }`}>
+                                        <Truck size={15} weight={preset.key === 'tir' ? 'fill' : 'regular'} />
+                                        {preset.label}
+                                    </span>
+                                    <span className="block text-xl font-black tabular-nums text-white">
+                                        {formatM2(preset.m2)} m²
+                                    </span>
+                                    <span className="mt-1 block text-[11px] font-semibold text-brand-300">
+                                        {preset.benefit}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+                <div className="relative mt-3">
                     <input
                         type="number"
                         min="1"
@@ -211,25 +297,51 @@ export function WizardStep4({
                 {!validation.isValid && validation.kind === 'full_vehicle' && (
                     <div className="mt-2 p-3 rounded-xl border bg-amber-900/15 border-amber-700/40">
                         <p className="text-sm font-semibold text-amber-200 mb-1 flex items-center gap-1.5">
-                            <Truck size={16} weight="fill" /> Taşyünü parsiyel taşınamaz
+                            <Truck size={16} weight="fill" /> Bu metraj tam araç düzenine uymuyor
                         </p>
-                        <p className="text-xs text-amber-100/80 mb-2">
-                            Taşyünü ürünleri yalnızca <span className="font-bold">tam Kamyon</span>,
-                            <span className="font-bold"> tam TIR</span> ya da bunların kombinasyonları halinde
-                            taşınabilir. Aşağıdaki yakın geçerli metrajlardan birini seçin:
+                        <p className="text-xs text-amber-100/80">
+                            Taşyünü siparişi tam Kamyon/TIR metrajına göre ilerler.
+                            Araç dolu olmadığında nakliye ayrıca ücretlendirilir.
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
-                            {validation.suggestions.map((opt) => (
-                                <button
-                                    key={`${opt.m2}-${opt.label}`}
-                                    type="button"
-                                    onClick={() => setMetraj(String(Math.round(opt.m2)))}
-                                    className="rounded-full border border-amber-600/40 bg-amber-900/30 px-3 py-1.5 text-[11px] font-semibold text-amber-100 hover:border-amber-500/60 hover:bg-amber-800/40 transition-colors"
-                                >
-                                    {Math.round(opt.m2).toLocaleString('tr-TR')} m² · {opt.label}
-                                </button>
-                            ))}
-                        </div>
+                        {primaryFullVehicleOption && (
+                            <button
+                                type="button"
+                                onClick={() => setMetraj(String(primaryFullVehicleOption.roundedM2))}
+                                className="mt-3 w-full rounded-xl border border-amber-500/55 bg-amber-900/35 px-3 py-3 text-left transition-colors hover:border-amber-400 hover:bg-amber-800/40"
+                            >
+                                <span className="block text-[11px] font-bold uppercase tracking-wide text-amber-300">
+                                    En yakın geçerli metraj
+                                </span>
+                                <span className="mt-1 block text-xl font-black tabular-nums text-white">
+                                    {formatM2(primaryFullVehicleOption.m2)} m² · {primaryFullVehicleOption.label}
+                                </span>
+                                <span className="mt-1 block text-xs font-semibold text-amber-100/90">
+                                    {primaryDeltaM2 > 0
+                                        ? `${formatDeltaM2(primaryDeltaM2)} m² eklenir`
+                                        : 'Metraj bu seçeneğe alınır'}
+                                    {' '}· {vehicleBenefitText(primaryFullVehicleOption.label)}
+                                </span>
+                            </button>
+                        )}
+                        {secondaryFullVehicleOptions.length > 0 && (
+                            <div className="mt-2">
+                                <p className="mb-1 text-[11px] font-semibold text-amber-100/70">
+                                    Diğer geçerli seçenekler
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {secondaryFullVehicleOptions.map((opt) => (
+                                        <button
+                                            key={`${opt.m2}-${opt.label}`}
+                                            type="button"
+                                            onClick={() => setMetraj(String(opt.roundedM2))}
+                                            className="rounded-full border border-amber-600/35 bg-amber-950/25 px-3 py-1.5 text-[11px] font-semibold text-amber-100 hover:border-amber-500/60 hover:bg-amber-800/35 transition-colors"
+                                        >
+                                            {formatM2(opt.m2)} m² · {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 {/* Yuvarlama / snap gösterimi */}
@@ -269,49 +381,51 @@ export function WizardStep4({
             </div>
 
             {/* Tier badge row */}
-            <div className="flex gap-2 mb-4">
-                {(['parsiyel', 'kamyon', 'tir'] as Tier[]).map(t => {
-                    const cfg = TIER_CONFIG[t];
-                    const isActive = tier === t && hasVal;
-                    const isPast   = hasVal && (
-                        (t === 'parsiyel') ||
-                        (t === 'kamyon' && (tier === 'kamyon' || tier === 'tir')) ||
-                        (t === 'tir'    && tier === 'tir')
-                    );
-                    return (
-                        <div
-                            key={t}
-                            className={`flex-1 flex flex-col items-center py-2 px-1 rounded-xl border transition-all duration-300 ${
-                                isActive
-                                    ? `${cfg.bg} border-transparent ring-1 ${cfg.ring}`
-                                    : isPast && t !== tier
-                                        ? 'bg-fe-raised/40 border-fe-border/50 opacity-50'
-                                        : 'bg-fe-surface border-fe-border'
-                            }`}
-                        >
-                            <cfg.Icon
-                                size={20}
-                                weight={isActive ? 'fill' : 'regular'}
-                                className={`mb-0.5 ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}
-                            />
-                            <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? 'text-brand-200' : 'text-fe-muted/70'}`}>
-                                {cfg.label}
-                            </span>
-                            {/* İskonto oranı badge */}
-                            {t === 'kamyon' && discKamyon != null && (
-                                <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}>
-                                    %{discKamyon}
+            {!isFullVehicleInvalid && (
+                <div className="flex gap-2 mb-4">
+                    {(['parsiyel', 'kamyon', 'tir'] as Tier[]).map(t => {
+                        const cfg = TIER_CONFIG[t];
+                        const isActive = tier === t && hasVal;
+                        const isPast   = hasVal && (
+                            (t === 'parsiyel') ||
+                            (t === 'kamyon' && (tier === 'kamyon' || tier === 'tir')) ||
+                            (t === 'tir'    && tier === 'tir')
+                        );
+                        return (
+                            <div
+                                key={t}
+                                className={`flex-1 flex flex-col items-center py-2 px-1 rounded-xl border transition-all duration-300 ${
+                                    isActive
+                                        ? `${cfg.bg} border-transparent ring-1 ${cfg.ring}`
+                                        : isPast && t !== tier
+                                            ? 'bg-fe-raised/40 border-fe-border/50 opacity-50'
+                                            : 'bg-fe-surface border-fe-border'
+                                }`}
+                            >
+                                <cfg.Icon
+                                    size={20}
+                                    weight={isActive ? 'fill' : 'regular'}
+                                    className={`mb-0.5 ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}
+                                />
+                                <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? 'text-brand-200' : 'text-fe-muted/70'}`}>
+                                    {cfg.label}
                                 </span>
-                            )}
-                            {t === 'tir' && discTir != null && (
-                                <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}>
-                                    {isActive && isMultiVehicle ? `×${fullTirCount} TIR` : `%${discTir}`}
-                                </span>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
+                                {/* İskonto oranı badge */}
+                                {t === 'kamyon' && discKamyon != null && (
+                                    <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}>
+                                        %{discKamyon}
+                                    </span>
+                                )}
+                                {t === 'tir' && discTir != null && (
+                                    <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}>
+                                        {isActive && isMultiVehicle ? `×${fullTirCount} TIR` : `%${discTir}`}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Progress bars / Araç Planı */}
             {currentLogistics && (
@@ -388,7 +502,7 @@ export function WizardStep4({
 
             {/* Nudge / tebrik mesajı */}
             <AnimatePresence mode="wait">
-                {'multi' in (nudge ?? {}) && nudge && (
+                {!isFullVehicleInvalid && 'multi' in (nudge ?? {}) && nudge && (
                     <motion.div
                         key="multi"
                         initial={{ opacity: 0, y: 6 }}
@@ -453,7 +567,7 @@ export function WizardStep4({
                         )}
                     </motion.div>
                 )}
-                {'remainingPkgs' in (nudge ?? {}) && nudge && (
+                {!isFullVehicleInvalid && 'remainingPkgs' in (nudge ?? {}) && nudge && (
                     <motion.div
                         key={(nudge as any).target}
                         initial={{ opacity: 0, y: 6 }}
@@ -507,7 +621,7 @@ export function WizardStep4({
                         )}
                     </motion.div>
                 )}
-                {'bonus' in (nudge ?? {}) && nudge && (
+                {!isFullVehicleInvalid && 'bonus' in (nudge ?? {}) && nudge && (
                     <motion.div
                         key="bonus"
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -528,7 +642,7 @@ export function WizardStep4({
                         </p>
                     </motion.div>
                 )}
-                {'done' in (nudge ?? {}) && nudge && !('bonus' in (nudge ?? {})) && (
+                {!isFullVehicleInvalid && 'done' in (nudge ?? {}) && nudge && !('bonus' in (nudge ?? {})) && (
                     <motion.div
                         key="done"
                         initial={{ opacity: 0, y: 6 }}
@@ -547,7 +661,7 @@ export function WizardStep4({
             </AnimatePresence>
 
             {/* TIR avantajı bilgi notu */}
-            {hasVal && tier !== 'tir' && discTir != null && (
+            {hasVal && !isFullVehicleInvalid && tier !== 'tir' && discTir != null && (
                 <p className="mt-2 text-[11px] text-fe-muted text-center leading-relaxed inline-flex items-center justify-center gap-1 flex-wrap">
                     <Lightbulb size={12} weight="fill" className="text-amber-400" /> Tam dolu TIR siparişinde nakliye fiyata dahildir +{' '}
                     <span className="text-fe-muted font-semibold">%{discTir}</span>{' '}
