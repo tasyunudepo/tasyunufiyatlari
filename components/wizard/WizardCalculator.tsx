@@ -1549,25 +1549,27 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                         </p>
 
                         {recommendedPackage && (
-                            <div className="relative mb-8 overflow-hidden rounded-2xl border border-brand-600/45 bg-fe-surface/85 p-5 shadow-xl shadow-brand-950/20 md:p-6">
+                            <div className="relative mb-8 overflow-hidden rounded-2xl border border-brand-600/45 bg-fe-surface/95 p-5 shadow-xl shadow-brand-950/20 md:p-6">
                                 <div
                                     aria-hidden="true"
-                                    className="pointer-events-none absolute inset-y-0 left-0 w-full opacity-[0.035] md:w-[44%]"
-                                    style={{
-                                        backgroundImage: `linear-gradient(90deg, rgba(255,255,255,0.08), rgba(11,11,12,0.96)), url("${resultPanelTexture}")`,
-                                        backgroundPosition: 'left bottom',
-                                        backgroundRepeat: 'no-repeat',
-                                        backgroundSize: '280px 280px',
-                                    }}
-                                />
-                                <div
-                                    aria-hidden="true"
-                                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(198,158,84,0.10),transparent_32%),linear-gradient(90deg,rgba(255,255,255,0.015),rgba(11,11,12,0.24)_48%,rgba(11,11,12,0.52))]"
+                                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_12%,rgba(198,158,84,0.16),transparent_28%),linear-gradient(90deg,rgba(255,255,255,0.03),rgba(11,11,12,0.18)_52%,rgba(11,11,12,0.38))]"
                                 />
                                 <div className="relative grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
                                     <div>
-                                        <div className="mb-3 inline-flex items-center rounded-full border border-brand-600/50 bg-brand-900/35 px-3 py-1 text-xs font-bold text-brand-200">
-                                            Önerilen paket: {recommendedPackage.definition.name}
+                                        <div className="mb-4 flex items-center gap-3">
+                                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-brand-600/35 bg-fe-bg/80 p-2 shadow-inner shadow-black/40">
+                                                <img
+                                                    src={resultPanelTexture}
+                                                    alt=""
+                                                    aria-hidden="true"
+                                                    className="h-full w-full object-contain opacity-90"
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="inline-flex items-center rounded-full border border-brand-600/50 bg-brand-900/35 px-3 py-1 text-xs font-bold text-brand-200">
+                                                    Önerilen paket: {recommendedPackage.definition.name}
+                                                </div>
+                                            </div>
                                         </div>
                                         <h4 className="font-heading text-2xl font-bold text-white tracking-tight">
                                             Bu m² fiyatıyla teklif kaydı oluşturun
