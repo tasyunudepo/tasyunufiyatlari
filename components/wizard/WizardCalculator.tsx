@@ -1445,6 +1445,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                     key={pkg.definition.id}
                                     pkg={pkg}
                                     index={index}
+                                    isPopular={pkg.definition.tier === 'balanced'}
                                     expandedCards={expandedCards}
                                     onToggleExpand={(id) => {
                                         setExpandedCards(prev =>
