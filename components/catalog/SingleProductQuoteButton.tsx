@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { FileText } from 'lucide-react';
 import { PdfOfferModal } from '@/components/modal/PdfOfferModal';
 import { generateQuotePDF } from '@/lib/pdfGenerator';
 import { uploadPdfToStorage } from '@/lib/uploadPdfToStorage';
@@ -22,6 +23,9 @@ interface Props {
   isShippingIncluded: boolean;
   vehicleType: 'lorry' | 'truck' | 'depot' | null;
   label?: string;                // CTA buton metni (default: "Anında Teklif Oluştur")
+  resultSessionId?: string;      // PDP session zinciri için
+  onOpen?: () => void;
+  buttonClassName?: string;
 }
 
 interface SuccessState {
@@ -41,6 +45,9 @@ export default function SingleProductQuoteButton({
   isShippingIncluded,
   vehicleType,
   label,
+  resultSessionId,
+  onOpen,
+  buttonClassName,
 }: Props) {
   const [showModal, setShowModal]       = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,6 +200,7 @@ export default function SingleProductQuoteButton({
             ref_code:              refCode,
             customer_type:         formData.customerCompany ? 'company' : 'individual',
             source_channel:        'catalog',
+            result_session_id:     resultSessionId ?? undefined,
           });
         }
       } catch { /* DB hatası PDF'i engellemez */ }
@@ -268,9 +276,13 @@ export default function SingleProductQuoteButton({
     <>
       <button
         type="button"
-        onClick={() => setShowModal(true)}
-        className="w-full py-3 rounded-xl border-2 border-brand-500/70 bg-fe-raised text-brand-200 font-bold text-sm transition-colors hover:bg-brand-500/10 hover:border-brand-500 hover:text-white active:bg-brand-500/15"
+        onClick={() => {
+          onOpen?.();
+          setShowModal(true);
+        }}
+        className={buttonClassName ?? "inline-flex w-full items-center justify-center gap-2 py-3 rounded-xl border-2 border-brand-500/70 bg-fe-raised text-brand-200 font-bold text-sm transition-colors hover:bg-brand-500/10 hover:border-brand-500 hover:text-white active:bg-brand-500/15"}
       >
+        <FileText className="h-4 w-4" aria-hidden="true" />
         {label ?? "PDF Teklif Al"}
       </button>
 

@@ -103,14 +103,14 @@ function AracKarti({
             <p className="mt-1 text-[10px] leading-none text-fe-muted">{fmt(capacity, 0)} m²</p>
             {price !== null ? (
               <p className="mt-1 text-[11px] font-bold leading-none text-white">
-                ₺{fmt(price)}<span className="text-[9px] font-normal text-fe-muted">/m²</span>
+                {fmt(price)}<span className="text-[9px] font-normal text-fe-muted"> ₺/m²</span>
               </p>
             ) : (
               <p className="mt-1 text-[10px] text-fe-muted">Fiyat teklif ile</p>
             )}
             {avantaj !== null && avantaj > 0 && (
               <div className="mt-1.5 inline-flex items-center rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[8px] font-medium leading-none text-emerald-300">
-                ↓ ₺{fmt(avantaj)} avantaj
+                ↓ {fmt(avantaj)} ₺ avantaj
               </div>
             )}
           </div>
@@ -171,8 +171,8 @@ function AracKarti({
 
       {price !== null ? (
         <p className="mb-3 text-[13px] font-bold text-white">
-          ₺{fmt(price)}{" "}
-          <span className="text-[10px] font-normal text-fe-muted">/m²</span>
+          {fmt(price)}{" "}
+          <span className="text-[10px] font-normal text-fe-muted">₺/m²</span>
         </p>
       ) : (
         <p className="mb-3 text-[13px] text-fe-muted">Fiyat teklif ile</p>
@@ -180,7 +180,7 @@ function AracKarti({
 
       {avantaj !== null && avantaj > 0 && (
         <div className="mb-3 inline-flex items-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-          ↓ ₺{fmt(avantaj)} avantaj
+          ↓ {fmt(avantaj)} ₺ avantaj
         </div>
       )}
 
@@ -304,7 +304,7 @@ function SepetVehicleCardsImpl({
             {totalTL > 0 && (
               <div className="text-right">
                 <p className="text-[10px] uppercase tracking-wide text-fe-muted">Tahmini Tutar</p>
-                <p className="mt-0.5 text-base font-bold text-white">₺{fmt(totalTL, 0)}</p>
+                <p className="mt-0.5 text-base font-bold text-white">{fmt(totalTL, 0)} ₺</p>
                 <p className="mt-0.5 text-[10px] text-fe-muted">KDV hariç</p>
               </div>
             )}

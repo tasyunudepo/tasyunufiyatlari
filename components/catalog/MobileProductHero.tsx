@@ -50,14 +50,13 @@ export default function MobileProductHero({
           M² Fiyatı
         </p>
         <p className="mt-1 text-[1.6rem] font-extrabold leading-none">
-          <span className="text-brand-300">₺</span>
           <span className="text-white">
             {heroPrice.toLocaleString("tr-TR", {
               minimumFractionDigits: 0,
               maximumFractionDigits: 2,
             })}
           </span>
-          <span className="ml-1 text-xs font-normal text-fe-muted">/m²</span>
+          <span className="ml-1 text-xs font-normal text-fe-muted">₺/m²</span>
         </p>
       </div>
       <p className="mt-1.5 text-[10px] leading-snug text-fe-muted-strong">

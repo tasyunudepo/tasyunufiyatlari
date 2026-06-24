@@ -5,10 +5,18 @@
 // Düzeltme: parseFloat veya '7-5' URL formatına geçirilmesi gerekecek.
 // Bu dosya kapsamında değil; ayrı bir PR'da ele alınacak.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { WHATSAPP_ORDER } from "@/lib/config";
-import { ChevronDown, Layers, Package } from "lucide-react";
+import { ChevronDown, Layers, MessageCircle, Package, Phone } from "lucide-react";
 import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
+import { notifyPhoneCall } from "@/lib/notifyPhoneCall";
+import {
+  notifyProductDetailCtaClick,
+  notifyProductDetailFormOpen,
+  notifyProductDetailPriceView,
+  type ProductDetailCtaLocation,
+} from "@/lib/notifyWizardEvent";
+import { BUSINESS_INFO } from "@/lib/business/info";
 
 import type { CatalogProductView, DecisionContext, WizardPrefill } from "@/lib/catalog/types";
 import { getPriceDisplay } from "@/lib/catalog/decision";
@@ -50,6 +58,10 @@ const PROFIT_MARGIN = 0.1;
 const roundM2 = (value: number): number => Math.round(value * 10) / 10;
 const formatM2Input = (value: number): string =>
   Number.isInteger(value) ? String(value) : String(roundM2(value));
+const formatCurrency = (value: number): string =>
+  value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const formatM2 = (value: number): string =>
+  value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
 
 export default function ProductPricePanel({
   product,
@@ -73,6 +85,10 @@ export default function ProductPricePanel({
   const [debouncedM2, setDebouncedM2] = useState<string>("");
   type MetrajMode = "custom" | "lorry" | "truck";
   const [, setMetrajMode] = useState<MetrajMode>("custom");
+  const [resultSessionId] = useState(() =>
+    `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+  );
+  const lastPriceViewRef = useRef<string>("");
 
   // Debounce: senaryo hesapları 350ms bekler — "400" yazarken "40" uyarısı tetiklenmez
   useEffect(() => {
@@ -148,7 +164,7 @@ export default function ProductPricePanel({
       ? kdvHaricListe / packageSizeM2
       : kdvHaricListe;
 
-  // Gösterilen birim fiyat = hesaplanan toplam / m²: ₺342,34 × 806 = ₺275.946.
+  // Gösterilen birim fiyat = hesaplanan toplam / m²: 342,34 ₺ × 806 = 275.946 ₺.
   // calcPrice çıktısı kuruşa yuvarlanır; tüm türev fiyatlar tutarlı.
   function calcPrice(isk1Pct: number): number | null {
     if (pricePerM2Base === null) return null;
@@ -259,6 +275,95 @@ export default function ProductPricePanel({
           : "";
 
   const quoteM2 = sepetState.totalM2 > 0 ? sepetState.totalM2 : neededM2Num;
+  const quotePackageCount = packageSizeM2 && quoteM2 > 0
+    ? Math.max(1, Math.ceil(quoteM2 / packageSizeM2))
+    : null;
+  const quoteTotalKdvHaric = heroPrice !== null && quoteM2 > 0
+    ? heroPrice * quoteM2
+    : null;
+  const quoteShippingIncluded =
+    product.material_type !== 'eps' &&
+    (quoteVehicleType === 'lorry' || quoteVehicleType === 'truck');
+  const quoteVehicleSummary =
+    sepetState.tir > 0 && sepetState.kamyon > 0
+      ? `${sepetState.tir} TIR + ${sepetState.kamyon} Kamyon`
+      : sepetState.tir > 0
+        ? `${sepetState.tir} TIR`
+        : sepetState.kamyon > 0
+          ? `${sepetState.kamyon} Kamyon`
+          : sepetState.scenario === 'depot_optimal'
+            ? 'Depo stok kontrolü'
+            : 'Metraj seçimi';
+  const productDetailVehicleType =
+    sepetState.tir > 0 && sepetState.kamyon > 0
+      ? 'mixed' as const
+      : quoteVehicleType;
+
+  const buildProductDetailPayload = () => ({
+    product_name: product.name,
+    brand_name: product.brand.name,
+    category_name: product.category.name,
+    material_type: product.material_type === 'eps' ? 'eps' as const : 'tasyunu' as const,
+    thickness_cm: activeThickness ?? null,
+    city_code: selectedCode,
+    city_name: zone?.city_name ?? null,
+    area_m2: neededM2Num || null,
+    total_m2: quoteM2 || null,
+    package_count: quotePackageCount,
+    price_per_m2: heroPrice,
+    total_price: quoteTotalKdvHaric,
+    vehicle_type: productDetailVehicleType,
+    product_slug: product.slug,
+    result_session_id: resultSessionId,
+  });
+
+  const trackProductDetailCta = (
+    ctaType: 'pdf' | 'whatsapp' | 'phone',
+    ctaLocation: ProductDetailCtaLocation = 'product_detail_summary'
+  ) => {
+    notifyProductDetailCtaClick({
+      ...buildProductDetailPayload(),
+      cta_type: ctaType,
+      cta_location: ctaLocation,
+    });
+  };
+
+  const trackProductDetailPdfOpen = (
+    ctaLocation: ProductDetailCtaLocation = 'product_detail_summary'
+  ) => {
+    trackProductDetailCta('pdf', ctaLocation);
+    notifyProductDetailFormOpen({
+      ...buildProductDetailPayload(),
+      form_type: 'pdf',
+      cta_location: ctaLocation,
+    });
+  };
+
+  useEffect(() => {
+    if (!showTierPrice || heroPrice === null) return;
+    const signature = [
+      product.id,
+      activeThickness ?? 'none',
+      selectedCode,
+      neededM2Num,
+      quoteM2,
+      heroPrice,
+      productDetailVehicleType ?? 'none',
+    ].join('|');
+    if (lastPriceViewRef.current === signature) return;
+    lastPriceViewRef.current = signature;
+
+    notifyProductDetailPriceView(buildProductDetailPayload());
+  }, [
+    showTierPrice,
+    heroPrice,
+    product.id,
+    activeThickness,
+    selectedCode,
+    neededM2Num,
+    quoteM2,
+    productDetailVehicleType,
+  ]);
 
   // Depo uygunsa depot kartı ana kartın üstüne çıkar
   const depotBlock = depotStock > 0 && depotPrice !== null ? (
@@ -268,11 +373,13 @@ export default function ProductPricePanel({
       depotMinM2={product.depot_min_m2 ?? 300}
       ihtiyac={neededM2Num}
       packageRefPrice={packageRefPrice}
+      productName={product.name}
+      resultSessionId={resultSessionId}
     />
   ) : null;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 pb-32 lg:pb-0">
       {/* Depo optimal → depot kartı en üstte */}
       {sepetState.scenario === 'depot_optimal' && depotBlock}
 
@@ -344,26 +451,56 @@ export default function ProductPricePanel({
               m² Fiyatı
             </p>
             <p className="text-3xl font-bold leading-none text-white">
-              ₺
               {heroPrice.toLocaleString("tr-TR", {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2,
               })}
-              <span className="ml-1 text-sm font-normal text-fe-muted">/ m²</span>
+              <span className="ml-1 text-sm font-normal text-fe-muted">₺/m²</span>
             </p>
-            <p className="mt-1 text-[11px] text-fe-muted-strong">KDV hariç</p>
+            <div className="mt-1 space-y-0.5 text-[11px]">
+              <p className="font-medium text-brand-300/80">Fabrika çıkışlı bayilik fiyatı</p>
+              <p className="text-fe-muted-strong">KDV hariç · KDV dahil tutar PDF teklifinde gösterilir</p>
+            </div>
             {activeThickness && (
               <p className="mt-1 text-xs text-fe-muted">{activeThickness} cm</p>
             )}
           </div>
         )}
 
-        {/* ─── Teslimat Şehri + Metraj (sol) · Kamyon/TIR (sağ) ─── */}
         {shippingZones.length > 0 && (
           <div className="mb-4 space-y-3 border-b border-fe-border/60 pb-4">
-            <div className="grid grid-cols-2 items-stretch gap-3">
+            <div className="grid grid-cols-2 items-start gap-3">
               {/* SOL — şehir + metraj */}
               <div className="space-y-3">
+                {/* Sipariş Toplamı — sol karar kolonunda, araç seçimiyle aynı hizada */}
+                {showTierPrice && heroPrice !== null && showSepet && (() => {
+                  const orderM2 = sepetState.totalM2 > 0 ? sepetState.totalM2 : neededM2Num;
+                  if (orderM2 <= 0 || heroPrice === null || inputInvalid) return null;
+                  const orderTotal = orderM2 * heroPrice;
+                  return (
+                    <div className="border-t border-fe-border/60 pt-4" aria-live="polite" aria-atomic="true">
+                      <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-fe-muted-strong">
+                        Sipariş Toplamı
+                      </p>
+                      <p className="text-2xl font-extrabold leading-none text-white">
+                        {orderTotal.toLocaleString("tr-TR", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                        <span className="ml-1 text-brand-300">₺</span>
+                      </p>
+                      <p className="mt-1 text-[11px] leading-snug text-fe-muted-strong">
+                        KDV hariç · {orderM2.toLocaleString("tr-TR")} m² ×{" "}
+                        {heroPrice.toLocaleString("tr-TR", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2,
+                        })}
+                        {" "}₺/m²
+                      </p>
+                    </div>
+                  );
+                })()}
+
                 <div>
                   <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-fe-muted-strong">
                     Teslimat Şehri
@@ -404,8 +541,7 @@ export default function ProductPricePanel({
                         inputMode="decimal"
                         value={neededM2}
                         onChange={(e) => { setNeededM2(e.target.value); setMetrajMode("custom"); }}
-                        placeholder="örn. 1200"
-                        className={`w-full rounded-lg border bg-fe-bg/80 px-3 py-2 pr-9 text-sm text-fe-text transition-colors placeholder:text-fe-muted focus:outline-none ${
+                        className={`w-full rounded-lg border bg-fe-bg/80 px-3 py-2 pr-9 text-sm text-fe-text transition-colors focus:outline-none ${
                           inputInvalid
                             ? "border-red-500/60 focus:border-red-500/80"
                             : "border-brand-500/40 focus:border-brand-500/70 focus:shadow-[0_0_0_2px_rgba(212,132,90,0.10)]"
@@ -418,45 +554,13 @@ export default function ProductPricePanel({
                     {inputInvalid && (
                       <p className="mt-1 text-[10px] text-red-400">Geçerli m² giriniz</p>
                     )}
-
-                    {/* SİPARİŞ TOPLAMI — sepet doluyken gerçek araç toplamı (PDF ile aynı),
-                        sepet boşken kullanıcının girdiği metraj × hero fiyatı */}
-                    {(() => {
-                      const orderM2 = sepetState.totalM2 > 0 ? sepetState.totalM2 : neededM2Num;
-                      if (orderM2 <= 0 || heroPrice === null || inputInvalid) return null;
-                      const orderTotal = orderM2 * heroPrice;
-                      return (
-                        <div className="mt-2 rounded-xl border border-brand-500/30 bg-brand-500/[0.07] px-3 py-2.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-300/80">
-                            Sipariş Toplamı
-                          </p>
-                          <p className="mt-1 text-[18px] font-extrabold leading-none">
-                            <span className="text-brand-300">₺</span>
-                            <span className="text-white">
-                              {orderTotal.toLocaleString("tr-TR", {
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 0,
-                              })}
-                            </span>
-                          </p>
-                          <p className="mt-1 text-[9px] leading-snug text-fe-muted">
-                            KDV hariç · {orderM2.toLocaleString("tr-TR")} m² × ₺
-                            {heroPrice.toLocaleString("tr-TR", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 2,
-                            })}
-                            /m²
-                          </p>
-                        </div>
-                      );
-                    })()}
                   </div>
                 )}
               </div>
 
               {/* SAĞ — Kamyon + TIR vehicle cards (SepetUI'dan portal ile gelir) */}
               {showSepet && (
-                <div ref={setVehicleCardsSlot} className="flex min-w-0 flex-col justify-end" />
+                <div ref={setVehicleCardsSlot} className="flex min-w-0 flex-col justify-start" />
               )}
             </div>
           </div>
@@ -510,7 +614,38 @@ export default function ProductPricePanel({
 
         {/* ─── CTA ─── */}
         {showSepet && (
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-3">
+            {quoteM2 > 0 && heroPrice !== null && !inputInvalid && (
+              <div className="hidden rounded-xl border border-brand-600/30 bg-brand-950/20 px-3 py-3 lg:block">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-300/80">
+                  Teklif Özeti
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-fe-muted">Sevkiyat planı</p>
+                    <p className="mt-0.5 font-semibold text-white">{quoteVehicleSummary}</p>
+                  </div>
+                  <div>
+                    <p className="text-fe-muted">Toplam metraj</p>
+                    <p className="mt-0.5 font-semibold text-white">{formatM2(quoteM2)} m²</p>
+                  </div>
+                  <div>
+                    <p className="text-fe-muted">Birim fiyat</p>
+                    <p className="mt-0.5 font-semibold text-white">{heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺/m²</p>
+                  </div>
+                  {quoteTotalKdvHaric !== null && (
+                    <div>
+                      <p className="text-fe-muted">Toplam tutar</p>
+                      <p className="mt-0.5 font-semibold text-white">{formatCurrency(quoteTotalKdvHaric)} ₺</p>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-2 text-[11px] leading-relaxed text-fe-muted-strong">
+                  Tam dolu araç siparişinde bölge iskontosu uygulanır ve nakliye fiyata dahildir;
+                  altında kalındığında nakliye koşulu satış ekibiyle netleşir.
+                </p>
+              </div>
+            )}
             {ctaDisabled ? (
               <button
                 type="button"
@@ -528,46 +663,129 @@ export default function ProductPricePanel({
                 cityCode={selectedCode}
                 cityName={zone?.city_name ?? ""}
                 tierLabel={quoteTierLabel}
-                isShippingIncluded={true}
+                isShippingIncluded={quoteShippingIncluded}
                 vehicleType={quoteVehicleType}
-                label={ctaLabel}
+                label="PDF teklifimi hazırla"
+                resultSessionId={resultSessionId}
+                onOpen={() => trackProductDetailPdfOpen('product_detail_summary')}
               />
             )}
-            <p className="px-1 text-center text-[10px] leading-relaxed text-fe-muted">
-              Fiyat, şehir ve metraj bilginizle kişisel teklif oluşturulur, PDF olarak sunulur
+            <div className="hidden grid-cols-2 gap-2 lg:grid">
+              <a
+                href={`https://wa.me/${WHATSAPP_ORDER}?text=${encodeURIComponent(`Merhaba, ${product.name} için ${zone?.city_name ?? ''} ${quoteM2 ? `${formatM2(quoteM2)} m²` : ''} teklif koşullarını teyit etmek istiyorum.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  trackProductDetailCta('whatsapp');
+                  notifyWhatsappIntent({
+                    source: 'product_detail_summary',
+                    productName: product.name,
+                    resultSessionId,
+                    ctaLocation: 'product_detail_summary',
+                  });
+                }}
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-green-600/50 bg-green-600/12 px-3 py-2.5 text-center text-xs font-bold text-green-300 transition-colors hover:border-green-500 hover:bg-green-600/18 hover:text-green-200"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                WhatsApp'tan teyit iste
+              </a>
+              <a
+                href={`tel:${BUSINESS_INFO.phone.tel}`}
+                onClick={() => {
+                  trackProductDetailCta('phone');
+                  notifyPhoneCall({
+                    source: 'product_detail_phone',
+                    productName: product.name,
+                    resultSessionId,
+                    ctaLocation: 'product_detail_summary',
+                  });
+                }}
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-fe-border bg-fe-raised px-3 py-2.5 text-center text-xs font-bold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-200"
+              >
+                <Phone className="h-4 w-4" aria-hidden="true" />
+                Telefonla konuş
+              </a>
+            </div>
+            <p className="hidden px-1 text-center text-[11px] leading-relaxed text-fe-muted-strong lg:block">
+              PDF teklif ürün, şehir ve metraj bilginizle hazırlanır. Teyit için WhatsApp veya telefonla görüşebilirsiniz.
             </p>
-            <a
-              href={`https://wa.me/${WHATSAPP_ORDER}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => notifyWhatsappIntent({
-                source: 'product_detail_cta',
-                productName: product.name,
-              })}
-              className={`block py-1 text-center text-xs transition-colors ${
-                sepetState.scenario === 'depot_optimal'
-                  ? "font-semibold text-green-400 hover:text-green-300"
-                  : "text-fe-muted hover:text-fe-muted"
-              }`}
-            >
-              {sepetState.scenario === 'depot_optimal'
-                ? "WhatsApp ile Hızlı Sipariş →"
-                : "Sormak istediğiniz mi var? → WhatsApp"}
-            </a>
           </div>
         )}
 
-        {/* Eğitsel Kutu — CTA altında, en altta */}
-        {showSepet && (
-          <div className="mt-4 rounded-lg border border-brand-700/25 bg-brand-950/20 px-3 py-3">
-            <p className="mb-1 text-xs font-semibold text-brand-200">Neden tam araç avantajlı?</p>
-            <p className="text-[11px] leading-relaxed text-brand-200/70">
-              Fabrika çıkışlı alımlarda tam araç yüklemesi gerekir. Ara metraj ihtiyaçlarında sistem
-              önce depo stoklarını kontrol eder.
-            </p>
-          </div>
-        )}
+        {/* "Neden tam araç?" eğitsel metni yukarıdaki özet kartı dipnotuyla birleştirildi */}
       </div>
+
+      {showSepet && !ctaDisabled && quoteM2 > 0 && heroPrice !== null && !inputInvalid && (
+        <div className="fixed inset-x-3 bottom-16 z-[60] rounded-2xl border border-fe-border/80 bg-fe-bg/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-screen-sm items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-300/80">
+                {formatM2(quoteM2)} m²
+              </p>
+              <p className="truncate text-sm font-black leading-none text-white">
+                {heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                <span className="ml-0.5 text-[10px] font-normal text-fe-muted">₺/m²</span>
+              </p>
+              {quoteTotalKdvHaric !== null && (
+                <p className="mt-0.5 truncate text-[11px] font-medium leading-none text-fe-muted-strong">
+                  ≈ {formatCurrency(quoteTotalKdvHaric)} ₺ toplam
+                </p>
+              )}
+            </div>
+            <div className="w-[104px] shrink-0">
+              <SingleProductQuoteButton
+                product={product}
+                activeThickness={activeThickness ?? null}
+                pricePerM2KdvHaric={heroPrice}
+                neededM2={quoteM2}
+                cityCode={selectedCode}
+                cityName={zone?.city_name ?? ""}
+                tierLabel={quoteTierLabel}
+                isShippingIncluded={quoteShippingIncluded}
+                vehicleType={quoteVehicleType}
+                label="PDF"
+                resultSessionId={resultSessionId}
+                onOpen={() => trackProductDetailPdfOpen('sticky_mobile')}
+                buttonClassName="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-500/70 bg-brand-500 px-3 text-[13px] font-black text-fe-bg transition-colors hover:bg-brand-400"
+              />
+            </div>
+            <a
+              href={`https://wa.me/${WHATSAPP_ORDER}?text=${encodeURIComponent(`Merhaba, ${product.name} için ${zone?.city_name ?? ''} ${formatM2(quoteM2)} m² teklif koşullarını teyit etmek istiyorum.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp'tan teyit iste"
+              onClick={() => {
+                trackProductDetailCta('whatsapp', 'sticky_mobile');
+                notifyWhatsappIntent({
+                  source: 'product_detail_cta',
+                  productName: product.name,
+                  resultSessionId,
+                  ctaLocation: 'sticky_mobile',
+                });
+              }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-green-600/50 bg-green-600/15 text-green-300"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            </a>
+            <a
+              href={`tel:${BUSINESS_INFO.phone.tel}`}
+              aria-label="Telefonla konuş"
+              onClick={() => {
+                trackProductDetailCta('phone', 'sticky_mobile');
+                notifyPhoneCall({
+                  source: 'product_detail_phone',
+                  productName: product.name,
+                  resultSessionId,
+                  ctaLocation: 'sticky_mobile',
+                });
+              }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-fe-border bg-fe-raised text-fe-text"
+            >
+              <Phone className="h-5 w-5" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Depo optimal değilse normal pozisyonda göster */}
       {sepetState.scenario !== 'depot_optimal' && depotBlock}
