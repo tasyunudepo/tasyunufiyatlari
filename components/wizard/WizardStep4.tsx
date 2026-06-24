@@ -219,6 +219,14 @@ export function WizardStep4({
                 )}
                 {/* Yuvarlama / snap gösterimi */}
                 {isSnapped && (
+                    <div className="mt-2 rounded-xl border border-blue-700/35 bg-blue-900/15 p-3">
+                        <p className="text-[11px] leading-relaxed text-blue-100/90">
+                            Bu metrajı <span className="font-bold text-white">{roundedM2.toFixed(1)} m²</span>&apos;ye yuvarladık.
+                            Tam dolu araç eşiğinde olmanız için; bu sayede bölge iskontosu uygulanır.
+                        </p>
+                    </div>
+                )}
+                {isSnapped && (
                     <p className="mt-1.5 text-xs text-fe-muted inline-flex items-center gap-1 flex-wrap">
                         <ArrowBendDownRight size={12} weight="bold" />
                         {m2.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} m² →{' '}
@@ -401,13 +409,15 @@ export function WizardStep4({
                                 {pkgsToCompleteTir > 0 && pkgsToCompleteTir <= FILL_THRESHOLD ? (
                                     <div className="flex items-start gap-2 p-2 rounded-lg bg-brand-900/20 border border-brand-700/30">
                                         <CaretUp size={16} weight="bold" className="text-brand-400 shrink-0 mt-0.5" />
-                                        <p className="text-xs text-brand-300">
-                                            <span className="font-bold">{m2ToCompleteTir.toFixed(1)} m² ({pkgsToCompleteTir} paket) ekleyin</span>
-                                            {' '}→ {fullTirCount + 1}. TIR tam dolar · nakliye fiyata dahildir
-                                        </p>
-                                        <p className="mt-1 text-[11px] text-brand-300/80">
-                                            Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
-                                        </p>
+                                        <div>
+                                            <p className="text-xs text-brand-300">
+                                                <span className="font-bold">{m2ToCompleteTir.toFixed(1)} m² ({pkgsToCompleteTir} paket) ekleyin</span>
+                                                {' '}→ {fullTirCount + 1}. TIR tam dolar · nakliye fiyata dahildir
+                                            </p>
+                                            <p className="mt-1 text-[11px] text-brand-300/80">
+                                                Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                            </p>
+                                        </div>
                                     </div>
                                 ) : (
                                     <p className="text-[11px] text-brand-400/70 inline-flex items-center gap-1">
@@ -461,19 +471,24 @@ export function WizardStep4({
                                 </p>
                             </>
                         ) : (
-                            <p className="text-xs text-brand-300">
-                                <button
-                                    type="button"
-                                    onClick={() => setMetraj(String(Math.round((rawPkgCount + (nudge as any).remainingPkgs) * pkgSizeM2)))}
-                                    className="inline-flex items-center gap-1 font-semibold underline decoration-dotted underline-offset-2 hover:text-hub-warm hover:decoration-solid transition-colors"
-                                >
-                                    <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² daha ekleyin
-                                </button>{' '}
-                                {discKamyon != null && (nudge as any).pct > discKamyon && (
-                                    <><span className="font-bold text-brand-200">%{(nudge as any).pct - discKamyon} ekstra iskontolu</span>{' '}</>
-                                )}
-                                → <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> TIR iskontosu kazanıyorsunuz
-                            </p>
+                            <>
+                                <p className="text-xs text-brand-300">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMetraj(String(Math.round((rawPkgCount + (nudge as any).remainingPkgs) * pkgSizeM2)))}
+                                        className="inline-flex items-center gap-1 font-semibold underline decoration-dotted underline-offset-2 hover:text-hub-warm hover:decoration-solid transition-colors"
+                                    >
+                                        <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² daha ekleyin
+                                    </button>{' '}
+                                    {discKamyon != null && (nudge as any).pct > discKamyon && (
+                                        <><span className="font-bold text-brand-200">%{(nudge as any).pct - discKamyon} ekstra iskontolu</span>{' '}</>
+                                    )}
+                                    → <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> TIR iskontosu kazanıyorsunuz
+                                </p>
+                                <p className="mt-1 text-[11px] text-brand-300/80">
+                                    Tam dolu TIR siparişinde nakliye fiyata dahildir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                </p>
+                            </>
                         )}
                     </motion.div>
                 )}
@@ -491,11 +506,10 @@ export function WizardStep4({
                         <p className="text-sm font-medium text-brand-300 inline-flex items-center gap-1.5 flex-wrap">
                             <Confetti size={16} weight="fill" className="text-amber-400" />
                             {(nudge as any).tier === 'tir' ? 'TIR tam dolu' : 'Kamyon tam dolu'} —{' '}
-                            nakliye{(nudge as any).tier === 'tir' ? '' : ' bedava +'}{' '}
                             <span className="font-bold text-brand-200">
                                 %{(nudge as any).pct}
                             </span>{' '}
-                            iskonto otomatik uygulandı!
+                            bölge iskontosu uygulandı, nakliye fiyata dahildir.
                         </p>
                     </motion.div>
                 )}
@@ -511,7 +525,7 @@ export function WizardStep4({
                         <p className="text-sm font-medium text-brand-300 inline-flex items-center gap-1.5 flex-wrap">
                             <Truck size={16} weight="fill" /> TIR doldu —{' '}
                             <span className="font-bold text-brand-200">%{(nudge as any).pct}</span>{' '}
-                            bölge iskontosu uygulandı!
+                            bölge iskontosu uygulandı, nakliye fiyata dahildir.
                         </p>
                     </motion.div>
                 )}
@@ -520,7 +534,7 @@ export function WizardStep4({
             {/* TIR avantajı bilgi notu */}
             {hasVal && tier !== 'tir' && discTir != null && (
                 <p className="mt-2 text-[11px] text-fe-muted text-center leading-relaxed inline-flex items-center justify-center gap-1 flex-wrap">
-                    <Lightbulb size={12} weight="fill" className="text-amber-400" /> TIR siparişlerinde fabrika nakliyesi ücretsiz +{' '}
+                    <Lightbulb size={12} weight="fill" className="text-amber-400" /> Tam dolu TIR siparişinde nakliye fiyata dahildir +{' '}
                     <span className="text-fe-muted font-semibold">%{discTir}</span>{' '}
                     bölge iskontosu uygulanır
                     {discKamyon != null && discTir > discKamyon
