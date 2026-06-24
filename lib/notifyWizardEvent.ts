@@ -15,7 +15,14 @@
 const GA_EVENT_SHOW_PRICES = 'Fiyat_Gosterildi';
 const GA_EVENT_PDF_QUOTE   = 'Pdf_Teklif_Talebi';
 const GA_EVENT_WHATSAPP    = 'Whatsapp_Siparis';
+const GA_EVENT_RESULT_CTA_CLICK = 'Wizard_Result_CTA_Click';
+const GA_EVENT_RESULT_FORM_OPEN = 'Wizard_Result_Form_Open';
+const GA_EVENT_RESULT_FORM_ERROR = 'Wizard_Result_Form_Error';
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-VCHRKVJCEN';
+
+export type WizardResultCtaType = 'pdf' | 'whatsapp' | 'phone';
+export type WizardResultFormType = 'pdf' | 'whatsapp';
+export type WizardResultCtaLocation = 'result_summary' | 'result_card' | 'sticky_mobile';
 
 // ─── Ortak event params (3 event aynı taksonomiye sahip) ─────────────
 export interface WizardBasePayload {
@@ -28,6 +35,7 @@ export interface WizardBasePayload {
   area_m2: number;
   total_m2?: number;
   package_count?: number;
+  result_session_id?: string;
 }
 
 // 1) Fiyat_Gosterildi
@@ -36,6 +44,7 @@ export interface WizardShowPricesPayload extends WizardBasePayload {
   cheapest_total?: number | null;
   cheapest_per_m2?: number | null;
   special_order_required?: boolean;
+  recommended_package_name?: string | null;
 }
 
 // 2) Pdf_Teklif_Talebi
@@ -63,6 +72,31 @@ export interface WhatsappOrderRequestedPayload extends WizardBasePayload {
   source_channel?: 'wizard' | 'catalog';
 }
 
+export interface WizardResultCtaPayload {
+  cta_type: WizardResultCtaType;
+  cta_location: WizardResultCtaLocation;
+  package_name: string;
+  package_tier: string;
+  result_session_id?: string;
+}
+
+export interface WizardResultFormOpenPayload {
+  form_type: WizardResultFormType;
+  cta_location: WizardResultCtaLocation;
+  package_name: string;
+  package_tier: string;
+  result_session_id?: string;
+}
+
+export interface WizardResultFormErrorPayload {
+  form_type: WizardResultFormType;
+  field_name?: string;
+  error_type: string;
+  package_name?: string;
+  package_tier?: string;
+  result_session_id?: string;
+}
+
 type GtagWindow = Window & {
   gtag?: (
     command: 'event',
@@ -71,20 +105,57 @@ type GtagWindow = Window & {
   ) => void;
 };
 
+function getEmptyParamNames(params: Record<string, unknown>): string[] {
+  return Object.entries(params)
+    .filter(([, value]) => (
+      value === undefined ||
+      value === null ||
+      (typeof value === 'string' && value.trim() === '')
+    ))
+    .map(([name]) => name);
+}
+
+function debugGaEvent(stage: string, eventName: string, params: Record<string, unknown>): void {
+  if (process.env.NODE_ENV !== 'development') return;
+
+  const emptyFields = getEmptyParamNames(params);
+  console.groupCollapsed(`[GA4 debug] ${eventName} - ${stage}`);
+  console.log('event_name', eventName);
+  console.log('param_names', Object.keys(params));
+  console.log('empty_fields', emptyFields);
+  console.log('payload', params);
+  console.groupEnd();
+}
+
 function emit(eventName: string, params: Record<string, unknown>): void {
   if (typeof window === 'undefined') return;
   const w = window as GtagWindow;
-  if (typeof w.gtag !== 'function') return;
-  w.gtag('event', eventName, {
+
+  const finalPayload = {
     ...params,
     page_path: window.location.pathname,
     send_to: GA_MEASUREMENT_ID,
-  });
+  };
+
+  debugGaEvent('emit final payload', eventName, finalPayload);
+
+  if (process.env.NODE_ENV === 'development' && typeof w.gtag !== 'function') {
+    console.warn(`[GA4 debug] gtag yüklenmemiş - event="${eventName}" gönderilemedi.`);
+  }
+
+  if (typeof w.gtag !== 'function') return;
+  w.gtag('event', eventName, finalPayload);
 }
 
 // ─── 1. Fiyatları Göster ──────────────────────────────────────────────
 export function notifyWizardShowPrices(p: WizardShowPricesPayload): void {
-  emit(GA_EVENT_SHOW_PRICES, {
+  debugGaEvent(
+    'notifyWizardShowPrices received payload',
+    GA_EVENT_SHOW_PRICES,
+    p as unknown as Record<string, unknown>
+  );
+
+  const payload = {
     material_type:           p.material_type,
     brand_name:              p.brand_name,
     model_name:              p.model_name ?? null,
@@ -94,11 +165,15 @@ export function notifyWizardShowPrices(p: WizardShowPricesPayload): void {
     area_m2:                 p.area_m2,
     total_m2:                p.total_m2 ?? null,
     package_count:           p.package_count ?? null,
+    result_session_id:       p.result_session_id ?? null,
     results_count:           p.results_count ?? null,
     cheapest_total:          p.cheapest_total ?? null,
     cheapest_per_m2:         p.cheapest_per_m2 ?? null,
     special_order_required:  p.special_order_required ?? false,
-  });
+    recommended_package_name: p.recommended_package_name ?? null,
+  };
+
+  emit(GA_EVENT_SHOW_PRICES, payload);
 }
 
 // ─── 2. PDF Teklif Talebi ────────────────────────────────────────────
@@ -113,6 +188,7 @@ export function notifyPdfQuoteRequested(p: PdfQuoteRequestedPayload): void {
     area_m2:                 p.area_m2,
     total_m2:                p.total_m2 ?? null,
     package_count:           p.package_count ?? null,
+    result_session_id:       p.result_session_id ?? null,
     selected_package_name:   p.selected_package_name,
     selected_package_total:  p.selected_package_total,
     selected_per_m2:         p.selected_per_m2,
@@ -134,11 +210,44 @@ export function notifyWhatsappOrderRequested(p: WhatsappOrderRequestedPayload): 
     area_m2:                 p.area_m2,
     total_m2:                p.total_m2 ?? null,
     package_count:           p.package_count ?? null,
+    result_session_id:       p.result_session_id ?? null,
     selected_package_name:   p.selected_package_name,
     selected_package_total:  p.selected_package_total,
     selected_per_m2:         p.selected_per_m2,
     ref_code:                p.ref_code,
     source_channel:          p.source_channel ?? 'wizard',
+  });
+}
+
+// ─── Sonuç Ekranı CTA Etkileşimleri ──────────────────────────────────
+export function notifyWizardResultCtaClick(p: WizardResultCtaPayload): void {
+  emit(GA_EVENT_RESULT_CTA_CLICK, {
+    cta_type:          p.cta_type,
+    cta_location:      p.cta_location,
+    package_name:      p.package_name,
+    package_tier:      p.package_tier,
+    result_session_id: p.result_session_id ?? null,
+  });
+}
+
+export function notifyWizardResultFormOpen(p: WizardResultFormOpenPayload): void {
+  emit(GA_EVENT_RESULT_FORM_OPEN, {
+    form_type:         p.form_type,
+    cta_location:      p.cta_location,
+    package_name:      p.package_name,
+    package_tier:      p.package_tier,
+    result_session_id: p.result_session_id ?? null,
+  });
+}
+
+export function notifyWizardResultFormError(p: WizardResultFormErrorPayload): void {
+  emit(GA_EVENT_RESULT_FORM_ERROR, {
+    form_type:         p.form_type,
+    field_name:        p.field_name ?? null,
+    error_type:        p.error_type,
+    package_name:      p.package_name ?? null,
+    package_tier:      p.package_tier ?? null,
+    result_session_id: p.result_session_id ?? null,
   });
 }
 

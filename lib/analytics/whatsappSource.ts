@@ -7,6 +7,8 @@ export type WhatsappSource =
   | 'header_mobile'         // SiteHeader mobile drawer içindeki WA butonu
   | 'header_mobile_topbar'  // SiteHeader mobile üst bar (drawer dışı) ikon
   | 'wizard_help_step1'     // Wizard Step 1 erken yardım linki
+  | 'wizard_result_summary' // Wizard sonuç üst karar paneli WhatsApp CTA
+  | 'wizard_result_card'    // Wizard sonuç paket kartı WhatsApp CTA
   | 'footer_link'           // SiteFooter "WhatsApp Destek" link
   | 'iletisim_card'         // /iletisim sayfası WhatsApp kartı
   | 'depomuz_cta'           // /depomuz "WhatsApp ile yazışın"
@@ -19,6 +21,7 @@ export type PhoneSource =
   | 'header_mobile'         // SiteHeader mobile drawer "Ara" butonu
   | 'header_mobile_topbar'  // SiteHeader mobile üst bar (drawer dışı) ikon
   | 'topbar_phone'          // hub TrustStrip telefon link
+  | 'wizard_result_phone'   // Wizard sonuç ekranı telefon CTA
   | 'iletisim_phone'        // /iletisim telefon kartı / "Hemen Ara"
   | 'depomuz_phone'         // /depomuz telefon link
   | 'kvkk_phone'            // /kvkk başvuru kartı telefon
@@ -44,6 +47,8 @@ export const WHATSAPP_SOURCE_LABEL: Record<WhatsappSource, string> = {
   header_mobile:         'Mobil menü',
   header_mobile_topbar:  'Mobil header ikon',
   wizard_help_step1:     'Hesaplayıcı yardım (Step 1)',
+  wizard_result_summary: 'Wizard sonuç karar paneli',
+  wizard_result_card:    'Wizard sonuç paket kartı',
   footer_link:           'Footer linki',
   iletisim_card:         'İletişim sayfası kartı',
   depomuz_cta:           'Depomuz sayfası',
@@ -56,6 +61,7 @@ export const PHONE_SOURCE_LABEL: Record<PhoneSource, string> = {
   header_mobile:         'Mobil menü',
   header_mobile_topbar:  'Mobil header ikon',
   topbar_phone:          'Üst şerit',
+  wizard_result_phone:   'Wizard sonuç telefon',
   iletisim_phone:        'İletişim sayfası',
   depomuz_phone:         'Depomuz sayfası',
   kvkk_phone:            'KVKK sayfası',
