@@ -5,7 +5,7 @@ import {
     Truck, Package, WarningCircle, CheckCircle, Confetti,
     CaretUp, ArrowBendDownRight, Lightbulb,
 } from "@phosphor-icons/react";
-import type { ComponentType } from "react";
+import { useEffect, useRef, type ComponentType } from "react";
 import type { LogisticsCapacity, ShippingZone } from "@/lib/types";
 
 export type MetrajValidation =
@@ -46,6 +46,7 @@ export function WizardStep4({
     shippingZones, selectedCityCode,
     selectedMalzeme, validation,
 }: WizardStep4Props) {
+    const didPrefillMetraj = useRef(false);
     const m2 = parseFloat(metraj) || 0;
     const lorryM2   = currentLogistics?.lorry_capacity_m2        ?? 480;
     const truckM2   = currentLogistics?.truck_capacity_m2        ?? 1200;
@@ -54,6 +55,18 @@ export function WizardStep4({
     const truckPkgs = currentLogistics?.truck_capacity_packages  ?? 0;
 
     const hasVal = m2 > 0;
+    const suggestedStartM2 = selectedMalzeme === 'tasyunu' && lorryM2 > 0
+        ? Math.round(lorryM2)
+        : null;
+
+    useEffect(() => {
+        if (didPrefillMetraj.current) return;
+        if (selectedMalzeme !== 'tasyunu' || suggestedStartM2 == null) return;
+        if (metraj.trim() !== '') return;
+
+        didPrefillMetraj.current = true;
+        setMetraj(String(suggestedStartM2));
+    }, [metraj, selectedMalzeme, setMetraj, suggestedStartM2]);
 
     // Ham paket yuvarlama (kullanıcı girdisinden)
     const rawPkgCount  = hasVal ? Math.ceil(m2 / pkgSizeM2) : 0;
@@ -151,10 +164,12 @@ export function WizardStep4({
             {/* m² input */}
             <div className="mb-4">
                 <label className="block text-sm font-semibold text-white mb-2">
-                    Kaç m² hesaplayalım?
+                    Sipariş metrajı
                 </label>
                 <p className="mt-2 text-sm text-fe-muted leading-relaxed">
-                    Brüt cephe alanı yazın — pencere/kapı çıkarmasını sistem standart sarfiyat ile karşılar. ±15 m² toleransla tam araç eşiklerine otomatik yapışılır.
+                    {selectedMalzeme === 'tasyunu' && suggestedStartM2 != null
+                        ? `${selectedKalinlik} cm levhada kamyon dolusu başlangıç metrajı ${suggestedStartM2.toLocaleString('tr-TR')} m². Ölçünüz farklıysa değiştirin; sistem uygun araç metrajını gösterir.`
+                        : 'Cephe alanınızı yazın; sistem paket metrajına göre sipariş miktarını hesaplar.'}
                 </p>
                 <div className="relative">
                     <input
