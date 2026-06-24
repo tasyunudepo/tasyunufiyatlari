@@ -105,10 +105,15 @@ export function PdfOfferModal({
           >
             <X weight={ICON_WEIGHT} size={20} />
           </button>
-          <h3 className="text-xl font-bold text-white mb-1">Teklif Bilgileri</h3>
+          <h3 className="text-xl font-bold text-white mb-1">PDF Teklif Kaydı</h3>
           <p className="text-sm text-fe-muted">
-            Teklifinizi kişiselleştirmek için birkaç bilgiye ihtiyacımız var.
+            Teklif belgenizi oluşturalım. Satış ekibimiz aynı kayıt üzerinden stok, ödeme ve sevkiyat koşullarını teyit eder.
           </p>
+          {defaultCity && (
+            <p className="mt-2 text-xs text-brand-200">
+              Fiyat ili: {defaultCity}
+            </p>
+          )}
         </div>
 
         {/* FORM (flex-1 col, body scroll içinde) */}
@@ -120,16 +125,16 @@ export function PdfOfferModal({
         >
           {/* SCROLL BODY */}
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-            {/* ── Zorunlu 3 alan: İlgili kişi + Telefon + İl ── */}
+            {/* ── Zorunlu alanlar: İlgili kişi + Telefon. İl wizard seçiminden gelir. ── */}
+            {defaultCity && <input type="hidden" {...register('city')} />}
             <div>
               <label className="block text-sm font-medium text-fe-text mb-1">
-                İlgili Kişi <span className="text-red-400">*</span>
+                Ad Soyad / Firma <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
                 {...register('relatedPerson')}
                 className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                placeholder="Örn: Erkan Gültekin"
                 disabled={isSubmitting}
               />
               {errors.relatedPerson && (
@@ -137,7 +142,7 @@ export function PdfOfferModal({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className={defaultCity ? '' : 'grid grid-cols-1 sm:grid-cols-2 gap-3'}>
               <div>
                 <label className="block text-sm font-medium text-fe-text mb-1">
                   Telefon <span className="text-red-400">*</span>
@@ -148,7 +153,6 @@ export function PdfOfferModal({
                   autoComplete="tel"
                   {...register('phone')}
                   className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                  placeholder="05321234567"
                   disabled={isSubmitting}
                 />
                 {errors.phone && (
@@ -156,21 +160,22 @@ export function PdfOfferModal({
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-fe-text mb-1">
-                  İl <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  {...register('city')}
-                  className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                  placeholder="Örn: İstanbul"
-                  disabled={isSubmitting}
-                />
-                {errors.city && (
-                  <p className="text-red-400 text-xs mt-1">{errors.city.message}</p>
-                )}
-              </div>
+              {!defaultCity && (
+                <div>
+                  <label className="block text-sm font-medium text-fe-text mb-1">
+                    İl <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    {...register('city')}
+                    className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                    disabled={isSubmitting}
+                  />
+                  {errors.city && (
+                    <p className="text-red-400 text-xs mt-1">{errors.city.message}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── Opsiyonel detay toggle ── */}
@@ -208,7 +213,6 @@ export function PdfOfferModal({
                       type="text"
                       {...register('customerCompany')}
                       className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                      placeholder="Örn: Gültekin Yapı İnşaat"
                       disabled={isSubmitting}
                     />
                     {errors.customerCompany && (
@@ -225,7 +229,6 @@ export function PdfOfferModal({
                         type="text"
                         {...register('district')}
                         className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                        placeholder="Örn: Pendik"
                         disabled={isSubmitting}
                       />
                       {errors.district && (
@@ -241,7 +244,6 @@ export function PdfOfferModal({
                         autoComplete="email"
                         {...register('email')}
                         className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                        placeholder="mail@firma.com"
                         disabled={isSubmitting}
                       />
                       {errors.email && (
@@ -258,7 +260,6 @@ export function PdfOfferModal({
                       rows={2}
                       {...register('deliveryAddress')}
                       className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none resize-none"
-                      placeholder="Teklif belgesinde görünür, opsiyoneldir"
                       disabled={isSubmitting}
                     />
                     {errors.deliveryAddress && (
@@ -296,7 +297,7 @@ export function PdfOfferModal({
               disabled={isSubmitting}
               className="w-full py-3 rounded-xl font-bold text-base text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors min-h-[48px]"
             >
-              {isSubmitting ? 'Hazırlanıyor...' : 'PDF Teklifimi Oluştur'}
+              {isSubmitting ? 'Hazırlanıyor...' : 'PDF Teklif Kaydı Oluştur'}
             </button>
           </div>
         </form>
