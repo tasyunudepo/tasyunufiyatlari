@@ -445,19 +445,21 @@ export function WizardStep4({
                             </span>
                         </p>
                         {(nudge as any).target === 'kamyon' ? (
-                            <p className="text-xs text-brand-300">
-                                <button
-                                    type="button"
-                                    onClick={() => setMetraj(String(Math.round((rawPkgCount + (nudge as any).remainingPkgs) * pkgSizeM2)))}
-                                    className="inline-flex items-center gap-1 font-semibold underline decoration-dotted underline-offset-2 hover:text-hub-warm hover:decoration-solid transition-colors"
-                                >
-                                    <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² ekleyin
-                                </button>
-                                {' '}→ nakliye fiyata dahildir + <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> iskonto!
-                            </p>
-                            <p className="mt-1 text-[11px] text-brand-300/80">
-                                Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
-                            </p>
+                            <>
+                                <p className="text-xs text-brand-300">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMetraj(String(Math.round((rawPkgCount + (nudge as any).remainingPkgs) * pkgSizeM2)))}
+                                        className="inline-flex items-center gap-1 font-semibold underline decoration-dotted underline-offset-2 hover:text-hub-warm hover:decoration-solid transition-colors"
+                                    >
+                                        <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² ekleyin
+                                    </button>
+                                    {' '}→ nakliye fiyata dahildir + <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> iskonto!
+                                </p>
+                                <p className="mt-1 text-[11px] text-brand-300/80">
+                                    Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                </p>
+                            </>
                         ) : (
                             <p className="text-xs text-brand-300">
                                 <button
