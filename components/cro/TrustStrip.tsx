@@ -15,7 +15,7 @@ const ITEMS = [
   {
     Icon: FileText,
     title: 'Resmi PDF teklif',
-    body: '24 saat geçerli sabit fiyat ve referans no.',
+    body: 'Teklif referans kodu ve güncel hesap bilgileri.',
   },
 ] as const;
 

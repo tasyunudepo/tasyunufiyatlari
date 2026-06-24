@@ -160,7 +160,6 @@ export function WizardStep4({
                     <input
                         type="number"
                         min="1"
-                        placeholder={selectedMalzeme === 'eps' ? 'Min 250 m² · örn: 350' : 'Tam araç metrajı · örn: 806'}
                         value={metraj}
                         onChange={e => setMetraj(e.target.value)}
                         className={`w-full px-4 py-4 border rounded-xl bg-fe-bg text-white text-xl font-bold focus:ring-1 outline-none transition-all tabular-nums pr-16 ${
@@ -404,7 +403,10 @@ export function WizardStep4({
                                         <CaretUp size={16} weight="bold" className="text-brand-400 shrink-0 mt-0.5" />
                                         <p className="text-xs text-brand-300">
                                             <span className="font-bold">{m2ToCompleteTir.toFixed(1)} m² ({pkgsToCompleteTir} paket) ekleyin</span>
-                                            {' '}→ {fullTirCount + 1}. TIR tam dolar · nakliye ücretsiz
+                                            {' '}→ {fullTirCount + 1}. TIR tam dolar · nakliye fiyata dahildir
+                                        </p>
+                                        <p className="mt-1 text-[11px] text-brand-300/80">
+                                            Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
                                         </p>
                                     </div>
                                 ) : (
@@ -415,9 +417,14 @@ export function WizardStep4({
                             </>
                         )}
                         {(nudge as any).pct != null && remainKisiPaket === 0 && (
-                            <p className="text-xs text-white">
-                                TIR&apos;lara <span className="font-bold text-green-300">%{(nudge as any).pct}</span> bölge iskontosu uygulanır · nakliye ücretsiz
-                            </p>
+                            <>
+                                <p className="text-xs text-white">
+                                    TIR&apos;lara <span className="font-bold text-green-300">%{(nudge as any).pct}</span> bölge iskontosu uygulanır · nakliye fiyata dahildir
+                                </p>
+                                <p className="mt-1 text-[11px] text-green-200/80">
+                                    Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                </p>
+                            </>
                         )}
                     </motion.div>
                 )}
@@ -446,7 +453,10 @@ export function WizardStep4({
                                 >
                                     <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² ekleyin
                                 </button>
-                                {' '}→ nakliye ücretsiz + <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> iskonto!
+                                {' '}→ nakliye fiyata dahildir + <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> iskonto!
+                            </p>
+                            <p className="mt-1 text-[11px] text-brand-300/80">
+                                Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
                             </p>
                         ) : (
                             <p className="text-xs text-brand-300">

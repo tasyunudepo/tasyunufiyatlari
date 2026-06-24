@@ -38,11 +38,11 @@ const faqItems = [
     },
     {
         q: "PDF teklif ne zaman ve nasıl elime ulaşır?",
-        a: "Hesabı tamamladıktan sonra ad-soyad ve telefon bilgisini girdiğinizde resmi PDF saniyeler içinde oluşur, mail adresinize ve WhatsApp üzerinden gönderilir. Teklifte referans numarası, kalem listesi ve 24 saat geçerli sabit fiyat yer alır.",
+        a: "Hesabı tamamladıktan sonra ad-soyad ve telefon bilgisini girdiğinizde resmi PDF saniyeler içinde oluşur, mail adresinize ve WhatsApp üzerinden gönderilir. Teklifte kalem listesi, teklif referans kodu ve güncel hesap bilgileri yer alır.",
     },
     {
-        q: "Sipariş nasıl ilerler, ön ödeme gerekir mi?",
-        a: "PDF teklifteki referans numarasını WhatsApp üzerinden bize iletmeniz yeterli. Sevkiyat planı (tarih, araç tipi) onaylanır, kapora oranı paket büyüklüğüne göre değişir; bu kısmı satış ekibi netleştirir.",
+        q: "Sipariş nasıl ilerler, ödeme koşulları nasıl netleşir?",
+        a: "PDF teklifteki referans numarasını WhatsApp üzerinden bize iletmeniz yeterli. Sevkiyat planı (tarih, araç tipi) onaylanır. Satış ekibimiz ödeme koşullarını ve sevkiyat planını görüşmede netleştirir.",
     },
     {
         q: "Kararsızım, hangi paketi seçeceğimi bilmiyorum.",
@@ -239,7 +239,7 @@ export default function Home() {
 
             <RiskMistakesBlock />
 
-            {/* HOW IT WORKS — 3 adımlı timeline (BURASI gerçek sıralı akış, NumberMarker burada KALIR) */}
+            {/* Süreç akışı */}
             <section className="bg-fe-surface section-pad-md border-t border-fe-border">
                 <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
                     <SectionHeader
@@ -367,13 +367,13 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* BRAND STRIP — çalışılan markaların logo şeridi */}
+            {/* Marka şeridi */}
             <BrandStrip />
 
-            {/* PROOF BLOCK — sprint 4: kanıt katmanı (görsel placeholder, TODO: real assets) */}
+            {/* Güven kanıtları */}
             <ProofBlock />
 
-            {/* NAKLIYE — full-width band + yatay step indicator (3-card pattern bırakıldı) */}
+            {/* Nakliye akışı */}
             <section className="bg-fe-surface section-pad-md border-t border-fe-border">
                 <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
                     <RevealOnScroll className="grid md:grid-cols-12 gap-10 md:gap-16 items-center">
