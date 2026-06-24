@@ -13,6 +13,8 @@ export type WhatsappSource =
   | 'iletisim_card'         // /iletisim sayfası WhatsApp kartı
   | 'depomuz_cta'           // /depomuz "WhatsApp ile yazışın"
   | 'product_detail_cta'    // ürün detay sayfası WhatsApp CTA
+  | 'product_detail_summary' // ürün detay karar özeti WhatsApp CTA
+  | 'product_detail_card'   // ürün detay kart içi WhatsApp CTA
   | 'site_general';         // fallback / belirsiz
 
 // ─── Telefon tıklama kaynakları ──────────────────────────────────
@@ -22,6 +24,7 @@ export type PhoneSource =
   | 'header_mobile_topbar'  // SiteHeader mobile üst bar (drawer dışı) ikon
   | 'topbar_phone'          // hub TrustStrip telefon link
   | 'wizard_result_phone'   // Wizard sonuç ekranı telefon CTA
+  | 'product_detail_phone'  // ürün detay sayfası telefon CTA
   | 'iletisim_phone'        // /iletisim telefon kartı / "Hemen Ara"
   | 'depomuz_phone'         // /depomuz telefon link
   | 'kvkk_phone'            // /kvkk başvuru kartı telefon
@@ -32,6 +35,10 @@ export interface WhatsappIntentPayload {
   productName?: string;
   /** Otomatik doldurulur (window.location.pathname) */
   page?: string;
+  /** PDP session zinciri için — aynı oturumdaki event'leri bağlar */
+  resultSessionId?: string;
+  /** Masaüstü / sticky mobil ayrımı için */
+  ctaLocation?: string;
 }
 
 export interface PhoneCallPayload {
@@ -39,6 +46,10 @@ export interface PhoneCallPayload {
   productName?: string;
   /** Otomatik doldurulur */
   page?: string;
+  /** PDP session zinciri için — aynı oturumdaki event'leri bağlar */
+  resultSessionId?: string;
+  /** Masaüstü / sticky mobil ayrımı için */
+  ctaLocation?: string;
 }
 
 // ─── İnsan-okur etiketler (CallMeBot mesajında ve GA4 dashboard'da) ─
@@ -53,6 +64,8 @@ export const WHATSAPP_SOURCE_LABEL: Record<WhatsappSource, string> = {
   iletisim_card:         'İletişim sayfası kartı',
   depomuz_cta:           'Depomuz sayfası',
   product_detail_cta:    'Ürün detay sayfası',
+  product_detail_summary:'Ürün detay karar özeti',
+  product_detail_card:   'Ürün detay kart içi',
   site_general:          'Site geneli',
 };
 
@@ -62,6 +75,7 @@ export const PHONE_SOURCE_LABEL: Record<PhoneSource, string> = {
   header_mobile_topbar:  'Mobil header ikon',
   topbar_phone:          'Üst şerit',
   wizard_result_phone:   'Wizard sonuç telefon',
+  product_detail_phone:  'Ürün detay telefon',
   iletisim_phone:        'İletişim sayfası',
   depomuz_phone:         'Depomuz sayfası',
   kvkk_phone:            'KVKK sayfası',

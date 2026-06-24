@@ -18,11 +18,16 @@ const GA_EVENT_WHATSAPP    = 'Whatsapp_Siparis';
 const GA_EVENT_RESULT_CTA_CLICK = 'Wizard_Result_CTA_Click';
 const GA_EVENT_RESULT_FORM_OPEN = 'Wizard_Result_Form_Open';
 const GA_EVENT_RESULT_FORM_ERROR = 'Wizard_Result_Form_Error';
+const GA_EVENT_PDP_PRICE_VIEW = 'PDP_Price_View';
+const GA_EVENT_PDP_CTA_CLICK = 'PDP_CTA_Click';
+const GA_EVENT_PDP_FORM_OPEN = 'PDP_Form_Open';
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-VCHRKVJCEN';
 
 export type WizardResultCtaType = 'pdf' | 'whatsapp' | 'phone';
 export type WizardResultFormType = 'pdf' | 'whatsapp';
 export type WizardResultCtaLocation = 'result_summary' | 'result_card' | 'sticky_mobile';
+export type ProductDetailCtaType = 'pdf' | 'whatsapp' | 'phone';
+export type ProductDetailCtaLocation = 'product_detail_summary' | 'product_detail_card' | 'sticky_mobile';
 
 // ─── Ortak event params (3 event aynı taksonomiye sahip) ─────────────
 export interface WizardBasePayload {
@@ -95,6 +100,38 @@ export interface WizardResultFormErrorPayload {
   package_name?: string;
   package_tier?: string;
   result_session_id?: string;
+}
+
+export interface ProductDetailBasePayload {
+  product_name: string;
+  brand_name: string;
+  category_name?: string | null;
+  material_type?: 'tasyunu' | 'eps' | string;
+  thickness_cm?: number | null;
+  city_code?: number | null;
+  city_name?: string | null;
+  area_m2?: number | null;
+  total_m2?: number | null;
+  package_count?: number | null;
+  price_per_m2?: number | null;
+  total_price?: number | null;
+  vehicle_type?: 'lorry' | 'truck' | 'depot' | 'mixed' | null;
+  product_slug?: string | null;
+  result_session_id?: string;
+}
+
+export interface ProductDetailPriceViewPayload extends ProductDetailBasePayload {
+  source_channel?: 'catalog';
+}
+
+export interface ProductDetailCtaPayload extends ProductDetailBasePayload {
+  cta_type: ProductDetailCtaType;
+  cta_location: ProductDetailCtaLocation;
+}
+
+export interface ProductDetailFormOpenPayload extends ProductDetailBasePayload {
+  form_type: 'pdf';
+  cta_location: ProductDetailCtaLocation;
 }
 
 type GtagWindow = Window & {
@@ -248,6 +285,50 @@ export function notifyWizardResultFormError(p: WizardResultFormErrorPayload): vo
     package_name:      p.package_name ?? null,
     package_tier:      p.package_tier ?? null,
     result_session_id: p.result_session_id ?? null,
+  });
+}
+
+// ─── Ürün Detay Sayfası Etkileşimleri ───────────────────────────────
+function buildProductDetailPayload(p: ProductDetailBasePayload): Record<string, unknown> {
+  return {
+    product_name:      p.product_name,
+    brand_name:        p.brand_name,
+    category_name:     p.category_name ?? null,
+    material_type:     p.material_type ?? null,
+    thickness_cm:      p.thickness_cm ?? null,
+    city_code:         p.city_code ?? null,
+    city_name:         p.city_name ?? null,
+    area_m2:           p.area_m2 ?? null,
+    total_m2:          p.total_m2 ?? null,
+    package_count:     p.package_count ?? null,
+    price_per_m2:      p.price_per_m2 ?? null,
+    total_price:       p.total_price ?? null,
+    vehicle_type:      p.vehicle_type ?? null,
+    product_slug:      p.product_slug ?? null,
+    result_session_id: p.result_session_id ?? null,
+  };
+}
+
+export function notifyProductDetailPriceView(p: ProductDetailPriceViewPayload): void {
+  emit(GA_EVENT_PDP_PRICE_VIEW, {
+    ...buildProductDetailPayload(p),
+    source_channel: p.source_channel ?? 'catalog',
+  });
+}
+
+export function notifyProductDetailCtaClick(p: ProductDetailCtaPayload): void {
+  emit(GA_EVENT_PDP_CTA_CLICK, {
+    ...buildProductDetailPayload(p),
+    cta_type:     p.cta_type,
+    cta_location: p.cta_location,
+  });
+}
+
+export function notifyProductDetailFormOpen(p: ProductDetailFormOpenPayload): void {
+  emit(GA_EVENT_PDP_FORM_OPEN, {
+    ...buildProductDetailPayload(p),
+    form_type:    p.form_type,
+    cta_location: p.cta_location,
   });
 }
 

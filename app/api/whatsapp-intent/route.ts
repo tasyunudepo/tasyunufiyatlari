@@ -34,6 +34,8 @@ const ALLOWED_SOURCES: WhatsappSource[] = [
   'iletisim_card',
   'depomuz_cta',
   'product_detail_cta',
+  'product_detail_summary',
+  'product_detail_card',
   'site_general',
 ];
 

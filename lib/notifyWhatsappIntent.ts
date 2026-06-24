@@ -43,6 +43,8 @@ export function notifyWhatsappIntent(payload: WhatsappIntentPayload): void {
       source: fullPayload.source,
       page_path: fullPayload.page,
       product_name: fullPayload.productName,
+      result_session_id: fullPayload.resultSessionId ?? null,
+      cta_location: fullPayload.ctaLocation ?? null,
       send_to: GA_MEASUREMENT_ID,
     });
   }
