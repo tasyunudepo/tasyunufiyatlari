@@ -86,9 +86,9 @@ export default function KullanimKosullariPage() {
               </p>
 
               <p>
-                <span className="font-semibold text-hub-ink">Teklif geçerlilik süresi:</span> Resmi PDF teklif,
-                oluşturulma tarihinden itibaren <span className="font-semibold text-hub-ink">24 saat</span>
-                {' '}boyunca geçerlidir. Süre sonunda güncel fiyatla yenileme talep edebilirsiniz.
+                <span className="font-semibold text-hub-ink">Teklif kaydı:</span> Resmi PDF teklifte
+                referans kodu, ürün kalemleri ve güncel hesap bilgileri yer alır. Stok, ödeme ve
+                sevkiyat koşulları satış ekibi görüşmesinde netleştirilir.
               </p>
             </Block>
 

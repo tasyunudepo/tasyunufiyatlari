@@ -19,10 +19,10 @@ interface Props {
   neededM2: number;              // 0 ise girilen alan yok
   cityCode: number;
   cityName: string;
-  tierLabel: string;             // Kamyon / TIR / Hızlı Teslim
+  tierLabel: string;             // Kamyon / TIR / depo stok
   isShippingIncluded: boolean;
   vehicleType: 'lorry' | 'truck' | 'depot' | null;
-  label?: string;                // CTA buton metni (default: "Anında Teklif Oluştur")
+  label?: string;                // CTA buton metni
   resultSessionId?: string;      // PDP session zinciri için
   onOpen?: () => void;
   buttonClassName?: string;
@@ -101,7 +101,7 @@ export default function SingleProductQuoteButton({
         priceWithoutVat:    totalKdvHaric,
         vatAmount,
         refCode,
-        validityDate:       new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString('tr-TR'),
+        validityDate:       new Date().toLocaleString('tr-TR'),
         whatsappOrderLink:  `https://wa.me/${WHATSAPP_ORDER}?text=${whatsappMsg}`,
         customerCompany:    formData.customerCompany || '',
         relatedPerson:      formData.relatedPerson,

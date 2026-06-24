@@ -200,7 +200,7 @@ export function getDecisionContext(
     case 'single_only':
       if (!rules.requires_city_for_pricing) {
         cta_primary = 'siparis';
-        cta_label_primary = 'Hızlı Sipariş Talebi';
+        cta_label_primary = 'Teklif teyidi iste';
         wizard_target_step = 2;
       } else {
         cta_primary = 'hesapla';

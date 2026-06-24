@@ -2,11 +2,10 @@ import type { CalculatedPackage } from '@/lib/types';
 import { WHATSAPP_ORDER } from '@/lib/config';
 
 /**
- * Teklif geçerlilik tarihi (24 saat sonra — PDF ile tutarlı)
+ * Teklif kayıt tarihi (eski API adı korunuyor).
  */
 export const getOfferValidityDate = (): string => {
     const date = new Date();
-    date.setDate(date.getDate() + 1);
     return date.toLocaleString('tr-TR', {
         day: 'numeric',
         month: 'long',

@@ -75,7 +75,7 @@ interface PDFQuoteData {
     priceWithoutVat: number;
     vatAmount: number;
     refCode: string;
-    validityDate: string;
+    validityDate?: string;
     whatsappOrderLink: string;
     customerCompany: string;
     relatedPerson: string;
@@ -423,13 +423,13 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
                 </div>
             </div>
 
-            <!-- DİKKAT: FİYAT GEÇERLİLİK (Banka Altında) -->
+            <!-- DİKKAT: TEKLİF REFERANS NOTU (Banka Altında) -->
             <div style="background:${COLORS.orange100};border-left:4px solid ${COLORS.orange600};padding:8px 12px;border-radius:0 4px 4px 0;margin-bottom:12px;">
                 <div style="font-weight:700;font-size:11px;color:${COLORS.orange600};display:flex;align-items:center;gap:6px;">
-                    ⚠️ DİKKAT: FİYAT GEÇERLİLİK SÜRESİ
+                    ⚠️ DİKKAT: TEKLİF REFERANS NOTU
                 </div>
                 <div style="font-size:10px;color:${COLORS.slate700};margin-top:2px;">
-                    Sektörel dalgalanmalar nedeniyle bu teklif <strong>${escapeHtml(data.validityDate)}</strong> tarihine kadar geçerlidir.
+                    Bu PDF teklif kaydı referans kodu ve güncel hesap bilgileriyle oluşturulmuştur. Stok, ödeme ve sevkiyat koşulları satış ekibi görüşmesinde netleştirilir.
                 </div>
             </div>
 

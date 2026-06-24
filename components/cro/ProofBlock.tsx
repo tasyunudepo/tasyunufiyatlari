@@ -32,7 +32,7 @@ export function ProofBlock() {
             Referanslı PDF teklif, paletli sevkiyat, kayıtlı süreç
           </h2>
           <p className="mt-4 text-sm sm:text-base text-fe-muted leading-relaxed">
-            Teklifte ürün kalemleri, m² maliyeti, nakliye dahil toplam ve geçerlilik süresi yer alır. Sipariş onayından sonra yükleme ve teslimat süreci başlar.
+            Teklifte ürün kalemleri, m² maliyeti, referans kodu ve güncel hesap bilgileri yer alır. Sipariş onayından sonra stok ve sevkiyat koşulları netleştirilir.
           </p>
         </div>
 

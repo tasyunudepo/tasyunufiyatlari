@@ -24,7 +24,6 @@ export function PackageCard({
     onToggleExpand,
     onWhatsAppOrder,
     onDownloadPDF,
-    getOfferValidityDate,
     getTruckMeterColor,
     getSmartAdvice
 }: PackageCardProps) {
@@ -78,11 +77,11 @@ export function PackageCard({
                 Levha: {pkg.plateBrandName} • Toz Grubu: {pkg.accessoryBrandName}
             </p>
 
-            {/* FOMO: Geçerlilik Tarihi */}
+            {/* Teklif referans bilgisi */}
             <div className="mb-3 flex items-center gap-2 text-xs bg-brand-900/30 border border-brand-700/50 rounded-lg px-3 py-2">
-                <span className="text-brand-500">⏰</span>
+                <span className="text-brand-500">📄</span>
                 <span className="text-fe-text">
-                    Bu teklif <strong className="text-brand-400">{getOfferValidityDate()}</strong> tarihine kadar geçerlidir
+                    Teklif referans kodu ve güncel hesap bilgileri PDF kaydında yer alır
                 </span>
             </div>
 
