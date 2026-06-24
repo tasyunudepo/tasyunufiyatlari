@@ -31,6 +31,11 @@ export function PackageCard({
     const isExpanded = expandedCards.includes(pkg.definition.id);
     const visibleItems = isExpanded ? pkg.items : pkg.items.slice(0, 5);
     const hiddenCount = pkg.items.length - 5;
+    const totalWithVat = pkg.grandTotal * 1.2;
+    const m2PriceWithVat = pkg.pricePerM2 * 1.2;
+    const m2PriceLabel = pkg.logistics?.isShippingIncluded
+        ? 'KDV ve nakliye dahil m² maliyeti'
+        : 'KDV dahil m² maliyeti';
 
     return (
         <motion.div
@@ -100,18 +105,20 @@ export function PackageCard({
 
             {/* Fiyat */}
             <div className="mb-4">
-                <div className="text-xs text-fe-muted mb-0.5">Ödenecek Toplam</div>
-                <div className="font-heading text-3xl font-bold text-white tabular-nums">
-                    {(pkg.grandTotal * 1.2).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺
+                <div className="text-xs font-bold text-brand-500 mb-0.5">{m2PriceLabel}</div>
+                <div className="font-heading text-4xl font-bold text-white tabular-nums">
+                    {m2PriceWithVat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m²
                 </div>
-                <div className="text-xs text-fe-muted mt-0.5 mb-2">
-                    KDV dahil{pkg.logistics?.isShippingIncluded ? ' · Nakliye dahil' : ''}
+                <div className="mt-1 text-sm text-fe-text">
+                    Toplam:{' '}
+                    <span className="font-heading font-bold tabular-nums text-white">
+                        {totalWithVat.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺
+                    </span>
+                    <span className="text-fe-muted"> · KDV dahil</span>
                 </div>
-                <div className="text-sm text-fe-muted">
-                    <span className={`${pkg.logistics?.isShippingIncluded ? 'text-brand-500' : 'text-fe-muted'} font-bold`}>
-                        {pkg.logistics?.isShippingIncluded ? 'KDV dahil m² maliyeti:' : 'm² maliyeti (Nakliye Hariç):'}
-                    </span>{' '}
-                    <span className="font-heading tabular-nums">{(pkg.pricePerM2 * 1.2).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m²</span>
+                <div className="mt-0.5 text-xs text-fe-muted">
+                    KDV hariç m²: <span className="font-heading tabular-nums">{pkg.pricePerM2.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m²</span>
+                    {!pkg.logistics?.isShippingIncluded && ' · Nakliye alıcıya ait'}
                 </div>
 
                 {/* Nakliye Uyarısı */}
@@ -164,15 +171,8 @@ export function PackageCard({
                 )}
 
                 <div className="text-xs text-fe-muted mt-2">
-                    KDV Hariç:{' '}
+                    KDV hariç toplam:{' '}
                     <span className="font-heading tabular-nums">{pkg.grandTotal.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺</span>
-                </div>
-                <div className="text-xs text-fe-muted">
-                    KDV (%20):{' '}
-                    <span className="font-heading tabular-nums">{(pkg.grandTotal * 0.2).toLocaleString('tr-TR', {
-                        maximumFractionDigits: 0
-                    })}{' '}
-                        ₺</span>
                 </div>
             </div>
 
@@ -360,24 +360,6 @@ export function PackageCard({
                         )}
                     </button>
                 )}
-            </div>
-
-            {/* Maliyet Detayı */}
-            <div className="border-t border-fe-border pt-4 space-y-1 text-sm">
-                <div className="flex justify-between text-fe-text">
-                    <span>Ürün Toplamı:</span>
-                    <span className="font-heading tabular-nums">
-                        {pkg.totalProductCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺
-                    </span>
-                </div>
-                <div className="flex justify-between text-fe-text">
-                    <span>Nakliye:</span>
-                    <span className={`font-heading tabular-nums ${pkg.logistics?.isShippingIncluded ? 'text-green-500' : 'text-brand-400 font-bold'}`}>
-                        {pkg.logistics?.isShippingIncluded
-                            ? 'Fiyata dahil'
-                            : 'Alıcıya Ait'}
-                    </span>
-                </div>
             </div>
 
             {/* CTA BUTTONS */}

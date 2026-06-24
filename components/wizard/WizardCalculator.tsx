@@ -810,6 +810,13 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [metraj, selectedMalzeme, materialTypes, currentLogistics]);
 
+    const selectRecommendedPackage = (packages: CalculatedPackage[]) =>
+        packages.find(pkg => pkg.definition.name.toLocaleLowerCase('tr-TR').includes('dengeli')) ??
+        packages.find(pkg => pkg.definition.tier === 'balanced') ??
+        packages[1] ??
+        packages[0] ??
+        null;
+
     // Fiyatları Göster
     const handleShowPrices = async () => {
         setIsLoading(true);
@@ -1094,7 +1101,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const cheapest = calculated.length > 0
             ? calculated.reduce((min, p) => p.grandTotal < min.grandTotal ? p : min, calculated[0])
             : null;
-        const recommended = calculated.find(p => p.definition.tier === 'balanced') ?? calculated[0] ?? null;
+        const recommended = selectRecommendedPackage(calculated);
         notifyWizardShowPrices({
             material_type:          selectedMalzeme,
             brand_name:             selectedBrand.name,
@@ -1297,11 +1304,15 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         }
     };
 
-    const recommendedPackage = calculatedPackages.find(pkg => pkg.definition.tier === 'balanced') ?? calculatedPackages[0] ?? null;
+    const recommendedPackage = selectRecommendedPackage(calculatedPackages);
     const recommendedTotalM2 = recommendedPackage ? getPackageTotalM2(recommendedPackage) : 0;
     const recommendedPackageCount = recommendedPackage?.logistics?.packageCount ?? 0;
     const recommendedShippingStatus = recommendedPackage ? getShippingStatusText(recommendedPackage) : '';
-    const recommendedVatLabel = recommendedPackage ? 'KDV dahil toplam' : '';
+    const recommendedM2PriceWithVat = recommendedPackage ? recommendedPackage.pricePerM2 * 1.2 : 0;
+    const recommendedM2PriceWithoutVat = recommendedPackage ? recommendedPackage.pricePerM2 : 0;
+    const recommendedM2Label = recommendedPackage?.logistics?.isShippingIncluded
+        ? 'KDV ve nakliye dahil m² maliyeti'
+        : 'KDV dahil m² maliyeti';
 
     return (
         <div className="flex flex-col bg-fe-bg">
@@ -1542,7 +1553,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                             Önerilen paket: {recommendedPackage.definition.name}
                                         </div>
                                         <h4 className="font-heading text-2xl font-bold text-white tracking-tight">
-                                            Teklif kaydını bu fiyat üzerinden oluşturun
+                                            Bu m² fiyatıyla teklif kaydı oluşturun
                                         </h4>
                                         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-fe-muted">
                                             Bu fiyatla teklif kaydı oluşturun. Satış ekibimiz stok, ödeme ve sevkiyat koşullarını teyit ederek sipariş sürecini netleştirsin.
@@ -1555,13 +1566,26 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                     </div>
 
                                     <div className="space-y-4">
+                                        <div className="rounded-2xl border border-brand-600/45 bg-brand-950/25 p-4">
+                                            <div className="text-[11px] font-bold uppercase tracking-wide text-brand-200">
+                                                {recommendedM2Label}
+                                            </div>
+                                            <div className="mt-1 font-heading text-4xl font-bold tabular-nums text-white">
+                                                {formatCurrency(recommendedM2PriceWithVat)} ₺/m²
+                                            </div>
+                                            <div className="mt-1 text-xs text-fe-muted">
+                                                KDV hariç: {formatCurrency(recommendedM2PriceWithoutVat)} ₺/m²
+                                                {!recommendedPackage.logistics?.isShippingIncluded && ' · Nakliye alıcıya ait'}
+                                            </div>
+                                        </div>
+
                                         <div className="grid grid-cols-2 gap-3 text-sm">
                                             <div className="rounded-xl border border-fe-border bg-fe-bg/70 p-3">
                                                 <div className="text-[11px] uppercase tracking-wide text-fe-muted">Toplam</div>
                                                 <div className="mt-1 font-heading text-xl font-bold tabular-nums text-white">
                                                     {formatCurrency(recommendedPackage.grandTotal * 1.2)} ₺
                                                 </div>
-                                                <div className="mt-0.5 text-[11px] text-fe-muted">{recommendedVatLabel}</div>
+                                                <div className="mt-0.5 text-[11px] text-fe-muted">KDV dahil toplam</div>
                                             </div>
                                             <div className="rounded-xl border border-fe-border bg-fe-bg/70 p-3">
                                                 <div className="text-[11px] uppercase tracking-wide text-fe-muted">Sipariş</div>
@@ -1622,7 +1646,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                     key={pkg.definition.id}
                                     pkg={pkg}
                                     index={index}
-                                    isPopular={pkg.definition.tier === 'balanced'}
+                                    isPopular={pkg.definition.name.toLocaleLowerCase('tr-TR').includes('dengeli') || pkg.definition.tier === 'balanced'}
                                     expandedCards={expandedCards}
                                     onToggleExpand={(id) => {
                                         setExpandedCards(prev =>
@@ -1648,11 +1672,11 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold text-fe-muted">Önerilen: {recommendedPackage.definition.name}</p>
                                 <p className="font-heading text-lg font-bold tabular-nums text-white">
-                                    {formatCurrency(recommendedPackage.grandTotal * 1.2)} ₺
+                                    {formatCurrency(recommendedM2PriceWithVat)} ₺/m²
                                 </p>
                             </div>
                             <div className="shrink-0 text-right text-[11px] text-fe-muted">
-                                <div>{recommendedTotalM2 > 0 ? `${formatM2(recommendedTotalM2)} m²` : `${formatM2(Number(metraj) || 0)} m²`}</div>
+                                <div>{formatCurrency(recommendedPackage.grandTotal * 1.2)} ₺ toplam</div>
                                 <div>{recommendedShippingStatus}</div>
                             </div>
                         </div>
