@@ -1313,6 +1313,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     const recommendedM2Label = recommendedPackage?.logistics?.isShippingIncluded
         ? 'KDV ve nakliye dahil m² maliyeti'
         : 'KDV dahil m² maliyeti';
+    const resultPanelTexture = selectedMalzeme === 'eps'
+        ? '/images/ikonlar/EPS Levha.webp'
+        : '/images/ikonlar/tas-yunu-levha.webp';
 
     return (
         <div className="flex flex-col bg-fe-bg">
@@ -1546,9 +1549,23 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                         </p>
 
                         {recommendedPackage && (
-                            <div className="mb-8 rounded-2xl border border-brand-600/50 bg-fe-surface/85 p-5 md:p-6 shadow-xl shadow-brand-950/20">
-                                <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-                                    <div>
+                            <div className="relative mb-8 overflow-hidden rounded-2xl border border-brand-600/50 bg-fe-surface/90 p-5 shadow-xl shadow-brand-950/20 md:p-6">
+                                <div
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute inset-y-0 left-0 w-full opacity-[0.08] blur-[1px] md:w-[58%]"
+                                    style={{
+                                        backgroundImage: `linear-gradient(90deg, rgba(11,11,12,0.25), rgba(11,11,12,0.88)), url("${resultPanelTexture}")`,
+                                        backgroundPosition: 'left center',
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: '420px 420px',
+                                    }}
+                                />
+                                <div
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(198,158,84,0.16),transparent_34%),linear-gradient(90deg,rgba(11,11,12,0.24),rgba(11,11,12,0.72)_48%,rgba(11,11,12,0.9))]"
+                                />
+                                <div className="relative grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+                                    <div className="rounded-2xl border border-white/5 bg-fe-bg/20 p-4 backdrop-blur-[2px] md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-0">
                                         <div className="mb-3 inline-flex items-center rounded-full border border-brand-600/50 bg-brand-900/35 px-3 py-1 text-xs font-bold text-brand-200">
                                             Önerilen paket: {recommendedPackage.definition.name}
                                         </div>
