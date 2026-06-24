@@ -440,7 +440,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 ? shippingZones.find(z => z.city_code === selectedCityCode)?.city_name
                 : undefined) || "";
 
-        // PDF toplamına KDV eklenir.
+        // Mevcut hesaplar KDV hariç ilerliyor; PDF'de KDV dahil toplamı göstermek için burada hesaplıyoruz.
         const priceWithoutVat = (pkg.totalProductCost || 0) + (pkg.shippingCost || 0);
         const vatAmount = priceWithoutVat * 0.20;
         const grandTotal = priceWithoutVat + vatAmount;
@@ -1210,7 +1210,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
     return (
         <div className="flex flex-col bg-fe-bg">
-            {/* Hesap formu ve güven notları */}
+            {/* WIZARD — page-level hero zaten yukarıda; burada sadece form + sol bilgi paneli */}
             <section
                 className="relative bg-cover bg-center py-10 lg:py-14"
                 style={{
@@ -1501,6 +1501,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         value={quoteForm.customerName}
                                         onChange={e => setQuoteForm({ ...quoteForm, customerName: e.target.value })}
                                         className="w-full px-4 py-3 bg-fe-raised border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                                        placeholder="Adınız Soyadınız"
                                     />
                                 </div>
                                 <div>
@@ -1511,6 +1512,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         value={quoteForm.customerPhone}
                                         onChange={e => setQuoteForm({ ...quoteForm, customerPhone: e.target.value })}
                                         className="w-full px-4 py-3 bg-fe-raised border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                                        placeholder="05XXXXXXXXX"
                                     />
                                 </div>
                                 <div>
@@ -1522,6 +1524,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         value={quoteForm.customerEmail}
                                         onChange={e => setQuoteForm({ ...quoteForm, customerEmail: e.target.value })}
                                         className="w-full px-4 py-3 bg-fe-raised border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                                        placeholder="ornek@firma.com"
                                     />
                                 </div>
                                 <div>
@@ -1531,6 +1534,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         value={quoteForm.customerCompany}
                                         onChange={e => setQuoteForm({ ...quoteForm, customerCompany: e.target.value })}
                                         className="w-full px-4 py-3 bg-fe-raised border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                                        placeholder="Opsiyonel"
                                     />
                                 </div>
                                 <div>
@@ -1540,6 +1544,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         onChange={e => setQuoteForm({ ...quoteForm, customerAddress: e.target.value })}
                                         className="w-full px-4 py-3 bg-fe-raised border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none resize-none"
                                         rows={3}
+                                        placeholder="Opsiyonel teslimat adresi"
                                     />
                                 </div>
 
