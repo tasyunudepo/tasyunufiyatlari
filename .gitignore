@@ -58,6 +58,8 @@ nul
 *.xlsx
 *.xls
 *.pdf
+!public/templates/
+!public/templates/mantolama-teklif-sablonu.xlsx
 
 # MCP config (contains API tokens)
 .mcp.json
