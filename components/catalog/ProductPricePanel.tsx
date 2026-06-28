@@ -17,6 +17,8 @@ import {
   type ProductDetailCtaLocation,
 } from "@/lib/notifyWizardEvent";
 import { BUSINESS_INFO } from "@/lib/business/info";
+import { buildWhatsAppLink, generateQuoteWhatsAppMessage } from "@/lib/utils/whatsapp";
+import { formatBrandProductName } from "@/lib/brandFormat";
 
 import type { CatalogProductView, DecisionContext, WizardPrefill } from "@/lib/catalog/types";
 import { getPriceDisplay } from "@/lib/catalog/decision";
@@ -223,7 +225,13 @@ export default function ProductPricePanel({
     }
   })();
   const isTyping = neededM2 !== debouncedM2;
-  const ctaDisabled = !isTyping && sepetState.scenario === 'below_minimum' && sepetState.totalM2 === 0;
+  // Ara_metraj / empty / below_minimum senaryolarında CTA pasif:
+  // kullanıcı önce araç seçmeli veya metrajı minimuma tamamlamalı.
+  // Tam dolu araç (lorry/tir/large_project) siparişinde nakliye dahil fiyat çıkar.
+  const sepetBos = sepetState.kamyon === 0 && sepetState.tir === 0;
+  const ctaDisabled =
+    !isTyping &&
+    (sepetBos || (sepetState.scenario === 'below_minimum' && sepetState.totalM2 === 0));
 
   // Hero fiyat mantığı:
   // 1. Sepet dolu → blended effective (kamyon × lorryPrice + TIR × truckPrice / toplam m²)
@@ -283,7 +291,7 @@ export default function ProductPricePanel({
     : null;
   const quoteShippingIncluded =
     product.material_type !== 'eps' &&
-    (quoteVehicleType === 'lorry' || quoteVehicleType === 'truck');
+    (sepetState.kamyon > 0 || sepetState.tir > 0);
   const quoteVehicleSummary =
     sepetState.tir > 0 && sepetState.kamyon > 0
       ? `${sepetState.tir} TIR + ${sepetState.kamyon} Kamyon`
@@ -601,14 +609,25 @@ export default function ProductPricePanel({
           </div>
         )}
 
-        {/* Minimum Sipariş — stok olan kalınlıklarda geçerli (depo bazlı); stok yoksa
-            fabrika minimumu lorry/TIR olarak KararKutusu'nda gösterilir */}
-        {minimum_order.has_minimum && minimum_order.label
-          && sepetState.scenario !== 'below_minimum'
-          && depotStock > 0 && (
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-fe-muted">Minimum sipariş</span>
-            <span className="text-xs font-medium text-brand-400">{minimum_order.label}</span>
+        {/* Lojistik Minimum — kalınlığa bağlı dinamik bilgi.
+            Stok varsa depo kuralı, yoksa fabrika (Kamyon/TIR) kuralı.
+            Tam dolu araç = nakliye dahil + bölge iskontosu (kalıcı vurgu). */}
+        {showTierPrice && logistics !== null && activeThickness !== null
+          && (lorryM2 !== null || truckM2 !== null) && (
+          <div className="mt-3 rounded-lg border border-fe-border/50 bg-fe-raised/40 px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fe-muted-strong">
+              Lojistik Minimum · {activeThickness} cm
+            </p>
+            <p className="mt-1 text-xs text-fe-text">
+              {depotStock > 0
+                ? `Depodan minimum ${formatM2(product.depot_min_m2 ?? 300)} m². Tam dolu araç iskontosu uygulanmaz.`
+                : lorryM2 !== null && truckM2 !== null
+                  ? `Fabrika alımında minimum 1 Kamyon = ${formatM2(lorryM2)} m² veya 1 TIR = ${formatM2(truckM2)} m².`
+                  : `Fabrika alımında nakliye verisi henüz tanımlı değil.`}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-snug text-fe-muted-strong">
+              Tam dolu araç siparişinde nakliye fiyata dahildir, bölge iskontosu uygulanır.
+            </p>
           </div>
         )}
 
@@ -629,6 +648,17 @@ export default function ProductPricePanel({
                     <p className="text-fe-muted">Toplam metraj</p>
                     <p className="mt-0.5 font-semibold text-white">{formatM2(quoteM2)} m²</p>
                   </div>
+                  {quotePackageCount !== null && (
+                    <div>
+                      <p className="text-fe-muted">Paket adedi</p>
+                      <p className="mt-0.5 font-semibold text-white">
+                        {quotePackageCount} paket
+                        {packageSizeM2 && (
+                          <span className="ml-1 text-fe-muted">× {formatM2(packageSizeM2)} m²</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-fe-muted">Birim fiyat</p>
                     <p className="mt-0.5 font-semibold text-white">{heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺/m²</p>
@@ -667,12 +697,23 @@ export default function ProductPricePanel({
                 vehicleType={quoteVehicleType}
                 label="PDF teklifimi hazırla"
                 resultSessionId={resultSessionId}
+                packageSizeM2={packageSizeM2}
                 onOpen={() => trackProductDetailPdfOpen('product_detail_summary')}
               />
             )}
             <div className="hidden grid-cols-2 gap-2 lg:grid">
               <a
-                href={`https://wa.me/${WHATSAPP_ORDER}?text=${encodeURIComponent(`Merhaba, ${product.name} için ${zone?.city_name ?? ''} ${quoteM2 ? `${formatM2(quoteM2)} m²` : ''} teklif koşullarını teyit etmek istiyorum.`)}`}
+                href={buildWhatsAppLink(generateQuoteWhatsAppMessage({
+                  productName: formatBrandProductName(product.brand.name, product.name),
+                  thicknessCm: activeThickness,
+                  metrajM2: quoteM2,
+                  vehicleLabel: (sepetState.kamyon > 0 || sepetState.tir > 0)
+                    ? quoteVehicleSummary
+                    : `${formatM2(quoteM2)} m²`,
+                  cityName: zone?.city_name ?? '',
+                  pricePerM2: heroPrice ?? 0,
+                  totalKdvHaric: quoteTotalKdvHaric ?? 0,
+                }))}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => {
@@ -745,12 +786,23 @@ export default function ProductPricePanel({
                 vehicleType={quoteVehicleType}
                 label="PDF"
                 resultSessionId={resultSessionId}
+                packageSizeM2={packageSizeM2}
                 onOpen={() => trackProductDetailPdfOpen('sticky_mobile')}
                 buttonClassName="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-500/70 bg-brand-500 px-3 text-[13px] font-black text-fe-bg transition-colors hover:bg-brand-400"
               />
             </div>
             <a
-              href={`https://wa.me/${WHATSAPP_ORDER}?text=${encodeURIComponent(`Merhaba, ${product.name} için ${zone?.city_name ?? ''} ${formatM2(quoteM2)} m² teklif koşullarını teyit etmek istiyorum.`)}`}
+              href={buildWhatsAppLink(generateQuoteWhatsAppMessage({
+                productName: formatBrandProductName(product.brand.name, product.name),
+                thicknessCm: activeThickness,
+                metrajM2: quoteM2,
+                vehicleLabel: (sepetState.kamyon > 0 || sepetState.tir > 0)
+                  ? quoteVehicleSummary
+                  : `${formatM2(quoteM2)} m²`,
+                cityName: zone?.city_name ?? '',
+                pricePerM2: heroPrice ?? 0,
+                totalKdvHaric: quoteTotalKdvHaric ?? 0,
+              }))}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp'tan teyit iste"

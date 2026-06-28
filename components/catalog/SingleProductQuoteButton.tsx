@@ -11,6 +11,7 @@ import type { PdfOfferFormData } from '@/lib/schemas/pdfOffer.schema';
 import type { CatalogProductView } from '@/lib/catalog/types';
 import { WHATSAPP_ORDER } from '@/lib/config';
 import { formatBrandProductName, formatBrandName } from '@/lib/brandFormat';
+import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp';
 
 interface Props {
   product: CatalogProductView;
@@ -24,6 +25,7 @@ interface Props {
   vehicleType: 'lorry' | 'truck' | 'depot' | null;
   label?: string;                // CTA buton metni
   resultSessionId?: string;      // PDP session zinciri için
+  packageSizeM2?: number | null;  // plate_prices boşsa logistics_capacity fallback'i
   onOpen?: () => void;
   buttonClassName?: string;
 }
@@ -46,6 +48,7 @@ export default function SingleProductQuoteButton({
   vehicleType,
   label,
   resultSessionId,
+  packageSizeM2: fallbackPackageSizeM2,
   onOpen,
   buttonClassName,
 }: Props) {
@@ -73,17 +76,36 @@ export default function SingleProductQuoteButton({
       const activeRow = activeThickness != null
         ? product.thickness_prices?.find(r => r.thickness === activeThickness) ?? null
         : null;
-      const packageSizeM2 = activeRow?.package_m2 && activeRow.package_m2 > 0
+      const activeRowPackageSizeM2 = activeRow?.package_m2 && activeRow.package_m2 > 0
         ? activeRow.package_m2
         : null;
-      const computedPackageCount = packageSizeM2
-        ? Math.max(1, Math.ceil(areaM2 / packageSizeM2))
+      const effectivePackageSizeM2 =
+        activeRowPackageSizeM2 ?? (
+          fallbackPackageSizeM2 && fallbackPackageSizeM2 > 0
+            ? fallbackPackageSizeM2
+            : null
+        );
+      const computedPackageCount = effectivePackageSizeM2
+        ? Math.max(1, Math.ceil(areaM2 / effectivePackageSizeM2))
         : 0;
 
       // 1. PDF üret (müşteri otomatik indirir)
-      const whatsappMsg = encodeURIComponent(
-        `Merhaba, ${refCode} no'lu teklif hakkında bilgi almak istiyorum.`
-      );
+      const message = generateQuoteWhatsAppMessage({
+        productName: brandProductName,
+        thicknessCm: activeThickness,
+        metrajM2: areaM2,
+        vehicleLabel: (() => {
+          // PDP'den gelen vehicleType'a göre kısa etiket
+          if (vehicleType === 'lorry') return '1 Kamyon dolusu';
+          if (vehicleType === 'truck') return '1 TIR dolusu';
+          return `${areaM2.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m²`;
+        })(),
+        cityName,
+        pricePerM2,
+        totalKdvHaric: totalKdvHaric,
+        refCode,
+      });
+      const whatsappMsg = encodeURIComponent(message);
       const pdfResult = await generateQuotePDF({
         packageName:        brandProductName,
         packageDescription: brandProductName,
@@ -102,7 +124,7 @@ export default function SingleProductQuoteButton({
         vatAmount,
         refCode,
         validityDate:       new Date().toLocaleString('tr-TR'),
-        whatsappOrderLink:  `https://wa.me/${WHATSAPP_ORDER}?text=${whatsappMsg}`,
+        whatsappOrderLink:  buildWhatsAppLink(message),
         customerCompany:    formData.customerCompany || '',
         relatedPerson:      formData.relatedPerson,
         deliveryAddress:    formData.deliveryAddress || '',
@@ -169,7 +191,7 @@ export default function SingleProductQuoteButton({
             priceWithoutVat: totalKdvHaric,
             vatAmount,
             packageCount:    computedPackageCount || 1,
-            packageSizeM2:   packageSizeM2 ?? 1,
+            packageSizeM2:   effectivePackageSizeM2 ?? 1,
             itemsPerPackage: 1,
             vehicleType:     vehicleType === 'depot' ? 'none' : (vehicleType ?? null),
             lorryCapacityPackages: null,
@@ -183,6 +205,16 @@ export default function SingleProductQuoteButton({
           }),
         });
 
+        if (!quoteRes.ok) {
+          // Hata durumunda ham body'yi logla (debug için)
+          try {
+            const raw = await quoteRes.text();
+            console.error('Catalog PDF quote save failed:', {
+              status: quoteRes.status,
+              rawBody: raw.slice(0, 2000),
+            });
+          } catch { /* ignore */ }
+        }
         if (quoteRes.ok) {
           notifyPdfQuoteRequested({
             material_type:         matType,
