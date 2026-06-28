@@ -1,5 +1,4 @@
 import type { CalculatedPackage } from '@/lib/types';
-import { WHATSAPP_ORDER } from '@/lib/config';
 
 /**
  * Teklif kayıt tarihi (eski API adı korunuyor).
@@ -50,32 +49,6 @@ export const getSmartAdvice = (logistics: CalculatedPackage['logistics']): strin
 };
 
 /**
- * WhatsApp mesajı oluştur
+ * WhatsApp mesajı artık merkezi `lib/utils/whatsapp.ts` modülünde.
+ * generateQuoteWhatsAppMessage + buildWhatsAppLink fonksiyonlarına geçildi.
  */
-export const generateWhatsAppMessage = (
-    pkg: CalculatedPackage,
-    metraj: number,
-    cityName: string
-): string => {
-    const refCode = `#TY${Date.now().toString().slice(-6)}`;
-
-    return (
-        `Merhaba! Sitenizden hesapladığım sipariş bilgileri:\n\n` +
-        `📦 Paket: ${pkg.definition.name}\n` +
-        `📏 Metraj: ${metraj} m²\n` +
-        `📍 Şehir: ${cityName}\n` +
-        `💰 Tutar: ${pkg.grandTotal.toLocaleString('tr-TR')} ₺\n\n` +
-        `Ödeme planı ve termin öğrenebilir miyim?\n\n` +
-        `Ref: ${refCode}`
-    );
-};
-
-/**
- * WhatsApp URL oluştur
- */
-export const generateWhatsAppURL = (phoneNumber: string, message: string): string => {
-    const encodedMessage = encodeURIComponent(message);
-    // return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    // Numara override edildi
-    return `https://wa.me/${WHATSAPP_ORDER}?text=${encodedMessage}`;
-};
