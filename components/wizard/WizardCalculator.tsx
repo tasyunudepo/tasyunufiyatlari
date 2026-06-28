@@ -28,9 +28,8 @@ import {
     getOfferValidityDate,
     getTruckMeterColor,
     getSmartAdvice,
-    generateWhatsAppMessage,
-    generateWhatsAppURL
 } from "@/lib/utils/packageHelpers";
+import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from "@/lib/utils/whatsapp";
 import { useWizardStore } from "@/lib/store/wizardStore";
 import type { PdfOfferFormData } from "@/lib/schemas/pdfOffer.schema";
 import type {
@@ -475,8 +474,29 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const validityDate = getOfferValidityDate();
 
         const metrajNumber = Number(metraj) || 0;
-        const waMessage = `Merhaba ${refCode} no lu teklif formunu sipariş etmek istiyorum`;
-        const whatsappOrderLink = generateWhatsAppURL("", waMessage);
+        // PDF içine gömülecek WhatsApp linki — müşteri teklif aldıktan sonra
+        // sipariş onayı/iletişim için tıklar. Bağlamsal bilgiler içerir.
+        const log = pkg.logistics;
+        const vehicleLabel = log
+            ? log.vehicleType === 'lorry'
+                ? '1 Kamyon'
+                : log.vehicleType === 'truck'
+                    ? '1 TIR'
+                    : log.vehicleType === 'multiple'
+                        ? 'Kamyon + TIR kombinasyonu'
+                        : `${formatM2(metrajNumber)} m²`
+            : `${formatM2(metrajNumber)} m²`;
+        const waMessage = generateQuoteWhatsAppMessage({
+            productName: pkg.definition.name,
+            thicknessCm: parseInt(selectedKalinlik) || null,
+            metrajM2: metrajNumber,
+            vehicleLabel,
+            cityName: shippingZones.find(z => z.city_code === selectedCityCode)?.city_name ?? '',
+            pricePerM2: pkg.pricePerM2,
+            totalKdvHaric: Math.round(pkg.grandTotal / 1.2),
+            refCode,
+        });
+        const whatsappOrderLink = buildWhatsAppLink(waMessage);
 
         const totalM2 =
             pkg.logistics?.packageCount && pkg.logistics?.packageSizeM2
@@ -621,14 +641,32 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 body: JSON.stringify({ ...quotePayload, pdfUrl, pdfStoragePath }),
             });
 
-            const quoteResult = await quoteRes.json();
+            let quoteResult: any = null;
+            let rawBody = '';
+            try {
+                quoteResult = await quoteRes.json();
+            } catch (parseErr) {
+                // JSON parse hatası → server response body'sini ham metin olarak al
+                rawBody = await quoteRes.text().catch(() => '');
+                console.error('PDF quote save: response JSON parse failed', {
+                    status: quoteRes.status,
+                    statusText: quoteRes.statusText,
+                    rawBody: rawBody.slice(0, 2000),
+                    payload: quotePayload,
+                });
+                throw new Error(`Sunucudan beklenen formatta yanıt alınamadı (HTTP ${quoteRes.status}).`);
+            }
             if (!quoteRes.ok || !quoteResult.ok) {
                 console.error('PDF quote save failed:', {
                     status: quoteRes.status,
                     result: quoteResult,
                     payload: quotePayload,
                 });
-                throw new Error(quoteResult.error || "Teklif kaydı oluşturulamadı.");
+                throw new Error(
+                    quoteResult.error
+                    || (quoteResult as any).debug
+                    || "Teklif kaydı oluşturulamadı."
+                );
             }
 
             // GA4 event — Pdf_Teklif_Talebi (server-side quote insert zaten oldu)
@@ -751,7 +789,11 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     };
 
     // Hedef metrajın yakınında geçerli tam-araç kombinasyonları üretir
-    // (kullanıcıya snap-suggestion butonları için). En yakın 4 öneri.
+    // (kullanıcıya snap-suggestion butonları için).
+    //
+    // Kural: TIR öncelikli. Kalan miktar 1 kamyona sığıyorsa +1 kamyon,
+    // sığmıyorsa +1 TIR. Hiçbir zaman 1'den fazla kamyon önerilmez.
+    // (TIR fiyatı kamyondan düşük → çoklu kamyon yerine her zaman +1 TIR mantıklı.)
     const getValidFullVehicleOptions = (
         m2: number,
         logistics: LogisticsCapacity | null
@@ -760,23 +802,52 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const lorry = logistics.lorry_capacity_m2;
         const truck = logistics.truck_capacity_m2;
         if (!lorry || !truck) return [];
-        const options: { m2: number; label: string }[] = [];
-        const maxTrucks = Math.max(2, Math.ceil(m2 / truck) + 1);
-        const maxLorries = Math.max(2, Math.ceil(m2 / lorry) + 1);
-        for (let t = 0; t <= maxTrucks; t++) {
-            for (let l = 0; l <= maxLorries; l++) {
-                if (t === 0 && l === 0) continue;
-                const total = t * truck + l * lorry;
-                const parts: string[] = [];
-                if (l > 0) parts.push(`${l} Kamyon`);
-                if (t > 0) parts.push(`${t} TIR`);
-                options.push({ m2: total, label: parts.join(' + ') });
-            }
+
+        const candidates: { m2: number; label: string }[] = [];
+
+        // Aday A: pure TIR (en az ceil(m2/truck) TIR)
+        const fullTirCount = Math.ceil(m2 / truck);
+        candidates.push({
+            m2: fullTirCount * truck,
+            label: `${fullTirCount} TIR`,
+        });
+
+        // Aday B: TIR-öncelikli — floor(m2/truck) TIR + (kalan ≤ lorry ? 1 kamyon : +1 TIR)
+        const baseTir = Math.floor(m2 / truck);
+        const kalan = m2 - baseTir * truck;
+        if (baseTir > 0 && kalan > 0 && kalan <= lorry) {
+            // Kalan 1 kamyona sığıyor → "X TIR + 1 Kamyon"
+            candidates.push({
+                m2: baseTir * truck + lorry,
+                label: `${baseTir} TIR + 1 Kamyon`,
+            });
+        } else if (baseTir > 0 && kalan > lorry) {
+            // Kalan kamyondan büyük → +1 TIR (zaten Aday A ile aynı; duplicate önlemek için atla)
+            // (fullTirCount = baseTir + 1 zaten Aday A'da var)
         }
-        // En yakın 4 öneri (mutlak farka göre sırala)
-        return options
+
+        // Aday C: pure kamyon (küçük metrajlar için; sadece 1 kamyon mantıklı,
+        // TIR'a eşit veya az metrajlarda göster)
+        if (lorry <= truck) {
+            candidates.push({
+                m2: lorry,
+                label: `1 Kamyon`,
+            });
+        }
+
+        // Duplicate'leri kaldır (aynı m2 birden fazla adayda olabilir)
+        const seen = new Set<number>();
+        const unique = candidates.filter(c => {
+            const key = Math.round(c.m2 * 10);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        // Mesafeye göre sırala, en yakın 3'ünü döndür
+        return unique
             .sort((a, b) => Math.abs(a.m2 - m2) - Math.abs(b.m2 - m2))
-            .slice(0, 4)
+            .slice(0, 3)
             .sort((a, b) => a.m2 - b.m2);
     };
 
@@ -1271,13 +1342,31 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 });
             }
 
-            const message = generateWhatsAppMessage(
-                selectedPackageForQuote,
-                Number(metraj) || 0,
-                selectedCityCode ? shippingZones.find(z => z.city_code === selectedCityCode)?.city_name || "" : ""
-            );
+            // Araç etiketi — logistics'ten türetilir (sipariş planı özetlenir)
+            const log = selectedPackageForQuote.logistics;
+            const vehicleLabel = log
+                ? log.vehicleType === 'lorry'
+                    ? '1 Kamyon'
+                    : log.vehicleType === 'truck'
+                        ? '1 TIR'
+                        : log.vehicleType === 'multiple'
+                            ? 'Kamyon + TIR kombinasyonu'
+                            : `${formatM2(Number(metraj) || 0)} m²`
+                : `${formatM2(Number(metraj) || 0)} m²`;
 
-            const whatsappUrl = `https://wa.me/${WHATSAPP_ORDER}?text=${encodeURIComponent(message)}`;
+            const message = generateQuoteWhatsAppMessage({
+                productName: selectedPackageForQuote.definition.name,
+                thicknessCm: parseInt(selectedKalinlik) || null,
+                metrajM2: Number(metraj) || 0,
+                vehicleLabel,
+                cityName: selectedCityCode ? shippingZones.find(z => z.city_code === selectedCityCode)?.city_name || "" : "",
+                pricePerM2: selectedPackageForQuote.pricePerM2,
+                // grandTotal KDV dahil; WhatsApp'ta KDV hariç göstermek için 1.2'ye böl
+                totalKdvHaric: Math.round(selectedPackageForQuote.grandTotal / 1.2),
+                refCode,
+            });
+
+            const whatsappUrl = buildWhatsAppLink(message);
             window.open(whatsappUrl, '_blank');
 
             setShowQuoteModal(false);

@@ -26,16 +26,14 @@ interface WizardStep4Props {
     validation: MetrajValidation;
 }
 
-type Tier = 'parsiyel' | 'kamyon' | 'tir';
+type Tier = 'kamyon' | 'tir';
 
-function getTier(m2: number, lorryM2: number, truckM2: number): Tier {
+function getTier(m2: number, _lorryM2: number, truckM2: number): Tier {
     if (m2 >= truckM2) return 'tir';
-    if (m2 >= lorryM2) return 'kamyon';
-    return 'parsiyel';
+    return 'kamyon';
 }
 
 const TIER_CONFIG: Record<Tier, { label: string; Icon: IconCmp; iconWeight: 'regular' | 'fill' | 'bold'; ring: string; bg: string; text: string }> = {
-    parsiyel: { label: 'Kısmi Yük',     Icon: Package, iconWeight: 'regular', ring: 'ring-fe-muted',  bg: 'bg-fe-raised',    text: 'text-fe-text' },
     kamyon:   { label: 'Kamyon Dolusu', Icon: Truck,   iconWeight: 'regular', ring: 'ring-brand-500',  bg: 'bg-brand-900/40', text: 'text-brand-300' },
     tir:      { label: 'TIR Dolusu',    Icon: Truck,   iconWeight: 'fill',    ring: 'ring-brand-500',  bg: 'bg-brand-900/40', text: 'text-brand-300'  },
 };
@@ -101,8 +99,8 @@ export function WizardStep4({
         : null;
 
     // Tier hesabı (roundedM2 üzerinden)
-    const rawTier       = hasVal ? getTier(m2, lorryM2, truckM2) : 'parsiyel';
-    const effectiveTier = hasVal ? getTier(roundedM2, lorryM2, truckM2) : 'parsiyel';
+    const rawTier       = hasVal ? getTier(m2, lorryM2, truckM2) : 'kamyon';
+    const effectiveTier = hasVal ? getTier(roundedM2, lorryM2, truckM2) : 'kamyon';
     const tier          = effectiveTier;
     const roundingBonus = (showRound || isSnapped) && effectiveTier !== rawTier;
 
@@ -110,21 +108,21 @@ export function WizardStep4({
     const lorryPct = Math.min((roundedM2 / lorryM2) * 100, 100);
     const truckPct = Math.min((roundedM2 / truckM2) * 100, 100);
 
-    // Çoklu araç hesabı
+    // Çoklu araç hesabı: TIR'ları doldur, kalanı mantıklı bir araca tamamla
+    // Kalan kamyona sığarsa → 1 kamyon daha ekle (toplam: fullTirCount TIR + 1 kamyon)
+    // Kalan kamyondan büyükse → +1 TIR (toplam: fullTirCount+1 TIR, kamyon yok)
+    // Kısmi yük kabul edilmez — sistem sadece tam araçla çalışır.
     const isMultiVehicle  = hasVal && roundedM2 > truckM2;
     const fullTirCount    = isMultiVehicle ? Math.floor(roundedM2 / truckM2) : 0;
     const remainAfterTir  = isMultiVehicle ? roundedM2 - fullTirCount * truckM2 : 0;
     const remainKisiPaket = remainAfterTir > 0.1 ? Math.ceil(remainAfterTir / pkgSizeM2) : 0;
+    const canFitInLorry   = isMultiVehicle && remainKisiPaket > 0 && remainKisiPaket <= lorryPkgs;
+    const needOneMoreTir  = isMultiVehicle && remainKisiPaket > lorryPkgs;
+    const finalTirCount   = needOneMoreTir ? fullTirCount + 1 : fullTirCount;
+    const showExtraLorry  = canFitInLorry;
 
-    // Bir sonraki tam araca kaç paket eksik
-    const pkgsToLorry = (tier === 'parsiyel' && lorryPkgs > pkgCount) ? lorryPkgs - pkgCount : 0;
+    // Bir sonraki tam araca kaç paket eksik (kamyon tier'ından TIR'a geçiş)
     const pkgsToTir   = (tier === 'kamyon'   && truckPkgs > pkgCount) ? truckPkgs - pkgCount : 0;
-
-    // Multi: kısmi yükü bir sonraki tam TIR'a tamamlamak için gereken paket
-    const pkgsToCompleteTir = (isMultiVehicle && truckPkgs > 0 && remainKisiPaket > 0)
-        ? truckPkgs - remainKisiPaket : 0;
-    const m2ToCompleteTir = pkgsToCompleteTir * pkgSizeM2;
-    const FILL_THRESHOLD = 10;
 
     // Bölge iskonto oranları
     const selectedZone = shippingZones.find(z => z.city_code === selectedCityCode);
@@ -180,6 +178,9 @@ export function WizardStep4({
         : 0;
     const secondaryFullVehicleOptions = fullVehicleOptions
         .filter(opt => opt.roundedM2 !== primaryFullVehicleOption?.roundedM2)
+        // Yetersiz seçenekler (ihtiyaçtan küçük) gösterilmez — kullanıcıya
+        // sadece ihtiyacı karşılayan tam araç alternatifleri sunulur.
+        .filter(opt => opt.m2 >= currentOrderM2 - 0.05)
         .slice(0, 3);
 
     // Nudge mesajı
@@ -195,8 +196,6 @@ export function WizardStep4({
         } else if (roundingBonus) {
             const bonusPct = effectiveTier === 'tir' ? discTir : discKamyon;
             if (bonusPct != null) nudge = { bonus: true, tier: effectiveTier as 'kamyon' | 'tir', pct: bonusPct };
-        } else if (tier === 'parsiyel' && discKamyon != null && pkgsToLorry > 0) {
-            nudge = { remainingPkgs: pkgsToLorry, target: 'kamyon', pct: discKamyon };
         } else if (tier === 'kamyon' && discTir != null && pkgsToTir > 0) {
             nudge = { remainingPkgs: pkgsToTir, target: 'tir', pct: discTir };
         } else if (tier === 'tir' && discTir != null) {
@@ -383,13 +382,12 @@ export function WizardStep4({
             {/* Tier badge row */}
             {!isFullVehicleInvalid && (
                 <div className="flex gap-2 mb-4">
-                    {(['parsiyel', 'kamyon', 'tir'] as Tier[]).map(t => {
+                    {(['kamyon', 'tir'] as Tier[]).map(t => {
                         const cfg = TIER_CONFIG[t];
                         const isActive = tier === t && hasVal;
                         const isPast   = hasVal && (
-                            (t === 'parsiyel') ||
-                            (t === 'kamyon' && (tier === 'kamyon' || tier === 'tir')) ||
-                            (t === 'tir'    && tier === 'tir')
+                            (t === 'kamyon' && tier === 'tir') ||
+                            (t === 'tir'    && false)
                         );
                         return (
                             <div
@@ -443,17 +441,31 @@ export function WizardStep4({
                                 </span>
                             </div>
                         ))}
-                        {remainKisiPaket > 0 && (
+                        {remainKisiPaket > 0 && showExtraLorry && (
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-fe-muted w-16 shrink-0 inline-flex items-center gap-1"><Package size={14} /> Kısmi</span>
+                                <span className="text-xs text-fe-muted w-16 shrink-0 inline-flex items-center gap-1"><Truck size={14} /> Kamyon</span>
                                 <div className="flex-1 h-2 bg-fe-raised rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-fe-muted/60 rounded-full"
+                                        className="h-full bg-brand-400 rounded-full"
+                                        style={{ width: `${Math.min((remainAfterTir / lorryM2) * 100, 100)}%` }}
+                                    />
+                                </div>
+                                <span className="text-xs font-bold tabular-nums text-brand-300 w-20 text-right shrink-0">
+                                    {remainAfterTir.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m²
+                                </span>
+                            </div>
+                        )}
+                        {needOneMoreTir && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-fe-muted w-16 shrink-0 inline-flex items-center gap-1"><Truck size={14} weight="fill" /> TIR {fullTirCount + 1}</span>
+                                <div className="flex-1 h-2 bg-fe-raised rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-brand-400 rounded-full"
                                         style={{ width: `${Math.min((remainAfterTir / truckM2) * 100, 100)}%` }}
                                     />
                                 </div>
-                                <span className="text-xs text-fe-muted tabular-nums w-20 text-right shrink-0">
-                                    {remainKisiPaket} paket
+                                <span className="text-xs font-bold tabular-nums text-brand-300 w-20 text-right shrink-0">
+                                    {remainAfterTir.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m²
                                 </span>
                             </div>
                         )}
@@ -521,39 +533,33 @@ export function WizardStep4({
                                 : <span className="text-green-300"> — Tam Doluluk</span>
                             }
                         </p>
-                        {remainKisiPaket > 0 && (
-                            <>
-                                {/* Bilgi: 1 TIR ve üzeri varyasyonlarda TIR iskontosu zaten uygulanır */}
-                                {fullTirCount >= 1 && (nudge as any).pct != null && (
-                                    <div className="flex items-start gap-2 p-2 rounded-lg bg-green-900/20 border border-green-700/30 mb-1.5">
-                                        <CheckCircle size={16} weight="fill" className="text-green-400 shrink-0 mt-0.5" />
-                                        <p className="text-xs text-green-200">
-                                            1 TIR ve üzeri Kamyon + TIR varyasyonlarında{' '}
-                                            <span className="font-bold text-green-100">%{(nudge as any).pct} TIR iskontosu</span>{' '}
-                                            uygulanır.
-                                        </p>
-                                    </div>
-                                )}
-                                {/* Seçenek: Ekle → sonraki TIR (sadece yakınsa) — nakliye optimizasyonu */}
-                                {pkgsToCompleteTir > 0 && pkgsToCompleteTir <= FILL_THRESHOLD ? (
-                                    <div className="flex items-start gap-2 p-2 rounded-lg bg-brand-900/20 border border-brand-700/30">
-                                        <CaretUp size={16} weight="bold" className="text-brand-400 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs text-brand-300">
-                                                <span className="font-bold">{m2ToCompleteTir.toFixed(1)} m² ({pkgsToCompleteTir} paket) ekleyin</span>
-                                                {' '}→ {fullTirCount + 1}. TIR tam dolar · nakliye fiyata dahildir
-                                            </p>
-                                            <p className="mt-1 text-[11px] text-brand-300/80">
-                                                Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
-                                            </p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <p className="text-[11px] text-brand-400/70 inline-flex items-center gap-1">
-                                        <WarningCircle size={12} weight="fill" /> Kısmi yük ({remainKisiPaket} paket · {remainAfterTir.toFixed(1)} m²) için nakliye ayrıca ücretlendirilir
+                        {remainKisiPaket > 0 && showExtraLorry && (
+                            <div className="flex items-start gap-2 p-2 rounded-lg bg-brand-900/20 border border-brand-700/30 mb-1.5">
+                                <CaretUp size={16} weight="bold" className="text-brand-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-brand-300">
+                                        <span className="font-bold">+1 Kamyon ekleyin ({remainAfterTir.toFixed(1)} m²)</span>
+                                        {' '}→ {fullTirCount} TIR + 1 Kamyon tam dolu · nakliye fiyata dahildir
                                     </p>
-                                )}
-                            </>
+                                    <p className="mt-1 text-[11px] text-brand-300/80">
+                                        Kalan miktar 1 kamyona sığdığı için tam araç tamamlaması yapılır.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {remainKisiPaket > 0 && needOneMoreTir && (
+                            <div className="flex items-start gap-2 p-2 rounded-lg bg-brand-900/20 border border-brand-700/30 mb-1.5">
+                                <CaretUp size={16} weight="bold" className="text-brand-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-brand-300">
+                                        <span className="font-bold">+1 TIR ekleyin ({remainAfterTir.toFixed(1)} m²)</span>
+                                        {' '}→ {fullTirCount + 1} TIR tam dolu · nakliye fiyata dahildir
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-brand-300/80">
+                                        Kalan miktar kamyondan büyük olduğu için +1 TIR ile tamamlanır.
+                                    </p>
+                                </div>
+                            </div>
                         )}
                         {(nudge as any).pct != null && remainKisiPaket === 0 && (
                             <>
@@ -561,7 +567,7 @@ export function WizardStep4({
                                     TIR&apos;lara <span className="font-bold text-green-300">%{(nudge as any).pct}</span> bölge iskontosu uygulanır · nakliye fiyata dahildir
                                 </p>
                                 <p className="mt-1 text-[11px] text-green-200/80">
-                                    Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                    Bu fiyat tam dolu araç sipariş koşulunda geçerlidir.
                                 </p>
                             </>
                         )}
