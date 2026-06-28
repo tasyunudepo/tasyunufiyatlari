@@ -17,8 +17,10 @@ export const quoteSchema = z.object({
 
   customerPhone: z
     .string()
-    .regex(/^05\d{9}$/, '05XX formatında 11 haneli telefon girin (örn: 05321234567)')
-    .length(11, 'Telefon numarası 11 haneli olmalı'),
+    .trim()
+    .min(7, 'Telefon numarası çok kısa')
+    .max(20, 'Telefon numarası çok uzun')
+    .regex(/^[\d+\s()-]+$/, 'Geçerli bir telefon numarası girin (örn: 0532 123 45 67 veya +7 900 123 45 67)'),
 
   customerCompany: z.string().max(255, 'En fazla 255 karakter').optional().or(z.literal('')),
   customerAddress: z.string().max(500, 'En fazla 500 karakter').optional().or(z.literal('')),
@@ -41,8 +43,10 @@ export const apiQuoteSchema = z.object({
     .or(z.literal('')),
   customerPhone: z
     .string()
-    .regex(/^05\d{9}$/, '05XX formatında 11 haneli telefon girin (örn: 05321234567)')
-    .length(11, 'Telefon numarası 11 haneli olmalı'),
+    .trim()
+    .min(7, 'Telefon numarası çok kısa')
+    .max(20, 'Telefon numarası çok uzun')
+    .regex(/^[\d+\s()-]+$/, 'Geçerli bir telefon numarası girin (örn: 0532 123 45 67 veya +7 900 123 45 67)'),
   customerCompany: z.string().max(255).optional().or(z.literal('')),
   customerAddress: z.string().max(500).optional().or(z.literal('')),
   submissionType: z.enum(['whatsapp_order', 'pdf_quote']),

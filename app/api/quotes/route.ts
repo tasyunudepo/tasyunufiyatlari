@@ -108,8 +108,18 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Quote insert failed:', error)
+      // Geliştirme/debug için Supabase error mesajını da döndür.
+      // Production'da generic mesaj yeterli; debug için detay kritik.
+      const debugError =
+        process.env.NODE_ENV !== 'production' && error
+          ? `${error.message} (code: ${error.code ?? 'n/a'})`
+          : null
       return NextResponse.json(
-        { ok: false, error: 'Teklif kaydı oluşturulamadı.' },
+        {
+          ok: false,
+          error: 'Teklif kaydı oluşturulamadı.',
+          ...(debugError ? { debug: debugError } : {}),
+        },
         { status: 500 }
       )
     }
