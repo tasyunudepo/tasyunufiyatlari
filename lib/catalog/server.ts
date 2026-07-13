@@ -5,6 +5,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { buildMinimumOrderLabel } from '@/lib/catalog/slug';
+import { buildWizardPrefill } from '@/lib/catalog/prefill';
 import { getDecisionContext } from '@/lib/catalog/decision';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import type {
@@ -13,7 +14,6 @@ import type {
   CatalogProductsResponse,
   ProductRules,
   MinimumOrderSummary,
-  WizardPrefill,
   SalesMode,
   PricingVisibilityMode,
   MinimumOrderType,
@@ -411,14 +411,17 @@ function buildPlateView(row: SupabasePlateRow): CatalogProductView {
     return derivedThicknesses[0];
   })();
 
-  const wizard_prefill: WizardPrefill = {
-    levhaTipi: (materialType?.slug as 'tasyunu' | 'eps') ?? null,
-    markaId:   brand?.id   ?? null,
-    markaAdi:  brand?.name ?? null,
-    modelId:   row.id,
-    modelAdi:  row.short_name ?? row.name,
-    kalinlik:  dominantThickness,
-  };
+  // FR-007: mantolama-uygun olmayan levha (çatı/ara bölme/giydirme/endüstriyel)
+  // wizard prefill'i alamaz; karar lib/catalog/prefill üzerinden verilir.
+  const wizard_prefill = buildWizardPrefill({
+    plateId:      row.id,
+    plateName:    row.name,
+    shortName:    row.short_name,
+    materialSlug: materialType?.slug ?? null,
+    brandId:      brand?.id ?? null,
+    brandName:    brand?.name ?? null,
+    kalinlik:     dominantThickness,
+  });
 
   return {
     id:   row.id,

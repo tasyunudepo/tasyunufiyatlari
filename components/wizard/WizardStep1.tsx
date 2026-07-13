@@ -4,12 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { Check } from "@phosphor-icons/react";
 import type { Brand } from "@/lib/types";
-
-const DIS_CEPHE_MODELLER = [
-    'SW035', 'Premium', 'HD150', 'LD125', 'TR7.5',
-    'İdeal Carbon', 'Double Carbon', 'EPS Karbonlu',
-    'EPS Beyaz', 'EPS 035 Beyaz', 'Optimix Karbonlu',
-];
+import { filterMantolamaWizardModels } from '@/lib/wizard/eligibility';
 
 const MARKA_LOGOLARI: Record<string, string> = {
     'Dalmaçyalı': '/images/markalogolar/dalmaçyalı-taşyünü- fiyatları.webp',
@@ -34,13 +29,11 @@ const BRAND_CHIPS: Record<string, string> = {
     'Optimix':    'Ekonomik',
 };
 
-// Model meta — chip (kullanım alanı) opsiyonel; desc (yoğunluk) ana bilgidir.
-const MODEL_META: Record<string, { chip?: string; desc: string }> = {
-    'SW035':   { chip: 'Konut · Villa', desc: '120 kg/m³ yoğunluk' },
-    'LD125':   {                         desc: '125 kg/m³ yoğunluk' },
-    'HD150':   {                         desc: '150 kg/m³ yoğunluk' },
-    'Premium': {                         desc: '120 kg/m³ yoğunluk' },
-    'TR7.5':   {                         desc: '120 kg/m³ yoğunluk' },
+// Model meta — chip (kullanım alanı) opsiyonel.
+// Yoğunluk metni buraya sabit yazılamaz: değer ancak teknik profil
+// verisinden kaynak etiketiyle gelir (lib/technical-profiles, PRD FR-006).
+const MODEL_META: Record<string, { chip?: string; desc?: string }> = {
+    'SW035': { chip: 'Konut · Villa' },
 };
 
 interface WizardStep1Props {
@@ -61,12 +54,12 @@ export function WizardStep1({
 }: WizardStep1Props) {
     useEffect(() => {
         if (selectedBrandId && availableModels.length > 0 && !selectedModel) {
-            const filtered = availableModels.filter(m => DIS_CEPHE_MODELLER.includes(m));
+            const filtered = filterMantolamaWizardModels(selectedMalzeme, availableModels);
             if (filtered.length > 0) setSelectedModel(filtered[0]);
         }
-    }, [selectedBrandId, availableModels, selectedModel, setSelectedModel]);
+    }, [selectedBrandId, availableModels, selectedModel, setSelectedModel, selectedMalzeme]);
 
-    const filteredModels = availableModels.filter(m => DIS_CEPHE_MODELLER.includes(m));
+    const filteredModels = filterMantolamaWizardModels(selectedMalzeme, availableModels);
 
     return (
         <motion.div
@@ -111,9 +104,9 @@ export function WizardStep1({
             {/* Marka */}
             <div className="mb-5">
                 <label className="block text-sm font-semibold text-white mb-3">Levha Markası</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     {brands
-                        .filter(b => ['Dalmaçyalı', 'Expert', 'Optimix'].includes(b.name))
+                        .filter(b => ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name))
                         .map(brand => (
                             <button
                                 key={brand.id}

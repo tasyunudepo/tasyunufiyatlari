@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import type { Brand, LogisticsCapacity, ShippingZone } from "@/lib/types";
+import { filterMantolamaWizardModels } from '@/lib/wizard/eligibility';
 
 type SliderMetrics = {
     packageCount: number;
@@ -56,13 +57,6 @@ const KALINLIKLAR = [
     { value: "10", label: "10cm", popular: true },
 ];
 
-// Dış Cephe Mantolama için uygun modeller
-const DIS_CEPHE_MODELLER = [
-    'SW035', 'Premium', 'HD150', 'LD125', 'TR7.5',
-    'İdeal Carbon', 'Double Carbon', 'EPS Karbonlu',
-    'EPS Beyaz', 'EPS 035 Beyaz', 'Optimix Karbonlu'
-];
-
 const MARKA_LOGOLARI: { [key: string]: string } = {
     'Dalmaçyalı': '/images/markalogolar/dalmaçyalı-taşyünü- fiyatları.webp',
     'Expert': '/images/markalogolar/fawori-taşyünü- fiyatları.webp',
@@ -97,12 +91,12 @@ export function Step1ProductSelection({
     // Marka değiştiğinde otomatik olarak ilk modeli seç
     useEffect(() => {
         if (selectedBrandId && availableModels.length > 0) {
-            const filteredModels = availableModels.filter(m => DIS_CEPHE_MODELLER.includes(m));
+            const filteredModels = filterMantolamaWizardModels(selectedMalzeme, availableModels);
             if (filteredModels.length > 0 && !selectedModel) {
                 setSelectedModel(filteredModels[0]);
             }
         }
-    }, [selectedBrandId, availableModels, selectedModel, setSelectedModel]);
+    }, [selectedBrandId, availableModels, selectedModel, setSelectedModel, selectedMalzeme]);
 
     return (
         <motion.div
@@ -188,8 +182,7 @@ export function Step1ProductSelection({
                 <div className="grid grid-cols-3 gap-3">
                     {brands
                         .filter(b => {
-                            // Görseldeki gibi: 3'lü marka seti
-                            return ['Dalmaçyalı', 'Expert', 'Optimix'].includes(b.name);
+                            return ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name);
                         })
                         .map((brand) => (
                             <button
@@ -226,12 +219,11 @@ export function Step1ProductSelection({
             {/* Model & Kalınlık & Metraj (Grid Yapı) */}
             <div className="space-y-4">
                 {/* Model (butonlar) */}
-                {availableModels.filter(m => DIS_CEPHE_MODELLER.includes(m)).length > 0 && (
+                {filterMantolamaWizardModels(selectedMalzeme, availableModels).length > 0 && (
                     <div>
                         <label className="block text-sm font-medium text-white mb-2">Model</label>
                         <div className="grid grid-cols-3 gap-3">
-                            {availableModels
-                                .filter(m => DIS_CEPHE_MODELLER.includes(m))
+                            {filterMantolamaWizardModels(selectedMalzeme, availableModels)
                                 .map((model) => {
                                     const selected = selectedModel === model;
                                     return (
