@@ -467,7 +467,17 @@ Bu nedenle P0, kod entegrasyonu olarak yeşil; canlıya hazır hükmü migration
 - Güncel payload'lar KVKK alanını taşımaktadır; ancak localhost gerçek isteği `HTTP 503` döndürmektedir. Yerel `.env.local` içinde `QUOTE_ABUSE_HASH_SECRET` ve `PDF_CAPABILITY_SECRET` yoktur; canlı Supabase şemasında da `submit_quote_guarded` RPC henüz bulunmamaktadır. Güvenlik tasarımı gereği bu eksiklerde teklif yolu fail-closed kalır.
 - Wizard tek `try/catch` içinde PDF üretimi ile teklif kaydını birleştirdiği için API 503 hatasını yanlış biçimde “PDF oluşturulurken hata” diye gösteriyordu. Akış aşamaları ayrıldı: PDF üretim hatası ile teklif kayıt hatası artık farklı mesaj verir.
 - Yeni sözleşme testi `tests/contracts/wizard-pdf-error-message.test.ts`, teklif kayıt hatasının yeniden PDF hatası diye gösterilmesini engeller. Hedefli API/sözleşme testleri `9/9` ve TypeScript kontrolü geçmiştir.
-- Canlı düzeltme hâlâ kontrollü release gerektirir: v16/v17 migration, iki farklı güçlü production secret, uygulama deploy'u ve sonrasında gerçek kayıt + ofis görünürlüğü smoke testi aynı pencerede tamamlanmalıdır.
+- Canlı düzeltmenin kapanış koşulu kontrollü release olarak belirlendi: v16/v17 migration, iki farklı güçlü production secret, uygulama deploy'u ve sonrasında gerçek kayıt + ofis görünürlüğü smoke testi aynı pencerede tamamlanmalıydı. Aşağıdaki kanıtlarla bu koşul tamamlandı.
+
+### 13 Temmuz canlı kapanış kanıtı
+
+- V16 ve v17 canlı Supabase projesine transaction içinde uygulandı. `quote-pdfs` bucket `public=false`; atomik RPC yalnız `service_role` tarafından çalıştırılabiliyor ve iki guard tablosunda RLS + FORCE RLS açık.
+- `QUOTE_ABUSE_HASH_SECRET`, `PDF_CAPABILITY_SECRET` ve PDF süre ayarları Vercel Production ortamına secret olarak eklendi; değerler repoya veya çıktı kayıtlarına yazılmadı.
+- Release commit'i `8f4ebd9` üretime alındı. Canlı salt-okunur doğrulama `9 geçti / 0 başarısız` verdi.
+- Kontrollü canlı PDF teklif kaydı `ID 99`, `TYSMOKE034154` referansıyla `created` oldu ve ofis API’sinde göründü. Aynı payload yeni idempotency anahtarıyla `deduplicated` oldu; ikinci quote oluşmadı.
+- PDF private storage'a bağlandı; yükleme `HTTP 200`, signed nesne erişimi `HTTP 200`, admin PDF endpoint'i `HTTP 302` private signed URL yönlendirmesi verdi.
+- Yerel release kanıtı: `164/164` unit/API/contract testi, TypeScript, hedefli lintte `0` hata, gerçek PostgreSQL eşzamanlı smoke, `308` sayfalık production build ve `5/5` kritik Playwright akışı geçti.
+- P0 teklif/PDF kayıt kesintisi canlıda kapatıldı. Sistem test kaydı ofiste “SİSTEM TESTİ SİLİNEBİLİR” adıyla ayırt edilebilir.
 
 # 9. Goal-ready sözleşme
 
