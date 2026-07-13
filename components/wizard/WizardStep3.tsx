@@ -2,12 +2,34 @@
 
 import { motion } from "framer-motion";
 import type { ShippingZone } from "@/lib/types";
+import { citySubRegionQuestion, type BonusSubRegionChoice } from "@/lib/pricing/bonus/subRegions";
 
 interface WizardStep3Props {
     shippingZones: ShippingZone[];
     selectedCityCode: number | null;
     onCityChange: (code: number) => void;
+    citySubRegion: BonusSubRegionChoice | null;
+    onCitySubRegionChange: (value: BonusSubRegionChoice | null) => void;
 }
+
+// Bonus bölge haritası gereği iki ilde teslimat alt-bölgesi sorulur:
+// İstanbul (Avrupa/Anadolu yakası) ve Kocaeli (Gebze/diğer ilçeler).
+const SUB_REGION_UI: Record<string, { label: string; options: Array<{ value: BonusSubRegionChoice; text: string }> }> = {
+    yaka: {
+        label: 'Teslimat Yakası',
+        options: [
+            { value: 'avrupa',  text: 'Avrupa Yakası' },
+            { value: 'anadolu', text: 'Anadolu Yakası' },
+        ],
+    },
+    gebze: {
+        label: 'Kocaeli Teslimat Bölgesi',
+        options: [
+            { value: 'gebze', text: 'Gebze' },
+            { value: 'diger', text: 'Diğer ilçeler' },
+        ],
+    },
+};
 
 const ZONE_CONFIG = {
     green:  { emoji: '🟢', label: 'Yeşil Bölge',  bg: 'bg-green-900/30',  border: 'border-green-700/40',  text: 'text-green-300',  sub: 'text-green-400'  },
@@ -17,10 +39,16 @@ const ZONE_CONFIG = {
 
 const PRIORITY_CITIES = ["İstanbul", "Kocaeli", "Bolu", "Sakarya", "Düzce", "Tekirdağ", "Yalova", "Bursa", "Balıkesir"];
 
-export function WizardStep3({ shippingZones, selectedCityCode, onCityChange }: WizardStep3Props) {
+export function WizardStep3({
+    shippingZones, selectedCityCode, onCityChange,
+    citySubRegion, onCitySubRegionChange,
+}: WizardStep3Props) {
     const selectedZone = shippingZones.find(z => z.city_code === selectedCityCode);
     const zoneKey = selectedZone?.zone ?? null;
     const cfg = zoneKey ? (ZONE_CONFIG[zoneKey] ?? ZONE_CONFIG.green) : null;
+
+    const subRegionQuestion = selectedCityCode != null ? citySubRegionQuestion(selectedCityCode) : null;
+    const subRegionUi = subRegionQuestion ? SUB_REGION_UI[subRegionQuestion.question] : null;
 
     return (
         <motion.div
@@ -54,6 +82,37 @@ export function WizardStep3({ shippingZones, selectedCityCode, onCityChange }: W
                     </optgroup>
                 </select>
             </div>
+
+            {/* Alt-bölge sorusu — yalnız İstanbul (yaka) ve Kocaeli (Gebze) */}
+            {subRegionUi && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="mb-5"
+                >
+                    <label className="block text-sm font-semibold text-white mb-2">{subRegionUi.label}</label>
+                    <div className="grid grid-cols-2 gap-3">
+                        {subRegionUi.options.map(({ value, text }) => (
+                            <button
+                                key={value}
+                                type="button"
+                                onClick={() => onCitySubRegionChange(value)}
+                                className={`px-3 py-3 rounded-xl border-2 font-bold text-sm transition-all ${
+                                    citySubRegion === value
+                                        ? "bg-fe-surface border-brand-500 text-white shadow-lg shadow-brand-500/10"
+                                        : "bg-fe-surface border-fe-border text-fe-text hover:border-fe-muted/50"
+                                }`}
+                            >
+                                {text}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="mt-2 text-[11px] text-fe-muted">
+                        Bazı markaların fiyat listesi bu ilde teslimat bölgesine göre farklılık gösterir.
+                    </p>
+                </motion.div>
+            )}
 
             {/* Zone reveal — şehir seçilince açılır */}
             {selectedZone && cfg && (

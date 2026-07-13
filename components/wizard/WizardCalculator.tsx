@@ -23,6 +23,7 @@ import PhoneCallLink from "@/components/shared/PhoneCallLink";
 import { WizardStep1 } from "@/components/wizard/WizardStep1";
 import { WizardStep2 } from "@/components/wizard/WizardStep2";
 import { WizardStep3 } from "@/components/wizard/WizardStep3";
+import { citySubRegionQuestion, type BonusSubRegionChoice } from "@/lib/pricing/bonus/subRegions";
 import { WizardStep4 } from "@/components/wizard/WizardStep4";
 import {
     getOfferValidityDate,
@@ -114,6 +115,24 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
     // Kullanıcı seçimleri
     const [selectedCityCode, setSelectedCityCode] = useState<number | null>(null);
+    const [citySubRegion, setCitySubRegion] = useState<BonusSubRegionChoice | null>(null);
+    // Bonus levha teklifi — set/paket motoru yerine bölge fiyatlı tekil sonuç.
+    // Kilitli karar 13: Bonus + TEKNO toz kombinasyonuna kesin SET fiyatı
+    // verilmez; bu kart yalnız levha teklifidir.
+    const [bonusResult, setBonusResult] = useState<{
+        productLabel: string;
+        thicknessCm: number;
+        cityLabel: string;
+        pricePerM2ExVat: number;
+        packageCount: number;
+        packageM2: number;
+        orderM2: number;
+        totalExVat: number;
+        vatAmount: number;
+        totalWithVat: number;
+        kamyonM2: number;
+        tirM2: number;
+    } | null>(null);
     const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
     const [selectedModel, setSelectedModel] = useState<string | null>(null);
     const [selectedMalzeme, setSelectedMalzeme] = useState<"tasyunu" | "eps">("tasyunu");
@@ -133,6 +152,18 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     // Wizard step
     const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
 
+    // Bonus'un kamyon/TIR kapasiteleri kendi bölge listesinden gelir;
+    // genel logistics_capacity kaydıyla doğrulanamaz. Bonus'ta tam araç
+    // kuralı fiyat anında sunucu verisiyle uygulanır (handleShowBonusPrices).
+    const isBonusSelected = brands.find(b => b.id === selectedBrandId)?.name === 'Bonus';
+
+    // Bonus butonu yalnız canlıda AKTİF Bonus levhası varken görünür:
+    // migration uygulanmış ama aktivasyon yapılmamışken modelsiz marka
+    // butonu göstermeyelim (plates zaten is_active=true ile çekiliyor).
+    const wizardSelectableBrands = brands.filter(
+        b => b.name !== 'Bonus' || plates.some(p => p.brand_id === b.id),
+    );
+
     const isCurrentStepValid = (): boolean => {
         switch (activeStep) {
             case 1: return selectedBrandId != null;
@@ -144,7 +175,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 const matType = materialTypes.find(m => m.slug === selectedMalzeme);
                 const minOrder = matType?.min_order_m2 ?? 0;
                 if (minOrder > 0 && m2 < minOrder) return false;
-                if (matType?.full_vehicle_only && currentLogistics
+                if (!isBonusSelected && matType?.full_vehicle_only && currentLogistics
                     && !isValidFullVehicleMetraj(m2, currentLogistics)) return false;
                 return true;
             }
@@ -465,6 +496,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
     const handleCityChange = (cityCode: number) => {
         setSelectedCityCode(cityCode);
+        // Alt-bölge seçimi şehre bağlıdır; şehir değişince sıfırlanır
+        // (İstanbul: Avrupa/Anadolu yakası, Kocaeli: Gebze/diğer).
+        setCitySubRegion(null);
     };
 
     const isStepValid = (): boolean => {
@@ -901,7 +935,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         if (minOrder > 0 && m2 < minOrder) {
             return { isValid: false, kind: 'min_order', minOrder };
         }
-        if (matType.full_vehicle_only && currentLogistics
+        if (!isBonusSelected && matType.full_vehicle_only && currentLogistics
             && !isValidFullVehicleMetraj(m2, currentLogistics)) {
             return {
                 isValid: false,
@@ -910,7 +944,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             };
         }
         return { isValid: true };
-    }, [metraj, selectedMalzeme, materialTypes, currentLogistics]);
+    }, [metraj, selectedMalzeme, materialTypes, currentLogistics, isBonusSelected]);
 
     const selectRecommendedPackage = (packages: CalculatedPackage[]) =>
         packages.find(pkg => pkg.definition.name.toLocaleLowerCase('tr-TR').includes('dengeli')) ??
@@ -919,10 +953,130 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         packages[0] ??
         null;
 
-    // Fiyatları Göster
-    const handleShowPrices = async () => {
+    // Bonus levha teklifi: fiyat sunucudan gelir (bölge + marka marjı);
+    // taban/iskonto istemciye inmez. Bölge çözülemezse fiyat üretilmez.
+    const handleShowBonusPrices = async () => {
+        if (!selectedCityCode || !selectedModel) return;
+
+        if (citySubRegionQuestion(selectedCityCode) && !citySubRegion) {
+            alert('Bu il için teslimat bölgesi seçimi gerekli. Lütfen Konum adımından seçim yapın.');
+            setActiveStep(3);
+            return;
+        }
+
         setIsLoading(true);
         setShowResults(false);
+        setBonusResult(null);
+        setCalculatedPackages([]);
+
+        try {
+            const m2UserInput = parseFloat(metraj) || 0;
+            const params = new URLSearchParams({
+                model: selectedModel,
+                thicknessCm: selectedKalinlik,
+                cityCode: String(selectedCityCode),
+            });
+            if (citySubRegion) params.set('sub', citySubRegion);
+
+            const res = await fetch(`/api/bonus-price?${params.toString()}`);
+            const json = await res.json().catch(() => null);
+
+            if (!res.ok || !json?.ok) {
+                const reason = json?.reason as string | undefined;
+                if (reason === 'thickness_unavailable') {
+                    alert('Bu kalınlık, üreticinin Bonus fiyat listesinde yer almıyor. Farklı bir kalınlık seçin.');
+                } else if (reason === 'sub_region_required') {
+                    alert('Bu il için teslimat bölgesi seçimi gerekli. Lütfen Konum adımından seçim yapın.');
+                    setActiveStep(3);
+                } else {
+                    alert('Bonus fiyatı şu anda hesaplanamıyor. Lütfen bizimle iletişime geçin.');
+                }
+                return;
+            }
+
+            // Kilitli karar 6: taşyününde tam araç altındaki tekil ürüne
+            // fiyat verilmez; kamyon/TIR kombinasyonu gerekir.
+            if (!isValidFullVehicleArea({
+                areaM2: m2UserInput,
+                lorryCapacityM2: json.kamyonM2,
+                truckCapacityM2: json.tirM2,
+                packageSizeM2: json.packageM2 || 1,
+            })) {
+                const kamyonStr = json.kamyonM2.toLocaleString('tr-TR');
+                const tirStr = json.tirM2.toLocaleString('tr-TR');
+                alert(`Taşyünü parsiyel taşınamaz. Bonus için metraj tam araç olmalıdır: örn. ${kamyonStr} m² (1 Kamyon), ${tirStr} m² (1 TIR) veya kombinasyonları.`);
+                return;
+            }
+
+            const packageCount = Math.ceil(m2UserInput / json.packageM2);
+            const orderM2 = Math.round(packageCount * json.packageM2 * 100) / 100;
+            const productTotalNet = Math.round(json.salePricePerM2 * orderM2 * 100) / 100;
+            // Bölge fiyatı nakliye bölgesine göredir; tam araçta nakliye
+            // satış fiyatına dahildir (kilitli karar 3) → ayrı nakliye 0.
+            const totals = buildQuoteSurfacePricing(productTotalNet, 0, orderM2);
+
+            const cityName = shippingZones.find(z => z.city_code === selectedCityCode)?.city_name ?? '';
+            const subLabel = citySubRegion === 'avrupa' ? ' (Avrupa Yakası)'
+                : citySubRegion === 'anadolu' ? ' (Anadolu Yakası)'
+                : citySubRegion === 'gebze' ? ' (Gebze)'
+                : citySubRegion === 'diger' ? ' (Merkez ve diğer ilçeler)'
+                : '';
+
+            setBonusResult({
+                productLabel: `Bonus ${selectedModel}`,
+                thicknessCm: parseInt(selectedKalinlik) || 0,
+                cityLabel: `${cityName}${subLabel}`,
+                pricePerM2ExVat: json.salePricePerM2,
+                packageCount,
+                packageM2: json.packageM2,
+                orderM2,
+                totalExVat: totals.priceWithoutVat,
+                vatAmount: totals.vatAmount,
+                totalWithVat: totals.totalPrice,
+                kamyonM2: json.kamyonM2,
+                tirM2: json.tirM2,
+            });
+            setShowResults(true);
+
+            const nextResultSessionId = createResultSessionId();
+            setResultSessionId(nextResultSessionId);
+            notifyWizardShowPrices({
+                material_type: selectedMalzeme,
+                brand_name: 'Bonus',
+                model_name: selectedModel,
+                thickness_cm: parseInt(selectedKalinlik) || 0,
+                city_code: selectedCityCode,
+                city_name: cityName,
+                area_m2: m2UserInput,
+                total_m2: orderM2,
+                package_count: packageCount,
+                results_count: 1,
+                cheapest_total: totals.priceWithoutVat,
+                cheapest_per_m2: json.salePricePerM2,
+                special_order_required: false,
+                recommended_package_name: 'Bonus Levha Teklifi',
+                result_session_id: nextResultSessionId,
+            });
+
+            setTimeout(() => {
+                resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Fiyatları Göster
+    const handleShowPrices = async () => {
+        const brandForFlow = brands.find(b => b.id === selectedBrandId);
+        if (brandForFlow?.name === 'Bonus') {
+            await handleShowBonusPrices();
+            return;
+        }
+
+        setIsLoading(true);
+        setShowResults(false);
+        setBonusResult(null);
         await new Promise(resolve => setTimeout(resolve, 600));
 
         if (!selectedBrandId || !selectedCityCode) return;
@@ -1613,7 +1767,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         setSelectedMalzeme={setSelectedMalzeme}
                                         selectedBrandId={selectedBrandId}
                                         setSelectedBrandId={setSelectedBrandId}
-                                        brands={brands}
+                                        brands={wizardSelectableBrands}
                                         selectedModel={selectedModel}
                                         setSelectedModel={setSelectedModel}
                                         availableModels={availableModels}
@@ -1632,6 +1786,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                         shippingZones={shippingZones}
                                         selectedCityCode={selectedCityCode}
                                         onCityChange={handleCityChange}
+                                        citySubRegion={citySubRegion}
+                                        onCitySubRegionChange={setCitySubRegion}
                                     />
                                 )}
                                 {activeStep === 4 && (
@@ -1696,6 +1852,68 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     </div>
                 </div>
             </section>
+
+            {/* RESULTS - BONUS LEVHA TEKLİFİ */}
+            {showResults && bonusResult && (
+                <section ref={resultsRef} className="pt-12 pb-28 md:py-12 bg-fe-bg scroll-mt-20">
+                    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h3 className="font-heading text-2xl font-bold text-white mb-2 text-center tracking-tight">
+                            <span className="font-heading tabular-nums text-brand-500">{bonusResult.orderM2.toLocaleString('tr-TR')} m²</span>{' '}
+                            {bonusResult.productLabel} levha teklifi
+                        </h3>
+                        <p className="text-fe-muted text-center mb-8 text-sm">
+                            {bonusResult.packageCount} paket × {bonusResult.packageM2} m² · {bonusResult.cityLabel} teslim · tam araç sevkiyatında nakliye fiyata dahildir
+                        </p>
+
+                        <div className="rounded-2xl border border-brand-600/45 bg-fe-surface/95 p-6 shadow-xl shadow-brand-950/20">
+                            <div className="flex items-baseline justify-between flex-wrap gap-2 mb-4">
+                                <div>
+                                    <div className="text-sm text-fe-muted">{bonusResult.productLabel} · {bonusResult.thicknessCm} cm</div>
+                                    <div className="font-heading text-3xl font-bold text-white tabular-nums">
+                                        {bonusResult.pricePerM2ExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL/m²
+                                    </div>
+                                    <div className="text-[11px] text-fe-muted">KDV hariç</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 border-t border-fe-border pt-4 text-sm">
+                                <div className="flex justify-between"><span className="text-fe-muted">Ara toplam (KDV hariç)</span><span className="text-white font-semibold tabular-nums">{bonusResult.totalExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL</span></div>
+                                <div className="flex justify-between"><span className="text-fe-muted">KDV (%20)</span><span className="text-white tabular-nums">{bonusResult.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL</span></div>
+                                <div className="flex justify-between text-base"><span className="text-white font-semibold">Genel toplam (KDV dahil)</span><span className="text-brand-400 font-bold tabular-nums">{bonusResult.totalWithVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL</span></div>
+                            </div>
+
+                            <p className="mt-4 text-xs text-fe-muted leading-relaxed">
+                                Bu teklif yalnız Bonus levha içindir. Toz grubu ve aksesuar dahil komple
+                                mantolama seti fiyatı, sevkiyat koşulları netleşince ayrıca teklif edilir.
+                            </p>
+
+                            <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                                <a
+                                    href={buildWhatsAppLink(
+                                        `Merhaba, Bonus ${bonusResult.productLabel.replace('Bonus ', '')} ${bonusResult.thicknessCm} cm, ${bonusResult.orderM2.toLocaleString('tr-TR')} m² (${bonusResult.cityLabel}) için levha teklifini onaylamak ve komple set fiyatı almak istiyorum.`,
+                                    )}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 inline-flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-500 px-5 py-3 font-semibold text-sm text-white transition"
+                                >
+                                    WhatsApp ile Teklifi Tamamla
+                                </a>
+                                <a
+                                    href={TEL_URL}
+                                    className="flex-1 inline-flex items-center justify-center rounded-xl border border-fe-border hover:border-brand-500 px-5 py-3 font-semibold text-sm text-fe-text transition"
+                                >
+                                    Telefonla Görüş
+                                </a>
+                            </div>
+                        </div>
+
+                        <p className="mt-4 text-center text-[11px] text-fe-muted">
+                            Fiyatlar üreticinin güncel bölge listesine göre hesaplanır; tam kamyon
+                            ({Math.round(bonusResult.kamyonM2)} m²) veya tam TIR ({Math.round(bonusResult.tirM2)} m²) sevkiyatı esastır.
+                        </p>
+                    </div>
+                </section>
+            )}
 
             {/* RESULTS - PACKAGE CARDS */}
             {showResults && calculatedPackages.length > 0 && (
