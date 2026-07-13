@@ -101,10 +101,14 @@ export function WizardStep1({
                 </div>
             </div>
 
-            {/* Marka */}
+            {/* Marka — 4. marka (Bonus) aktifken 2×2, üç markada tek satır */}
             <div className="mb-5">
                 <label className="block text-sm font-semibold text-white mb-3">Levha Markası</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${
+                    brands.filter(b => ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name)).length >= 4
+                        ? 'grid-cols-2'
+                        : 'grid-cols-3'
+                }`}>
                     {brands
                         .filter(b => ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name))
                         .map(brand => (
