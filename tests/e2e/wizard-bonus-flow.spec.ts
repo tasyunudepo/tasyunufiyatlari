@@ -1,13 +1,18 @@
 import { expect, test } from '@playwright/test'
 
-// Bonus levha teklifi akışı. Bonus markası canlı DB'de aktif değilse
-// (migration + aktivasyon henüz uygulanmadıysa) testler atlanır;
-// aktivasyondan sonra bu spec zorunlu regresyondur.
+// Bonus harman paket akışı (karar 13 revizyonu, 13 Temmuz 2026):
+// Bonus levha + Expert/Optimix/TEKNO toz grubu üç paket kartı üretir.
+// Bonus markası canlı DB'de aktif değilse testler atlanır.
 
-test.describe('Bonus levha teklifi', () => {
-  test('Bonus seçilir, İstanbul yakası zorunludur ve levha fiyat kartı gelir', async ({ page }) => {
+test.describe('Bonus harman paket teklifi', () => {
+  test('Bonus akışı: kapasiteli metraj adımı + 3 harman paketi', async ({ page }) => {
     await page.goto('/')
     const wizard = page.locator('#mantolama-hesaplayici')
+
+    // Marka listesi Supabase'ten asenkron gelir; önce hidrasyonu bekle.
+    await expect(
+      wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first(),
+    ).toBeVisible({ timeout: 20_000 })
 
     const bonusButton = wizard.locator('button').filter({ hasText: 'Bonus' }).first()
     if ((await bonusButton.count()) === 0) {
@@ -26,14 +31,40 @@ test.describe('Bonus levha teklifi', () => {
     await wizard.getByRole('button', { name: 'Avrupa Yakası' }).click()
     await wizard.getByRole('button', { name: 'Metraj Gir' }).click()
 
-    // F 150 / 50 mm tam TIR yükü — üretici listesindeki birebir değer.
-    await wizard.locator('input[type="number"]').fill('1774.1')
-    await wizard.getByRole('button', { name: /Teklif|Fiyat/ }).last().click()
+    // A2 kabulü: metraj adımı Bonus'un KENDİ kapasiteleriyle pozisyon alır
+    // (F 150 / 5 cm: kamyon 967,7 m² — genel 480/1200 kaydı değil).
+    await expect(wizard.getByText(/967,7/).first()).toBeVisible({ timeout: 15_000 })
 
-    const resultCard = page.getByText('levha teklifi').first()
-    await expect(resultCard).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText('KDV hariç').first()).toBeVisible()
-    await expect(page.getByText(/TL\/m²/).first()).toBeVisible()
-    await expect(page.getByText('komple').first()).toBeVisible()
+    // Ara metraj tam araç düzenine uymaz: inline uyarı + CTA kilidi.
+    const metrajInput = wizard.locator('input[type="number"]')
+    await metrajInput.fill('500')
+    await expect(wizard.getByText('Bu metraj tam araç düzenine uymuyor')).toBeVisible()
+    await expect(wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' })).toBeDisabled()
+
+    // Üretici listesindeki birebir tam TIR değeri geçerlidir.
+    await metrajInput.fill('1774.1')
+    const compareButton = wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' })
+    await expect(compareButton).toBeEnabled()
+    await compareButton.click()
+
+    // B kabulü: üç harman paketi kartı (Expert/Optimix/TEKNO toz grubu).
+    await expect(page.getByText('Premium Sistem').first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Dengeli Sistem').first()).toBeVisible()
+    await expect(page.getByText('Ekonomik Sistem').first()).toBeVisible()
+
+    // Levha kalemi her kartta Bonus markasıyla listelenir.
+    await expect(page.getByText(/Bonus F 150/).first()).toBeVisible()
+
+    // TEKNO tozlu pakette sevkiyat ayrı teyide bağlanır (mevcut marka kuralı).
+    await expect(page.getByText(/sevkiyat verisi henüz kesinleşmedi/).first()).toBeVisible()
+
+    // Çifte marj kilidi (uçtan uca): sunucu levha fiyatı ile set m² fiyatı
+    // tutarlı olmalı — set fiyatı levha fiyatının altına inemez.
+    const res = await page.request.get(
+      '/api/bonus-price?model=F%20150&thicknessCm=5&cityCode=34&sub=avrupa',
+    )
+    const json = await res.json()
+    expect(json.ok).toBe(true)
+    expect(json.salePricePerM2).toBe(370.03)
   })
 })

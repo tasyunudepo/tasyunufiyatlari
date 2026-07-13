@@ -5,9 +5,11 @@
 // Marka marjı DB'den (brands.margin_pct) gelir ve çağırana aittir;
 // bu modül marjsız/bölgesiz durumda fiyat ÜRETMEZ (fail-closed).
 //
-// Kilitli karar sınırı: bu fiyat yalnız LEVHA birim fiyatıdır. Bonus
-// levha + TEKNO toz grubu kombinasyonunun kesin SET fiyatı, TEKNO
-// şehir/sevkiyat kuralı aktif edilene kadar üretilmez (karar 13).
+// Karar 13 revizyonu (13 Temmuz 2026, Emrah): Bonus levha + harman toz
+// grubu (Expert / Optimix / TEKNO) komple set fiyatı wizard'da verilir.
+// Bu modül yine yalnız LEVHA birim fiyatı üretir; toz kalemleri paket
+// motorunda diğer markalarla AYNI kod yolundan hesaplanır (tek marj).
+// TEKNO tozlu pakette sevkiyat "ayrıca teyit" uyarısıyla sunulur.
 // ============================================================
 
 import { getProfileByModel } from '@/lib/technical-profiles'
@@ -38,6 +40,49 @@ export type BonusSaleResult =
       tirM2: number
     }
   | { ok: false; reason: BonusSaleFailReason }
+
+export type BonusCapacityFailReason =
+  | 'unknown_model'
+  | 'not_bonus'
+  | 'thickness_unavailable'
+
+export type BonusCapacityResult =
+  | {
+      ok: true
+      thicknessMm: number
+      packageM2: number
+      packagePieces: number
+      kamyonM2: number
+      tirM2: number
+    }
+  | { ok: false; reason: BonusCapacityFailReason }
+
+/**
+ * Bonus model + kalınlık → paket/araç kapasiteleri. Fiyat, bölge ve
+ * iskonto verisi İÇERMEZ; wizard metraj adımının tam araç önerileri
+ * bu değerlerle kurulur (müşteri yüzeyine inmesi güvenlidir).
+ */
+export function computeBonusCapacity(input: {
+  modelShortName: string
+  thicknessCm: number
+}): BonusCapacityResult {
+  const profile = getProfileByModel(input.modelShortName)
+  if (!profile) return { ok: false, reason: 'unknown_model' }
+  if (profile.brandName !== 'Bonus') return { ok: false, reason: 'not_bonus' }
+
+  const thicknessMm = Math.round(input.thicknessCm * 10)
+  const row = getBonusPriceRow(profile.productKey, thicknessMm)
+  if (!row) return { ok: false, reason: 'thickness_unavailable' }
+
+  return {
+    ok: true,
+    thicknessMm,
+    packageM2: row.packageM2,
+    packagePieces: row.packagePieces,
+    kamyonM2: row.truckM2,
+    tirM2: row.trailerM2,
+  }
+}
 
 export function computeBonusUnitSale(input: {
   modelShortName: string

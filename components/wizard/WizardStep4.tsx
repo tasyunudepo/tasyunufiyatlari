@@ -24,6 +24,9 @@ interface WizardStep4Props {
     selectedCityCode: number | null;
     selectedMalzeme: 'tasyunu' | 'eps';
     validation: MetrajValidation;
+    // Bölge kamyon/TIR iskontoları levha fiyat motoruna bağlı markalar
+    // içindir; bölge-liste fiyatlı markalarda (Bonus) rozet gösterilmez.
+    suppressZoneDiscounts?: boolean;
 }
 
 type Tier = 'kamyon' | 'tir';
@@ -46,6 +49,7 @@ export function WizardStep4({
     currentLogistics, selectedKalinlik,
     shippingZones, selectedCityCode,
     selectedMalzeme, validation,
+    suppressZoneDiscounts = false,
 }: WizardStep4Props) {
     const didPrefillMetraj = useRef(false);
     const m2 = parseFloat(metraj) || 0;
@@ -56,7 +60,10 @@ export function WizardStep4({
     const truckPkgs = currentLogistics?.truck_capacity_packages  ?? 0;
 
     const hasVal = m2 > 0;
-    const suggestedStartM2 = selectedMalzeme === 'tasyunu' && lorryM2 > 0
+    // Lojistik verisi gelmeden öneri/prefill üretme: fallback sabitleri
+    // (480/1200) yalnız görsel hesap içindir, markaya ait sayı değildir.
+    const hasLogistics = currentLogistics != null;
+    const suggestedStartM2 = selectedMalzeme === 'tasyunu' && hasLogistics && lorryM2 > 0
         ? normalizeM2(lorryM2)
         : null;
 
@@ -126,10 +133,10 @@ export function WizardStep4({
     // Bir sonraki tam araca kaç paket eksik (kamyon tier'ından TIR'a geçiş)
     const pkgsToTir   = (tier === 'kamyon'   && truckPkgs > pkgCount) ? truckPkgs - pkgCount : 0;
 
-    // Bölge iskonto oranları
+    // Bölge iskonto oranları (bölge-liste fiyatlı markalarda gösterilmez)
     const selectedZone = shippingZones.find(z => z.city_code === selectedCityCode);
-    const discTir    = selectedZone?.discount_tir    ?? null;
-    const discKamyon = selectedZone?.discount_kamyon ?? null;
+    const discTir    = suppressZoneDiscounts ? null : (selectedZone?.discount_tir    ?? null);
+    const discKamyon = suppressZoneDiscounts ? null : (selectedZone?.discount_kamyon ?? null);
     const isFullVehicleInvalid = !validation.isValid && validation.kind === 'full_vehicle';
 
     const isWholeNumber = (value: number) => Math.abs(value - Math.round(value)) < 0.05;
@@ -153,7 +160,7 @@ export function WizardStep4({
             ? `%${discKamyon} kamyon iskontosu · nakliye fiyata dahil`
             : 'Kamyon dolusu · nakliye fiyata dahil';
     };
-    const vehiclePresets = selectedMalzeme === 'tasyunu'
+    const vehiclePresets = selectedMalzeme === 'tasyunu' && hasLogistics
         ? [
             {
                 key: 'kamyon',
@@ -353,7 +360,9 @@ export function WizardStep4({
                     <div className="mt-2 rounded-xl border border-blue-700/35 bg-blue-900/15 p-3">
                         <p className="text-[11px] leading-relaxed text-blue-100/90">
                             Bu metrajı <span className="font-bold text-white">{roundedM2.toFixed(1)} m²</span>&apos;ye yuvarladık.
-                            Tam dolu araç eşiğinde olmanız için; bu sayede bölge iskontosu uygulanır.
+                            Tam dolu araç eşiğinde olmanız için{discKamyon != null || discTir != null
+                                ? '; bu sayede bölge iskontosu uygulanır.'
+                                : '; tam araç sevkiyatında nakliye fiyata dahildir.'}
                         </p>
                     </div>
                 )}
