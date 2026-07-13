@@ -242,6 +242,7 @@ export interface CalculatedPackage {
         lowMetrageSurcharge?: number;
         packagesNeededForOptimal?: number;
         isShippingIncluded?: boolean;
+        shippingMode?: 'included_in_sale_price' | 'buyer_pays' | 'separate_quote_required';
         shippingWarning?: string;
     };
 }

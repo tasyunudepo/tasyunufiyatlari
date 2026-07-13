@@ -4,17 +4,17 @@ import { ICON_WEIGHT } from '@/lib/design/tokens';
 const ITEMS = [
   {
     Icon: Truck,
-    title: '81 ile sevkiyat',
-    body: 'Kısmi yük + tam araç, tüm Türkiye.',
+    title: 'Fabrika çıkışlı sevkiyat',
+    body: 'Tam araç ve uygun EPS seti kuralına göre planlanır.',
   },
   {
     Icon: ShieldCheck,
-    title: 'TSE & CE uyumlu sistem',
-    body: 'Tüm kalemler standartlara uygun, raporlu.',
+    title: 'Ürün teknik belgeleri',
+    body: 'Marka ve model bazında sipariş öncesi kontrol edilir.',
   },
   {
     Icon: FileText,
-    title: 'Resmi PDF teklif',
+    title: 'Referanslı PDF teklif',
     body: 'Teklif referans kodu ve güncel hesap bilgileri.',
   },
 ] as const;

@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 const BRANDS = [
   { src: '/images/markalogolar/Knauf Mineral yünleri.webp',         alt: 'Knauf taşyünü' },
-  { src: '/images/markalogolar/Tekno Taşyünü ve EPs Fiyatları.webp', alt: 'Tekno taşyünü ve EPS' },
+  { src: '/images/markalogolar/Tekno Taşyünü ve EPs Fiyatları.webp', alt: 'Tekno toz grubu ve aksesuar ürünleri' },
   { src: '/images/markalogolar/dalmaçyalı-taşyünü- fiyatları.webp',  alt: 'Dalmaçyalı taşyünü' },
   { src: '/images/markalogolar/fawori-taşyünü- fiyatları.webp',      alt: 'Fawori taşyünü' },
   { src: '/images/markalogolar/filli-boya-mantolama.webp',           alt: 'Filli Boya mantolama' },

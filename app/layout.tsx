@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s | Taşyünü Fiyatları",
   },
   description:
-    "Fabrika çıkışlı taşyünü ve EPS mantolama. Kapı teslim setinizi saniyeler içinde hesaplayın, KDV hariç net fiyatla resmi PDF teklifinizi anında alın.",
+    "Fabrika çıkışlı taşyünü ve EPS mantolama. Tam araç ve set koşullarına göre KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
   alternates: {
     canonical: "/",
   },
@@ -43,13 +43,13 @@ export const metadata: Metadata = {
     url: "https://www.tasyunufiyatlari.com",
     title: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
     description:
-      "Fabrika çıkışlı taşyünü ve EPS mantolama. Kapı teslim setinizi saniyeler içinde hesaplayın, KDV hariç net fiyatla resmi PDF teklifinizi anında alın.",
+      "Fabrika çıkışlı taşyünü ve EPS mantolama. Tam araç ve set koşullarına göre KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Fabrika çıkışlı taşyünü ve EPS mantolama — Kapı teslim PDF teklif",
+        alt: "Fabrika çıkışlı taşyünü ve EPS mantolama fiyat hesabı",
       },
     ],
   },
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
     description:
-      "Fabrika çıkışlı taşyünü ve EPS mantolama. Kapı teslim setinizi saniyeler içinde hesaplayın, KDV hariç net fiyatla resmi PDF teklifinizi anında alın.",
+      "Fabrika çıkışlı taşyünü ve EPS mantolama. Tam araç ve set koşullarına göre KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -80,7 +80,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <head>
-        {/* GA4 — Production-only, Consent Mode v2 default deny */}
+        {/* GA4 — İşletme kararıyla analitik açık; reklam sinyalleri kapalı */}
         {process.env.NODE_ENV === "production" && (
           <GoogleAnalytics measurementId={GA_MEASUREMENT_ID} />
         )}

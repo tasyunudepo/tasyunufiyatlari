@@ -1,6 +1,10 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { BUSINESS_INFO } from '@/lib/business/info';
+import {
+    getShippingPresentation,
+    type ShippingMode,
+} from '@/lib/pricing/commercialRules';
 
 export interface QuotePDFResult {
     blobUrl: string;
@@ -88,6 +92,7 @@ interface PDFQuoteData {
     systemDescription?: string;
     items: PDFQuoteItem[];
     isShippingIncluded?: boolean;
+    shippingMode?: ShippingMode;
     shippingWarning?: string;
     specialOrderNote?: string;
 }
@@ -192,7 +197,7 @@ function generateFallbackQuotePDF(data: PDFQuoteData): QuotePDFResult {
     y += 7;
     doc.text(`Genel Toplam: ${fmtMoney(data.grandTotal)}`, 14, y);
     y += 7;
-    doc.text(`m2 Fiyat: ${fmtMoney(data.pricePerM2)}`, 14, y);
+    doc.text(`m² Fiyat (KDV Hariç): ${fmtMoney(data.pricePerM2)}`, 14, y);
 
     const filename = buildSafeFileName(data);
     const blob = doc.output('blob') as Blob;
@@ -246,6 +251,9 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             minute: '2-digit'
         });
         const materialLabel = data.materialType === 'tasyunu' ? 'Taşyünü' : 'EPS';
+        const shippingMode: ShippingMode = data.shippingMode
+            ?? (data.isShippingIncluded ? 'included_in_sale_price' : 'buyer_pays');
+        const shippingPresentation = getShippingPresentation(shippingMode);
         // M2 Fiyatını data'dan alalım yoksa hesaplayalım
         const calculatedM2Price = data.pricePerM2 > 0 ? data.pricePerM2 : (metrajValue > 0 ? data.grandTotal / metrajValue : 0);
 
@@ -377,7 +385,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
          <!-- Zemin BEYAZ, Border LACİVERT, Yazılar LACİVERT -->
          <div style="flex:1; background:#fff; border:2px solid ${COLORS.slate900}; border-radius:8px; padding:16px; display:flex; flex-direction:column; justify-content:center;">
             
-            <div style="font-size:11px; font-weight:700; color:${COLORS.slate700}; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${data.isShippingIncluded ? 'NAKLİYE DAHİL M² MALİYETİ' : 'M² MALİYETİ (NAKLİYE HARİÇ)'}</div>
+            <div style="font-size:11px; font-weight:700; color:${COLORS.slate700}; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${shippingPresentation.heroLabel}</div>
             
             <div style="font-size:32px; font-weight:800; color:${COLORS.slate900}; line-height:1; margin-bottom:12px; font-feature-settings:'tnum';">
                 ${escapeHtml(fmtMoney(calculatedM2Price))}
@@ -401,8 +409,8 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:center;width:50px;">MİKTAR</th>
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:center;width:40px;">BİRİM</th>
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:center;width:50px;">SARF.</th>
-            <th style="padding:10px;font-size:10px;font-weight:600;text-align:right;width:80px;">BİRİM FİYAT</th>
-            <th style="padding:10px;font-size:10px;font-weight:600;text-align:right;width:110px;">TUTAR</th>
+            <th style="padding:10px;font-size:10px;font-weight:600;text-align:right;width:80px;">BİRİM FİYAT<br />(KDV HARİÇ)</th>
+            <th style="padding:10px;font-size:10px;font-weight:600;text-align:right;width:110px;">TUTAR<br />(KDV HARİÇ)</th>
           </tr>
         </thead>
         <tbody>
@@ -436,7 +444,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             <div style="margin-bottom:12px;">
                 <h4 style="font-size:11px;font-weight:700;margin:0 0 4px 0;color:${COLORS.slate900};">ÖNEMLİ NOTLAR</h4>
                 <ul style="margin:0;padding-left:16px;font-size:10px;color:${COLORS.slate700};line-height:1.4;">
-                    <li>Fiyatlarımıza <strong>${data.isShippingIncluded ? 'NAKLİYE ve KDV DAHİLDİR' : 'KDV DAHİLDİR, NAKLİYE HARİÇTİR'}.</strong></li>
+                    <li>Birim fiyatlar ve ara toplam <strong>KDV HARİÇTİR</strong>; KDV genel toplamda ayrıca gösterilir. Nakliye <strong>${shippingPresentation.termsLabel}.</strong></li>
                     ${data.shippingWarning ? `<li style="color:${COLORS.orange600}; font-weight:700;">${escapeHtml(data.shippingWarning)}</li>` : ''}
                     ${data.specialOrderNote ? `<li style="color:${COLORS.orange600}; font-weight:700;">⭐ Büyük Metraj — Özel Teklif: ${escapeHtml(data.specialOrderNote)}</li>` : ''}
                     <li>Ürünler şantiyeye teslimdir, indirme alıcıya aittir.</li>
@@ -476,8 +484,8 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
                     <td style="padding:8px 0;text-align:right;font-weight:600;border-bottom:1px solid ${COLORS.border};">${escapeHtml(fmtMoney(data.vatAmount))}</td>
                 </tr>
                 <tr>
-                    <td style="padding:8px 0;color:${data.isShippingIncluded ? COLORS.green600 : COLORS.orange600};font-weight:600;font-size:11px;border-bottom:1px solid ${COLORS.border};">${data.isShippingIncluded ? '✅ Nakliye Hizmeti' : '⚠️ Nakliye Durumu'}</td>
-                    <td style="padding:8px 0;text-align:right;color:${data.isShippingIncluded ? COLORS.green600 : COLORS.orange600};font-size:11px;font-weight:600;border-bottom:1px solid ${COLORS.border};">${data.isShippingIncluded ? 'DAHİL' : 'ALICIYA AİT'}</td>
+                    <td style="padding:8px 0;color:${shippingPresentation.isIncluded ? COLORS.green600 : COLORS.orange600};font-weight:600;font-size:11px;border-bottom:1px solid ${COLORS.border};">${shippingPresentation.isIncluded ? '✅ Nakliye Hizmeti' : '⚠️ Nakliye Durumu'}</td>
+                    <td style="padding:8px 0;text-align:right;color:${shippingPresentation.isIncluded ? COLORS.green600 : COLORS.orange600};font-size:11px;font-weight:600;border-bottom:1px solid ${COLORS.border};">${shippingPresentation.statusLabel}</td>
                 </tr>
             </table>
             
@@ -488,7 +496,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
                     <span style="font-size:28px;font-weight:800;color:#ffffff;font-feature-settings:'tnum';">${escapeHtml(data.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}</span>
                     <span style="font-size:18px;font-weight:700;color:${COLORS.orange600};">₺</span>
                 </div>
-                <div style="font-size:9px;color:#64748b;text-align:right;margin-top:4px;">KDV <span style="color:${COLORS.orange600};font-weight:600;">DAHİL</span> | NAKLİYE <span style="color:${data.isShippingIncluded ? COLORS.green600 : COLORS.orange600};font-weight:600;">${data.isShippingIncluded ? 'DAHİL' : 'HARİÇ'}</span></div>
+                <div style="font-size:9px;color:#64748b;text-align:right;margin-top:4px;">KDV <span style="color:${COLORS.orange600};font-weight:600;">DAHİL</span> | NAKLİYE <span style="color:${shippingPresentation.isIncluded ? COLORS.green600 : COLORS.orange600};font-weight:600;">${shippingPresentation.footerLabel}</span></div>
             </div>
 
             <!-- QR ve Onay -->

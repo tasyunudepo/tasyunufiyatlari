@@ -23,6 +23,7 @@ type OfficeQuote = QuoteRow & {
     quote_code?: string | null;
     priority?: string | null;
     pdf_url?: string | null;
+    pdf_storage_path?: string | null;
     price_per_m2?: number | null;
     total_price?: number | null;
     price_without_vat?: number | null;
@@ -563,9 +564,9 @@ export function QuotesTab() {
                                                             <option value="high">Yüksek</option>
                                                             <option value="urgent">Acil</option>
                                                         </select>
-                                                        {quote.pdf_url && (
+                                                        {(quote.pdf_storage_path || quote.pdf_url) && (
                                                             <a
-                                                                href={quote.pdf_url}
+                                                                href={`/api/admin/quotes/${quote.id}/pdf`}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className={`${ofisControl} px-3 py-2 text-xs text-sky-300 hover:bg-sky-400/10 whitespace-nowrap`}
@@ -608,10 +609,10 @@ export function QuotesTab() {
                                         )}
                                     </h3>
                                         <p className="text-[var(--nx-text-soft)] text-sm">{new Date(selectedQuote.created_at).toLocaleString("tr-TR")}</p>
-                                    {selectedQuote.pdf_url && (
+                                    {(selectedQuote.pdf_storage_path || selectedQuote.pdf_url) && (
                                         <div className="flex gap-2 mt-3">
                                             <a
-                                                href={selectedQuote.pdf_url}
+                                                href={`/api/admin/quotes/${selectedQuote.id}/pdf`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className={`${ofisControl} px-4 py-2 text-xs font-semibold text-sky-300 hover:bg-sky-500/10`}
@@ -619,7 +620,7 @@ export function QuotesTab() {
                                                 PDF Görüntüle
                                             </a>
                                             <a
-                                                href={selectedQuote.pdf_url}
+                                                href={`/api/admin/quotes/${selectedQuote.id}/pdf?download=1`}
                                                 download
                                                 className={`${ofisControl} px-4 py-2 text-xs font-semibold hover:bg-[rgba(255,255,255,0.06)]`}
                                             >

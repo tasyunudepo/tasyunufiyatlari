@@ -3,15 +3,15 @@ import { FileText, Truck, BuildingOffice, ShieldCheck, ChatCircle, Package, MapP
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 
 const TRUST_ROW = [
-  { Icon: ShieldCheck, t: 'TSE & CE belgeli sistem', d: 'Tüm kalemler standartlara uygun, raporlu.' },
-  { Icon: BuildingOffice, t: 'ÖzerGrup — 2006', d: 'Yalıtım ve izolasyon alanında 19 yıl.' },
-  { Icon: Truck, t: '81 il sevkiyat', d: 'Kısmi yükten tam araca her ölçek.' },
+  { Icon: ShieldCheck, t: 'Ürün belgesi kontrolü', d: 'Teknik belgeler marka ve model bazında değerlendirilir.' },
+  { Icon: BuildingOffice, t: 'Tuzla görüşme noktası', d: 'Proje ayrıntıları randevuyla değerlendirilir.' },
+  { Icon: Truck, t: 'Fabrika çıkışlı sevkiyat', d: 'Tam araç ve uygun EPS seti kuralına göre.' },
 ] as const;
 
 const SEVKIYAT_AKISI = [
   { Icon: ChatCircle, t: 'Sipariş onayı', d: 'PDF teklifteki referans no ile WhatsApp\'tan onay.' },
-  { Icon: Package, t: 'Tuzla\'da yükleme', d: 'Paletli sayım, fotoğraflı çıkış kaydı.' },
-  { Icon: MapPin, t: 'Bölgenize teslim', d: 'Sevkiyat tipine göre 1-5 iş günü içinde sahada.' },
+  { Icon: Package, t: 'Fabrika uygunluğu', d: 'Üretim ve araç planı satış görüşmesinde kontrol edilir.' },
+  { Icon: MapPin, t: 'Sevkiyat planı', d: 'Tarih ve güzergâh, fabrika teyidinden sonra netleştirilir.' },
 ] as const;
 
 export function ProofBlock() {
@@ -29,10 +29,10 @@ export function ProofBlock() {
             id="proof-baslik"
             className="mt-3 font-heading font-extrabold text-[28px] sm:text-[36px] leading-[1.15] tracking-tight text-fe-text"
           >
-            Referanslı PDF teklif, paletli sevkiyat, kayıtlı süreç
+            Referanslı PDF teklif, fabrika çıkışlı sevkiyat planı
           </h2>
           <p className="mt-4 text-sm sm:text-base text-fe-muted leading-relaxed">
-            Teklifte ürün kalemleri, m² maliyeti, referans kodu ve güncel hesap bilgileri yer alır. Sipariş onayından sonra stok ve sevkiyat koşulları netleştirilir.
+            Teklifte ürün kalemleri, m² maliyeti ve referans kodu yer alır. Fabrika üretim uygunluğu ile sevkiyat tarihi sipariş görüşmesinde netleştirilir.
           </p>
         </div>
 
@@ -60,21 +60,21 @@ export function ProofBlock() {
             </div>
           </div>
 
-          {/* Sağ kolon — Depo kartı + Sevkiyat süreci kartı dikey stack */}
+          {/* Sağ kolon — görüşme noktası + sevkiyat planı */}
           <div className="flex flex-col gap-6">
-            {/* Depo kartı */}
+            {/* Görüşme noktası kartı */}
             <div className="rounded-2xl border border-fe-border/40 bg-fe-raised/40 p-6">
               <div className="flex items-center gap-3">
                 <BuildingOffice size={26} weight={ICON_WEIGHT} className="text-brand" aria-hidden />
-                <h3 className="text-lg font-semibold text-fe-text">Depodan paletli yükleme</h3>
+                <h3 className="text-lg font-semibold text-fe-text">Tuzla görüşme noktası</h3>
               </div>
               <p className="mt-2 text-sm text-fe-muted leading-relaxed">
-                Ürünler sevkiyat öncesi sayılır, paletli hazırlanır ve yükleme kaydıyla çıkar.
+                Proje ayrıntılarını yüz yüze görüşmek için Tuzla Tepeören adresimizden randevu alabilirsiniz. Sipariş sevkiyatı fabrikadan planlanır.
               </p>
               <div className="mt-5 overflow-hidden rounded-lg border border-fe-border/30 bg-fe-surface/40">
                 <Image
                   src="/images/depo.webp"
-                  alt="ÖzerGrup Tuzla deposundan paletli sevkiyat çıkışı"
+                  alt="ÖzerGrup Tuzla Tepeören görüşme noktası"
                   width={1200}
                   height={800}
                   className="w-full h-auto"
@@ -82,14 +82,14 @@ export function ProofBlock() {
               </div>
             </div>
 
-            {/* Sevkiyat akışı — 3 adım, depo kartının altında dengeleyici */}
+            {/* Sevkiyat planı — üç ticari kontrol */}
             <div className="flex-1 rounded-2xl border border-fe-border/40 bg-fe-raised/40 p-6">
               <div className="flex items-center gap-3">
                 <Truck size={26} weight={ICON_WEIGHT} className="text-brand" aria-hidden />
-                <h3 className="text-lg font-semibold text-fe-text">Onaydan teslimata 3 adım</h3>
+                <h3 className="text-lg font-semibold text-fe-text">Tekliften sevkiyat planına 3 adım</h3>
               </div>
               <p className="mt-2 text-sm text-fe-muted leading-relaxed">
-                PDF onayı, depo yüklemesi ve bölgenize teslim süreci net ilerler.
+                Referans kodu, fabrika uygunluğu ve sevkiyat ayrıntıları sırayla teyit edilir.
               </p>
               <ol className="mt-5 space-y-5">
                 {SEVKIYAT_AKISI.map((s, i) => (

@@ -64,6 +64,8 @@ function gone() {
 
 function legacyDestination(pathname: string): string | null {
   if (
+    pathname === '/urun' ||
+    pathname.startsWith('/urun/') ||
     pathname.startsWith('/wp-admin') ||
     pathname.startsWith('/wp-content') ||
     pathname.startsWith('/wp-includes') ||
@@ -88,7 +90,7 @@ function legacyDestination(pathname: string): string | null {
   }
 
   if (pathname === '/tasyunu-eps-depo' || pathname.startsWith('/tasyunu-eps-depo/')) {
-    return '/depomuz';
+    return '/urunler';
   }
 
   const categoryMatch = pathname.match(/^\/kategori\/([^/]+)(?:\/page\/\d+)?\/?$/);
@@ -210,6 +212,7 @@ export const config = {
     '/ofis/:path*',
     '/api/admin/:path*',
     '/kategori/:path*',
+    '/urun/:path*',
     '/shop/:path*',
     '/tasyunu-eps-depo/:path*',
     '/marka/:brand/page/:page*',

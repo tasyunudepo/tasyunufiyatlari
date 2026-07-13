@@ -85,9 +85,9 @@ export default function CerezPolitikasiPage() {
             <Block title="3. Veri Toplama Disiplini">
               <ul className="list-disc pl-5 space-y-1.5">
                 <li>
-                  <span className="font-semibold text-hub-ink">IP maskelenmesi:</span> GA4 yapılandırmamızda
-                  <code className="bg-hub-warm px-1.5 py-0.5 rounded text-sm mx-1">anonymize_ip: true</code>
-                  aktif. IP adresinin son okteti maskelenir, tam IP adresi Google sunucularına gönderilmez.
+                  <span className="font-semibold text-hub-ink">IP işleme:</span> GA4 bağlantısı sırasında IP adresi
+                  konum bilgisinin türetilmesi için Google tarafından kullanılabilir. Google&apos;ın GA4 açıklamasına göre
+                  tam IP adresi Analytics raporlarına yazılmadan önce sistemden çıkarılır.
                 </li>
                 <li>
                   <span className="font-semibold text-hub-ink">Google Signals kapalı:</span>
@@ -142,8 +142,8 @@ export default function CerezPolitikasiPage() {
 
               <h3 className="font-semibold text-hub-ink text-lg mb-2">Do Not Track</h3>
               <p>
-                Tarayıcınızda &quot;Do Not Track&quot; özelliği aktifse bu tercihi saygıyla karşılıyoruz;
-                analitik araç bu sinyali okuduğunda ölçümü minimize eder.
+                Site şu anda tarayıcının &quot;Do Not Track&quot; sinyaline bağlı ayrı bir ölçüm davranışı uygulamaz.
+                GA4 ölçümünü engellemek için tarayıcı çerez ayarlarını veya yukarıdaki Google opt-out eklentisini kullanabilirsiniz.
               </p>
             </Block>
 

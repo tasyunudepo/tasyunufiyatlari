@@ -1,11 +1,12 @@
 'use client';
 
 // Next.js App Router client-side navigation gtag.js'in otomatik pageview
-// trackleme mekanizmasını tetiklemiyor. Bu komponent route değişikliklerini
-// dinleyip her geçişte explicit page_view eventi atar.
+// mekanizmasını tetiklemez. Bu komponent route değişikliklerini dinler;
+// query/hash ve tam href'i GA4'e taşımadan tekil page_view eventi atar.
 
-import { Suspense, useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { emitDeduplicatedPageView } from '@/lib/analytics/pageview';
 
 interface Props {
   measurementId: string;
@@ -17,31 +18,24 @@ type GtagWindow = Window & {
 
 function Tracker({ measurementId }: Props) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const w = window as GtagWindow;
     if (typeof w.gtag !== 'function') return;
 
-    const qs = searchParams?.toString();
-    const path = qs ? `${pathname}?${qs}` : pathname;
-
-    w.gtag('event', 'page_view', {
-      page_path: path,
-      page_location: window.location.href,
-      page_title: document.title,
-      send_to: measurementId,
+    emitDeduplicatedPageView({
+      gtag: w.gtag,
+      pathname,
+      origin: window.location.origin,
+      title: document.title,
+      measurementId,
     });
-  }, [pathname, searchParams, measurementId]);
+  }, [pathname, measurementId]);
 
   return null;
 }
 
 export default function GAPageviewTracker(props: Props) {
-  return (
-    <Suspense fallback={null}>
-      <Tracker {...props} />
-    </Suspense>
-  );
+  return <Tracker {...props} />;
 }

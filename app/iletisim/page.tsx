@@ -14,7 +14,6 @@ import {
   Phone,
   WhatsappLogo,
   Clock,
-  Timer,
   Truck,
   MapPin,
   ArrowRight,
@@ -34,7 +33,7 @@ const MAPS_DIRECTIONS_URL = WAREHOUSE_INFO.mapsDirectionsUrl;
 export const metadata: Metadata = buildMetadata({
   title: 'İletişim',
   description:
-    'Soru, teklif ve bayilik için bize ulaşın. Telefon ve WhatsApp üzerinden hızlıca bağlantı kurun. Mesai içinde 30 dk dönüş garantisi.',
+    'Soru, teklif ve bayilik için bize ulaşın. Telefon veya WhatsApp üzerinden projenizin ürün, metraj ve sevkiyat ayrıntılarını paylaşın.',
   path: '/iletisim',
   type: 'website',
 });
@@ -49,10 +48,10 @@ const contactPageNode = {
 };
 
 const OPS_METRICS = [
-  { Icon: Clock,  label: 'Mesai',         value: 'Pzt–Cmt  08:00–18:00' },
-  { Icon: Timer,  label: 'Ortalama Yanıt', value: '30 dk içinde' },
-  { Icon: Truck,  label: 'Sevkiyat',      value: 'Türkiye geneli 81 il' },
-  { Icon: MapPin, label: 'Depo',          value: 'Tuzla / Tepeören' },
+  { Icon: Clock,          label: 'Mesai',           value: 'Pzt–Cmt  08:00–18:00' },
+  { Icon: ChatCircleDots, label: 'Teklif İletişimi', value: 'Telefon + WhatsApp' },
+  { Icon: Truck,          label: 'Sevkiyat',        value: 'Fabrika çıkışlı planlama' },
+  { Icon: MapPin,         label: 'Görüşme Noktası', value: 'Tuzla / Tepeören' },
 ];
 
 export default function IletisimPage() {
@@ -70,8 +69,8 @@ export default function IletisimPage() {
               <span className="text-hub-gold">bayilik fiyatına</span>.
             </h1>
             <p className="text-hub-ink-2 text-base sm:text-lg leading-relaxed max-w-2xl">
-              Soru, teklif veya bayilik için bize ulaşın. Mesai içinde ortalama 30 dakikada dönüş yapıyoruz.
-              Tercih ettiğiniz kanaldan başlamanız yeterli.
+              Soru, teklif veya bayilik için bize ulaşın. Ürün, metraj ve şehir bilgisini paylaşmanız
+              teklif görüşmesini hızlandırır; tercih ettiğiniz kanaldan başlayabilirsiniz.
             </p>
           </div>
         </section>
@@ -98,7 +97,7 @@ export default function IletisimPage() {
                   {PHONE}
                 </PhoneCallLink>
                 <p className="text-hub-ink-2 text-base leading-relaxed mb-6 max-w-md">
-                  Ortalama yanıt süresi 30 dakika. Hızlı fiyat sorularında en doğrudan kanal.
+                  Projenizin ürün, metraj ve şehir bilgisini satış ekibimizle doğrudan paylaşın.
                 </p>
                 <div className="mt-auto flex flex-wrap items-center gap-3">
                   <PhoneCallLink
@@ -133,7 +132,7 @@ export default function IletisimPage() {
                   {/* Chat bubble preview */}
                   <div className="space-y-2.5 mb-6 max-w-sm">
                     <div className="bg-white/10 rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-snug">
-                      Merhaba, 320 m² için Dalmaçyalı Premium fiyatı alabilir miyim?
+                      Merhaba, 400 m² EPS seti için teklif alabilir miyim?
                     </div>
                     <div className="bg-[#25D366]/95 text-[#0a3d2c] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-snug ml-auto w-fit max-w-full">
                       Tabii. Hangi şehir için, kalınlık tercihiniz?
@@ -141,7 +140,7 @@ export default function IletisimPage() {
                   </div>
 
                   <p className="text-white/70 text-sm mb-6 max-w-md leading-relaxed">
-                    Anlık fiyat, stok ve teklif sorularınız için en hızlı kanal. Ortalama 5–10 dk dönüş.
+                    Ürün seçimi, teklif koşulu ve sevkiyat planı için proje ayrıntılarınızı yazabilirsiniz.
                   </p>
 
                   <WhatsappLink
@@ -182,7 +181,7 @@ export default function IletisimPage() {
           </div>
         </section>
 
-        {/* DEPOMUZ — bağımsız modül: foto + adres + maps + CTA */}
+        {/* TUZLA GÖRÜŞME NOKTASI — adres + harita */}
         <section className="border-b border-hub-rule">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-24">
             <RevealOnScroll className="grid md:grid-cols-12 gap-8 md:gap-14 items-center">
@@ -196,13 +195,13 @@ export default function IletisimPage() {
                 />
               </div>
               <div className="md:col-span-6 order-1 md:order-2">
-                <Eyebrow tone="warm" className="mb-5">Tuzla Tepeören · Depo</Eyebrow>
+                <Eyebrow tone="warm" className="mb-5">Tuzla Tepeören · Görüşme Noktası</Eyebrow>
                 <h2 className="font-heading font-bold text-hub-ink tracking-tight leading-[1.1] text-3xl sm:text-4xl mb-5">
-                  Numune ve teknik incelemeye depomuza bekleriz.
+                  Projenizi yüz yüze değerlendirelim.
                 </h2>
                 <p className="text-hub-ink-2 text-base sm:text-lg leading-relaxed mb-6">
-                  Ürün numunelerini fiziken inceleyebilir, teknik ekibimizle yüz yüze görüşebilirsiniz.
-                  Orhanlı Nakliyeciler Sitesi&apos;ne 2 km mesafede.
+                  Ürün seçimi ve teknik ayrıntılar için gelmeden önce telefonla görüşme zamanı belirleyebilirsiniz.
+                  Adresimiz Orhanlı Nakliyeciler Sitesi&apos;ne 2 km mesafededir.
                 </p>
                 <address className="not-italic text-hub-ink leading-relaxed text-base mb-8">
                   <span className="block font-semibold">{ADDRESS_LINE}</span>
@@ -218,8 +217,8 @@ export default function IletisimPage() {
                     Yol Tarifi Al
                     <ArrowUpRight weight={ICON_WEIGHT} size={18} className="btn-arrow" />
                   </a>
-                  <Link href="/depomuz" className="btn-ghost">
-                    Depo Sayfası
+                  <Link href="/urunler" className="btn-ghost">
+                    Ürünleri İncele
                     <ArrowRight weight={ICON_WEIGHT} size={16} className="btn-arrow" />
                   </Link>
                 </div>

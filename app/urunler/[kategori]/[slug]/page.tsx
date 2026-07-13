@@ -23,6 +23,10 @@ import SiteFooter from '@/components/shared/SiteFooter';
 import { ErrorBoundaryWrapper } from '@/components/shared/ErrorBoundaryWrapper';
 import BrandTrustLogos from '@/components/shared/BrandTrustLogos';
 import { computeM2Price } from '@/lib/catalog/pricing';
+import {
+  resolveMarginPctStrict,
+  type MarginRuleInput,
+} from '@/lib/pricing/margin';
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 import type { CatalogProductView } from '@/lib/catalog/types';
 
@@ -101,11 +105,13 @@ function buildProductOffers({
   productUrl,
   zone,
   logisticsCapacity,
+  marginPct,
 }: {
   product: CatalogProductView;
   productUrl: string;
   zone: { city_code: number; discount_tir: string | number } | null;
   logisticsCapacity: Array<{ thickness: number; package_size_m2: string | number }>;
+  marginPct: number | null;
 }) {
   const canExposePrice =
     product.rules.pricing_visibility_mode === 'from_price' ||
@@ -120,6 +126,7 @@ function buildProductOffers({
         thickness: row.thickness,
         zone,
         logisticsCapacity,
+        marginPct,
       }))
       .filter((price): price is number => price !== null && Number.isFinite(price) && price > 0);
 
@@ -137,6 +144,8 @@ function buildProductOffers({
       };
     }
   }
+
+  if (product.product_type === 'plate') return undefined;
 
   if (product.base_price !== null && product.base_price > 0) {
     return {
@@ -270,7 +279,7 @@ export async function ProductDetailPage({
 }) {
   // Paralel veri çekimi (logistics ayrı cache'ten)
   const supabase = createServerSupabaseClient();
-  const [productData, zonesResult, logisticsCapacity] = await Promise.all([
+  const [productData, zonesResult, logisticsCapacity, marginRulesResult] = await Promise.all([
     getCatalogProduct(slug, kategori),
     supabase
       .from('shipping_zones')
@@ -278,6 +287,9 @@ export async function ProductDetailPage({
       .eq('is_active', true)
       .order('city_name'),
     getLogisticsCapacity(),
+    supabase
+      .from('material_types')
+      .select('slug, tier1_max_m2, tier1_margin_pct, tier2_max_m2, tier2_margin_pct, tier3_margin_pct'),
   ]);
 
   if (!productData) notFound();
@@ -305,6 +317,13 @@ export async function ProductDetailPage({
   const kategoriLabel = KATEGORI_LABELS[kategori] ?? kategori;
   const defaultZone = shippingZones.find((zone) => zone.city_code === 34) ?? shippingZones[0] ?? null;
   const pagePath = buildProductPath(kategori, slug, isValidThickness ? selectedThicknessValue : null);
+  const materialMarginRule = (marginRulesResult.data ?? []).find(
+    (rule) => rule.slug === product.material_type
+  ) as MarginRuleInput | undefined;
+  // Schema'daki başlangıç fiyatı yüksek hacim/TIR çıpasıdır; tier3 açıkça seçilir.
+  const catalogMarginPct = product.product_type === 'plate'
+    ? resolveMarginPctStrict(materialMarginRule, Number.MAX_SAFE_INTEGER)
+    : null;
 
   // Provider initial values (mobil hero + panel + picker hepsi context'ten beslenir)
   const initialCityCode = defaultZone?.city_code ?? 34;
@@ -325,6 +344,7 @@ export async function ProductDetailPage({
     productUrl,
     zone: defaultZone,
     logisticsCapacity,
+    marginPct: catalogMarginPct,
   });
 
   // ─── Schema.org @graph ──────────────────────────────────

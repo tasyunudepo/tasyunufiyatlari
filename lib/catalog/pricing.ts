@@ -6,8 +6,7 @@
 // ============================================================
 
 import type { CatalogProductView } from './types';
-
-const PROFIT_MARGIN = 0.1;
+import { applyMargin } from '@/lib/pricing/margin';
 
 export interface PricingZone {
   city_code: number;
@@ -24,6 +23,8 @@ export interface PricingArgs {
   thickness: number | null;
   zone: PricingZone | null;
   logisticsCapacity: PricingLogistics[];
+  /** material_types kuralından açıkça çözülmüş marj; levhada zorunludur. */
+  marginPct: number | null;
 }
 
 /** Aktif kalınlık için zone-aware m² fiyatı (KDV hariç). */
@@ -32,11 +33,15 @@ export function computeM2Price({
   thickness,
   zone,
   logisticsCapacity,
+  marginPct,
 }: PricingArgs): number | null {
   if (!zone) return null;
 
   // Plates → thickness_prices üzerinden
   if (thickness != null && product.thickness_prices) {
+    if (marginPct == null || !Number.isFinite(marginPct) || marginPct < 0 || marginPct > 100) {
+      return null;
+    }
     const tp = product.thickness_prices.find((p) => p.thickness === thickness);
     if (!tp) return null;
     const log = logisticsCapacity.find((l) => l.thickness === thickness * 10);
@@ -49,11 +54,9 @@ export function computeM2Price({
     const kdvHaric = tp.is_kdv_included ? raw / 1.2 : raw;
     const perM2Base = kdvHaric / pkg;
     const discTir = parseFloat(String(zone.discount_tir));
-    return (
-      Math.round(
-        perM2Base * (1 - discTir / 100) * (1 - isk2) * (1 + PROFIT_MARGIN) * 100
-      ) / 100
-    );
+    if (!Number.isFinite(discTir)) return null;
+    const discountedNet = perM2Base * (1 - discTir / 100) * (1 - isk2);
+    return applyMargin(discountedNet, marginPct);
   }
 
   // Accessory / fallback → base_price + zone discount_tir
@@ -75,11 +78,13 @@ export function computeDelta({
   activeThickness,
   zone,
   logisticsCapacity,
+  marginPct,
 }: {
   product: CatalogProductView;
   activeThickness: number | null;
   zone: PricingZone | null;
   logisticsCapacity: PricingLogistics[];
+  marginPct: number | null;
 }): DeltaResult {
   if (activeThickness == null) return { nextThickness: null, deltaPerM2: null };
   const sorted = Array.isArray(product.thickness_options)
@@ -89,8 +94,8 @@ export function computeDelta({
   const next = idx >= 0 && idx < sorted.length - 1 ? sorted[idx + 1] : null;
   if (next === null) return { nextThickness: null, deltaPerM2: null };
 
-  const cur = computeM2Price({ product, thickness: activeThickness, zone, logisticsCapacity });
-  const nxt = computeM2Price({ product, thickness: next, zone, logisticsCapacity });
+  const cur = computeM2Price({ product, thickness: activeThickness, zone, logisticsCapacity, marginPct });
+  const nxt = computeM2Price({ product, thickness: next, zone, logisticsCapacity, marginPct });
   if (cur === null || nxt === null) return { nextThickness: next, deltaPerM2: null };
   return { nextThickness: next, deltaPerM2: Math.round((nxt - cur) * 100) / 100 };
 }

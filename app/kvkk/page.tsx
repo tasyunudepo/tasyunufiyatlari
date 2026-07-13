@@ -68,7 +68,7 @@ export default function KvkkPage() {
                 <li><span className="font-semibold text-hub-ink">İletişim bilgileri:</span> telefon numarası, e-posta adresi, teslimat / ikamet adresi, şehir-ilçe.</li>
                 <li><span className="font-semibold text-hub-ink">Müşteri/firma bilgileri:</span> firma adı, vergi-fatura bilgisi (sipariş aşamasında).</li>
                 <li><span className="font-semibold text-hub-ink">İşlem bilgileri:</span> talep edilen ürün, metraj, kalınlık, paket tercihi, oluşturulan teklif kodu (TY-prefix).</li>
-                <li><span className="font-semibold text-hub-ink">Teknik bilgiler:</span> IP adresi, tarayıcı bilgisi, ziyaret zamanı (analitik amacıyla anonimize edilir).</li>
+                <li><span className="font-semibold text-hub-ink">Teknik bilgiler:</span> IP adresi, tarayıcı bilgisi ve ziyaret zamanı. GA4 bağlantı sırasında IP&apos;yi konum türetmede kullanabilir; tam IP Analytics raporlarına yazılmaz.</li>
               </ul>
             </Block>
 
@@ -99,7 +99,9 @@ export default function KvkkPage() {
               <ul className="list-disc pl-5 space-y-1.5">
                 <li>Sevkiyat, kargo ve nakliye iş ortaklarımız (teslimat amacıyla ad, telefon, adres).</li>
                 <li>Yasal mercilerce talep edilmesi halinde yetkili kamu kurum ve kuruluşları.</li>
-                <li>Teklif PDF&apos;lerinin saklandığı, KVKK uyumlu bulut hizmet sağlayıcımız (Supabase / AB ve TR sunucular).</li>
+                <li>Teklif ve PDF kayıtlarının tutulduğu bulut veritabanı/depolama hizmeti sağlayıcısı Supabase.</li>
+                <li>Site kullanım ölçümü için Google Analytics; formdaki ad, telefon, e-posta ve adres GA4 eventlerine eklenmez.</li>
+                <li>Teklif bildiriminin satış ekibine iletilmesi için CallMeBot ve WhatsApp; bildirim ad, telefon ve teklif bağlamını içerebilir.</li>
                 <li>Mali müşavir, hukuk danışmanı ve denetim kuruluşları (yasal yükümlülük çerçevesinde).</li>
               </ul>
               <p className="mt-3 text-sm text-hub-ink-2">
@@ -109,15 +111,16 @@ export default function KvkkPage() {
 
             <Block title="6. Saklama Süresi">
               <p>
-                Kişisel verileriniz, ilgili mevzuatta öngörülen saklama süreleri boyunca (vergi/fatura için 10 yıl, sözleşmesel ilişki için sözleşme süresi + 10 yıl)
-                veya işleme amacının ortadan kalkmasına kadar saklanır. Süre sonunda veriler silinir, yok edilir veya anonim hale getirilir.
+                Kişisel veriler, işleme amacı ve uygulanabilir mevzuat için gerekli süreyle sınırlı tutulur.
+                Teklif ve müşteri kayıtlarına ilişkin ayrıntılı saklama-imha süresi hukuk ve operasyon teyidiyle ayrıca yayımlanacaktır.
+                Süre sonunda veriler silinir, yok edilir veya anonim hâle getirilir.
               </p>
             </Block>
 
             <Block title="7. Veri Güvenliği Tedbirleri">
               <p>
-                Kişisel verilerinizin hukuka aykırı işlenmesini ve erişilmesini önlemek için idari ve teknik tedbirler alınır: erişim yetkilendirmesi,
-                aktarım sırasında SSL/TLS şifreleme, sunucu güvenlik duvarı, düzenli yedekleme ve sızma testleri.
+                Kişisel verilerin hukuka aykırı işlenmesini ve erişilmesini önlemek için rol tabanlı erişim,
+                satır seviyesinde veritabanı yetkilendirmesi, özel PDF depolama bağlantıları ve aktarım sırasında TLS gibi tedbirler uygulanır.
               </p>
             </Block>
 

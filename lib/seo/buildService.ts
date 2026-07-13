@@ -27,7 +27,7 @@ export function buildCalculationServiceNode() {
     serviceType: 'Online Hesaplama Aracı',
     description:
       '8 kalemli mantolama setini metraj, kalınlık ve şehir bazında hesaplar; ' +
-      'nakliye dahil 3 farklı paket alternatifini PDF teklif olarak sunar.',
+      'nakliye koşuluyla birlikte 3 farklı paket alternatifini PDF teklif olarak sunar.',
     provider:   BUSINESS_REF,
     areaServed: { '@type': 'Country' as const, name: BUSINESS_INFO.areaServed.name },
     offers: {
@@ -43,8 +43,7 @@ export function buildCalculationServiceNode() {
 // ─── 2) Sevkiyat Servisi ─────────────────────────────────────
 
 /**
- * Türkiye Geneli Sevkiyat — fabrika çıkışlı, parsiyel/kamyon/TIR.
- * 81 il sevkiyat sinyali Knowledge Graph'a doğrudan iletilir.
+ * Türkiye Geneli Sevkiyat — fabrika çıkışlı tam araç ve uygun EPS seti.
  */
 export function buildShippingServiceNode() {
   return {
@@ -53,9 +52,9 @@ export function buildShippingServiceNode() {
     name: 'Türkiye Geneli Mantolama Malzemesi Sevkiyatı',
     serviceType: 'Yapı Malzemesi Sevkiyatı',
     description:
-      'Tuzla Tepeören depodan Türkiye\'nin 81 iline taşyünü ve EPS levha ' +
-      'sevkiyatı. Parsiyel yük, kamyon ve TIR seçenekleriyle bölgesel ' +
-      'iskonto otomatik uygulanır.',
+      'Taşyününde tam kamyon/TIR, EPS mantolama setinde tanımlı set ' +
+      'koşullarıyla fabrika çıkışlı sevkiyat planlanır. Bölgesel ' +
+      'iskonto seçilen ürün kuralına göre hesaplanır.',
     provider:   BUSINESS_REF,
     areaServed: { '@type': 'Country' as const, name: BUSINESS_INFO.areaServed.name },
   };

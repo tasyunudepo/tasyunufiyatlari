@@ -5,7 +5,7 @@ import { WHATSAPP_ORDER } from "@/lib/config";
  * WhatsApp'a gönderilecek hazır metin. Bağlamsal bilgiler içerir
  * (ürün, kalınlık, metraj, araç, fiyat, şehir) ki satış ekibi
  * dönüşte müşteriyi tanısın. Son iki satır müşterinin isim/telefon
- * yazacağı placeholder.
+ * yazacağı yer tutucu.
  *
  * Not: WhatsApp URL'inde pre-fill yapılır, müşteri metni düzenleyebilir.
  */
@@ -17,6 +17,7 @@ export interface QuoteContext {
   cityName: string;           // "İstanbul"
   pricePerM2: number;         // 416.30
   totalKdvHaric: number;      // 335704
+  shippingMessage: string;    // "fiyata dahil" | "satış görüşmesinde netleşir"
   refCode?: string;           // "TY123456" — opsiyonel
 }
 
@@ -31,8 +32,9 @@ export function generateQuoteWhatsAppMessage(ctx: QuoteContext): string {
     "",
     `${ctx.metrajM2.toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m² · ${ctx.vehicleLabel}`,
     `${ctx.cityName || "Teslimat şehri belirsiz"}`,
-    `${ctx.pricePerM2.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m² (KDV hariç, nakliye dahil)`,
+    `${ctx.pricePerM2.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m² (KDV hariç)`,
     `~${ctx.totalKdvHaric.toLocaleString("tr-TR")} ₺ toplam (KDV hariç)`,
+    `Nakliye: ${ctx.shippingMessage}`,
   ];
   if (ctx.refCode) {
     lines.push("", `Ref: ${ctx.refCode}`);

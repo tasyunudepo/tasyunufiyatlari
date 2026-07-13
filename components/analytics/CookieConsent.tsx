@@ -1,10 +1,8 @@
 'use client';
 
 // Cookie / KVKK rıza bildirimi.
-// İlk ziyarette default deny aktif (Consent Mode v2 — GoogleAnalytics.tsx).
-// Kullanıcı seçim yapana kadar banner görünür.
-//   "Kabul Et"  → analytics + ad çerezleri 'granted'
-//   "Reddet"    → mevcut deny korunur
+// Analitik ölçüm işletme kararıyla sürekli açıktır. Bu bileşen ileride tekrar
+// render edilse bile reklam depolama ve kişiselleştirme sinyallerini açamaz.
 // Tercih localStorage'a yazılır; banner bir daha gösterilmez.
 
 import { useEffect, useState } from 'react';
@@ -20,25 +18,16 @@ type GtagWindow = Window & {
   gtag?: (...args: unknown[]) => void;
 };
 
-function setGtagConsent(value: ConsentValue) {
+function setGtagConsent(_value: ConsentValue) {
   if (typeof window === 'undefined') return;
   const w = window as GtagWindow;
   if (typeof w.gtag !== 'function') return;
-  if (value === 'accepted') {
-    w.gtag('consent', 'update', {
-      analytics_storage: 'granted',
-      ad_storage: 'granted',
-      ad_user_data: 'granted',
-      ad_personalization: 'granted',
-    });
-  } else {
-    w.gtag('consent', 'update', {
-      analytics_storage: 'granted',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-    });
-  }
+  w.gtag('consent', 'update', {
+    analytics_storage: 'granted',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+  });
 }
 
 export default function CookieConsent() {
@@ -86,8 +75,7 @@ export default function CookieConsent() {
               Çerez ve gizlilik tercihleri
             </h3>
             <p className="text-fe-text/85 text-sm leading-relaxed">
-              Site trafiğini anonim olarak ölçüyoruz. Reklam ve kişiselleştirme amaçlı çerezler ise yalnızca onay verdiğinizde açılır.
-              İsterseniz reklam çerezleri kapalı şekilde devam edebilirsiniz.
+              Site kullanımını hizmeti geliştirmek amacıyla ölçüyoruz. Reklam depolama ve kişiselleştirme sinyalleri kapalı tutulur.
               Detay için{' '}
               <Link href="/kvkk" className="text-hub-gold-soft underline hover:text-hub-gold">
                 Aydınlatma Metni

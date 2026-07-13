@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { ArrowRight, TrendingDown } from "lucide-react";
 
 interface Props {
@@ -15,7 +14,7 @@ interface Props {
   onJump: (targetM2: number) => void;
 }
 
-type TierLevel = "parsiyel" | "lorry" | "truck";
+type TierLevel = "below_vehicle" | "lorry" | "truck";
 
 type ThresholdRow = {
   key: "lorry" | "truck";
@@ -56,42 +55,6 @@ export default function AreaThresholdAssist({
   discTir,
   onJump,
 }: Props) {
-  const [recentUnlocks, setRecentUnlocks] = useState<Record<"lorry" | "truck", boolean>>({
-    lorry: false,
-    truck: false,
-  });
-
-  const prevNeededRef = useRef(neededM2);
-
-  useEffect(() => {
-    const prevNeeded = prevNeededRef.current;
-    const timers: Array<ReturnType<typeof setTimeout>> = [];
-
-    if (lorryM2 && prevNeeded < lorryM2 && neededM2 >= lorryM2) {
-      setRecentUnlocks((prev) => ({ ...prev, lorry: true }));
-      timers.push(
-        setTimeout(() => {
-          setRecentUnlocks((prev) => ({ ...prev, lorry: false }));
-        }, 1100)
-      );
-    }
-
-    if (truckM2 && prevNeeded < truckM2 && neededM2 >= truckM2) {
-      setRecentUnlocks((prev) => ({ ...prev, truck: true }));
-      timers.push(
-        setTimeout(() => {
-          setRecentUnlocks((prev) => ({ ...prev, truck: false }));
-        }, 1100)
-      );
-    }
-
-    prevNeededRef.current = neededM2;
-
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-  }, [lorryM2, neededM2, truckM2]);
-
   if (neededM2 <= 0 || (!lorryM2 && !truckM2)) return null;
 
   const currentLevel: TierLevel =
@@ -99,7 +62,7 @@ export default function AreaThresholdAssist({
       ? "truck"
       : lorryM2 && neededM2 >= lorryM2
         ? "lorry"
-        : "parsiyel";
+        : "below_vehicle";
 
   const rows: ThresholdRow[] = [
     ...(lorryM2
@@ -129,7 +92,7 @@ export default function AreaThresholdAssist({
   ];
 
   const upsell = (() => {
-    if (currentLevel === "parsiyel" && lorryM2 && lorryPrice && packageRefPrice) {
+    if (currentLevel === "below_vehicle" && lorryM2 && lorryPrice && packageRefPrice) {
       return {
         label: "Kamyon",
         targetM2: lorryM2,
@@ -184,16 +147,16 @@ export default function AreaThresholdAssist({
         </div>
       )}
 
-      {currentLevel === "parsiyel" && (
+      {currentLevel === "below_vehicle" && (
         <div className="rounded-lg border border-brand-700/20 bg-brand-950/20 px-3 py-2.5">
           <div className="flex items-start gap-2.5">
             <span className="mt-0.5 text-[13px] leading-none">□</span>
             <div>
               <p className="text-xs font-semibold leading-tight text-brand-300">
-                Parsiyel seviye aktif
+                Tam araç altı metraja teklif verilmiyor
               </p>
               <p className="mt-0.5 text-[11px] text-fe-muted">
-                Kamyon veya TIR baremine çıkarak birim fiyatı düşürebilirsiniz
+                Fabrika çıkışı için tam Kamyon veya tam TIR metrajını seçin
               </p>
             </div>
           </div>
@@ -211,8 +174,6 @@ export default function AreaThresholdAssist({
             const ratio = clampPercent((neededM2 / row.targetM2) * 100);
             const remaining = Math.max(0, Math.ceil(row.targetM2 - neededM2));
             const reached = remaining === 0;
-            const recentlyUnlocked = recentUnlocks[row.key];
-
             return (
               <div
                 key={row.key}
@@ -220,9 +181,7 @@ export default function AreaThresholdAssist({
                   "rounded-xl border px-3 py-3 transition-[border-color,box-shadow,background-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   reached
                     ? "border-emerald-500/30 bg-emerald-950/12"
-                    : "border-white/6 bg-fe-bg/40",
-                  recentlyUnlocked &&
-                    "shadow-[0_0_0_1px_rgba(34,197,94,0.16),0_14px_30px_rgba(34,197,94,0.12)]"
+                    : "border-white/6 bg-fe-bg/40"
                 )}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
@@ -307,7 +266,7 @@ export default function AreaThresholdAssist({
                     {row.price !== null ? (
                       <span>
                         Bu baremde yaklaşık{" "}
-                        <span className="text-fe-text">{formatCurrency(row.price)}</span> /m²
+                        <span className="text-fe-text">{formatCurrency(row.price)}</span> /m² · KDV hariç
                       </span>
                     ) : (
                       <span>Fiyat bilgisi teklif ile belirlenir</span>
@@ -363,6 +322,10 @@ export default function AreaThresholdAssist({
               </p>
             </div>
           </div>
+
+          <p className="mb-3 text-[10px] text-fe-muted-strong">
+            Avantaj tutarları KDV hariç fiyatlar üzerinden hesaplanır.
+          </p>
 
           <button
             type="button"

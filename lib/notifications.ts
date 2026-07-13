@@ -73,14 +73,14 @@ async function callCallMeBot(phone: string, apiKey: string, message: string): Pr
   const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
   try {
     const res = await fetch(url, { method: 'GET' });
-    const body = await res.text();
+    await res.text();
     if (!res.ok) {
-      console.warn(`[CallMeBot ${phone}] HTTP ${res.status}: ${body.slice(0, 200)}`);
-    } else {
-      console.log(`[CallMeBot ${phone}] OK ${res.status}`);
+      console.warn(`[CallMeBot] HTTP ${res.status}`);
     }
-  } catch (err) {
-    console.error(`[CallMeBot ${phone}] fetch error:`, err);
+  } catch {
+    // Fetch hata nesnesi istek URL'sini içerebilir. URL; alıcı telefonu,
+    // API anahtarı ve müşteri mesajını taşıdığı için hata ayrıntısını loglama.
+    console.error('[CallMeBot] fetch error');
   }
 }
 
@@ -110,15 +110,6 @@ export async function sendNotification(
   const apiKey1 = cleanEnv(process.env.CALLMEBOT_APIKEY_1);
   const phone2  = cleanEnv(process.env.CALLMEBOT_PHONE_2);
   const apiKey2 = cleanEnv(process.env.CALLMEBOT_APIKEY_2);
-
-  // Tanılama: env okunmuyor mu, hangi alıcı aktif?
-  console.log('[sendNotification] event=%s phone1=%s phone2=%s apikey1=%s apikey2=%s',
-    event,
-    phone1 ? phone1 : '(yok)',
-    phone2 ? phone2 : '(yok)',
-    apiKey1 ? 'set' : '(yok)',
-    apiKey2 ? 'set' : '(yok)',
-  );
 
   if (!phone1 && !phone2) {
     console.warn('[sendNotification] No phone configured — env CALLMEBOT_PHONE_1/2 missing');

@@ -47,8 +47,8 @@ export const BUSINESS_INFO = {
   // Fiyat aralığı (schema.org priceRange, sektör kullanımı)
   priceRange: '₺₺',
 
-  // Kuruluş bilgisi (hakkımızda LocalBusiness'a bağlanır)
-  foundingDate: '2006',
+  // Kurucu adı kurumsal kayıtta kullanılır; faaliyet başlangıç yılı belge
+  // teyidi tamamlanmadan müşteri metnine veya schema'ya eklenmez.
   founder:      'Muhammet Öztürk',
 } as const;
 

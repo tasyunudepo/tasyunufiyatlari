@@ -6,7 +6,7 @@
 // Bu dosya kapsamında değil; ayrı bir PR'da ele alınacak.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { WHATSAPP_ORDER } from "@/lib/config";
+import { supabase } from "@/lib/supabase";
 import { ChevronDown, Layers, MessageCircle, Package, Phone } from "lucide-react";
 import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
 import { notifyPhoneCall } from "@/lib/notifyPhoneCall";
@@ -19,12 +19,17 @@ import {
 import { BUSINESS_INFO } from "@/lib/business/info";
 import { buildWhatsAppLink, generateQuoteWhatsAppMessage } from "@/lib/utils/whatsapp";
 import { formatBrandProductName } from "@/lib/brandFormat";
+import {
+  applyMargin,
+  resolveMarginPctStrict,
+  type MarginRuleInput,
+} from "@/lib/pricing/margin";
+import { buildQuoteSurfacePricing } from "@/lib/pricing/quoteTotals";
 
 import type { CatalogProductView, DecisionContext, WizardPrefill } from "@/lib/catalog/types";
 import { getPriceDisplay } from "@/lib/catalog/decision";
 import SepetUI, { type SepetState } from "./SepetUI";
 import SingleProductQuoteButton from "./SingleProductQuoteButton";
-import StokAlternatifSection from "./StokAlternatifSection";
 import WizardLinkButton from "./WizardLinkButton";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
@@ -56,7 +61,6 @@ interface Props {
   hideHeroPriceOnMobile?: boolean;
 }
 
-const PROFIT_MARGIN = 0.1;
 const roundM2 = (value: number): number => Math.round(value * 10) / 10;
 const formatM2Input = (value: number): string =>
   Number.isInteger(value) ? String(value) : String(roundM2(value));
@@ -91,6 +95,40 @@ export default function ProductPricePanel({
     `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
   );
   const lastPriceViewRef = useRef<string>("");
+  const [loadedMarginRule, setLoadedMarginRule] = useState<{
+    slug: string;
+    rule: MarginRuleInput;
+  } | null>(null);
+  const marginRule = loadedMarginRule?.slug === product.material_type
+    ? loadedMarginRule.rule
+    : null;
+
+  // Ürün sayfası statik üretildiği için marjı doğrudan canlı material_types
+  // kaydından okuruz. Kural yoksa/okunamazsa levha fiyatı fail-closed kalır.
+  useEffect(() => {
+    let active = true;
+
+    if (product.product_type !== "plate") {
+      return () => { active = false; };
+    }
+
+    void supabase
+      .from("material_types")
+      .select("slug, tier1_max_m2, tier1_margin_pct, tier2_max_m2, tier2_margin_pct, tier3_margin_pct")
+      .eq("slug", product.material_type)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (!error && data) {
+          setLoadedMarginRule({
+            slug: product.material_type,
+            rule: data as MarginRuleInput,
+          });
+        }
+      });
+
+    return () => { active = false; };
+  }, [product.material_type, product.product_type]);
 
   // Debounce: senaryo hesapları 350ms bekler — "400" yazarken "40" uyarısı tetiklenmez
   useEffect(() => {
@@ -105,7 +143,6 @@ export default function ProductPricePanel({
     autoApplied: false,
     totalM2: 0,
     effectivePrice: null,
-    stokOnerisi: false,
     scenario: 'empty',
   });
 
@@ -116,7 +153,7 @@ export default function ProductPricePanel({
   }, []);
 
   const zone = shippingZones.find((z) => z.city_code === selectedCode) ?? defaultCity;
-  const { rules, base_price, minimum_order, thickness_prices } = product;
+  const { rules, base_price, thickness_prices } = product;
 
   // Provider varsa kalınlık context'ten; yoksa prop. Context yazıldığında
   // panel anında reaktif (URL navigasyonu beklemeden).
@@ -131,6 +168,10 @@ export default function ProductPricePanel({
   const activeThickness = activeThicknessPrice?.thickness ?? selectedThickness;
   const isKdvIncluded = activeThicknessPrice?.is_kdv_included ?? false;
   const rawPrice = activeThicknessPrice?.base_price ?? base_price;
+  const neededM2Num = (() => {
+    const raw = debouncedM2 ? parseFloat(debouncedM2.replace(",", ".")) : 0;
+    return isNaN(raw) || raw < 0 ? 0 : raw;
+  })();
 
   // logistics_capacity.thickness mm cinsinden tutuluyor (50, 75, 125)
   // activeThickness cm cinsinden (5, 7.5, 12.5) — ×10 ile mm'ye çevrilir
@@ -168,25 +209,28 @@ export default function ProductPricePanel({
 
   // Gösterilen birim fiyat = hesaplanan toplam / m²: 342,34 ₺ × 806 = 275.946 ₺.
   // calcPrice çıktısı kuruşa yuvarlanır; tüm türev fiyatlar tutarlı.
-  function calcPrice(isk1Pct: number): number | null {
-    if (pricePerM2Base === null) return null;
-    const raw = pricePerM2Base * (1 - isk1Pct / 100) * (1 - isk2) * (1 + PROFIT_MARGIN);
-    return Math.round(raw * 100) / 100;
+  function calcPrice(isk1Pct: number, areaM2: number | null): number | null {
+    if (pricePerM2Base === null || areaM2 == null) return null;
+    const marginPct = resolveMarginPctStrict(marginRule, areaM2);
+    if (marginPct === null) return null;
+    const discountedNet = pricePerM2Base * (1 - isk1Pct / 100) * (1 - isk2);
+    return applyMargin(discountedNet, marginPct);
   }
 
-  const packageRefPrice = calcPrice(0);
-  const lorryPrice = lorryM2 ? calcPrice(discKamyon) : null;
-  const truckPrice = truckM2 ? calcPrice(discTir) : null;
+  const selectedOrderAreaM2 = sepetState.totalM2 > 0 ? sepetState.totalM2 : null;
+  const referenceAreaM2 = selectedOrderAreaM2 ?? (neededM2Num > 0 ? neededM2Num : null);
+  const packageRefPrice = calcPrice(0, referenceAreaM2);
+  const lorryPrice = lorryM2
+    ? calcPrice(discKamyon, referenceAreaM2 ?? lorryM2)
+    : null;
+  const truckPrice = truckM2
+    ? calcPrice(discTir, referenceAreaM2 ?? truckM2)
+    : null;
 
-  const depotDiscountPct = product.depot_discount ?? 0;
-  const depotStock = activeThicknessPrice?.stock_tuzla ?? 0;
-  const depotPrice = depotStock > 0 ? calcPrice(depotDiscountPct) : null;
-
-  // Stoksuz kalınlıklarda metraj inputunu 1 kamyon kapasitesiyle prefill et.
+  // Katalog teklifi fabrika çıkışlıdır; başlangıç metrajı 1 Kamyon kapasitesidir.
   // Kalınlık değişince lorryM2 değişir → effect yeniden tetiklenir (doğal sıfırlama).
-  // depotStock > 0 ise depo yolu aktif; prefill gereksiz.
   useEffect(() => {
-    if (lorryM2 !== null && depotStock === 0) {
+    if (lorryM2 !== null) {
       const val = formatM2Input(lorryM2);
       const syncPrefill = window.setTimeout(() => {
         setNeededM2(val);
@@ -195,12 +239,7 @@ export default function ProductPricePanel({
       }, 0);
       return () => window.clearTimeout(syncPrefill);
     }
-  }, [lorryM2, depotStock]);
-
-  const neededM2Num = (() => {
-    const raw = debouncedM2 ? parseFloat(debouncedM2.replace(",", ".")) : 0;
-    return isNaN(raw) || raw < 0 ? 0 : raw;
-  })();
+  }, [lorryM2]);
 
   // Geçerlilik kontrolü direkt neededM2 üzerinden (anlık kırmızı border için)
   const inputInvalid = neededM2 !== "" && (() => {
@@ -208,16 +247,9 @@ export default function ProductPricePanel({
     return isNaN(raw) || raw < 0;
   })();
 
-  const minOrderM2 =
-    minimum_order.has_minimum && rules.minimum_order_type === "m2"
-      ? (rules.minimum_order_value ?? null)
-      : null;
-
   // CTA label — senaryoya ve araç sayısına göre dinamik
   const ctaLabel = (() => {
     switch (sepetState.scenario) {
-      case 'below_minimum': return `Teklif için en az ${minOrderM2 ?? ""} m² giriniz`;
-      case 'depot_optimal': return "PDF Teklif Al";
       case 'lorry_optimal': return `${sepetState.kamyon} Kamyon için PDF Teklif Al`;
       case 'tir_optimal':   return `${sepetState.tir} TIR için PDF Teklif Al`;
       case 'large_project': return "Büyük Metraj için PDF Teklif Al";
@@ -225,24 +257,18 @@ export default function ProductPricePanel({
     }
   })();
   const isTyping = neededM2 !== debouncedM2;
-  // Ara_metraj / empty / below_minimum senaryolarında CTA pasif:
-  // kullanıcı önce araç seçmeli veya metrajı minimuma tamamlamalı.
+  // Boş/hesaplanmakta olan sepette CTA pasiftir; teklif yalnız tam araç planıyla açılır.
   // Tam dolu araç (lorry/tir/large_project) siparişinde nakliye dahil fiyat çıkar.
   const sepetBos = sepetState.kamyon === 0 && sepetState.tir === 0;
-  const ctaDisabled =
-    !isTyping &&
-    (sepetBos || (sepetState.scenario === 'below_minimum' && sepetState.totalM2 === 0));
+  const ctaDisabled = isTyping || sepetBos;
 
   // Hero fiyat mantığı:
   // 1. Sepet dolu → blended effective (kamyon × lorryPrice + TIR × truckPrice / toplam m²)
-  // 2. Stok önerisi aktif → depotPrice (depo tek seçenek, TIR fiyatı yanıltıcı olur)
-  // 3. Boş sepet, metraj yok → TIR çıpa (SEO için en avantajlı fiyat)
+  // 2. Boş sepet, metraj yok → TIR çıpa (SEO için en avantajlı fiyat)
   const heroPrice =
     sepetState.totalM2 > 0
       ? sepetState.effectivePrice
-      : sepetState.stokOnerisi && depotPrice !== null
-        ? depotPrice
-        : truckPrice ?? lorryPrice;
+      : truckPrice ?? lorryPrice;
 
   // Context'e yaz → MobileProductHero senaryo-aware fiyatı okur (sepet doluyken
   // effectivePrice, boşken TIR çıpa). Mobil hero ile TOPLAM hesabı tek kaynaklı.
@@ -262,7 +288,6 @@ export default function ProductPricePanel({
     (lorryPrice !== null || truckPrice !== null);
 
   // Quote parametreleri sepet state'inden türetilir.
-  // SingleProductQuoteButton vehicleType: 'lorry' | 'truck' | 'depot' | null kabul eder.
   // Karışık sepet (TIR + Kamyon) için "mixed" enum yok, CTA disable de edilmez.
   // vehicleType = null geçmek yeterli: DB'ye null gider (yanıltıcı "truck" gitmez).
   // PDF hesabı zaten doğru: blended heroPrice × totalM2 = gerçek toplam.
@@ -286,12 +311,12 @@ export default function ProductPricePanel({
   const quotePackageCount = packageSizeM2 && quoteM2 > 0
     ? Math.max(1, Math.ceil(quoteM2 / packageSizeM2))
     : null;
-  const quoteTotalKdvHaric = heroPrice !== null && quoteM2 > 0
-    ? heroPrice * quoteM2
+  const quoteSurfacePricing = heroPrice !== null && quoteM2 > 0
+    ? buildQuoteSurfacePricing(heroPrice * quoteM2, 0, quoteM2)
     : null;
-  const quoteShippingIncluded =
-    product.material_type !== 'eps' &&
-    (sepetState.kamyon > 0 || sepetState.tir > 0);
+  const quoteTotalKdvHaric = quoteSurfacePricing?.priceWithoutVat ?? null;
+  const quotePricePerM2KdvHaric = quoteSurfacePricing?.pricePerM2WithoutVat ?? null;
+  const quoteShippingIncluded = sepetState.kamyon > 0 || sepetState.tir > 0;
   const quoteVehicleSummary =
     sepetState.tir > 0 && sepetState.kamyon > 0
       ? `${sepetState.tir} TIR + ${sepetState.kamyon} Kamyon`
@@ -299,9 +324,7 @@ export default function ProductPricePanel({
         ? `${sepetState.tir} TIR`
         : sepetState.kamyon > 0
           ? `${sepetState.kamyon} Kamyon`
-          : sepetState.scenario === 'depot_optimal'
-            ? 'Depo stok kontrolü'
-            : 'Metraj seçimi';
+          : 'Metraj seçimi';
   const productDetailVehicleType =
     sepetState.tir > 0 && sepetState.kamyon > 0
       ? 'mixed' as const
@@ -373,24 +396,8 @@ export default function ProductPricePanel({
     productDetailVehicleType,
   ]);
 
-  // Depo uygunsa depot kartı ana kartın üstüne çıkar
-  const depotBlock = depotStock > 0 && depotPrice !== null ? (
-    <StokAlternatifSection
-      depotStock={depotStock}
-      depotPrice={depotPrice}
-      depotMinM2={product.depot_min_m2 ?? 300}
-      ihtiyac={neededM2Num}
-      packageRefPrice={packageRefPrice}
-      productName={product.name}
-      resultSessionId={resultSessionId}
-    />
-  ) : null;
-
   return (
     <div className="space-y-3 pb-32 lg:pb-0">
-      {/* Depo optimal → depot kartı en üstte */}
-      {sepetState.scenario === 'depot_optimal' && depotBlock}
-
       <div className="rounded-xl border border-fe-border bg-fe-raised/40 p-5">
 
         {/* ─── Fiyat Görünürlük Kontrolleri (decision.ts tek otorite) ─── */}
@@ -407,7 +414,9 @@ export default function ProductPricePanel({
             base_price != null && zone
               ? Math.round(base_price * (1 - parseFloat(String(zone.discount_tir)) / 100) * 100) / 100
               : base_price;
-          const dynamicPrice = truckPrice ?? lorryPrice ?? accessoryTirPrice;
+          const dynamicPrice = product.product_type === 'plate'
+            ? truckPrice ?? lorryPrice
+            : accessoryTirPrice;
 
           const display = getPriceDisplay(
             rules,
@@ -533,7 +542,7 @@ export default function ProductPricePanel({
                   </div>
                   {zone && (zone.city_code === 34 || [41, 16, 14, 54, 81].includes(zone.city_code)) && (
                     <p className="mt-1 text-[10px] text-fe-muted">
-                      {zone.city_code === 34 ? "📍 Depoya en yakın" : "📍 Bölgesel avantaj"}
+                      📍 Bölgesel avantaj
                     </p>
                   )}
                 </div>
@@ -582,19 +591,8 @@ export default function ProductPricePanel({
             lorryPrice={lorryPrice}
             truckPrice={truckPrice}
             packageRefPrice={packageRefPrice}
-            depotStock={depotStock}
-            depotPrice={depotPrice}
-            depotMinM2={product.depot_min_m2 ?? 300}
-            minOrderM2={minOrderM2 ?? 0}
             ihtiyac={neededM2Num}
             onChange={handleSepetChange}
-            onSetIhtiyac={(m2) => {
-              const val = formatM2Input(m2);
-              setNeededM2(val);
-              setDebouncedM2(val);
-              setMetrajMode(m2 === lorryM2 ? "lorry" : m2 === truckM2 ? "truck" : "custom");
-            }}
-            hideMinWarning={isTyping}
             vehicleCardsSlot={vehicleCardsSlot}
           />
         )}
@@ -609,9 +607,7 @@ export default function ProductPricePanel({
           </div>
         )}
 
-        {/* Lojistik Minimum — kalınlığa bağlı dinamik bilgi.
-            Stok varsa depo kuralı, yoksa fabrika (Kamyon/TIR) kuralı.
-            Tam dolu araç = nakliye dahil + bölge iskontosu (kalıcı vurgu). */}
+        {/* Lojistik minimum — yalnız fabrika tam araç kuralı. */}
         {showTierPrice && logistics !== null && activeThickness !== null
           && (lorryM2 !== null || truckM2 !== null) && (
           <div className="mt-3 rounded-lg border border-fe-border/50 bg-fe-raised/40 px-3 py-2.5">
@@ -619,14 +615,13 @@ export default function ProductPricePanel({
               Lojistik Minimum · {activeThickness} cm
             </p>
             <p className="mt-1 text-xs text-fe-text">
-              {depotStock > 0
-                ? `Depodan minimum ${formatM2(product.depot_min_m2 ?? 300)} m². Tam dolu araç iskontosu uygulanmaz.`
-                : lorryM2 !== null && truckM2 !== null
-                  ? `Fabrika alımında minimum 1 Kamyon = ${formatM2(lorryM2)} m² veya 1 TIR = ${formatM2(truckM2)} m².`
-                  : `Fabrika alımında nakliye verisi henüz tanımlı değil.`}
+              {lorryM2 !== null && truckM2 !== null
+                ? `Fabrika alımında minimum 1 Kamyon = ${formatM2(lorryM2)} m² veya 1 TIR = ${formatM2(truckM2)} m².`
+                : `Fabrika alımında nakliye verisi henüz tanımlı değil.`}
             </p>
             <p className="mt-0.5 text-[11px] leading-snug text-fe-muted-strong">
-              Tam dolu araç siparişinde nakliye fiyata dahildir, bölge iskontosu uygulanır.
+              Teklifler fabrikadan tam Kamyon veya tam TIR yüklemesiyle hazırlanır. Tam dolu
+              araç siparişinde nakliye fiyata dahildir ve bölge iskontosu uygulanır.
             </p>
           </div>
         )}
@@ -670,9 +665,12 @@ export default function ProductPricePanel({
                     </div>
                   )}
                 </div>
+                <p className="mt-2 text-[11px] text-fe-muted-strong">
+                  Birim fiyat ve toplam tutar KDV hariçtir.
+                </p>
                 <p className="mt-2 text-[11px] leading-relaxed text-fe-muted-strong">
-                  Tam dolu araç siparişinde bölge iskontosu uygulanır ve nakliye fiyata dahildir;
-                  altında kalındığında nakliye koşulu satış ekibiyle netleşir.
+                  Sipariş, seçilen tam Kamyon/TIR planına göre fabrikadan çıkar. Bölge iskontosu
+                  uygulanır ve nakliye fiyata dahildir.
                 </p>
               </div>
             )}
@@ -688,7 +686,7 @@ export default function ProductPricePanel({
               <SingleProductQuoteButton
                 product={product}
                 activeThickness={activeThickness ?? null}
-                pricePerM2KdvHaric={heroPrice ?? 0}
+                pricePerM2KdvHaric={quotePricePerM2KdvHaric ?? 0}
                 neededM2={quoteM2}
                 cityCode={selectedCode}
                 cityName={zone?.city_name ?? ""}
@@ -711,8 +709,9 @@ export default function ProductPricePanel({
                     ? quoteVehicleSummary
                     : `${formatM2(quoteM2)} m²`,
                   cityName: zone?.city_name ?? '',
-                  pricePerM2: heroPrice ?? 0,
+                  pricePerM2: quotePricePerM2KdvHaric ?? 0,
                   totalKdvHaric: quoteTotalKdvHaric ?? 0,
+                  shippingMessage: quoteShippingIncluded ? 'fiyata dahil' : 'satış görüşmesinde netleşir',
                 }))}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -728,7 +727,7 @@ export default function ProductPricePanel({
                 className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-green-600/50 bg-green-600/12 px-3 py-2.5 text-center text-xs font-bold text-green-300 transition-colors hover:border-green-500 hover:bg-green-600/18 hover:text-green-200"
               >
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                WhatsApp'tan teyit iste
+                WhatsApp&apos;tan teyit iste
               </a>
               <a
                 href={`tel:${BUSINESS_INFO.phone.tel}`}
@@ -769,7 +768,7 @@ export default function ProductPricePanel({
               </p>
               {quoteTotalKdvHaric !== null && (
                 <p className="mt-0.5 truncate text-[11px] font-medium leading-none text-fe-muted-strong">
-                  ≈ {formatCurrency(quoteTotalKdvHaric)} ₺ toplam
+                  ≈ {formatCurrency(quoteTotalKdvHaric)} ₺ toplam · KDV hariç
                 </p>
               )}
             </div>
@@ -777,7 +776,7 @@ export default function ProductPricePanel({
               <SingleProductQuoteButton
                 product={product}
                 activeThickness={activeThickness ?? null}
-                pricePerM2KdvHaric={heroPrice}
+                pricePerM2KdvHaric={quotePricePerM2KdvHaric ?? 0}
                 neededM2={quoteM2}
                 cityCode={selectedCode}
                 cityName={zone?.city_name ?? ""}
@@ -800,8 +799,9 @@ export default function ProductPricePanel({
                   ? quoteVehicleSummary
                   : `${formatM2(quoteM2)} m²`,
                 cityName: zone?.city_name ?? '',
-                pricePerM2: heroPrice ?? 0,
+                pricePerM2: quotePricePerM2KdvHaric ?? 0,
                 totalKdvHaric: quoteTotalKdvHaric ?? 0,
+                shippingMessage: quoteShippingIncluded ? 'fiyata dahil' : 'satış görüşmesinde netleşir',
               }))}
               target="_blank"
               rel="noopener noreferrer"
@@ -838,9 +838,6 @@ export default function ProductPricePanel({
           </div>
         </div>
       )}
-
-      {/* Depo optimal değilse normal pozisyonda göster */}
-      {sepetState.scenario !== 'depot_optimal' && depotBlock}
 
       {/* ─── Sistem Teklifi ─── */}
       {(rules.requires_system_context || rules.sales_mode !== "single_only") && (

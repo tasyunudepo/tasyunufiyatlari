@@ -243,7 +243,7 @@ function CompleSystemCard() {
         </h3>
         <p className="text-[11px] sm:text-[12.5px] leading-snug text-hub-warm/70 line-clamp-3">
           Levha + dübel + file + sıva + harç. Şehir, kalınlık ve m² verin —
-          fabrika çıkışı paket fiyatınız anında.
+          fabrika çıkışı paket fiyatınızı hesaplayın.
         </p>
       </div>
       <div className="mt-5 pt-3 border-t border-hub-warm/15 flex items-center justify-between gap-2">

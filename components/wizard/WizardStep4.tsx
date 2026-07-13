@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Truck, Package, WarningCircle, CheckCircle, Confetti,
+    Truck, WarningCircle, Confetti,
     CaretUp, ArrowBendDownRight, Lightbulb,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, type ComponentType } from "react";
@@ -33,6 +33,9 @@ function getTier(m2: number, _lorryM2: number, truckM2: number): Tier {
     return 'kamyon';
 }
 
+const normalizeM2 = (value: number): number => Number(value.toFixed(2));
+const toM2Input = (value: number): string => String(normalizeM2(value));
+
 const TIER_CONFIG: Record<Tier, { label: string; Icon: IconCmp; iconWeight: 'regular' | 'fill' | 'bold'; ring: string; bg: string; text: string }> = {
     kamyon:   { label: 'Kamyon Dolusu', Icon: Truck,   iconWeight: 'regular', ring: 'ring-brand-500',  bg: 'bg-brand-900/40', text: 'text-brand-300' },
     tir:      { label: 'TIR Dolusu',    Icon: Truck,   iconWeight: 'fill',    ring: 'ring-brand-500',  bg: 'bg-brand-900/40', text: 'text-brand-300'  },
@@ -54,7 +57,7 @@ export function WizardStep4({
 
     const hasVal = m2 > 0;
     const suggestedStartM2 = selectedMalzeme === 'tasyunu' && lorryM2 > 0
-        ? Math.round(lorryM2)
+        ? normalizeM2(lorryM2)
         : null;
 
     useEffect(() => {
@@ -118,7 +121,6 @@ export function WizardStep4({
     const remainKisiPaket = remainAfterTir > 0.1 ? Math.ceil(remainAfterTir / pkgSizeM2) : 0;
     const canFitInLorry   = isMultiVehicle && remainKisiPaket > 0 && remainKisiPaket <= lorryPkgs;
     const needOneMoreTir  = isMultiVehicle && remainKisiPaket > lorryPkgs;
-    const finalTirCount   = needOneMoreTir ? fullTirCount + 1 : fullTirCount;
     const showExtraLorry  = canFitInLorry;
 
     // Bir sonraki tam araca kaç paket eksik (kamyon tier'ından TIR'a geçiş)
@@ -130,8 +132,11 @@ export function WizardStep4({
     const discKamyon = selectedZone?.discount_kamyon ?? null;
     const isFullVehicleInvalid = !validation.isValid && validation.kind === 'full_vehicle';
 
-    const formatM2 = (value: number) => Math.round(value).toLocaleString('tr-TR');
     const isWholeNumber = (value: number) => Math.abs(value - Math.round(value)) < 0.05;
+    const formatM2 = (value: number) => value.toLocaleString('tr-TR', {
+        minimumFractionDigits: isWholeNumber(value) ? 0 : 1,
+        maximumFractionDigits: 2,
+    });
     const formatDeltaM2 = (value: number) => value.toLocaleString('tr-TR', {
         minimumFractionDigits: isWholeNumber(value) ? 0 : 1,
         maximumFractionDigits: 1,
@@ -153,20 +158,20 @@ export function WizardStep4({
             {
                 key: 'kamyon',
                 label: 'Kamyon dolusu',
-                m2: Math.round(lorryM2),
+                m2: normalizeM2(lorryM2),
                 benefit: discKamyon != null ? `%${discKamyon} bölge iskontosu` : 'Tam araç siparişi',
             },
             {
                 key: 'tir',
                 label: 'TIR dolusu',
-                m2: Math.round(truckM2),
+                m2: normalizeM2(truckM2),
                 benefit: discTir != null ? `%${discTir} bölge iskontosu` : 'Tam araç siparişi',
             },
         ]
         : [];
     const fullVehicleOptions = isFullVehicleInvalid
         ? validation.suggestions
-            .map(opt => ({ ...opt, roundedM2: Math.round(opt.m2) }))
+            .map(opt => ({ ...opt, roundedM2: normalizeM2(opt.m2) }))
             .sort((a, b) => a.m2 - b.m2)
         : [];
     const currentOrderM2 = hasVal ? roundedM2 : m2;
@@ -232,7 +237,7 @@ export function WizardStep4({
                                 <button
                                     key={preset.key}
                                     type="button"
-                                    onClick={() => setMetraj(String(preset.m2))}
+                                    onClick={() => setMetraj(toM2Input(preset.m2))}
                                     className={`rounded-xl border px-3 py-3 text-left transition-all ${
                                         isSelectedPreset
                                             ? 'border-brand-500 bg-brand-900/35 shadow-lg shadow-brand-600/10'
@@ -279,7 +284,7 @@ export function WizardStep4({
                             <WarningCircle size={16} weight="fill" /> Minimum sipariş {validation.minOrder} m²
                         </p>
                         <p className="text-xs text-red-200/80">
-                            Bu metrajın altındaki siparişlerde nakliye masrafı maliyeti karşılamaz.
+                            Fabrika çıkışlı EPS sistem teklifi bu taban metrajdan başlar.
                             Lütfen <span className="font-bold">{validation.minOrder} m²</span> veya üzerinde bir değer girin.
                         </p>
                         <button
@@ -300,12 +305,12 @@ export function WizardStep4({
                         </p>
                         <p className="text-xs text-amber-100/80">
                             Taşyünü siparişi tam Kamyon/TIR metrajına göre ilerler.
-                            Araç dolu olmadığında nakliye ayrıca ücretlendirilir.
+                            Ara metraj için teklif oluşturulmaz; aşağıdaki en yakın tam araç miktarını seçin.
                         </p>
                         {primaryFullVehicleOption && (
                             <button
                                 type="button"
-                                onClick={() => setMetraj(String(primaryFullVehicleOption.roundedM2))}
+                                onClick={() => setMetraj(toM2Input(primaryFullVehicleOption.m2))}
                                 className="mt-3 w-full rounded-xl border border-amber-500/55 bg-amber-900/35 px-3 py-3 text-left transition-colors hover:border-amber-400 hover:bg-amber-800/40"
                             >
                                 <span className="block text-[11px] font-bold uppercase tracking-wide text-amber-300">
@@ -332,7 +337,7 @@ export function WizardStep4({
                                         <button
                                             key={`${opt.m2}-${opt.label}`}
                                             type="button"
-                                            onClick={() => setMetraj(String(opt.roundedM2))}
+                                            onClick={() => setMetraj(toM2Input(opt.m2))}
                                             className="rounded-full border border-amber-600/35 bg-amber-950/25 px-3 py-1.5 text-[11px] font-semibold text-amber-100 hover:border-amber-500/60 hover:bg-amber-800/35 transition-colors"
                                         >
                                             {formatM2(opt.m2)} m² · {opt.label}
@@ -514,7 +519,7 @@ export function WizardStep4({
 
             {/* Nudge / tebrik mesajı */}
             <AnimatePresence mode="wait">
-                {!isFullVehicleInvalid && 'multi' in (nudge ?? {}) && nudge && (
+                {!isFullVehicleInvalid && nudge && 'multi' in nudge && (
                     <motion.div
                         key="multi"
                         initial={{ opacity: 0, y: 6 }}
@@ -561,10 +566,10 @@ export function WizardStep4({
                                 </div>
                             </div>
                         )}
-                        {(nudge as any).pct != null && remainKisiPaket === 0 && (
+                        {nudge.pct != null && remainKisiPaket === 0 && (
                             <>
                                 <p className="text-xs text-white">
-                                    TIR&apos;lara <span className="font-bold text-green-300">%{(nudge as any).pct}</span> bölge iskontosu uygulanır · nakliye fiyata dahildir
+                                    TIR&apos;lara <span className="font-bold text-green-300">%{nudge.pct}</span> bölge iskontosu uygulanır · nakliye fiyata dahildir
                                 </p>
                                 <p className="mt-1 text-[11px] text-green-200/80">
                                     Bu fiyat tam dolu araç sipariş koşulunda geçerlidir.
@@ -573,36 +578,36 @@ export function WizardStep4({
                         )}
                     </motion.div>
                 )}
-                {!isFullVehicleInvalid && 'remainingPkgs' in (nudge ?? {}) && nudge && (
+                {!isFullVehicleInvalid && nudge && 'remainingPkgs' in nudge && (
                     <motion.div
-                        key={(nudge as any).target}
+                        key={nudge.target}
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: 0.2 }}
-                        className={`p-3 rounded-xl border ${ (nudge as any).target === 'kamyon' ? 'bg-brand-900/20 border-brand-700/40' : 'bg-brand-900/20 border-brand-700/40' }`}
+                        className="p-3 rounded-xl border bg-brand-900/20 border-brand-700/40"
                     >
                         <p className="text-sm font-bold text-white mb-1 flex items-center gap-1.5">
-                            <Truck size={16} weight={(nudge as any).target === 'kamyon' ? 'regular' : 'fill'} />
-                            {(nudge as any).target === 'kamyon' ? 'Kamyona' : "TIR'a"}{' '}
+                            <Truck size={16} weight={nudge.target === 'kamyon' ? 'regular' : 'fill'} />
+                            {nudge.target === 'kamyon' ? 'Kamyona' : "TIR'a"}{' '}
                             <span className="text-brand-300">
-                                {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² kaldı
+                                {(nudge.remainingPkgs * pkgSizeM2).toFixed(1)} m² kaldı
                             </span>
                         </p>
-                        {(nudge as any).target === 'kamyon' ? (
+                        {nudge.target === 'kamyon' ? (
                             <>
                                 <p className="text-xs text-brand-300">
                                     <button
                                         type="button"
-                                        onClick={() => setMetraj(String(Math.round((rawPkgCount + (nudge as any).remainingPkgs) * pkgSizeM2)))}
+                                        onClick={() => setMetraj(toM2Input((rawPkgCount + nudge.remainingPkgs) * pkgSizeM2))}
                                         className="inline-flex items-center gap-1 font-semibold underline decoration-dotted underline-offset-2 hover:text-hub-warm hover:decoration-solid transition-colors"
                                     >
-                                        <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² ekleyin
+                                        <CaretUp size={12} weight="bold" /> {(nudge.remainingPkgs * pkgSizeM2).toFixed(1)} m² ekleyin
                                     </button>
-                                    {' '}→ nakliye fiyata dahildir + <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> iskonto!
+                                    {' '}→ nakliye fiyata dahildir + <span className="font-bold text-brand-200">%{nudge.pct}</span> iskonto!
                                 </p>
                                 <p className="mt-1 text-[11px] text-brand-300/80">
-                                    Bu fiyat tam dolu araç sipariş koşulunda geçerlidir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                    Taşyününde tam araç, EPS sisteminde tanımlı set koşulu teklif kaydından önce kontrol edilir.
                                 </p>
                             </>
                         ) : (
@@ -610,45 +615,43 @@ export function WizardStep4({
                                 <p className="text-xs text-brand-300">
                                     <button
                                         type="button"
-                                        onClick={() => setMetraj(String(Math.round((rawPkgCount + (nudge as any).remainingPkgs) * pkgSizeM2)))}
+                                        onClick={() => setMetraj(toM2Input((rawPkgCount + nudge.remainingPkgs) * pkgSizeM2))}
                                         className="inline-flex items-center gap-1 font-semibold underline decoration-dotted underline-offset-2 hover:text-hub-warm hover:decoration-solid transition-colors"
                                     >
-                                        <CaretUp size={12} weight="bold" /> {((nudge as any).remainingPkgs * pkgSizeM2).toFixed(1)} m² daha ekleyin
+                                        <CaretUp size={12} weight="bold" /> {(nudge.remainingPkgs * pkgSizeM2).toFixed(1)} m² daha ekleyin
                                     </button>{' '}
-                                    {discKamyon != null && (nudge as any).pct > discKamyon && (
-                                        <><span className="font-bold text-brand-200">%{(nudge as any).pct - discKamyon} ekstra iskontolu</span>{' '}</>
+                                    {discKamyon != null && nudge.pct > discKamyon && (
+                                        <><span className="font-bold text-brand-200">%{nudge.pct - discKamyon} ekstra iskontolu</span>{' '}</>
                                     )}
-                                    → <span className="font-bold text-brand-200">%{(nudge as any).pct}</span> TIR iskontosu kazanıyorsunuz
+                                    → <span className="font-bold text-brand-200">%{nudge.pct}</span> TIR iskontosu kazanıyorsunuz
                                 </p>
                                 <p className="mt-1 text-[11px] text-brand-300/80">
-                                    Tam dolu TIR siparişinde nakliye fiyata dahildir; altında kalındığında nakliye ayrıca ücretlendirilir.
+                                    Mevcut tam kamyon fiyatında da nakliye fiyata dahildir; TIR dolumunda daha yüksek bölge iskontosu uygulanır.
                                 </p>
                             </>
                         )}
                     </motion.div>
                 )}
-                {!isFullVehicleInvalid && 'bonus' in (nudge ?? {}) && nudge && (
+                {!isFullVehicleInvalid && nudge && 'bonus' in nudge && (
                     <motion.div
                         key="bonus"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.25 }}
-                        className={(nudge as any).tier === 'tir'
-                            ? 'p-3 rounded-xl border bg-brand-900/25 border-brand-600/50'
-                            : 'p-3 rounded-xl border bg-brand-900/25 border-brand-600/50'}
+                        className="p-3 rounded-xl border bg-brand-900/25 border-brand-600/50"
                     >
                         <p className="text-sm font-medium text-brand-300 inline-flex items-center gap-1.5 flex-wrap">
                             <Confetti size={16} weight="fill" className="text-amber-400" />
-                            {(nudge as any).tier === 'tir' ? 'TIR tam dolu' : 'Kamyon tam dolu'} —{' '}
+                            {nudge.tier === 'tir' ? 'TIR tam dolu' : 'Kamyon tam dolu'} —{' '}
                             <span className="font-bold text-brand-200">
-                                %{(nudge as any).pct}
+                                %{nudge.pct}
                             </span>{' '}
                             bölge iskontosu uygulandı, nakliye fiyata dahildir.
                         </p>
                     </motion.div>
                 )}
-                {!isFullVehicleInvalid && 'done' in (nudge ?? {}) && nudge && !('bonus' in (nudge ?? {})) && (
+                {!isFullVehicleInvalid && nudge && 'done' in nudge && (
                     <motion.div
                         key="done"
                         initial={{ opacity: 0, y: 6 }}
@@ -659,7 +662,7 @@ export function WizardStep4({
                     >
                         <p className="text-sm font-medium text-brand-300 inline-flex items-center gap-1.5 flex-wrap">
                             <Truck size={16} weight="fill" /> TIR doldu —{' '}
-                            <span className="font-bold text-brand-200">%{(nudge as any).pct}</span>{' '}
+                            <span className="font-bold text-brand-200">%{nudge.pct}</span>{' '}
                             bölge iskontosu uygulandı, nakliye fiyata dahildir.
                         </p>
                     </motion.div>
@@ -669,7 +672,7 @@ export function WizardStep4({
             {/* TIR avantajı bilgi notu */}
             {hasVal && !isFullVehicleInvalid && tier !== 'tir' && discTir != null && (
                 <p className="mt-2 text-[11px] text-fe-muted text-center leading-relaxed inline-flex items-center justify-center gap-1 flex-wrap">
-                    <Lightbulb size={12} weight="fill" className="text-amber-400" /> Tam dolu TIR siparişinde nakliye fiyata dahildir +{' '}
+                    <Lightbulb size={12} weight="fill" className="text-amber-400" /> Tam kamyon ve TIR siparişinde nakliye fiyata dahildir; TIR seviyesinde{' '}
                     <span className="text-fe-muted font-semibold">%{discTir}</span>{' '}
                     bölge iskontosu uygulanır
                     {discKamyon != null && discTir > discKamyon

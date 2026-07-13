@@ -31,7 +31,7 @@ interface BrandTrustLogosProps {
 
 export default function BrandTrustLogos({
   compact = false,
-  title = 'Resmi bayilik altyapımızda öne çıkan markalar',
+  title = 'Tekliflerde karşılaştırdığımız markalar',
   variant = 'inline',
 }: BrandTrustLogosProps) {
   const isHero = variant === 'hero';
@@ -75,7 +75,7 @@ export default function BrandTrustLogos({
 
         {isHero && (
           <p className="max-w-[320px] text-sm leading-relaxed text-fe-muted/80">
-            Filli Boya, Dalmaçyalı ve Fawori bayilik altyapısıyla resmi teklif üretimi.
+            Ürün, kalınlık, metraj ve şehir koşullarını birlikte değerlendiriyoruz.
           </p>
         )}
       </div>

@@ -16,7 +16,7 @@ import { SituationSelector } from '@/components/cro/SituationSelector';
 import { RiskMistakesBlock } from '@/components/cro/RiskMistakesBlock';
 import { ProofBlock } from '@/components/cro/ProofBlock';
 import { BrandStrip } from '@/components/cro/BrandStrip';
-import { Truck, Package, Check, ArrowRight, CaretRight, Star } from "@phosphor-icons/react";
+import { Truck, Package, Check, ArrowRight, Star } from "@phosphor-icons/react";
 import { ICON_WEIGHT } from "@/lib/design/tokens";
 import { BUSINESS_INFO, WHATSAPP_URL } from "@/lib/business/info";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
@@ -30,19 +30,19 @@ const faqItems = [
     },
     {
         q: "Hesabı yanlış yaparsam ne kaybederim?",
-        a: "Eksik kalınlık seçimi yıllık ısınma giderinde %15–25 fark, eksik metraj ise sahada eksik malzeme + ek nakliye masrafı yaratır. Hesaplayıcı standart sarfiyat (kesim, fire) ve yuvarlamayı otomatik dahil eder, bu nedenle teklif gerçek sahaya yakın çıkar.",
+        a: "Eksik kalınlık ısı performansını, eksik metraj ise malzeme planını etkiler. Hesaplayıcı standart sarfiyatı ve paket yuvarlamasını birlikte gösterir; son uygulama miktarı saha ölçüsüyle teyit edilmelidir.",
     },
     {
         q: "Nakliye ücreti hesaba dahil mi, bölgeye göre değişir mi?",
-        a: "Evet, nakliye dahildir. Şehir kodu seçildiğinde sistem kısmi yük (1 paletten itibaren), kamyon ve TIR seçeneklerinden uygun olanı otomatik hesaplar. Tam araç dolduğunda iskonto bölgelerine göre ek indirim uygulanır.",
+        a: "Taşyününde tam kamyon, tam TIR veya bunların tam araç kombinasyonlarında nakliye fiyata dahildir. Uygun EPS setinde levha ve toz grubu birlikte hesaplandığında nakliye fiyata dahil gösterilir. Bu koşullara ulaşmayan sipariş için sistem teklif oluşturmaz.",
     },
     {
         q: "PDF teklif ne zaman ve nasıl elime ulaşır?",
-        a: "Hesabı tamamladıktan sonra ad-soyad ve telefon bilgisini girdiğinizde resmi PDF saniyeler içinde oluşur, mail adresinize ve WhatsApp üzerinden gönderilir. Teklifte kalem listesi, teklif referans kodu ve güncel hesap bilgileri yer alır.",
+        a: "Hesabı tamamlayıp iletişim bilgilerinizi onayladığınızda PDF ekranda oluşur. Buradan indirebilir; WhatsApp veya e-posta seçeneğiyle kendiniz paylaşabilirsiniz. Teklifte kalem listesi ve referans kodu yer alır.",
     },
     {
         q: "Sipariş nasıl ilerler, ödeme koşulları nasıl netleşir?",
-        a: "PDF teklifteki referans numarasını WhatsApp üzerinden bize iletmeniz yeterli. Sevkiyat planı (tarih, araç tipi) onaylanır. Satış ekibimiz ödeme koşullarını ve sevkiyat planını görüşmede netleştirir.",
+        a: "PDF teklifteki referans numarasını WhatsApp üzerinden bize iletin. Satış ekibi fabrika üretim uygunluğunu, sevkiyat tarihini ve araç planını görüşmede netleştirir. Ödeme sipariş onayında tek seferde alınır.",
     },
     {
         q: "Kararsızım, hangi paketi seçeceğimi bilmiyorum.",
@@ -58,13 +58,13 @@ const HOW_STEPS = [
     },
     {
         n: 2,
-        title: "8 kalem ve nakliye otomatik hesaplansın",
-        desc: "3 paket karşınızda; markalar ve kalemler net karşılaştırılır.",
+        title: "8 kalem ve nakliye koşulu hesaplansın",
+        desc: "Ürün kalemleri, tam araç eşiği ve uygun EPS seti birlikte değerlendirilir.",
     },
     {
         n: 3,
         title: "PDF teklifinizi indirin, paylaşın",
-        desc: "Resmi PDF teklif anında oluşur, WhatsApp ile sipariş onayı tek mesaj uzakta.",
+        desc: "PDF ekranda oluşur; indirme, WhatsApp veya e-posta paylaşımını siz seçersiniz.",
     },
 ];
 
@@ -79,7 +79,7 @@ const jsonLdGraph = buildBusinessGraph([
         name: "Mantolama Maliyet Hesaplayıcı",
         url: BUSINESS_INFO.url,
         applicationCategory: "BusinessApplication",
-        description: "8 kalem mantolama setini metraj, kalınlık ve bölgeye göre hesaplayın. Nakliye ve iskonto dahil 3 farklı paket seçeneğini karşılaştırıp PDF teklif alın.",
+        description: "8 kalem mantolama setini metraj, kalınlık ve bölgeye göre hesaplayın. Tam araç ve uygun EPS seti nakliye koşullarını görerek 3 paket seçeneğini karşılaştırın.",
         offers: {
             "@type": "Offer",
             price: "0",
@@ -104,9 +104,9 @@ const jsonLdGraph = buildBusinessGraph([
     buildHowToNode({
         name: "Mantolama Hesaplaması ve PDF Teklif Nasıl Alınır?",
         description:
-            "3 adımda paket, fiyat ve nakliye dahil resmi PDF teklif. " +
+            "3 adımda paket, fiyat ve nakliye koşulunu gösteren PDF teklif. " +
             "Şehir, metraj ve kalınlık girin; 8 kalem set otomatik hesaplansın; " +
-            "PDF teklifinizi anında indirin.",
+            "PDF teklifinizi ekranda oluşturup indirin.",
         totalTime: "PT2M",
         estimatedCost: { currency: "TRY", value: "0" },
         steps: HOW_STEPS.map((s) => ({ name: s.title, text: s.desc })),
@@ -123,13 +123,13 @@ const HIGHLIGHTS = [
     },
     {
         eyebrow: "Şehir · Doluluk · İskonto",
-        title: "Nakliye dahil maliyet baştan netleşir.",
-        desc: "Şehir, m² ve kalınlık seçildiğinde paket miktarı, araç doluluğu ve bölgesel iskonto aynı hesapta birleşir. Tam doluluğa yaklaştıkça taşıma avantajı otomatik görünür.",
+        title: "Nakliye koşulu baştan görünür.",
+        desc: "Taşyününde tam araç eşiği, EPS setinde levha ve toz grubu koşulu aynı hesapta değerlendirilir. Nakliyenin fiyata dahil olduğu durum sonuçta açıkça gösterilir.",
     },
     {
-        eyebrow: "Resmi PDF · Saniyeler İçinde",
+        eyebrow: "Referanslı PDF Teklif",
         title: "Teklifinizi indirin, kaydedin, paylaşın.",
-        desc: "Hesabı bitirdiğinizde resmi fiyat teklifi PDF olarak oluşur. Sistemde kayıtlıdır; WhatsApp linkinden sipariş referansıyla doğrudan ilerlersiniz.",
+        desc: "Hesabı bitirdiğinizde referanslı fiyat teklifi PDF olarak oluşur. Belgeyi indirir; WhatsApp veya e-posta uygulamanızı hazır metinle açarsınız.",
     },
 ];
 
@@ -159,10 +159,10 @@ export default function Home() {
                         <div>
                             <Eyebrow className="mb-2.5 sm:mb-4">Fabrika Çıkışlı Mantolama</Eyebrow>
                             <h1 className="max-w-[980px] font-heading font-extrabold text-[40px] sm:text-[52px] lg:text-[64px] leading-[1.05] tracking-tight text-fe-text">
-                                <span className="text-brand">Nakliye dahil</span> mantolama setinizi saniyeler içinde PDF olarak alın.
+                                Taşyününde <span className="text-brand">tam araç</span>, uygun EPS setinde nakliye fiyata dahil.
                             </h1>
                             <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-text/85 leading-relaxed">
-                                Şehir, metraj, kalınlık seç, 3 farklı kalitede teklif PDF olarak hazır. Seç indir.
+                                Şehir, metraj ve kalınlığı seçin; üç paket seçeneğini karşılaştırıp PDF teklifinizi ekranda oluşturun.
                             </p>
                             <div className="mt-5 sm:mt-7 lg:hidden">
                                 <HeroSystemVisual />
@@ -172,7 +172,7 @@ export default function Home() {
                                     href="#mantolama-hesaplayici"
                                     className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-fe-bg shadow-lg shadow-brand/20 transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-fe-bg"
                                 >
-                                    Ücretsiz PDF Teklif Oluştur
+                                    PDF Teklif Oluştur
                                     <ArrowRight size={18} weight={ICON_WEIGHT} />
                                 </Link>
                                 <Link
@@ -190,7 +190,7 @@ export default function Home() {
                                 <HeroSystemVisual />
                             </div>
                             <BrandTrustLogos
-                                title="Resmi Bayilikler"
+                                title="Çalıştığımız Markalar"
                                 variant="heroRail"
                             />
                         </div>
@@ -286,7 +286,7 @@ export default function Home() {
                                 name: "Ekonomik",
                                 tagline: "En düşük maliyet",
                                 desc: "Toplam maliyeti minimize etmek isteyen projeler için bütçe dostu kombinasyon.",
-                                points: ["Bütçe dostu kombinasyon", "Üretici ürün garantisi", "En düşük toplam maliyet"],
+                                points: ["Bütçe dostu kombinasyon", "Ürün teknik dokümanları", "En düşük toplam maliyet"],
                                 featured: false,
                                 forWho: "Toplam maliyeti aşağı çekmek isteyenler için.",
                                 notForWho: "Tek marka sistem bütünlüğü arıyorsanız size göre değil.",
@@ -295,16 +295,16 @@ export default function Home() {
                                 name: "Dengeli",
                                 tagline: "Popüler tercih",
                                 desc: "Fiyat / performans dengesini gözeten projeler için optimize edilmiş paket.",
-                                points: ["Onaylı levha + aksesuar", "Üretici ürün garantisi", "Fiyat/performans dengesi"],
+                                points: ["Levha + aksesuar dengesi", "Ürün teknik dokümanları", "Fiyat/performans dengesi"],
                                 featured: true,
                                 forWho: "Fiyat ve güven dengesi arayanlar için.",
                                 notForWho: "Ultra premium beklenti varsa Orijinal'i tercih edin.",
                             },
                             {
                                 name: "Orijinal",
-                                tagline: "Tam sistem garantisi",
-                                desc: "Tek marka bütünlüğüyle sistem garantisi. Dalmaçyalı levha ve aksesuar kombinasyonu.",
-                                points: ["Aynı marka levha + aksesuar", "Sistem garanti koşulları", "Marka bütünlüğü"],
+                                tagline: "Tek marka bütünlüğü",
+                                desc: "Dalmaçyalı levha ve aksesuarları aynı marka sistemi içinde birleştiren paket.",
+                                points: ["Aynı marka levha + aksesuar", "Marka teknik dokümanları", "Sistem bütünlüğü"],
                                 featured: false,
                                 forWho: "Tek marka sistem bütünlüğü arayanlar için.",
                                 notForWho: "Maliyeti minimum tutmak istiyorsanız Ekonomik'e bakın.",
@@ -381,10 +381,10 @@ export default function Home() {
                         <div className="md:col-span-5">
                             <Eyebrow className="mb-5">Lojistik · Otomatik</Eyebrow>
                             <h2 className="font-heading font-bold text-white text-4xl sm:text-5xl tracking-tight leading-[1.05] mb-6">
-                                Nakliye fiyatın bir parçası, sürprizi değil.
+                                Nakliye koşulu teklifin içinde açıkça görünür.
                             </h2>
                             <p className="text-fe-text/85 text-lg leading-relaxed mb-2">
-                                Metrajınıza göre en uygun araç seçilir; doluluk gerçek zamanlı görünür. <span className="text-hub-gold-soft font-semibold">TIR tam dolduğunda nakliye farkı sıfırlanır.</span>
+                                Taşyününde yalnız tam araç miktarları tekliflenir. <span className="text-hub-gold-soft font-semibold">Tam kamyon ve tam TIR siparişinde nakliye fiyata dahildir.</span>
                             </p>
                         </div>
 
@@ -397,31 +397,31 @@ export default function Home() {
                                 <div className="flex flex-col gap-3">
                                     {[
                                         {
-                                            label: 'Kısmi Yük',
-                                            badge: undefined,
-                                            Icon: Package,
-                                            iskonto: 'Kısmi iskonto',
-                                            nakliye: 'Nakliye alıcıya ait',
-                                            scope: 'Yakın bölge (İstanbul · Gebze)',
-                                            color: 'text-red-300 border-red-800/40 bg-red-950/25',
-                                        },
-                                        {
-                                            label: 'Kamyon',
+                                            label: 'Tam Kamyon',
                                             badge: undefined,
                                             Icon: Truck,
-                                            iskonto: '%14\'e kadar iskonto',
-                                            nakliye: 'Ücretsiz nakliye',
-                                            scope: 'Orta-büyük metraj',
+                                            iskonto: 'Ürün kuralına göre iskonto',
+                                            nakliye: 'Nakliye fiyata dahil',
+                                            scope: 'Tam kamyon dolumu',
                                             color: 'text-fe-text border-fe-border bg-fe-surface',
                                         },
                                         {
-                                            label: 'TIR',
+                                            label: 'Tam TIR',
                                             badge: 'En avantajlı',
                                             Icon: Truck,
-                                            iskonto: '%18\'e kadar iskonto',
-                                            nakliye: 'Ücretsiz nakliye',
-                                            scope: 'Tam araç eşiğinde',
+                                            iskonto: 'Ürün kuralına göre iskonto',
+                                            nakliye: 'Nakliye fiyata dahil',
+                                            scope: 'Tam TIR dolumu',
                                             color: 'text-green-300 border-green-800/40 bg-green-950/25',
+                                        },
+                                        {
+                                            label: 'Uygun EPS Seti',
+                                            badge: '400 m² taban',
+                                            Icon: Package,
+                                            iskonto: 'Levha + toz grubu birlikte',
+                                            nakliye: 'Nakliye fiyata dahil',
+                                            scope: 'EPS marj ve set kuralı sağlandığında',
+                                            color: 'text-fe-text border-fe-border bg-fe-surface',
                                         },
                                     ].map((item) => (
                                         <div key={item.label} className={`rounded-xl border p-4 ${item.color}`}>
@@ -448,7 +448,7 @@ export default function Home() {
                                     ))}
                                 </div>
                                 <p className="text-fe-text/60 text-xs mt-5 leading-relaxed">
-                                    Oranlar İstanbul / taşyünü için örnektir; şehir + ürün + paket metrajına göre hesaplayıcıda gerçek değer görünür.
+                                    İskonto oranı marka ve modele göre değişir; sonuç ekranında seçtiğiniz ürünün güncel kuralı gösterilir.
                                 </p>
                             </div>
                         </div>
@@ -461,10 +461,10 @@ export default function Home() {
                 <RevealOnScroll className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
                     <Eyebrow className="mb-5 justify-center">Karar Verin</Eyebrow>
                     <h2 className="mt-3 font-heading font-extrabold text-[32px] sm:text-[40px] leading-[1.1] tracking-tight text-fe-text">
-                        Nakliye dahil teklifinizi <span className="text-brand">şimdi oluşturun</span>.
+                        Tam araç veya uygun EPS seti teklifinizi <span className="text-brand">şimdi oluşturun</span>.
                     </h2>
                     <p className="mt-4 max-w-[560px] text-base text-fe-muted leading-relaxed">
-                        Paketi seçin, ad-soyad ve telefon girin; resmi PDF saniyeler içinde elinizde. Sipariş için referans numaranızla WhatsApp tek mesaj.
+                        Paketi seçip iletişim bilgilerinizi onaylayın; PDF ekranda oluşsun. İndirme veya paylaşma kanalını siz seçin.
                     </p>
                     <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
                         <Link

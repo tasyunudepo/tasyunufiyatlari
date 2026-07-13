@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, Lock, TrendingDown, Zap } from "lucide-react";
+import { Check, Lock, TrendingDown } from "lucide-react";
 
-type TierId = "lorry" | "truck" | "depot";
+type TierId = "lorry" | "truck";
 
 export type TierOption = {
   id: TierId;
@@ -11,7 +11,6 @@ export type TierOption = {
   price: number | null;
   savings?: number | null;
   shipping?: number | null;
-  depotStock?: number | null;
   badge?: string;
   isRecommended?: boolean;
   disabled?: boolean;
@@ -128,21 +127,10 @@ function TierIcon({ id, selected }: { id: TierId; selected: boolean }) {
     return <KamyonIcon selected={selected} className="h-10 w-20" />;
   }
 
-  return <Zap className="h-8 w-8" aria-hidden="true" />;
+  return <KamyonIcon selected={selected} className="h-10 w-20" />;
 }
 
 function getTierMeta(tier: TierOption) {
-  if (tier.id === "depot") {
-    return {
-      subtitle: "Stoktan yönlendirme",
-      helperText:
-        tier.depotStock && tier.depotStock > 0
-          ? `Tuzla depo stoku: ${formatNumber(tier.depotStock)} m²`
-          : "Depo durumuna göre hızlı çıkış planlanır.",
-      badge: tier.badge,
-    };
-  }
-
   return {
     subtitle: tier.id === "truck" ? "En avantajlı birim fiyat" : "Dengeli sevkiyat",
     helperText: `${formatNumber(tier.capacity)} m² kapasite`,
@@ -284,6 +272,9 @@ export default function TransportTierRail({
                         <div className="pb-1 text-[11px] text-zinc-400">/ m²</div>
                       ) : null}
                     </div>
+                    {tier.price !== null ? (
+                      <p className="mt-1 text-[10px] text-zinc-500">KDV hariç</p>
+                    ) : null}
                   </div>
                 )}
 

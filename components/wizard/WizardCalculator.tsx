@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateQuotePDF } from "@/lib/pdfGenerator";
-import { WHATSAPP_ORDER } from "@/lib/config";
 import { TEL_URL } from "@/lib/business/info";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import {
@@ -19,6 +18,7 @@ import {
 import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
 import { PackageCard } from "@/components/package/PackageCard";
 import { PdfOfferModal } from "@/components/modal/PdfOfferModal";
+import { PdfDeliveryCard } from "@/components/quote/PdfDeliveryCard";
 import PhoneCallLink from "@/components/shared/PhoneCallLink";
 import { WizardStep1 } from "@/components/wizard/WizardStep1";
 import { WizardStep2 } from "@/components/wizard/WizardStep2";
@@ -27,9 +27,17 @@ import { WizardStep4 } from "@/components/wizard/WizardStep4";
 import {
     getOfferValidityDate,
     getTruckMeterColor,
-    getSmartAdvice,
 } from "@/lib/utils/packageHelpers";
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from "@/lib/utils/whatsapp";
+import { resolveMarginPctStrict } from "@/lib/pricing/margin";
+import {
+    buildQuoteSurfacePricing,
+} from "@/lib/pricing/quoteTotals";
+import {
+    isValidFullVehicleArea,
+    resolveEpsShippingDecision,
+    resolveVehicleTypeFromPackages,
+} from "@/lib/pricing/commercialRules";
 import { useWizardStore } from "@/lib/store/wizardStore";
 import type { PdfOfferFormData } from "@/lib/schemas/pdfOffer.schema";
 import type {
@@ -60,8 +68,11 @@ const getPackageTotalM2 = (pkg: CalculatedPackage): number =>
 
 const getShippingStatusText = (pkg: CalculatedPackage): string => {
     if (!pkg.logistics) return 'Nakliye koşulu teklif görüşmesinde netleşir';
-    if (pkg.logistics.isShippingIncluded) return 'Nakliye fiyata dahil';
-    return 'Nakliye ayrıca ücretlendirilir';
+    if (pkg.logistics.shippingMode === 'separate_quote_required') {
+        return 'Nakliye satış görüşmesinde netleşir';
+    }
+    if (pkg.logistics.shippingMode === 'buyer_pays') return 'Nakliye alıcıya ait';
+    return 'Nakliye fiyata dahil';
 };
 
 const createResultSessionId = (): string =>
@@ -79,6 +90,14 @@ export const KALINLIKLAR = [
 
 interface WizardCalculatorProps {
     preSelectedCityName?: string;
+}
+
+interface PdfDeliveryState {
+    refCode: string;
+    pdfUrl: string;
+    pdfFilename: string;
+    whatsappUrl: string;
+    emailUrl: string;
 }
 
 export default function WizardCalculator({ preSelectedCityName }: WizardCalculatorProps) {
@@ -140,7 +159,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     };
 
     // Araç tipini ve bölge iskontosunu bilen getSmartAdvice wrapper'ı
-    const getSmartAdviceWithDiscount = (logistics: any): string | null => {
+    const getSmartAdviceWithDiscount = (
+        logistics: CalculatedPackage['logistics'],
+    ): string | null => {
         if (!logistics || logistics.vehicleType === 'multiple') return null;
         const activeFill = logistics.vehicleType === 'lorry'
             ? logistics.lorryFillPercentage
@@ -152,9 +173,10 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             const vehicleLabel = isLorry ? 'Kamyon' : 'TIR';
             return `✅ Mükemmel — ${vehicleLabel} tam kapasite kullanılıyor, nakliye fiyata dahildir${discPct != null ? ` + %${discPct} iskonto` : ''}!`;
         }
-        if (logistics.packagesNeededForOptimal > 0) {
-            const additionalM2 = (logistics.packagesNeededForOptimal * logistics.packageSizeM2).toFixed(1);
-            return `💡 Sadece ${logistics.packagesNeededForOptimal} paket daha (${additionalM2} m²) eklerseniz araç tam dolacak ve nakliye farkı sıfırlanacak!`;
+        const packagesNeededForOptimal = logistics.packagesNeededForOptimal ?? 0;
+        if (packagesNeededForOptimal > 0) {
+            const additionalM2 = (packagesNeededForOptimal * logistics.packageSizeM2).toFixed(1);
+            return `💡 Sadece ${packagesNeededForOptimal} paket daha (${additionalM2} m²) eklerseniz araç tam dolacak ve nakliye farkı sıfırlanacak!`;
         }
         return null;
     };
@@ -207,6 +229,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     // PDF Teklif Modal
     const [showPdfOfferModal, setShowPdfOfferModal] = useState(false);
     const [selectedPackageForPdf, setSelectedPackageForPdf] = useState<CalculatedPackage | null>(null);
+    const [pdfDelivery, setPdfDelivery] = useState<PdfDeliveryState | null>(null);
     const [isSubmittingPdf, setIsSubmittingPdf] = useState(false);
 
     // Scroll ref
@@ -465,15 +488,24 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 ? shippingZones.find(z => z.city_code === selectedCityCode)?.city_name
                 : undefined) || "";
 
-        // PDF çıktısında KDV dahil toplam ayrıca gösterilir.
-        const priceWithoutVat = (pkg.totalProductCost || 0) + (pkg.shippingCost || 0);
-        const vatAmount = priceWithoutVat * 0.20;
-        const grandTotal = priceWithoutVat + vatAmount;
-
         const refCode = externalRefCode || `TY${Date.now().toString().slice(-7)}`;
         const validityDate = getOfferValidityDate();
 
         const metrajNumber = Number(metraj) || 0;
+        const totalM2 =
+            pkg.logistics?.packageCount && pkg.logistics?.packageSizeM2
+                ? pkg.logistics.packageCount * pkg.logistics.packageSizeM2
+                : (metrajNumber || 1);
+        const {
+            priceWithoutVat,
+            vatAmount,
+            totalPrice: grandTotal,
+            pricePerM2WithoutVat,
+        } = buildQuoteSurfacePricing(
+            pkg.totalProductCost || 0,
+            pkg.shippingCost || 0,
+            totalM2,
+        );
         // PDF içine gömülecek WhatsApp linki — müşteri teklif aldıktan sonra
         // sipariş onayı/iletişim için tıklar. Bağlamsal bilgiler içerir.
         const log = pkg.logistics;
@@ -492,16 +524,16 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             metrajM2: metrajNumber,
             vehicleLabel,
             cityName: shippingZones.find(z => z.city_code === selectedCityCode)?.city_name ?? '',
-            pricePerM2: pkg.pricePerM2,
-            totalKdvHaric: Math.round(pkg.grandTotal / 1.2),
+            pricePerM2: pricePerM2WithoutVat,
+            totalKdvHaric: priceWithoutVat,
+            shippingMessage: pkg.logistics?.shippingMode === 'separate_quote_required'
+                ? 'satış görüşmesinde netleşir'
+                : pkg.logistics?.isShippingIncluded
+                    ? 'fiyata dahil'
+                    : 'alıcıya ait',
             refCode,
         });
         const whatsappOrderLink = buildWhatsAppLink(waMessage);
-
-        const totalM2 =
-            pkg.logistics?.packageCount && pkg.logistics?.packageSizeM2
-                ? pkg.logistics.packageCount * pkg.logistics.packageSizeM2
-                : (metrajNumber || 1);
 
         const materialLabel = selectedMalzeme === "tasyunu" ? "Taşyünü" : "EPS";
         const materialLongName = materialTypes.find(m => m.slug === selectedMalzeme)?.name || materialLabel;
@@ -540,7 +572,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             district: customer.district || "",
             materialLongName,
             grandTotal,
-            pricePerM2: totalM2 > 0 ? grandTotal / totalM2 : 0,
+            pricePerM2: pricePerM2WithoutVat,
             totalProductCost: pkg.totalProductCost || 0,
             shippingCost: pkg.shippingCost || 0,
             priceWithoutVat,
@@ -558,6 +590,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             email: customer.email || "",
             items: itemsForPdf,
             isShippingIncluded: pkg.logistics?.isShippingIncluded,
+            shippingMode: pkg.logistics?.shippingMode,
             shippingWarning: pkg.logistics?.shippingWarning,
             specialOrderNote: pkg.requiresSpecialOrder ? pkg.specialOrderNote : undefined,
         };
@@ -604,6 +637,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     const handleSubmitPdfOffer = async (data: PdfOfferFormData) => {
         if (!selectedPackageForPdf) return;
         setIsSubmittingPdf(true);
+        let pdfOfferFailureStage: 'pdf' | 'quote' = 'pdf';
         try {
             const refCode = `TY${Date.now().toString().slice(-7)}`;
             const customerAddress = [data.deliveryAddress, data.district, data.city]
@@ -618,55 +652,62 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 customerAddress,
                 cityName: data.city || getSelectedCityName() || '',
                 quoteCode: refCode,
+                kvkkConsent: data.kvkkConsent,
             });
 
-            // 1. PDF üret (müşteri otomatik indirir)
-            const pdfResult = await generateQuotePDF(buildPdfData(selectedPackageForPdf, data, refCode));
+            // PDF tarayıcıda hazırlanır; private storage yüklemesi ancak
+            // teklif kaydı ve server capability'si oluştuktan sonra yapılır.
+            const pdfData = buildPdfData(selectedPackageForPdf, data, refCode);
+            const pdfResult = await generateQuotePDF(pdfData);
 
-            // 2. Storage'a yükle (paralel, bloklamaz)
-            let pdfUrl: string | null = null;
-            let pdfStoragePath: string | null = null;
-            try {
-                const uploaded = await uploadPdfToStorage(pdfResult.blob, `${refCode}.pdf`);
-                if (uploaded) {
-                    pdfUrl = uploaded.publicUrl;
-                    pdfStoragePath = uploaded.storagePath;
-                }
-            } catch { /* storage hatası akışı durdurmasın */ }
-
-            // 3. DB kaydet
+            pdfOfferFailureStage = 'quote';
             const quoteRes = await fetch('/api/quotes', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...quotePayload, pdfUrl, pdfStoragePath }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Idempotency-Key': crypto.randomUUID(),
+                },
+                body: JSON.stringify(quotePayload),
             });
 
-            let quoteResult: any = null;
-            let rawBody = '';
+            let quoteResult: {
+                ok?: boolean;
+                error?: string;
+                quoteId?: string | number;
+                pdfUploadCapability?: string;
+            };
             try {
-                quoteResult = await quoteRes.json();
-            } catch (parseErr) {
-                // JSON parse hatası → server response body'sini ham metin olarak al
-                rawBody = await quoteRes.text().catch(() => '');
+                quoteResult = await quoteRes.json() as {
+                    ok?: boolean;
+                    error?: string;
+                    quoteId?: string | number;
+                    pdfUploadCapability?: string;
+                };
+            } catch (_parseErr) {
                 console.error('PDF quote save: response JSON parse failed', {
                     status: quoteRes.status,
-                    statusText: quoteRes.statusText,
-                    rawBody: rawBody.slice(0, 2000),
-                    payload: quotePayload,
                 });
                 throw new Error(`Sunucudan beklenen formatta yanıt alınamadı (HTTP ${quoteRes.status}).`);
             }
             if (!quoteRes.ok || !quoteResult.ok) {
-                console.error('PDF quote save failed:', {
-                    status: quoteRes.status,
-                    result: quoteResult,
-                    payload: quotePayload,
-                });
+                console.error('PDF quote save failed:', { status: quoteRes.status });
                 throw new Error(
                     quoteResult.error
-                    || (quoteResult as any).debug
                     || "Teklif kaydı oluşturulamadı."
                 );
+            }
+
+            if (!quoteResult.quoteId || !quoteResult.pdfUploadCapability) {
+                throw new Error('PDF yükleme yetkisi oluşturulamadı.');
+            }
+
+            const uploaded = await uploadPdfToStorage(pdfResult.blob, {
+                quoteId: quoteResult.quoteId,
+                capability: quoteResult.pdfUploadCapability,
+                filename: `${refCode}.pdf`,
+            });
+            if (!uploaded) {
+                console.warn('[wizard-pdf] Private arşiv yüklemesi tamamlanamadı; yerel PDF korunuyor.');
             }
 
             // GA4 event — Pdf_Teklif_Talebi (server-side quote insert zaten oldu)
@@ -688,24 +729,34 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     selected_package_name:  selectedPackageForPdf.definition.name,
                     selected_package_total: selectedPackageForPdf.grandTotal,
                     selected_per_m2:        selectedPackageForPdf.pricePerM2,
-                    ref_code:               refCode,
                     customer_type:          data.customerCompany ? 'company' : 'individual',
                     result_session_id:      resultSessionId,
                 });
             }
 
-            // 4. Yeni sekmede aç
-            try { window.open(pdfResult.blobUrl, '_blank'); } catch { /* popup blocker */ }
             setShowPdfOfferModal(false);
             setSelectedPackageForPdf(null);
+            const emailBody = `Merhaba,\n\n${refCode} referanslı fiyat teklifim hazır. PDF belgesini teklif ekranından indirebilirsiniz.`;
+            setPdfDelivery({
+                refCode,
+                pdfUrl: pdfResult.blobUrl,
+                pdfFilename: pdfResult.filename,
+                whatsappUrl: pdfData.whatsappOrderLink,
+                emailUrl: `mailto:${encodeURIComponent(data.email || '')}?subject=${encodeURIComponent(`Fiyat teklifi ${refCode}`)}&body=${encodeURIComponent(emailBody)}`,
+            });
         } catch (error) {
-            console.error("PDF oluşturma hatası:", error);
+            console.error('PDF teklif akışı tamamlanamadı.');
             notifyWizardResultFormError({
                 ...buildResultEventBase(selectedPackageForPdf),
                 form_type: 'pdf',
                 error_type: 'submit_failed',
             });
-            alert("PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyiniz.");
+            const customerMessage = pdfOfferFailureStage === 'pdf'
+                ? 'PDF hazırlanamadı. Lütfen tekrar deneyiniz.'
+                : error instanceof Error && error.message
+                    ? error.message
+                    : 'Teklif kaydı oluşturulamadı. Lütfen tekrar deneyiniz.';
+            alert(customerMessage);
         } finally {
             setIsSubmittingPdf(false);
         }
@@ -720,9 +771,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         return selectedCity?.optimix_toz_discount || 9;
     };
 
-    // Satış fiyatı hesapla
-    // profitMarginPct opsiyonel: hacim-bazlı marj kademe sisteminden gelir (EPS için 35/23/10).
-    // Verilmezse mevcut sabit %10 davranışı korunur (geriye dönük uyum).
+    // Satış fiyatı hesapla. Marj zorunlu olarak canlı material_types
+    // kuralından gelir; eksik kuralda fiyat üretimi fail-closed durur.
     const calculateSalePrice = (
         basePrice: number,
         discount1: number,
@@ -730,7 +780,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         brandName: string,
         isLevha: boolean = false,
         isKdvIncluded: boolean = true,
-        profitMarginPct: number = 10
+        profitMarginPct: number
     ): number => {
         let isk2 = discount2;
 
@@ -750,42 +800,24 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     // Hacim-bazlı marj seçici — material_types kademe alanlarına göre.
     // EPS: tier1_max altı → tier1; tier2_max altı → tier2; üstü → tier3.
     // Taşyünü: tier'lar boş, tier3_margin_pct döner (sabit).
-    // Migration v12'den önce material_types alanı boş ise → 10 fallback.
-    const selectMarginPct = (matType: MaterialType | undefined, totalM2: number): number => {
-        if (!matType) return 10;
-        const t1Max = matType.tier1_max_m2;
-        const t1Pct = matType.tier1_margin_pct;
-        const t2Max = matType.tier2_max_m2;
-        const t2Pct = matType.tier2_margin_pct;
-        const t3Pct = matType.tier3_margin_pct;
-        if (t1Max != null && t1Pct != null && totalM2 <= t1Max) return Number(t1Pct);
-        if (t2Max != null && t2Pct != null && totalM2 <= t2Max) return Number(t2Pct);
-        if (t3Pct != null) return Number(t3Pct);
-        return 10;
-    };
+    const selectMarginPct = (
+        matType: MaterialType | undefined,
+        totalM2: number,
+    ): number | null => resolveMarginPctStrict(matType, totalM2);
 
     // Taşyünü tam-araç kuralı: kullanıcı metrajı yalnızca N×Kamyon + M×TIR
-    // kombinasyonlarına denk geliyorsa geçerli. Tolerans paket boyutunun yarısı kadar.
+    // kombinasyonlarına denk geliyorsa geçerli. Yalnız kayan nokta sapmasına izin verilir.
     const isValidFullVehicleMetraj = (
         m2: number,
         logistics: LogisticsCapacity | null
     ): boolean => {
         if (!logistics) return true;
-        const lorry = logistics.lorry_capacity_m2;
-        const truck = logistics.truck_capacity_m2;
-        if (!lorry || !truck) return true;
-        const tolerance = (logistics.package_size_m2 || 1) / 2;
-        const maxTrucks = Math.ceil(m2 / truck) + 1;
-        for (let t = 0; t <= maxTrucks; t++) {
-            const remainder = m2 - t * truck;
-            if (remainder < -tolerance) break;
-            if (Math.abs(remainder) <= tolerance) return true;
-            const lorries = Math.round(remainder / lorry);
-            if (lorries >= 0 && Math.abs(remainder - lorries * lorry) <= tolerance) {
-                return true;
-            }
-        }
-        return false;
+        return isValidFullVehicleArea({
+            areaM2: m2,
+            lorryCapacityM2: logistics.lorry_capacity_m2,
+            truckCapacityM2: logistics.truck_capacity_m2,
+            packageSizeM2: logistics.package_size_m2 || 1,
+        });
     };
 
     // Hedef metrajın yakınında geçerli tam-araç kombinasyonları üretir
@@ -878,7 +910,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             };
         }
         return { isValid: true };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [metraj, selectedMalzeme, materialTypes, currentLogistics]);
 
     const selectRecommendedPackage = (packages: CalculatedPackage[]) =>
@@ -959,6 +990,11 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         // Adım 3a: Hacim-bazlı marj seçimi (EPS için kademe; Taşyünü için sabit tier3)
         const matType = materialTypes.find(m => m.slug === selectedMalzeme);
         const marginPct = selectMarginPct(matType, totalM2);
+        if (marginPct === null) {
+            setIsLoading(false);
+            alert('Fiyat marjı tanımlı olmadığı için teklif oluşturulamıyor. Lütfen satış ekibiyle görüşün.');
+            return;
+        }
 
         // Adım 3b: ≥10.000 m² özel teklif kontrolü (sadece Taşyünü için seed'lendi)
         const specialThreshold = matType?.special_order_threshold_m2 ?? null;
@@ -972,6 +1008,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
             const items: CalculatedPackageItem[] = [];
             let totalProductCost = 0;
+            let requiredAccessoriesComplete = true;
 
             // Bu paket içindeki levhayı belirle (Genelde seçilen ana levha ile aynı marka olur)
             // Not: Farklı levha markaları için pkgDef içindeki logic genişletilebilir
@@ -985,11 +1022,11 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 if ((!plateBasePrice || plateBasePrice <= 0) && plate.base_price_per_cm) {
                     plateBasePrice = plate.base_price_per_cm * parseInt(selectedKalinlik);
                 }
-                let plateIsKdvIncluded = platePrice ? platePrice.is_kdv_included : plate.is_kdv_included;
+                const plateIsKdvIncluded = platePrice ? platePrice.is_kdv_included : plate.is_kdv_included;
 
                 const plateBrand = brands.find(b => b.id === plate?.brand_id);
                 // EPS için bayi iskontosu (İSK2) %8 fallback (Admin ile aynı)
-                let plateDiscount2 = (platePrice?.discount_2 ?? plate.discount_2 ?? (selectedMalzeme === "eps" ? 8 : 0)) as number;
+                const plateDiscount2 = (platePrice?.discount_2 ?? plate.discount_2 ?? (selectedMalzeme === "eps" ? 8 : 0)) as number;
 
                 const plateDiscount1 = (() => {
                     if (!selectedCity) return 0;
@@ -1028,19 +1065,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
                 const materialSuffix = selectedMalzeme === "tasyunu" ? "Taşyünü" : "EPS";
 
-                // Debug için fiyat detaylarını konsola yaz
-                console.log(`Fiyat Hesaplama Detayı (${plate.name}):`, {
-                    'Liste Fiyatı': plateBasePrice,
-                    'KDV Dahil mi?': plateIsKdvIncluded,
-                    'Bölge İskontosu (İsk1)': effectivePlateDiscount1,
-                    'Bayi İskontosu (İsk2)': plateDiscount2,
-                    'Hacim Marjı (%)': marginPct,
-                    'Toplam Metraj': totalM2,
-                    'Sonuç (KDV Hariç Net Paket)': platePackagePrice,
-                    'm² Fiyatı': plateM2Price,
-                    'Paket Metrajı': realPackageM2
-                });
-
                 items.push({
                     name: `${plateBrand?.name || ''} ${plate.short_name} ${selectedKalinlik} cm ${materialSuffix}`.trim(),
                     shortName: plate.short_name,
@@ -1058,16 +1082,20 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             const pkgAccessories = accessories.filter(acc => acc.brand_id === pkgDef.accessory_brand_id);
 
             for (const accType of accessoryTypes) {
+                const consumption = selectedMalzeme === 'eps'
+                    ? accType.consumption_rate_eps
+                    : accType.consumption_rate_tasyunu;
+                if (consumption <= 0) continue;
+
                 const acc = pkgAccessories.find(a =>
                     a.accessory_type_id === accType.id &&
                     (selectedMalzeme === 'eps' ? a.is_for_eps : a.is_for_tasyunu)
                 );
-                if (acc) {
-                    const consumption = selectedMalzeme === 'eps'
-                        ? accType.consumption_rate_eps
-                        : accType.consumption_rate_tasyunu;
+                if (!acc) {
+                    requiredAccessoriesComplete = false;
+                    continue;
+                }
 
-                    if (consumption > 0) {
                         const totalNeed = totalM2 * consumption;
                         const itemQuantity = Math.ceil(totalNeed / acc.unit_content);
 
@@ -1107,8 +1135,12 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             totalPrice: accTotal,
                             isPlate: false
                         });
-                    }
-                }
+            }
+
+            // Wizard yalnız komple sistem teklifi üretir. Zorunlu toz/aksesuar
+            // kalemi eksikse kısmi ürün toplamını kesin teklif gibi göstermeyiz.
+            if (selectedMalzeme === 'eps' && !requiredAccessoriesComplete) {
+                continue;
             }
 
             // Tam-araç kuralı aktifken (yeni davranış) parsiyel taşıma kabul edilmediği için
@@ -1120,17 +1152,34 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 && logistics
                 && packageCount < logistics.lorry_capacity_packages;
 
-            // Aksesuar markası stoktan toplanıyorsa (örn. TEKNO) set tek noktadan
-            // çıkamaz → nakliye alıcıya ait. brands.requires_separate_shipping=TRUE
-            // olan aksesuar markaları bu kuralı tetikler.
+            // Sevkiyat verisi kesinleşmemiş aksesuar markaları (örn. TEKNO)
+            // için nakliye tarafını varsaymayız; ayrı teyit gerekir.
             const accBrand = brands.find(b => b.id === pkgDef.accessory_brand_id);
             const requiresSeparateShipping = accBrand?.requires_separate_shipping === true;
 
-            const isShippingIncluded = !isLowMetrageTasyunu && !requiresSeparateShipping;
+            const epsShippingDecision = selectedMalzeme === 'eps'
+                ? resolveEpsShippingDecision({
+                    saleMode: 'complete_set',
+                    areaM2: totalM2,
+                    minimumSetM2: matType?.min_order_m2 ?? 400,
+                    requiredAccessoriesComplete,
+                    isFullVehicle: false,
+                    requiresSeparateShipping,
+                })
+                : null;
+            const shippingMode = epsShippingDecision?.mode
+                ?? (requiresSeparateShipping
+                    ? 'separate_quote_required'
+                    : isLowMetrageTasyunu
+                        ? 'buyer_pays'
+                        : 'included_in_sale_price');
+            const isShippingIncluded = shippingMode === 'included_in_sale_price';
             const shippingWarning = requiresSeparateShipping
-                ? `${accBrand?.name ?? 'Bu aksesuar grubu'} stoktan toplandığı için set tek noktadan sevk edilemez — nakliye alıcıya aittir.`
+                ? `${accBrand?.name ?? 'Bu aksesuar grubu'} için sevkiyat verisi henüz kesinleşmedi. Görünen tutar ürün referansıdır; nakliye ve kesin teklif satış görüşmesinde netleşir.`
                 : isLowMetrageTasyunu
                     ? "Metraj kamyon kapasitesinin altında olduğu için nakliye alıcıya aittir. Ancak fabrikadan en iyi 'Tır İskontosu' fiyatları uygulanmıştır."
+                    : epsShippingDecision && !epsShippingDecision.isPriceFinal
+                        ? epsShippingDecision.customerMessage
                     : undefined;
 
             calculated.push({
@@ -1153,12 +1202,22 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     lorryCapacityPackages: logistics.lorry_capacity_packages,
                     truckFillPercentage: Math.min((packageCount / logistics.truck_capacity_packages) * 100, 100),
                     lorryFillPercentage: Math.min((packageCount / logistics.lorry_capacity_packages) * 100, 100),
-                    vehicleType: packageCount > logistics.truck_capacity_packages ? 'multiple' :
-                                 packageCount >= logistics.lorry_capacity_packages ? 'truck' : 'lorry',
+                    vehicleType: resolveVehicleTypeFromPackages({
+                        packageCount,
+                        lorryCapacityPackages: logistics.lorry_capacity_packages,
+                        truckCapacityPackages: logistics.truck_capacity_packages,
+                    }),
                     isShippingIncluded,
+                    shippingMode,
                     shippingWarning,
                 }
             });
+        }
+
+        if (selectedMalzeme === 'eps' && calculated.length === 0) {
+            setIsLoading(false);
+            alert('Komple EPS setinin zorunlu ürünleri tamamlanmadan teklif oluşturulamıyor. Lütfen satış ekibiyle görüşün.');
+            return;
         }
 
         setCalculatedPackages(calculated);
@@ -1225,6 +1284,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             customerAddress?: string;
             cityName?: string;
             quoteCode?: string;
+            kvkkConsent?: boolean;
         }
     ) => {
         const selectedBrand = brands.find(b => b.id === selectedBrandId);
@@ -1232,9 +1292,19 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             ? shippingZones.find(z => z.city_code === selectedCityCode)
             : null;
 
-        const priceWithoutVat = roundToKurus((pkg.totalProductCost || 0) + (pkg.shippingCost || 0));
-        const vatAmount = roundToKurus(priceWithoutVat * 0.20);
-        const totalPrice = roundToKurus(priceWithoutVat + vatAmount);
+        const billableAreaM2 = pkg.logistics?.packageCount && pkg.logistics?.packageSizeM2
+            ? pkg.logistics.packageCount * pkg.logistics.packageSizeM2
+            : Number(metraj) || 1;
+        const {
+            priceWithoutVat,
+            vatAmount,
+            totalPrice,
+            pricePerM2WithoutVat,
+        } = buildQuoteSurfacePricing(
+            pkg.totalProductCost || 0,
+            pkg.shippingCost || 0,
+            billableAreaM2,
+        );
 
         return {
             customerName: overrides?.customerName ?? quoteForm.customerName.trim(),
@@ -1260,7 +1330,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             plateBrandName: pkg.plateBrandName,
             accessoryBrandName: pkg.accessoryBrandName,
             totalPrice,
-            pricePerM2: roundToKurus(pkg.pricePerM2 * 1.20),
+            pricePerM2: pricePerM2WithoutVat,
             shippingCost: roundToKurus(pkg.shippingCost || 0),
             discountPercentage: 0,
             priceWithoutVat,
@@ -1278,6 +1348,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 logistics: pkg.logistics || null,
             },
             quoteCode: overrides?.quoteCode || null,
+            kvkkConsent: overrides?.kvkkConsent ?? quoteForm.kvkkConsent,
         };
     };
 
@@ -1309,6 +1380,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Idempotency-Key': crypto.randomUUID(),
                 },
                 body: JSON.stringify(quotePayload),
             });
@@ -1337,7 +1409,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     selected_package_name:  selectedPackageForQuote.definition.name,
                     selected_package_total: selectedPackageForQuote.grandTotal,
                     selected_per_m2:        selectedPackageForQuote.pricePerM2,
-                    ref_code:               refCode,
                     result_session_id:      resultSessionId,
                 });
             }
@@ -1354,15 +1425,29 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             : `${formatM2(Number(metraj) || 0)} m²`
                 : `${formatM2(Number(metraj) || 0)} m²`;
 
+            const billableAreaM2 = selectedPackageForQuote.logistics?.packageCount
+                && selectedPackageForQuote.logistics?.packageSizeM2
+                ? selectedPackageForQuote.logistics.packageCount
+                    * selectedPackageForQuote.logistics.packageSizeM2
+                : Number(metraj) || 1;
+            const surfacePricing = buildQuoteSurfacePricing(
+                selectedPackageForQuote.totalProductCost || 0,
+                selectedPackageForQuote.shippingCost || 0,
+                billableAreaM2,
+            );
             const message = generateQuoteWhatsAppMessage({
                 productName: selectedPackageForQuote.definition.name,
                 thicknessCm: parseInt(selectedKalinlik) || null,
                 metrajM2: Number(metraj) || 0,
                 vehicleLabel,
                 cityName: selectedCityCode ? shippingZones.find(z => z.city_code === selectedCityCode)?.city_name || "" : "",
-                pricePerM2: selectedPackageForQuote.pricePerM2,
-                // grandTotal KDV dahil; WhatsApp'ta KDV hariç göstermek için 1.2'ye böl
-                totalKdvHaric: Math.round(selectedPackageForQuote.grandTotal / 1.2),
+                pricePerM2: surfacePricing.pricePerM2WithoutVat,
+                totalKdvHaric: surfacePricing.priceWithoutVat,
+                shippingMessage: selectedPackageForQuote.logistics?.shippingMode === 'separate_quote_required'
+                    ? 'satış görüşmesinde netleşir'
+                    : selectedPackageForQuote.logistics?.isShippingIncluded
+                        ? 'fiyata dahil'
+                        : 'alıcıya ait',
                 refCode,
             });
 
@@ -1380,8 +1465,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             });
             setSelectedPackageForQuote(null);
 
-        } catch (error) {
-            console.error("Teklif gönderme hatası:", error);
+        } catch {
+            console.error('WhatsApp teklif akışı tamamlanamadı.');
             notifyWizardResultFormError({
                 ...buildResultEventBase(selectedPackageForQuote),
                 form_type: 'whatsapp',
@@ -1399,9 +1484,12 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     const recommendedShippingStatus = recommendedPackage ? getShippingStatusText(recommendedPackage) : '';
     const recommendedM2PriceWithVat = recommendedPackage ? recommendedPackage.pricePerM2 * 1.2 : 0;
     const recommendedM2PriceWithoutVat = recommendedPackage ? recommendedPackage.pricePerM2 : 0;
-    const recommendedM2Label = recommendedPackage?.logistics?.isShippingIncluded
+    const recommendedShippingMode = recommendedPackage?.logistics?.shippingMode;
+    const recommendedM2Label = recommendedShippingMode === 'included_in_sale_price'
         ? 'KDV ve nakliye dahil m² maliyeti'
-        : 'KDV dahil m² maliyeti';
+        : recommendedShippingMode === 'separate_quote_required'
+            ? 'KDV dahil ürün m² maliyeti · nakliye teyitli'
+            : 'KDV dahil m² maliyeti · nakliye hariç';
     const resultPanelTexture = selectedMalzeme === 'eps'
         ? '/images/ikonlar/EPS Levha.webp'
         : '/images/ikonlar/tas-yunu-levha.webp';
@@ -1432,7 +1520,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             {/* Mini stat strip (eski hero altından taşındı) */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-5 mb-6 border-y border-white/10 py-5">
                                 {[
-                                    { value: '81', label: 'İl sevkiyat' },
+                                    { value: 'Tam', label: 'Araç sevkiyatı' },
                                     { value: '8',  label: 'Kalem set' },
                                     { value: '3',  label: 'Paket seçeneği' },
                                 ].map((s) => (
@@ -1477,7 +1565,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                     Mantolama Hesaplama Aracı
                                 </h2>
                                 <p className="mt-1.5 text-sm text-fe-muted leading-relaxed">
-                                    4 adımda paket, fiyat ve nakliye dahil teklifiniz.
+                                    4 adımda paket, fiyat ve nakliye koşulunuz.
                                 </p>
                             </div>
 
@@ -1602,7 +1690,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             </div>
 
                             <p className="text-center text-fe-muted text-xs mt-4">
-                                Fiyatlar KDV hariç, nakliye dahildir. Bölge iskontosu uygulanmıştır.
+                                Fiyatlar KDV hariçtir. Nakliye, tam araç veya uygun EPS seti koşulu sağlandığında fiyata dahildir.
                             </p>
                         </div>
                     </div>
@@ -1683,7 +1771,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                             </div>
                                             <div className="mt-1 text-xs text-fe-muted">
                                                 KDV hariç: {formatCurrency(recommendedM2PriceWithoutVat)} ₺/m²
-                                                {!recommendedPackage.logistics?.isShippingIncluded && ' · Nakliye alıcıya ait'}
+                                                {recommendedShippingMode === 'buyer_pays' && ' · Nakliye alıcıya ait'}
+                                                {recommendedShippingMode === 'separate_quote_required' && ' · Nakliye satış görüşmesinde netleşir'}
                                             </div>
                                         </div>
 
@@ -1782,9 +1871,10 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                 <p className="font-heading text-lg font-bold tabular-nums text-white">
                                     {formatCurrency(recommendedM2PriceWithVat)} ₺/m²
                                 </p>
+                                <p className="text-[10px] text-fe-muted">KDV dahil</p>
                             </div>
                             <div className="shrink-0 text-right text-[11px] text-fe-muted">
-                                <div>{formatCurrency(recommendedPackage.grandTotal * 1.2)} ₺ toplam</div>
+                                <div>{formatCurrency(recommendedPackage.grandTotal * 1.2)} ₺ toplam · KDV dahil</div>
                                 <div>{recommendedShippingStatus}</div>
                             </div>
                         </div>
@@ -1951,6 +2041,15 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 isSubmitting={isSubmittingPdf}
                 defaultCity={getSelectedCityName()}
             />
+            {pdfDelivery && (
+                <PdfDeliveryCard
+                    {...pdfDelivery}
+                    onClose={() => {
+                        URL.revokeObjectURL(pdfDelivery.pdfUrl);
+                        setPdfDelivery(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

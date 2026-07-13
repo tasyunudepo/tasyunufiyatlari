@@ -60,8 +60,6 @@ export interface PdfQuoteRequestedPayload extends WizardBasePayload {
   selected_package_total: number;
   /** ₺/m² */
   selected_per_m2: number;
-  /** Quote DB referans kodu (TY1234567) */
-  ref_code: string;
   /** Customer kanal (kullanıcının formdaki firma adı varsa "company" yoksa "individual") */
   customer_type?: 'company' | 'individual';
   /** Kaynak kanal: wizard veya katalog/PDP */
@@ -73,7 +71,6 @@ export interface WhatsappOrderRequestedPayload extends WizardBasePayload {
   selected_package_name: string;
   selected_package_total: number;
   selected_per_m2: number;
-  ref_code: string;
   source_channel?: 'wizard' | 'catalog';
 }
 
@@ -229,7 +226,6 @@ export function notifyPdfQuoteRequested(p: PdfQuoteRequestedPayload): void {
     selected_package_name:   p.selected_package_name,
     selected_package_total:  p.selected_package_total,
     selected_per_m2:         p.selected_per_m2,
-    ref_code:                p.ref_code,
     customer_type:           p.customer_type ?? 'individual',
     source_channel:          p.source_channel ?? 'wizard',
   });
@@ -251,7 +247,6 @@ export function notifyWhatsappOrderRequested(p: WhatsappOrderRequestedPayload): 
     selected_package_name:   p.selected_package_name,
     selected_package_total:  p.selected_package_total,
     selected_per_m2:         p.selected_per_m2,
-    ref_code:                p.ref_code,
     source_channel:          p.source_channel ?? 'wizard',
   });
 }

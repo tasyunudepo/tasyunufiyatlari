@@ -32,7 +32,10 @@ export function PackageCard({
     const hiddenCount = pkg.items.length - 5;
     const totalWithVat = pkg.grandTotal * 1.2;
     const m2PriceWithVat = pkg.pricePerM2 * 1.2;
-    const m2PriceLabel = pkg.logistics?.isShippingIncluded
+    const isSeparateQuote = pkg.logistics?.shippingMode === 'separate_quote_required';
+    const m2PriceLabel = isSeparateQuote
+        ? 'KDV dahil ürün referans fiyatı'
+        : pkg.logistics?.isShippingIncluded
         ? 'KDV ve nakliye dahil m² maliyeti'
         : 'KDV dahil m² maliyeti';
 
@@ -117,7 +120,8 @@ export function PackageCard({
                 </div>
                 <div className="mt-0.5 text-xs text-fe-muted">
                     KDV hariç m²: <span className="font-heading tabular-nums">{pkg.pricePerM2.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m²</span>
-                    {!pkg.logistics?.isShippingIncluded && ' · Nakliye alıcıya ait'}
+                    {pkg.logistics?.shippingMode === 'buyer_pays' && ' · Nakliye alıcıya ait'}
+                    {isSeparateQuote && ' · Nakliye ayrıca netleşir'}
                 </div>
 
                 {/* Nakliye Uyarısı */}
@@ -179,9 +183,7 @@ export function PackageCard({
             <div className="flex items-center gap-2 mb-4 text-sm text-fe-text">
                 <span className="text-green-500">✓</span>
                 <span>
-                    {pkg.plateBrandName?.includes('Dalmaçyalı') && pkg.accessoryBrandName?.includes('Dalmaçyalı')
-                        ? '10 yıl Dalmaçyalı sistem garanti koşulları geçerlidir'
-                        : 'Üretici ürün garanti koşulları geçerlidir'}
+                    Garanti kapsamı, seçilen marka ve modelin üretici belgesine göre teyit edilir
                 </span>
             </div>
 

@@ -1,106 +1,110 @@
-import MarketTicker from "@/components/dashboard/MarketTicker";
-import VolumeChart from "@/components/dashboard/VolumeChart";
-import { HOTSPOTS, MOCK_TRANSACTIONS, type Transaction, type Hotspot } from "@/lib/data/marketData";
-import { ArrowUpRight, TrendingUp } from "lucide-react";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import {
+  ArrowRight,
+  BarChart3,
+  Calculator,
+  CheckCircle2,
+  PackageSearch,
+} from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Piyasa Verileri | Taşyünü Fiyatları',
+  description:
+    'Kaynağı ve güncellenme tarihi doğrulanan yalıtım piyasası verileri için yayın durumu.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+}
+
+const publicationRules = [
+  'Verinin kaynağı açıkça belirtilmeli.',
+  'Hangi dönemi kapsadığı anlaşılmalı.',
+  'Güncellenme tarihi ziyaretçiye gösterilmeli.',
+]
 
 export default function PiyasaPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white pt-24 pb-12">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-        <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-tight text-white mb-2">
-          Piyasa Verileri
-        </h1>
-        <p className="text-slate-400">
-          Türkiye geneli anlık yalıtım malzemesi talep endeksi ve bölgesel yoğunluk haritası.
-        </p>
-      </div>
-
-      {/* Ticker */}
-      <MarketTicker />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* CHART SECTION (2/3 Genişlik) */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800/60 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h2 className="text-lg font-heading font-semibold text-slate-200">Haftalık İşlem Hacmi</h2>
-                <div className="text-3xl font-mono font-bold text-orange-500 mt-1">32.400 m²</div>
-              </div>
-              <div className="flex items-center gap-1 text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full text-sm">
-                <TrendingUp size={16} />
-                <span>%12.4 Artış</span>
-              </div>
-            </div>
-            <VolumeChart />
-          </div>
-
-          {/* SON İŞLEMLER LİSTESİ */}
-          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800/60">
-            <h3 className="text-slate-400 text-sm font-bold uppercase tracking-wider mb-4">Son Fiyatlanan Projeler</h3>
-            <div className="space-y-3">
-              {MOCK_TRANSACTIONS.map((t: Transaction) => (
-                <div key={t.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-700">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-orange-500">
-                      <ArrowUpRight size={16} />
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-200">{t.city}, {t.district}</div>
-                      <div className="text-xs text-slate-500">{t.system} • {t.brand}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-mono text-orange-400 font-bold">{t.m2} m²</div>
-                    <div className="text-xs text-slate-600">Teklif Verildi</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <main className="min-h-screen bg-slate-950 pb-16 pt-24 text-white">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-center gap-3 text-sm text-slate-400">
+          <BarChart3 aria-hidden="true" className="h-5 w-5 text-orange-500" />
+          <span>Piyasa verileri</span>
         </div>
 
-        {/* SIDEBAR (1/3 Genişlik) - Hotspots */}
-        <div className="space-y-6">
-           <div className="p-6 rounded-xl bg-slate-900 border border-slate-800/60">
-            <h3 className="text-slate-200 font-bold mb-4">Bölgesel Yoğunluk</h3>
-            <div className="space-y-4">
-              {HOTSPOTS.map((h: Hotspot, i: number) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div>
-                    <div className="text-white font-medium">{h.city}</div>
-                    <div className="text-xs text-slate-500">{h.region}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-emerald-500 text-sm font-bold">%{h.percent}</div>
-                    <div className="w-24 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
-                      <div className="h-full bg-orange-600" style={{ width: `${h.percent}%` }}></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-           </div>
-           
-           {/* CTA KUTUSU */}
-           <div className="p-6 rounded-xl bg-orange-600 text-white relative overflow-hidden">
-             <div className="relative z-10">
-               <h3 className="font-heading font-bold text-xl mb-2">Sizin Projeniz?</h3>
-               <p className="text-orange-100 text-sm mb-4">Bölgenizdeki sevkiyat avantajlarını kaçırmayın.</p>
-               <button className="w-full bg-white text-orange-700 font-bold py-3 rounded-lg hover:bg-orange-50 transition shadow-lg">
-                 Hemen Maliyet Hesapla
-               </button>
-             </div>
-             {/* Background Decoration */}
-             <div className="absolute -right-6 -bottom-6 text-orange-700 opacity-30">
-                <TrendingUp size={120} />
-             </div>
-           </div>
-        </div>
+        <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/20">
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-6 sm:p-10 lg:p-12">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-300">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                Veri yayını beklemede
+              </div>
 
+              <h1 className="max-w-3xl font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                Doğrulanmış piyasa verisi şu anda yayınlanmıyor.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                Kaynağı, dönemi ve güncellenme tarihi doğrulanmayan rakamları göstermiyoruz.
+                İşlem hacmi, bölgesel talep ve son proje bilgileri güvenilir bir veri kaynağına
+                bağlandığında bu sayfada açık kaynağıyla birlikte yayınlanacak.
+              </p>
+
+              <div className="mt-8 rounded-2xl border border-slate-700/80 bg-slate-950/60 p-5 sm:p-6">
+                <h2 className="font-heading text-lg font-semibold text-white">
+                  Bir veriyi yayınlamadan önce
+                </h2>
+                <ul className="mt-4 space-y-3">
+                  {publicationRules.map((rule) => (
+                    <li key={rule} className="flex items-start gap-3 text-sm leading-6 text-slate-300">
+                      <CheckCircle2
+                        aria-hidden="true"
+                        className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400"
+                      />
+                      <span>{rule}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <aside className="border-t border-slate-800 bg-gradient-to-br from-orange-600 to-orange-700 p-6 sm:p-10 lg:border-l lg:border-t-0 lg:p-12">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+                <Calculator aria-hidden="true" className="h-6 w-6" />
+              </div>
+              <h2 className="mt-6 font-heading text-2xl font-bold text-white">
+                Projenize özel fiyatı hesaplayın
+              </h2>
+              <p className="mt-3 leading-7 text-orange-50">
+                Metrajı, kalınlığı, ürünü ve şehri seçin. Hesaplayıcı fiyat listesi ve sevkiyat
+                kurallarına göre projenizin sonucunu göstersin.
+              </p>
+
+              <div className="mt-8 space-y-3">
+                <Link
+                  href="/#mantolama-hesaplayici"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-bold text-orange-700 shadow-lg transition hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-orange-700"
+                >
+                  Projem için fiyat hesapla
+                  <ArrowRight aria-hidden="true" className="h-5 w-5" />
+                </Link>
+                <Link
+                  href="/urunler"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <PackageSearch aria-hidden="true" className="h-5 w-5" />
+                  Ürünleri incele
+                </Link>
+              </div>
+
+              <p className="mt-6 text-sm leading-6 text-orange-100">
+                Bu sayfada doğrulanmamış işlem hacmi, bölgesel yüzde veya müşteri projesi
+                yayınlanmaz.
+              </p>
+            </aside>
+          </div>
+        </section>
       </div>
     </main>
-  );
+  )
 }

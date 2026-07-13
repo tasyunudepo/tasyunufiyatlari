@@ -5,7 +5,6 @@ import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 import Eyebrow from '@/components/shared/Eyebrow';
 import RevealOnScroll from '@/components/shared/RevealOnScroll';
-import Timeline, { type Milestone } from '@/components/about/Timeline';
 import { Handshake, Truck, Medal, ArrowRight } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
@@ -15,53 +14,30 @@ import { buildBusinessGraph } from '@/lib/seo/buildBusinessNode';
 export const metadata: Metadata = buildMetadata({
   title: 'Hakkımızda',
   description:
-    "2006'dan beri yalıtım sektöründe. 20 yıllık tecrübe, 81 il sevkiyat, Filli Boya / Fawori / Dalmaçyalı resmi bayilik. ÖzerGrup Yalıtım ve İzolasyon A.Ş.",
+    'Taşyünü ve EPS siparişlerinde ürün, metraj, fiyat ve fabrika çıkışlı sevkiyat koşullarını birlikte değerlendiren ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
   path: '/hakkimizda',
   type: 'website',
 });
 
 
-const MILESTONES: Milestone[] = [
-  {
-    year: '2006',
-    title: 'Sektöre giriş — yalıtım, boya, alçıpan, taahhüt.',
-    body: 'Muhammet Öztürk tarafından temelleri atılan firmamız; yalıtım, boya, alçıpan ve taahhüt işleriyle inşaat sektörüne kaliteli, ilkeli ve uzman bir kadroyla giriş yaptı.',
-  },
-  {
-    year: '2010',
-    title: 'Özer Yapı İnşaat Taahhüt — ilk şube açıldı.',
-    body: 'Uygulamanın yanına inşaat malzemeleri satışı eklendi. Güzelyalı Mahallesi İstiklal Cad. No:49/A adresindeki ilk şubemizle perakende operasyonu başladı.',
-  },
-  {
-    year: '2015',
-    title: 'Ltd. Şti. — 3 şube, 2 depo, sektörel güç.',
-    body: 'Özer Yapı İnşaat San. ve Tic. Ltd. Şti. kuruldu. 3 şube ve 2 depoyla faaliyetler genişledi; bölgenin en güçlü yapı marketlerinden biri konumuna ulaşıldı.',
-  },
-  {
-    year: 'Bugün',
-    title: 'ÖzerGrup A.Ş. — 81 il sevkiyat, fabrika çıkışlı satış.',
-    body: '20 yıllık tecrübeyle Türkiye genelinde fabrika çıkışlı taşyünü ve EPS satışı, 36+ marka resmi bayiliği ve dijital fiyat hesaplayıcı altyapısıyla yalıtım sektörünün dijital tarafını da yönetiyoruz.',
-  },
-];
-
 const REASONS = [
   {
     Icon: Handshake,
-    eyebrow: 'Resmi Bayilik',
-    title: 'Filli Boya, Fawori, Dalmaçyalı bayilik avantajı',
-    body: '36+ markanın resmi bayiliğiyle çalışıyoruz. Yüksek metrajlı projelerde bayilik fiyatı + projeye özel pazarlık yapma esnekliğimiz var.',
+    eyebrow: 'Ürün Karşılaştırması',
+    title: 'Marka, kalınlık ve metraj aynı hesapta',
+    body: 'Taşyünü ve EPS ürünlerini şehir, kalınlık, paket ve sipariş metrajıyla birlikte değerlendiriyoruz.',
   },
   {
     Icon: Truck,
-    eyebrow: '81 İl Lojistik',
-    title: 'Fabrika çıkışlı sevkiyat, Türkiye geneli',
-    body: 'Tuzla Tepeören depomuzdan parsiyel veya tam araç (kamyon/TIR) sevkiyat. Bölgesel iskonto ve nakliye doluluk oranı tek hesapta otomatik birleşir.',
+    eyebrow: 'Fabrika Çıkışlı Lojistik',
+    title: 'Üretim ve tam araç koşuluna göre sevkiyat',
+    body: 'Taşyününde tam kamyon veya tam TIR, EPS setinde ise levha ve toz grubu koşulu birlikte değerlendirilir. Sevkiyat tarihi sipariş görüşmesinde fabrika uygunluğuna göre netleşir.',
   },
   {
     Icon: Medal,
-    eyebrow: '20 Yıl Tecrübe',
-    title: '2006\'dan beri yalıtım sektöründe',
-    body: 'Yalıtım, boya, alçıpan ve taahhüt — sahada 20 yıl. Yüksek metrajlı operasyonların inceliklerini biliyoruz; ürün+lojistik+uygulama bütünlüğünü tek elden çözüyoruz.',
+    eyebrow: 'Açık Ticari Koşullar',
+    title: 'Fiyatın hangi sipariş koşulunda geçerli olduğunu gösteriyoruz',
+    body: 'KDV, nakliye, minimum metraj ve tam araç koşullarını teklif ekranında ayrı ayrı belirtiyoruz.',
   },
 ];
 
@@ -71,26 +47,25 @@ export default function HakkimizdaPage() {
       <SiteHeader tone="warm" />
 
       <main className="flex-1">
-        {/* HERO — editorial split: sol manifesto, sağ depo foto */}
+        {/* HERO — editorial split */}
         <section className="border-b border-hub-rule">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-20">
             <RevealOnScroll className="grid md:grid-cols-12 gap-10 md:gap-14 items-center">
               <div className="md:col-span-6">
-                <Eyebrow tone="warm" className="mb-5">Kurumsal · 2006'dan Beri</Eyebrow>
+                <Eyebrow tone="warm" className="mb-5">Kurumsal</Eyebrow>
                 <h1 className="font-heading font-extrabold text-hub-ink tracking-tight leading-[1.05] text-[clamp(2.25rem,4.6vw,4rem)] mb-6">
                   ÖzerGrup Yalıtım ve İzolasyon A.Ş.
                 </h1>
                 <p className="text-hub-ink-2 text-lg leading-relaxed max-w-xl">
-                  20 yıldır yalıtım sektöründe. Bugün <span className="text-hub-gold font-semibold">36+ marka resmi bayiliği</span>,
-                  Tuzla Tepeören deposu ve <span className="text-hub-gold font-semibold">81 il sevkiyat</span> kapasitesiyle
-                  taşyünü ve EPS pazarının dijital tarafını yürütüyoruz.
+                  Taşyünü ve EPS siparişlerinde ürün seçimi, metraj, fiyat ve fabrika çıkışlı sevkiyat koşullarını
+                  <span className="text-hub-gold font-semibold"> tek teklif akışında</span> anlaşılır hâle getiriyoruz.
                 </p>
               </div>
 
               <div className="md:col-span-6 relative aspect-[5/4] rounded-2xl overflow-hidden ring-1 ring-hub-rule">
                 <Image
                   src="/hakkimizda/Ozeryapi-Hakkimizda-depo.webp"
-                  alt="Özer Yapı — Tuzla depo ve mağaza"
+                  alt="Özer Yapı çalışma ve görüşme noktası"
                   fill
                   sizes="(max-width: 768px) 100vw, 600px"
                   className="object-cover"
@@ -98,23 +73,6 @@ export default function HakkimizdaPage() {
                 />
               </div>
             </RevealOnScroll>
-          </div>
-        </section>
-
-        {/* TIMELINE — sticky stepper */}
-        <section className="border-b border-hub-rule">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-24">
-            <div className="max-w-2xl mb-14">
-              <Eyebrow tone="warm" className="mb-5">Kuruluştan Bugüne</Eyebrow>
-              <h2 className="font-heading font-bold text-hub-ink tracking-tight leading-[1.1] text-3xl sm:text-4xl md:text-5xl mb-4">
-                Sahada 20 yıl, dört önemli kavşak.
-              </h2>
-              <p className="text-hub-ink-2 text-base sm:text-lg leading-relaxed">
-                Küçük bir uygulama ekibinden A.Ş. ölçeğine: her milestone, sahanın çıkardığı yeni bir ihtiyaca verdiğimiz yapısal cevap oldu.
-              </p>
-            </div>
-
-            <Timeline milestones={MILESTONES} tone="warm" />
           </div>
         </section>
 
@@ -156,10 +114,10 @@ export default function HakkimizdaPage() {
               <div className="md:col-span-7">
                 <Eyebrow tone="warm" className="mb-4">Projeniz İçin</Eyebrow>
                 <h2 className="font-heading font-bold text-hub-ink tracking-tight leading-[1.1] text-3xl sm:text-4xl md:text-5xl mb-4">
-                  Bayilik fiyatını ve nakliyeyi tek hesapta görün.
+                  Bayilik fiyatını ve nakliye koşulunu tek hesapta görün.
                 </h2>
                 <p className="text-hub-ink-2 text-base sm:text-lg leading-relaxed max-w-2xl">
-                  Şehir, kalınlık ve metraj girin — projenize özel paket ve nakliye dahil fiyat saniyeler içinde.
+                  Şehir, kalınlık ve metrajı girin; tam araç veya uygun EPS setinde nakliyenin fiyata dahil olup olmadığını görün.
                 </p>
               </div>
               <div className="md:col-span-5 flex flex-wrap items-center gap-4 md:justify-end">
@@ -181,7 +139,7 @@ export default function HakkimizdaPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBusinessGraph([], { includeWarehouse: true })) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBusinessGraph([], { includeWarehouse: false })) }}
       />
     </div>
   );

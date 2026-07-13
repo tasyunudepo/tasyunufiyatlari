@@ -31,8 +31,11 @@ export default function PriceDisplay({ rules, basePrice, unitLabel = 'paket' }: 
   const isFromPrice = rules.pricing_visibility_mode === 'from_price';
 
   return (
-    <span className={isFromPrice ? 'text-brand-400 font-semibold' : 'text-white font-semibold'}>
-      {display.label}
+    <span className="inline-flex flex-col items-start gap-0.5">
+      <span className={isFromPrice ? 'text-brand-400 font-semibold' : 'text-white font-semibold'}>
+        {display.label}
+      </span>
+      <span className="text-[10px] font-normal text-fe-muted-strong">KDV hariç</span>
     </span>
   );
 }

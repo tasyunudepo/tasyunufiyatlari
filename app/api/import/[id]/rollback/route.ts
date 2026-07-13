@@ -1,4 +1,5 @@
 import { NextResponse }        from 'next/server';
+import { requireAdminMutationAuth } from '@/lib/security/adminMutationAuth';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { rollbackImportFile }  from '@/lib/importApplier';
 
@@ -7,9 +8,12 @@ import { rollbackImportFile }  from '@/lib/importApplier';
 // { ok: true, result } | { ok: false, error }
 
 export async function POST(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
+    const auth = requireAdminMutationAuth(req);
+    if (!auth.ok) return auth.response;
+
     const supabase = createServerSupabaseClient();
     const { id } = await params;
 

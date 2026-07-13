@@ -37,7 +37,15 @@ export default function MobileProductHero({
   const zone = shippingZones.find((z) => z.city_code === cityCode) ?? shippingZones[0] ?? null;
   // ProductPricePanel context'e senaryo-aware heroPrice yazar; o gelene kadar
   // (ilk render veya panel henüz mount olmadıysa) liste/TIR fiyatına düş.
-  const fallback = computeM2Price({ product, thickness: activeThickness, zone, logisticsCapacity });
+  // Levha marjı ProductPricePanel tarafından canlı okunup context'e yazılır.
+  // İlk render'da sessiz %10 varsayımı göstermek yerine fail-closed kalır.
+  const fallback = computeM2Price({
+    product,
+    thickness: activeThickness,
+    zone,
+    logisticsCapacity,
+    marginPct: null,
+  });
   const heroPrice = ctxHeroPrice ?? fallback;
   if (heroPrice === null) return null;
 

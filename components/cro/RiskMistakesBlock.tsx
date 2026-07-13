@@ -5,9 +5,9 @@ const ITEMS = [
   {
     n: '01',
     mistake: 'Kalınlığı sadece ucuzluğa göre seçmek',
-    mistakeBody: 'Karar metresi metre kare fiyatı değil, 10 yılda ödenen ısınma faturasıdır.',
-    fix: 'Bölge ve niyetinize göre kalınlık önerisi otomatik gelir',
-    fixBody: 'Isı, ses ya da çatı odaklı seçim yapın; sistem doğru kalınlıkla başlatır.',
+    mistakeBody: 'Karar yalnız metre kare fiyatıyla verilmez; ürün performansı ve uygulama koşulu birlikte değerlendirilir.',
+    fix: 'Bölge ve kullanım amacını birlikte değerlendirin',
+    fixBody: 'Isı, ses veya çatı amacını seçin; ürün ve kalınlık kararını proje koşullarıyla teyit edin.',
   },
   {
     n: '02',
@@ -19,16 +19,16 @@ const ITEMS = [
   {
     n: '03',
     mistake: 'Nakliyeyi sonradan eklemek',
-    mistakeBody: 'Levha bazlı tekliflerde nakliye "ekstra" gelir; sahadaki tutar farklı çıkar.',
-    fix: 'Şehir + doluluk girer girmez nakliye dahil tutar görünür',
-    fixBody: 'Kısmi yük, kamyon ve TIR doluluk eşiği aynı hesapta; sürpriz yok.',
+    mistakeBody: 'Tam araç veya EPS seti koşulu kontrol edilmeden yapılan hesap toplam maliyeti yanıltır.',
+    fix: 'Nakliye koşulunu teklifin içinde görün',
+    fixBody: 'Taşyününde tam araç, EPS setinde levha ve toz grubu koşulu hesapla birlikte değerlendirilir.',
   },
   {
     n: '04',
     mistake: 'Belge ve uygunluk istememek',
-    mistakeBody: 'TSE/CE olmayan malzeme, EKB onayı ve garanti vaadinde sorun yaratır.',
-    fix: 'Sistem yalnızca belgeli kalemlerle hesap yapar',
-    fixBody: 'Tüm kalemler TSE/CE uyumlu; EKB sürecinde geri dönmezsiniz.',
+    mistakeBody: 'Ürün uygunluğu proje gereksinimleriyle karşılaştırılmadan yalnız fiyata göre karar verilmemelidir.',
+    fix: 'Teknik belgeyi marka ve model bazında kontrol edin',
+    fixBody: 'Gereken belge ve performans değerlerini sipariş öncesinde ürün dokümanıyla teyit edin.',
   },
 ] as const;
 

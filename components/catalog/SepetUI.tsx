@@ -9,8 +9,6 @@ import SepetScenarioMessage from "./SepetScenarioMessage";
 
 export type SepetScenario =
   | 'empty'          // ihtiyac = 0
-  | 'below_minimum'  // ihtiyac > 0 && ihtiyac < minOrderM2
-  | 'depot_optimal'  // stok uygun ve daha ucuz
   | 'lorry_optimal'  // 1+ kamyon (tir = 0)
   | 'tir_optimal'    // 1+ tir (kamyon = 0)
   | 'large_project'  // karışık: tir + kamyon
@@ -22,7 +20,6 @@ export interface SepetState {
   autoApplied: boolean;
   totalM2: number;
   effectivePrice: number | null;
-  stokOnerisi: boolean;
   scenario: SepetScenario;
 }
 
@@ -31,7 +28,6 @@ type SepetInternal = {
   kamyon: number;
   tir: number;
   autoApplied: boolean;
-  stokOnerisi: boolean;
 };
 
 interface Props {
@@ -40,14 +36,8 @@ interface Props {
   lorryPrice: number | null;
   truckPrice: number | null;
   packageRefPrice: number | null;
-  depotStock: number;
-  depotPrice: number | null;
-  depotMinM2: number;
-  minOrderM2: number; // 0 = minimum yok
   ihtiyac: number;
   onChange: (state: SepetState) => void;
-  onSetIhtiyac?: (m2: number) => void; // "300 m²'ye tamamla" butonu
-  hideMinWarning?: boolean;            // yazarken geçici below_minimum kutusunu gizle
   /** Vehicle cards bloğunu portal ile başka bir DOM noktasına render et.
    *  null/verilmezse SepetUI'ın içinde yerinde render edilir (geri uyumlu). */
   vehicleCardsSlot?: HTMLElement | null;
@@ -62,7 +52,7 @@ type OptimalResult = {
 
 // ─── Pure fonksiyonlar (bileşen dışında, render'da yeniden oluşturulmaz) ──
 
-function findOptimalCombination(
+export function findOptimalCombination(
   ihtiyac: number,
   lorryM2: number,
   truckM2: number,
@@ -113,8 +103,13 @@ function buildEffectivePrice(
   return totalTL / totalM2;
 }
 
-function fmt(v: number, d = 2) {
-  return v.toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
+function resolveScenario(ihtiyac: number, kamyon: number, tir: number): SepetScenario {
+  if (ihtiyac <= 0) return 'empty';
+  if (kamyon === 0 && tir === 0) return 'ara_metraj';
+  if (kamyon > 0 && tir === 0) return 'lorry_optimal';
+  if (tir > 0 && kamyon === 0) return 'tir_optimal';
+  if (kamyon > 0 && tir > 0) return 'large_project';
+  return 'ara_metraj';
 }
 
 // ─── Sabitler ───────────────────────────────────────────────────────────────
@@ -123,7 +118,6 @@ const INITIAL_SEPET: SepetInternal = {
   kamyon: 0,
   tir: 0,
   autoApplied: false,
-  stokOnerisi: false,
 };
 
 // ─── Ana Bileşen ─────────────────────────────────────────────────────────────
@@ -134,14 +128,8 @@ export default function SepetUI({
   lorryPrice,
   truckPrice,
   packageRefPrice,
-  depotStock,
-  depotPrice,
-  depotMinM2,
-  minOrderM2,
   ihtiyac,
   onChange,
-  onSetIhtiyac,
-  hideMinWarning = false,
   vehicleCardsSlot,
 }: Props) {
   // prevIhtiyac'ı state olarak tut: render sırasında ihtiyac değişimini yakalar
@@ -156,21 +144,6 @@ export default function SepetUI({
     return findOptimalCombination(ihtiyac, lorryM2, truckM2, lorryPrice, truckPrice);
   }, [ihtiyac, lorryM2, truckM2, lorryPrice, truckPrice]);
 
-  // ─── Stok daha ucuz mu? ─────────────────────────────────────────────────
-  const stokDahaUygun = useMemo(() => {
-    if (
-      ihtiyac <= 0 ||
-      ihtiyac < depotMinM2 ||   // deponun kendi minimumunu karşılamıyorsa depot önerisi gösterilmez
-      depotStock <= 0 ||
-      depotPrice === null ||
-      depotStock < ihtiyac ||
-      optimalCombo === null
-    ) {
-      return false;
-    }
-    return ihtiyac * depotPrice < optimalCombo.totalTL;
-  }, [ihtiyac, depotMinM2, depotStock, depotPrice, optimalCombo]);
-
   // ─── ihtiyac değişince otomatik uygula — render sırasında (effect değil) ──
   // React'ın "store information from previous renders" escape hatch'i.
   // ESLint react-hooks/set-state-in-effect kuralını tetiklemez.
@@ -179,18 +152,14 @@ export default function SepetUI({
 
     if (ihtiyac <= 0) {
       setSepet(INITIAL_SEPET);
-    } else if (depotStock > 0 && minOrderM2 > 0 && ihtiyac < minOrderM2) {
-      // Depo siparişi altında: kamyon önermeden beklet (stoksuz kalınlıkta bu dal atllanır)
-      setSepet(INITIAL_SEPET);
-    } else if (stokDahaUygun) {
-      setSepet({ kamyon: 0, tir: 0, autoApplied: false, stokOnerisi: true });
     } else if (optimalCombo) {
       setSepet({
         kamyon: optimalCombo.kamyon,
         tir: optimalCombo.tir,
         autoApplied: true,
-        stokOnerisi: false,
       });
+    } else {
+      setSepet(INITIAL_SEPET);
     }
   }
 
@@ -210,7 +179,8 @@ export default function SepetUI({
       lorryPrice,
       truckPrice
     );
-    const signature = `${sepet.kamyon}-${sepet.tir}-${sepet.autoApplied}-${sepet.stokOnerisi}-${totalM2}-${effectivePrice ?? "null"}-${scenario}`;
+    const currentScenario = resolveScenario(ihtiyac, sepet.kamyon, sepet.tir);
+    const signature = `${sepet.kamyon}-${sepet.tir}-${sepet.autoApplied}-${totalM2}-${effectivePrice ?? "null"}-${currentScenario}`;
     if (lastSentRef.current === signature) return;
     lastSentRef.current = signature;
     onChange({
@@ -219,10 +189,9 @@ export default function SepetUI({
       autoApplied: sepet.autoApplied,
       totalM2,
       effectivePrice,
-      stokOnerisi: sepet.stokOnerisi,
-      scenario,
+      scenario: currentScenario,
     });
-  }, [sepet, lorryM2, truckM2, lorryPrice, truckPrice, onChange]);
+  }, [sepet, ihtiyac, lorryM2, truckM2, lorryPrice, truckPrice, onChange]);
 
   // ─── Manuel değişim ─────────────────────────────────────────────────────
   function handleKamyon(delta: number) {
@@ -230,7 +199,6 @@ export default function SepetUI({
       ...prev,
       kamyon: Math.max(0, prev.kamyon + delta),
       autoApplied: false,
-      stokOnerisi: false,
     }));
   }
 
@@ -239,7 +207,6 @@ export default function SepetUI({
       ...prev,
       tir: Math.max(0, prev.tir + delta),
       autoApplied: false,
-      stokOnerisi: false,
     }));
   }
 
@@ -249,12 +216,11 @@ export default function SepetUI({
       kamyon: optimalCombo.kamyon,
       tir: optimalCombo.tir,
       autoApplied: true,
-      stokOnerisi: false,
     });
   }
 
   // ─── Türetilmiş değerler ────────────────────────────────────────────────
-  const { kamyon, tir, autoApplied, stokOnerisi } = sepet;
+  const { kamyon, tir, autoApplied } = sepet;
 
   const totalM2 = kamyon * lorryM2 + tir * truckM2;
   const totalTL =
@@ -268,29 +234,14 @@ export default function SepetUI({
     packageRefPrice !== null && truckPrice !== null ? packageRefPrice - truckPrice : null;
 
   // Kamyon/TIR senaryosu için türetilmiş yardımcılar
-  const lorryLotM2 = kamyon * lorryM2;
   const truckLotM2 = tir * truckM2;
-  // true → kullanıcı lorryLotM2'den küçük girdi, optimizer yuvarladı
-  const lorryRoundedUp = kamyon > 0 && tir === 0 && ihtiyac > 0 && ihtiyac < lorryLotM2;
   const truckRoundedUp = tir > 0 && kamyon === 0 && ihtiyac > 0 && ihtiyac < truckLotM2;
 
-  const scenario: SepetScenario = (() => {
-    if (ihtiyac <= 0) return 'empty';
-    // below_minimum yalnızca stok olan kalınlıklarda geçerli (depo bazlı minimum)
-    // stok yoksa fabrika minimumu = 1 Kamyon → lorry_optimal zaten açıklıyor
-    if (depotStock > 0 && minOrderM2 > 0 && ihtiyac < minOrderM2) return 'below_minimum';
-    if (stokOnerisi) return 'depot_optimal';
-    if (kamyon === 0 && tir === 0) return 'ara_metraj';
-    if (kamyon > 0 && tir === 0) return 'lorry_optimal';
-    if (tir > 0 && kamyon === 0) return 'tir_optimal';
-    if (kamyon > 0 && tir > 0) return 'large_project';
-    return 'ara_metraj';
-  })();
+  const scenario = resolveScenario(ihtiyac, kamyon, tir);
 
   // Manuel mod önerisi: sepet dolu ama optimal farklı
   const suggestionDiffersFromCurrent =
     !autoApplied &&
-    !stokOnerisi &&
     (kamyon > 0 || tir > 0) &&
     optimalCombo !== null &&
     (optimalCombo.kamyon !== kamyon || optimalCombo.tir !== tir);
@@ -301,28 +252,24 @@ export default function SepetUI({
       {/* ─── Tek Ana Karar Mesajı ──────────────────────────────────── */}
       <SepetScenarioMessage
         scenario={scenario}
-        hideMinWarning={hideMinWarning}
         lorryM2={lorryM2}
         truckM2={truckM2}
         lorryPrice={lorryPrice}
         truckPrice={truckPrice}
         ihtiyac={ihtiyac}
-        minOrderM2={minOrderM2}
-        depotStock={depotStock}
         kamyon={kamyon}
         tir={tir}
         truckLotM2={truckLotM2}
         truckRoundedUp={truckRoundedUp}
         optimalCombo={optimalCombo}
         suggestionDiffersFromCurrent={suggestionDiffersFromCurrent}
-        onSetIhtiyac={onSetIhtiyac}
         onGeriAl={handleGeriAl}
       />
 
       {/* ─── Araç Kartları (portal kullanılırsa üst grid'e taşınır) ──── */}
       {(() => {
         const cardsBlock = (
-          <div className={scenario === 'below_minimum' ? "opacity-40 pointer-events-none select-none" : undefined}>
+          <div>
             <SepetVehicleCards
               kamyon={kamyon}
               lorryM2={lorryM2}

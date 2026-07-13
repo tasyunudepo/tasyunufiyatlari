@@ -67,6 +67,7 @@ export default function StokAlternatifSection({
             <div className="rounded-lg border border-fe-border/40 bg-fe-bg/60 px-3 py-2.5">
               <p className="text-[10px] uppercase tracking-wide text-fe-muted">m² Fiyatı</p>
               <p className="mt-1 text-[13px] font-semibold text-fe-text">{fmt(depotPrice)} ₺/m²</p>
+              <p className="mt-0.5 text-[9px] text-fe-muted-strong">KDV hariç</p>
             </div>
             <div className="rounded-lg border border-fe-border/40 bg-fe-bg/60 px-3 py-2.5">
               <p className="text-[10px] uppercase tracking-wide text-fe-muted">Min. Sipariş</p>

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "created_at": "2026-07-13T03:24:39.670914+00:00",
+  "files": {
+    "kanonik-konsensus-fable-sol.md": {
+      "sha256": "762ae0f69646011ecd08ab71d9cba432b99e6fb612a2f88c61d27a51e0035dd3",
+      "size": 43441
+    },
+    "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
+      "sha256": "455e03e45fc5990434c67e8d68d9f38ead8085db583d61221592b57e55eac858",
+      "size": 8568
+    },
+    "tests/api/quotes-route.integration.test.ts": {
+      "sha256": "6d436ef4b016b2fa206ea2afdf4c7029830c5036032bb3436663a91d291586ce",
+      "size": 7011
+    },
+    "tests/api/upload-pdf-route.integration.test.ts": {
+      "sha256": "f23a847663e99852d01d0c966849b2446b4f44287a37c408ae695c0b69090f8b",
+      "size": 4056
+    },
+    "tests/db/quote-guard-call.sql": {
+      "sha256": "c1665d3dda430e004267f08106e575702221f3f8100ef91dacbe4ce5946a5888",
+      "size": 1360
+    },
+    "scripts/verify-quote-guard-db.sh": {
+      "sha256": "9268e52e5383a8cb7ea0e6fb327f7f0efbd91edf87446bdd3eeeb6d3914221e8",
+      "size": 2231
+    },
+    "scripts/migration-v16-private-quote-pdfs.sql": {
+      "sha256": "dec1a8ec8b71ef5ee2366de83b6a36343a87f2db4db4a57d6e251105de22f455",
+      "size": 2043
+    },
+    "scripts/migration-v17-quote-submission-guard.sql": {
+      "sha256": "22d193205f8103cf5b2dcc7ed5d6b632aafb1c8d15be330a6d8319f87c0404b4",
+      "size": 22219
+    }
+  },
+  "note": "Bu kilit test değişikliğini yasaklamaz; sessiz değişikliği görünür kılar."
+}

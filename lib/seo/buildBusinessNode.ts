@@ -32,8 +32,6 @@ export interface BuildBusinessNodeOptions {
  * ile bu node'a bağlanır.
  */
 export function buildBusinessNode(opts: BuildBusinessNodeOptions = {}) {
-  const foundingDate = opts.foundingDate ?? BUSINESS_INFO.foundingDate;
-
   return {
     '@type': ['Organization', 'LocalBusiness'] as const,
     '@id':   BUSINESS_ID,
@@ -59,7 +57,7 @@ export function buildBusinessNode(opts: BuildBusinessNodeOptions = {}) {
       closes:    BUSINESS_INFO.openingHours.closes,
     }],
     priceRange: BUSINESS_INFO.priceRange,
-    foundingDate,
+    ...(opts.foundingDate ? { foundingDate: opts.foundingDate } : {}),
     // Founder artık standalone Person node'a pointer — buildPersonNode()
     // ile @graph'ta ayrı entity olarak yer alır (E-E-A-T sinyali).
     founder: PERSON_REF,

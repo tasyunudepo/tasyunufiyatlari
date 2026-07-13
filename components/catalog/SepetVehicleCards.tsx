@@ -103,7 +103,7 @@ function AracKarti({
             <p className="mt-1 text-[10px] leading-none text-fe-muted">{fmt(capacity, 0)} m²</p>
             {price !== null ? (
               <p className="mt-1 text-[11px] font-bold leading-none text-white">
-                {fmt(price)}<span className="text-[9px] font-normal text-fe-muted"> ₺/m²</span>
+                {fmt(price)}<span className="text-[9px] font-normal text-fe-muted"> ₺/m² · KDV hariç</span>
               </p>
             ) : (
               <p className="mt-1 text-[10px] text-fe-muted">Fiyat teklif ile</p>
@@ -172,7 +172,7 @@ function AracKarti({
       {price !== null ? (
         <p className="mb-3 text-[13px] font-bold text-white">
           {fmt(price)}{" "}
-          <span className="text-[10px] font-normal text-fe-muted">₺/m²</span>
+          <span className="text-[10px] font-normal text-fe-muted">₺/m² · KDV hariç</span>
         </p>
       ) : (
         <p className="mb-3 text-[13px] text-fe-muted">Fiyat teklif ile</p>

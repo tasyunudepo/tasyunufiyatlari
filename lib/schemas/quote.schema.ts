@@ -1,5 +1,16 @@
 import { z } from 'zod'
 
+const phoneSchema = z
+  .string()
+  .trim()
+  .min(7, 'Telefon numarası çok kısa')
+  .max(20, 'Telefon numarası çok uzun')
+  .regex(/^[\d+\s()-]+$/, 'Geçerli bir telefon numarası girin (örn: 0532 123 45 67 veya +7 900 123 45 67)')
+  .refine((value) => {
+    const digitCount = value.replace(/\D/g, '').length
+    return digitCount >= 10 && digitCount <= 15
+  }, 'Telefon numarası 10 ila 15 rakam içermelidir')
+
 export const quoteSchema = z.object({
   customerName: z
     .string()
@@ -15,12 +26,7 @@ export const quoteSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  customerPhone: z
-    .string()
-    .trim()
-    .min(7, 'Telefon numarası çok kısa')
-    .max(20, 'Telefon numarası çok uzun')
-    .regex(/^[\d+\s()-]+$/, 'Geçerli bir telefon numarası girin (örn: 0532 123 45 67 veya +7 900 123 45 67)'),
+  customerPhone: phoneSchema,
 
   customerCompany: z.string().max(255, 'En fazla 255 karakter').optional().or(z.literal('')),
   customerAddress: z.string().max(500, 'En fazla 500 karakter').optional().or(z.literal('')),
@@ -41,16 +47,11 @@ export const apiQuoteSchema = z.object({
     .trim()
     .optional()
     .or(z.literal('')),
-  customerPhone: z
-    .string()
-    .trim()
-    .min(7, 'Telefon numarası çok kısa')
-    .max(20, 'Telefon numarası çok uzun')
-    .regex(/^[\d+\s()-]+$/, 'Geçerli bir telefon numarası girin (örn: 0532 123 45 67 veya +7 900 123 45 67)'),
+  customerPhone: phoneSchema,
   customerCompany: z.string().max(255).optional().or(z.literal('')),
   customerAddress: z.string().max(500).optional().or(z.literal('')),
   submissionType: z.enum(['whatsapp_order', 'pdf_quote']),
-  sourceChannel: z.string().default('wizard'),
+  sourceChannel: z.enum(['wizard', 'catalog']).default('wizard'),
 
   materialType: z.enum(['tasyunu', 'eps'], {
     message: 'Geçerli bir levha tipi seçin',
@@ -96,9 +97,6 @@ export const apiQuoteSchema = z.object({
 
   packageItems: z.record(z.string(), z.any()),
   quoteCode: z.string().optional().nullable(),
-  pdfUrl: z.string().url().optional().nullable(),
-  pdfStoragePath: z.string().optional().nullable(),
-
   // KVKK rıza — frontend Zod (quoteSchema) zorunlu işaretliyor; API tarafı da
   // doğrulamalı ki bot/API client'lar consent'siz POST yapamasın.
   kvkkConsent: z.boolean().refine(val => val === true, {

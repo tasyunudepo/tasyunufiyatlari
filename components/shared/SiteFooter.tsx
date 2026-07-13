@@ -23,7 +23,7 @@ const GROUPS = [
     eyebrow: 'Kurumsal',
     links: [
       { href: '/hakkimizda', label: 'Hakkımızda' },
-      { href: '/depomuz', label: 'Depomuz' },
+      { href: '/iletisim', label: 'Görüşme Noktası' },
       { href: '/marka/dalmacyali', label: 'Markalar' },
     ],
   },
@@ -70,7 +70,7 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
               className="h-7 w-auto mb-4"
             />
             <p className={`${sloganText} text-sm leading-relaxed max-w-xs`}>
-              Türkiye geneli taşyünü ve EPS fiyatları. Lojistik dahil mantolama maliyetinizi hesaplayın.
+              Taşyünü ve EPS fiyatlarını, tam araç ve set nakliye koşullarıyla hesaplayın.
             </p>
           </div>
 
@@ -126,7 +126,7 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
             © {new Date().getFullYear()} Taşyünü Fiyatları. Tüm hakları saklıdır.
           </p>
           <p className={`${copyText} text-xs`}>
-            Fabrika çıkışlı satış · İstanbul / Tuzla depo
+            Fabrika çıkışlı satış · Tuzla görüşme noktası
           </p>
         </div>
       </div>

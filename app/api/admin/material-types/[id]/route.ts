@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { materialTypeRulesSchema } from '@/lib/schemas/materialTypeRules.schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,9 +41,41 @@ export async function PATCH(
   }
 
   const supabase = createServerSupabaseClient();
+  const { data: current, error: currentError } = await supabase
+    .from('material_types')
+    .select(ALLOWED_FIELDS.join(','))
+    .eq('id', id)
+    .single();
+
+  if (currentError || !current) {
+    return NextResponse.json({ error: 'Marj kuralı bulunamadı.' }, { status: 404 });
+  }
+
+  const currentRecord = current as unknown as Record<string, unknown>;
+  const parsed = materialTypeRulesSchema.safeParse({ ...currentRecord, ...update });
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: 'Marj kuralı doğrulanamadı.',
+        details: parsed.error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      },
+      { status: 400 },
+    );
+  }
+
+  const validatedUpdate = Object.fromEntries(
+    Object.keys(update).map((field) => [
+      field,
+      parsed.data[field as keyof typeof parsed.data],
+    ]),
+  );
+
   const { data, error } = await supabase
     .from('material_types')
-    .update(update)
+    .update(validatedUpdate)
     .eq('id', id)
     .select('*')
     .single();

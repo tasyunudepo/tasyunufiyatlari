@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAdminMutationAuth } from '@/lib/security/adminMutationAuth';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 import { parseExcelBuffer }  from '@/lib/importExcelParser';
@@ -20,7 +21,7 @@ import type { ImportPreviewRow, ImportPreviewRowDebug } from '@/lib/importTypes'
 // POST /api/import
 //
 // Akış:
-//   multipart/form-data (file, uploaded_by)
+//   multipart/form-data (file)
 //     → Excel parse → RawImportRow[]
 //     → raw_import_files INSERT (status='parsed')
 //     → raw_import_rows INSERT (1 kayıt / satır)
@@ -34,6 +35,9 @@ import type { ImportPreviewRow, ImportPreviewRowDebug } from '@/lib/importTypes'
 // ==========================================
 
 export async function POST(req: Request): Promise<NextResponse> {
+    const auth = requireAdminMutationAuth(req);
+    if (!auth.ok) return auth.response;
+
     const supabase = createServerSupabaseClient();
     let fileIdForCleanup: string | null = null;
 
@@ -42,7 +46,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         const form = await req.formData();
 
         const file       = form.get('file');
-        const uploadedBy = (form.get('uploaded_by') as string | null) ?? 'unknown';
+        const uploadedBy = auth.user;
 
         if (!(file instanceof File)) {
             return NextResponse.json(

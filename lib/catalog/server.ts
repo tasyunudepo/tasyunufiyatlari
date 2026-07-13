@@ -21,6 +21,19 @@ import type {
 
 const MATERIAL_IDS: Record<string, number> = { tasyunu: 2, eps: 1 };
 
+type CatalogSingleError = { code?: string; message: string } | null;
+
+async function loadCatalogSingleWithRetry<T>(
+  load: () => PromiseLike<{ data: T | null; error: CatalogSingleError }>,
+): Promise<{ data: T | null; error: CatalogSingleError }> {
+  const first = await load();
+  if (!first.error || first.error.code === 'PGRST116') return first;
+
+  // Geçici bağlantı/PostgREST hatasını "ürün yok" diye 404'e çevirmeyelim.
+  // Statik ürün sayfası üretiminde tek, anlık retry yeterlidir.
+  return load();
+}
+
 // Supabase'den dönen ham satır şekilleri — sadece okuduğumuz alanlar.
 // API route'ları aynı select() iskeletini paylaşıyor; tek kaynaktan tüketsinler.
 export type SupabasePlateRow = {
@@ -223,26 +236,33 @@ export async function getCatalogProduct(
 
   // Plates sorgusu (aksesuar kategorisinde atla)
   if (wantPlates) {
-    let plateQuery = supabase
-      .from('plates')
-      .select(`
-        id, name, short_name, slug, base_price, discount_2,
-        thickness_options, preferred_thickness, sales_mode, pricing_visibility_mode,
-        minimum_order_type, minimum_order_value,
-        requires_city_for_pricing, requires_system_context,
-        recommended_bundle_family, catalog_description, meta_title, meta_description,
-        image_cover, image_gallery,
-        stock_tuzla, depot_discount, depot_min_m2,
-        brands ( id, name, tier ),
-        material_types ( id, name, slug ),
-        plate_prices ( thickness, base_price, is_kdv_included, stock_tuzla, package_m2 )
-      `)
-      .eq('slug', slug)
-      .eq('is_active', true);
-    if (expectedMaterialId != null) {
-      plateQuery = plateQuery.eq('material_type_id', expectedMaterialId);
+    const loadPlate = async () => {
+      let plateQuery = supabase
+        .from('plates')
+        .select(`
+          id, name, short_name, slug, base_price, discount_2,
+          thickness_options, preferred_thickness, sales_mode, pricing_visibility_mode,
+          minimum_order_type, minimum_order_value,
+          requires_city_for_pricing, requires_system_context,
+          recommended_bundle_family, catalog_description, meta_title, meta_description,
+          image_cover, image_gallery,
+          stock_tuzla, depot_discount, depot_min_m2,
+          brands ( id, name, tier ),
+          material_types ( id, name, slug ),
+          plate_prices ( thickness, base_price, is_kdv_included, stock_tuzla, package_m2 )
+        `)
+        .eq('slug', slug)
+        .eq('is_active', true);
+      if (expectedMaterialId != null) {
+        plateQuery = plateQuery.eq('material_type_id', expectedMaterialId);
+      }
+      return plateQuery.single();
+    };
+    const { data: plateRow, error: plateError } = await loadCatalogSingleWithRetry(loadPlate);
+
+    if (plateError && plateError.code !== 'PGRST116') {
+      throw new Error('Katalog ürün verisi geçici olarak alınamadı.');
     }
-    const { data: plateRow } = await plateQuery.single();
 
     if (plateRow) {
       const product = buildPlateView(plateRow as unknown as SupabasePlateRow);
@@ -253,21 +273,26 @@ export async function getCatalogProduct(
 
   // Accessories sorgusu (tasyunu/eps kategorisinde atla)
   if (wantAccessories) {
-    const { data: accRow } = await supabase
-      .from('accessories')
-      .select(`
-        id, name, short_name, slug, base_price,
-        sales_mode, pricing_visibility_mode,
-        minimum_order_type, minimum_order_value,
-        requires_system_context, recommended_bundle_family,
-        catalog_description, meta_title, meta_description,
-        image_cover,
-        brands ( id, name, tier ),
-        accessory_types ( id, name, slug )
-      `)
-      .eq('slug', slug)
-      .eq('is_active', true)
-      .single();
+    const loadAccessory = () => supabase
+        .from('accessories')
+        .select(`
+          id, name, short_name, slug, base_price,
+          sales_mode, pricing_visibility_mode,
+          minimum_order_type, minimum_order_value,
+          requires_system_context, recommended_bundle_family,
+          catalog_description, meta_title, meta_description,
+          image_cover,
+          brands ( id, name, tier ),
+          accessory_types ( id, name, slug )
+        `)
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .single();
+    const { data: accRow, error: accessoryError } = await loadCatalogSingleWithRetry(loadAccessory);
+
+    if (accessoryError && accessoryError.code !== 'PGRST116') {
+      throw new Error('Katalog aksesuar verisi geçici olarak alınamadı.');
+    }
 
     if (accRow) {
       const row = accRow as unknown as SupabaseAccessoryRow;

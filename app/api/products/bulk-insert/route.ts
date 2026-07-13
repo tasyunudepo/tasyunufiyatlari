@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
+import { requireAdminMutationAuth } from '@/lib/security/adminMutationAuth';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { ParsedProduct } from '@/lib/utils/pdfParser';
 
 export async function POST(req: Request) {
+  const auth = requireAdminMutationAuth(req);
+  if (!auth.ok) return auth.response;
+
   const supabase = createServerSupabaseClient();
   try {
     const { brand_name, products, discounts } = await req.json();

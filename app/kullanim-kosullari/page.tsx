@@ -64,7 +64,7 @@ export default function KullanimKosullariPage() {
               <p>
                 İşletmeci, sitemiz üzerinden <span className="font-semibold text-hub-ink">taş yünü, EPS levha
                 ve mantolama sistemleri tedariki</span> hizmeti sunar. Maliyet hesaplayıcı bir bilgilendirme aracıdır;
-                sahaya kesin fiyat ancak resmi PDF teklif veya yazılı/sözlü sipariş onayı sonrasında bağlayıcı hâle gelir.
+                sipariş koşulları sistem tarafından oluşturulan PDF teklif ve satış ekibinin yazılı teyidiyle netleşir.
               </p>
               <p>
                 Sitemiz Türkiye&apos;de mukim, kurumsal kullanıcılar ile yapı uygulayıcılarına yönelik olarak yapılandırılmıştır.
@@ -75,7 +75,7 @@ export default function KullanimKosullariPage() {
               <p>
                 <span className="font-semibold text-hub-ink">KDV:</span> Sitedeki tüm fiyatlar
                 <span className="font-semibold text-hub-ink"> KDV hariç</span> olarak gösterilir;
-                %20 KDV ayrıca eklenir. Resmi PDF teklifte hem KDV hariç tutar hem KDV dahil
+                %20 KDV ayrıca eklenir. PDF teklifte hem KDV hariç tutar hem KDV dahil
                 toplam tutar ayrı ayrı yer alır.
               </p>
 
@@ -86,7 +86,7 @@ export default function KullanimKosullariPage() {
               </p>
 
               <p>
-                <span className="font-semibold text-hub-ink">Teklif kaydı:</span> Resmi PDF teklifte
+                <span className="font-semibold text-hub-ink">Teklif kaydı:</span> PDF teklifte
                 referans kodu, ürün kalemleri ve güncel hesap bilgileri yer alır. Stok, ödeme ve
                 sevkiyat koşulları satış ekibi görüşmesinde netleştirilir.
               </p>
@@ -102,8 +102,8 @@ export default function KullanimKosullariPage() {
                 koşullarına göre değişiklik gösterebilir. Net teslim tarihi siparişe özel olarak bildirilir.
               </p>
               <p>
-                Kısmi yük, kamyon ve TIR doluluk eşiklerine göre sevkiyat ücreti ve bölgesel iskonto
-                hesaplayıcıda otomatik olarak hesaplanır.
+                Taşyününde tam kamyon/TIR, EPS setinde tanımlı set koşullarına göre nakliye
+                durumu ve bölgesel iskonto hesaplayıcıda gösterilir.
               </p>
             </Block>
 
