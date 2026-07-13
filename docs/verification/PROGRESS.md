@@ -99,3 +99,45 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 - **A-002 açık:** Bonus ticari fiyat/iskonto yok → Bonus levhaları pasif, fiyat sütunu kapalı (PRD sınırı korunuyor).
 - **Faz 2 bekliyor:** `DIS_CEPHE_MODELLER` sabitinin profil verisine bağlanması (iki wizard dosyasında hâlâ sabit liste var; Faz 1 kapsamı dışı).
 - Wizard modeli chip'lerinde artık yoğunluk görünmüyor; kaynak etiketli gösterim Faz 3 karşılaştırma sayfasıyla gelecek.
+
+---
+
+## 2026-07-13 (gece) — Bonus canlı aktivasyon + metraj/harman paketi fazı
+
+### Canlıya alınanlar
+
+1. **Bonus aktivasyonu:** `canli-bonus-adim1-migrationlar.sql` (v18+v19+v19b) ve `canli-bonus-adim2-aktivasyon.sql` canlıda uygulandı (Supabase Management API, Emrah onayıyla). Doğrulama: marka %5 marj, 3 aktif levha, 231 bölge fiyatı, 79 şehir eşleşmesi, 8 teknik profil; canlı API smoke F 150/5cm/34-avrupa = 370,03 TL/m², alt-bölgesiz 34 → 422.
+2. **Katalog temizliği:** TEKNO altındaki mantolama dışı 6 Chelfix ürünü silindi (2 fayans, 2 granit yapıştırıcı, 2 yüzey sertleştirici; id 159-162, 167-168). Statik sayfalar redeploy ile düştü (404 doğrulandı).
+3. **Migration v20:** Bonus için 3 paket tanımı (Expert/Optimix/TEKNO toz) canlıya uygulandı; eski kod bu satırları okumadığı için site etkilenmedi.
+
+### Karar 13 revizyonu (Emrah, 13 Temmuz 2026)
+
+"Bonus + TEKNO toz kombinasyonuna kesin SET fiyatı verilmez; yalnız levha teklifi" kuralı kaldırıldı. Yeni kural: Bonus levha, üç harman paketiyle komple set olarak satılır (1. Expert "Premium Sistem", 2. Optimix "Dengeli Sistem", 3. TEKNO "Ekonomik Sistem"). TEKNO tozlu pakette sevkiyat `separate_quote_required` uyarısıyla sunulur (marka kuralı değişmedi). Toz marjı: Emrah toz gruplarını daha önce 5'e indirdi; Bonus akışı üzerine İKİNCİ marj bindirmez — toz kalemleri diğer markalarla aynı tek kod yolundan (`buildAccessoryItemsForDefinition`) hesaplanır, levha fiyatı sunucudan marjlı gelir ve değiştirilmez (`buildBonusPlateOrder`, kilit testi `tests/pricing/bonus-package-assembly.test.ts`).
+
+### Yapılanlar
+
+1. **A1 — Kapasite yüzeyi:** `computeBonusCapacity` (lib) + `GET /api/bonus-price/capacity` (yalnız paket m²/adet + kamyon/TIR m²; fiyat alanı YOK). Golden testler üretici listesi değerleriyle: `tests/pricing/bonus-capacity.test.ts`.
+2. **A2 — Metraj adımı:** Bonus'ta Step4 preset/prefill/doğrulama gerçek Bonus kapasiteleriyle çalışır (`bonusLogistics` sentezi); `isBonusSelected` doğrulama bypass'ları kaldırıldı; fiyat anındaki alert savunma katmanına indi. Lojistik verisi yokken 480/1200 uydurma preset üretimi tüm markalar için kapatıldı.
+3. **B — Harman paketleri:** `handleShowBonusPrices` paket motoruna bağlandı; aksesuar hesabı tek koda çekildi (`buildAccessoryItemsForDefinition`), standart akış da aynı fonksiyonu kullanır.
+4. **Metraj pakete oturtma:** Üretici araç kapasitesi paket katının yuvarlanmışı olduğundan (TIR 1.774,1 ≈ 616×2,88) yarım m² toleranslı snap eklendi; 617. paket taşması üretilmez.
+5. **Yanlış iddia temizliği:** Bonus'ta bölge kamyon/TIR iskonto rozetleri/nudge'ları bastırıldı (`suppressZoneDiscounts`); sonuç başlığındaki "iskonto hesaplanmış" ifadesi Bonus'ta "nakliye hesaplanmış" oldu.
+6. **Aksesuar seçim determinizmi:** `accessories` sorgusuna `.order("id")` eklendi — paket motoru her tipte İLK eşleşeni seçer; sırasız sonuç TEKNO setinde Chelfix'i seçip "Ekonomik" paketi en pahalı yapıyordu (748→590 TL/m² KDV dahil düzeldi).
+7. **404 gürültüsü:** marka değişimi sırasında eski modelin kapasite isteği atması engellendi (model-markaya aitlik şartı).
+
+### Kanıt
+
+| Kontrol | Komut | Sonuç |
+|---|---|---|
+| Unit + kontrat | `npm run verify:fast` | 36 dosya / 274 test + typecheck geçti |
+| Hedefli lint | `npx eslint <değişen 6 dosya>` | 0 hata (6 mevcut uyarı, kapsam dışı) |
+| E2E (tam paket) | `npx playwright test` | 12/12 geçti (kilitli kritik teklif akışları dahil) |
+| Bonus E2E | `tests/e2e/wizard-bonus-flow.spec.ts` | Kapasiteli metraj + inline uyarı + 3 kart + TEKNO sevkiyat uyarısı + 370,03 sunucu fiyatı |
+| Build + copy-gate | `npm run build` + `copy-gate.mjs .next` | 293 HTML temiz |
+| Görsel | Playwright ekran görüntüleri (step4, uyarı, kartlar) | Konsol hatası yok; iskonto iddiası yok; kartlar doğru |
+| Kabul kilidi | `npm run verify:acceptance` | (commit öncesi koşulacak) |
+
+### Kalan riskler / açık işler
+
+- Bonus E2E kartlarda kalem birim fiyatı göremez (kart yalnız ad+miktar basar); çifte marj kilidi unit + kod yolu tekliği ile sağlanıyor.
+- `bonus-karsilastirma-fikir-turlari.md` karar bölümüne revizyon notu eklendi; karşılaştırma/SEO sayfaları (P1 kalan kalem) hâlâ açık.
+- Aksesuar seçimi artık deterministik (id sırası) ama "en ucuz uygun ürün" gibi açık bir kural değil; ürün ekleme sırası değişirse gözden geçirilmeli.

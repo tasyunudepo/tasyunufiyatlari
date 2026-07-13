@@ -211,6 +211,8 @@ Sözlü bildirilen yoğunluk aralıkları:
 
 4. **Gebze/Kocaeli ayrımı — Karar (Emrah, 13 Temmuz):** Bonus listesi Kocaeli'yi 1. Bölge, Gebze'yi 2. Bölge olarak ayırıyor; bu ayrım İstanbul yakası gibi uygulanır. Kocaeli seçilince "Gebze / Kocaeli (diğer)" sorusu belirir (Gebze → 2. Bölge, diğer → 1. Bölge).
 
+5. **Harman paketleri — Karar revizyonu (Emrah, 13 Temmuz 2026 akşamı):** "Bonus + TEKNO kombinasyonuna kesin set fiyatı verilmez, yalnız levha teklifi" kuralı (eski karar 13) kaldırıldı. Bonus levha komple set olarak üç toz grubu harmanıyla satılır: 1) Expert → Premium Sistem, 2) Optimix → Dengeli Sistem, 3) TEKNO → Ekonomik Sistem (migration v20). TEKNO tozlu pakette sevkiyat "ayrıca teyit" uyarısıyla sunulur. Toz grubu marjı zaten 5'e indirildi; Bonus akışı üzerine ikinci marj bindirilmez (tek kod yolu + kilit testi).
+
 **Kalan satış teyidi:** Bölge haritası sayfasındaki "OCAK 2026" başlığının Haziran listesiyle birlikte geçerli olduğu satış tarafından teyit edilecek (uygulamayı bloklamaz).
 
 ### Codex yanıtı / hakem notu
