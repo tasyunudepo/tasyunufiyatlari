@@ -14,6 +14,7 @@ const SECTION_LABELS: Record<string, string> = {
     products:     "Ürünler",
     "excel-import": "Excel Yükle",
     "margin-rules": "Marj Kuralları",
+    brands:       "Markalar",
     settings:     "Ayarlar",
 };
 

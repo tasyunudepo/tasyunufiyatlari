@@ -14,6 +14,7 @@ import { ProductsTab } from "./tabs/ProductsTab";
 import { SettingsTab } from "./tabs/SettingsTab";
 import { ExcelImportTab } from "./tabs/ExcelImportTab";
 import { MarginRulesTab } from "./tabs/MarginRulesTab";
+import { BrandsTab } from "./tabs/BrandsTab";
 
 export default function AdminPanel() {
     const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -55,6 +56,7 @@ export default function AdminPanel() {
                     {activeTab === "analytics"     && <AnalyticsTab />}
                     {activeTab === "prices"        && <PricesTab />}
                     {activeTab === "margin-rules"  && <MarginRulesTab />}
+                    {activeTab === "brands"        && <BrandsTab />}
                     {activeTab === "logistics"     && <LogisticsTab />}
                     {activeTab === "discounts"     && <DiscountsTab />}
                     {activeTab === "products"      && <ProductsTab />}
