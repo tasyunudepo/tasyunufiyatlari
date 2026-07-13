@@ -1,0 +1,100 @@
+{
+  "source": {
+    "document": "BONUS FİYAT LİSTESİ - Haziran 2026.pdf",
+    "documentDate": "2026-06-08",
+    "publisher": "Eryap Grup / Bonus Yalıtım",
+    "priceNote": "Fiyatlar tavsiye edilen satış fiyatıdır ve KDV hariçtir (PDF dipnotu).",
+    "discountSource": "Bonus İskonto Listesi.jpeg — BONUS TAŞ YÜNÜ bölgelerde %10, yürürlük 2026-06-09",
+    "regionMapPage": 83,
+    "verification": "PDF sayfa görüntülerinden (s.57-61, s.83) satır satır okunarak 2026-07-13 tarihinde doğrulandı; bonus_products.json otomatik çıkarımı kolon kayması içerdiği için kaynak KABUL EDİLMEDİ.",
+    "notes": [
+      "Premium F 120 / 70 mm satırında üretici tablosunda paket adedi 3 yazar; paket m² 2,88 ile tutarsız görünür (0,72 m² levhada 4 adede karşılık gelir). Tablo olduğu gibi aktarıldı.",
+      "Premium F 150 fiyat listesi 150 mm satırı içerir; teknik föy kalınlık aralığı 20-130 mm'dir. Premium F 150 Pro fiyat listesi 150 mm içerir; föy aralığı 30-120 mm'dir. Satılabilir kalınlık kaynağı fiyat listesidir.",
+      "Bölge haritası sayfası (s.83) 'OCAK 2026' başlıklıdır; Haziran listesiyle birlikte geçerliliği satış teyidi beklemektedir (uygulamayı bloklamaz).",
+      "Kâr marjı bu dosyada YOKTUR ve tutulmaz; marj brands.margin_pct üzerinden canlı kuralla uygulanır."
+    ]
+  },
+  "discountPct": 10,
+  "regionsByCityCode": {
+    "1": 5, "2": 6, "3": 3, "4": 7, "5": 4, "6": 3, "7": 4, "8": 6, "9": 4, "10": 3,
+    "11": 2, "12": 6, "13": 7, "14": 1, "15": 3, "16": 2, "17": 3, "18": 3, "19": 4, "20": 3,
+    "21": 6, "22": 4, "23": 6, "24": 6, "25": 6, "26": 2, "27": 5, "28": 5, "29": 6, "30": 7,
+    "31": 5, "32": 3, "33": 5, "34": null, "35": 3, "36": 7, "37": 3, "38": 4, "39": 4, "40": 4,
+    "41": null, "42": 3, "43": 2, "44": 6, "45": 3, "46": 5, "47": 7, "48": 4, "49": 7, "50": 4,
+    "51": 5, "52": 5, "53": 6, "54": 1, "55": 4, "56": 7, "57": 5, "58": 5, "59": 3, "60": 5,
+    "61": 5, "62": 6, "63": 6, "64": 3, "65": 7, "66": 4, "67": 2, "68": 4, "69": 6, "70": 4,
+    "71": 3, "72": 7, "73": 7, "74": 2, "75": 7, "76": 7, "77": 2, "78": 2, "79": 5, "80": 5,
+    "81": 1
+  },
+  "specialCities": {
+    "34": {
+      "cityName": "İstanbul",
+      "question": "yaka",
+      "options": { "avrupa": 3, "anadolu": 2 }
+    },
+    "41": {
+      "cityName": "Kocaeli",
+      "question": "gebze",
+      "options": { "gebze": 2, "diger": 1 }
+    }
+  },
+  "products": [
+    {
+      "productKey": "bonus-premium-f-150",
+      "brandName": "Bonus",
+      "shortName": "F 150",
+      "pdfPage": 59,
+      "rows": [
+        { "thicknessMm": 20,  "packagePieces": 10, "packageM2": 7.2,  "truckPackages": 288, "truckM2": 2073.6,  "trailerPackages": 528, "trailerM2": 3801.6,  "listPricesByRegion": [220.54, 224.75, 230.01, 235.27, 244.22, 253.68, 265.26] },
+        { "thicknessMm": 30,  "packagePieces": 6,  "packageM2": 4.32, "truckPackages": 360, "truckM2": 1555.2,  "trailerPackages": 660, "trailerM2": 2851.2,  "listPricesByRegion": [241.01, 246.63, 253.64, 260.66, 272.58, 285.21, 300.64] },
+        { "thicknessMm": 40,  "packagePieces": 5,  "packageM2": 3.6,  "truckPackages": 336, "truckM2": 1209.6,  "trailerPackages": 616, "trailerM2": 2217.6,  "listPricesByRegion": [297.02, 304.23, 313.25, 322.27, 337.6, 353.84, 373.68] },
+        { "thicknessMm": 50,  "packagePieces": 4,  "packageM2": 2.88, "truckPackages": 336, "truckM2": 967.7,   "trailerPackages": 616, "trailerM2": 1774.1,  "listPricesByRegion": [371.27, 380.29, 391.57, 402.84, 422.0, 442.3, 467.1] },
+        { "thicknessMm": 60,  "packagePieces": 3,  "packageM2": 2.16, "truckPackages": 360, "truckM2": 777.6,   "trailerPackages": 660, "trailerM2": 1425.6,  "listPricesByRegion": [446.03, 457.25, 471.28, 485.31, 509.16, 534.41, 565.28] },
+        { "thicknessMm": 70,  "packagePieces": 3,  "packageM2": 2.16, "truckPackages": 312, "truckM2": 673.9,   "trailerPackages": 572, "trailerM2": 1235.5,  "listPricesByRegion": [520.19, 533.14, 549.33, 565.51, 593.03, 622.17, 657.78] },
+        { "thicknessMm": 80,  "packagePieces": 2,  "packageM2": 1.44, "truckPackages": 408, "truckM2": 587.5,   "trailerPackages": 748, "trailerM2": 1077.1,  "listPricesByRegion": [594.57, 609.42, 627.99, 646.56, 678.12, 711.55, 752.4] },
+        { "thicknessMm": 90,  "packagePieces": 3,  "packageM2": 2.16, "truckPackages": 240, "truckM2": 518.4,   "trailerPackages": 440, "trailerM2": 950.4,   "listPricesByRegion": [669.04, 685.88, 706.92, 727.97, 763.74, 801.62, 847.92] },
+        { "thicknessMm": 100, "packagePieces": 2,  "packageM2": 1.44, "truckPackages": 336, "truckM2": 483.8,   "trailerPackages": 616, "trailerM2": 887.0,   "listPricesByRegion": [742.55, 760.58, 783.13, 805.68, 844.01, 884.59, 934.2] },
+        { "thicknessMm": 110, "packagePieces": 2,  "packageM2": 1.44, "truckPackages": 288, "truckM2": 414.72,  "trailerPackages": 528, "trailerM2": 760.32,  "listPricesByRegion": [818.3, 839.35, 865.65, 891.96, 936.68, 984.02, 1041.89] },
+        { "thicknessMm": 120, "packagePieces": 2,  "packageM2": 1.44, "truckPackages": 264, "truckM2": 380.2,   "trailerPackages": 484, "trailerM2": 697.0,   "listPricesByRegion": [914.3, 937.25, 965.95, 994.64, 1043.43, 1095.08, 1158.21] },
+        { "thicknessMm": 130, "packagePieces": 2,  "packageM2": 1.44, "truckPackages": 240, "truckM2": 345.6,   "trailerPackages": 440, "trailerM2": 633.6,   "listPricesByRegion": [990.97, 1016.22, 1047.78, 1079.35, 1133.01, 1189.83, 1259.27] },
+        { "thicknessMm": 150, "packagePieces": 2,  "packageM2": 1.44, "truckPackages": 216, "truckM2": 311.0,   "trailerPackages": 396, "trailerM2": 570.2,   "listPricesByRegion": [1142.07, 1170.13, 1205.2, 1240.28, 1299.9, 1363.03, 1440.19] }
+      ]
+    },
+    {
+      "productKey": "bonus-premium-f-120",
+      "brandName": "Bonus",
+      "shortName": "F 120",
+      "pdfPage": 58,
+      "rows": [
+        { "thicknessMm": 30,  "packagePieces": 8, "packageM2": 5.76, "truckPackages": 264, "truckM2": 1520.6,  "trailerPackages": 484, "trailerM2": 2787.8,  "listPricesByRegion": [201.57, 207.31, 214.49, 221.66, 233.86, 246.77, 262.55] },
+        { "thicknessMm": 40,  "packagePieces": 6, "packageM2": 4.32, "truckPackages": 264, "truckM2": 1140.5,  "trailerPackages": 484, "trailerM2": 2090.9,  "listPricesByRegion": [239.97, 247.62, 257.18, 266.75, 283.01, 300.23, 321.27] },
+        { "thicknessMm": 50,  "packagePieces": 5, "packageM2": 3.6,  "truckPackages": 264, "truckM2": 950.4,   "trailerPackages": 484, "trailerM2": 1742.4,  "listPricesByRegion": [299.48, 308.66, 320.14, 331.62, 351.13, 371.79, 397.04] },
+        { "thicknessMm": 60,  "packagePieces": 4, "packageM2": 2.88, "truckPackages": 264, "truckM2": 760.32,  "trailerPackages": 484, "trailerM2": 1393.92, "listPricesByRegion": [359.95, 371.43, 385.77, 400.12, 424.51, 450.34, 481.91] },
+        { "thicknessMm": 70,  "packagePieces": 3, "packageM2": 2.88, "truckPackages": 240, "truckM2": 691.2,   "trailerPackages": 440, "trailerM2": 1267.2,  "listPricesByRegion": [418.98, 431.61, 447.39, 463.17, 490.01, 518.41, 553.14] },
+        { "thicknessMm": 80,  "packagePieces": 3, "packageM2": 2.16, "truckPackages": 264, "truckM2": 570.24,  "trailerPackages": 484, "trailerM2": 1045.44, "listPricesByRegion": [479.93, 495.24, 514.37, 533.5, 566.02, 600.45, 642.54] },
+        { "thicknessMm": 90,  "packagePieces": 3, "packageM2": 2.16, "truckPackages": 240, "truckM2": 518.4,   "trailerPackages": 440, "trailerM2": 950.4,   "listPricesByRegion": [539.44, 556.28, 577.32, 598.37, 634.14, 672.02, 718.32] },
+        { "thicknessMm": 100, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 336, "truckM2": 483.84,  "trailerPackages": 616, "trailerM2": 887.04,  "listPricesByRegion": [598.55, 616.58, 639.13, 661.68, 700.01, 740.59, 790.2] },
+        { "thicknessMm": 110, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 288, "truckM2": 414.72,  "trailerPackages": 528, "trailerM2": 760.32,  "listPricesByRegion": [659.9, 680.95, 707.25, 733.56, 778.28, 825.62, 883.49] },
+        { "thicknessMm": 120, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 264, "truckM2": 380.2,   "trailerPackages": 484, "trailerM2": 697.0,   "listPricesByRegion": [737.18, 760.13, 788.83, 817.52, 866.31, 917.96, 981.09] },
+        { "thicknessMm": 130, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 240, "truckM2": 345.6,   "trailerPackages": 440, "trailerM2": 633.6,   "listPricesByRegion": [799.09, 824.34, 855.9, 887.47, 941.13, 997.95, 1067.39] },
+        { "thicknessMm": 150, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 216, "truckM2": 311.0,   "trailerPackages": 396, "trailerM2": 570.2,   "listPricesByRegion": [920.67, 948.73, 983.8, 1018.88, 1078.5, 1141.63, 1218.79] }
+      ]
+    },
+    {
+      "productKey": "bonus-premium-f-150-pro",
+      "brandName": "Bonus",
+      "shortName": "F 150 Pro",
+      "pdfPage": 61,
+      "rows": [
+        { "thicknessMm": 40,  "packagePieces": 5, "packageM2": 3.6,  "truckPackages": 336, "truckM2": 1209.6,  "trailerPackages": 616, "trailerM2": 2217.6,  "listPricesByRegion": [284.42, 291.63, 300.65, 309.67, 325.0, 341.24, 361.08] },
+        { "thicknessMm": 50,  "packagePieces": 4, "packageM2": 2.88, "truckPackages": 336, "truckM2": 967.68,  "trailerPackages": 616, "trailerM2": 1774.08, "listPricesByRegion": [348.77, 357.79, 369.07, 380.34, 399.5, 419.8, 444.6] },
+        { "thicknessMm": 60,  "packagePieces": 3, "packageM2": 2.16, "truckPackages": 360, "truckM2": 777.6,   "trailerPackages": 660, "trailerM2": 1425.6,  "listPricesByRegion": [419.03, 430.25, 444.28, 458.31, 482.16, 507.41, 538.28] },
+        { "thicknessMm": 70,  "packagePieces": 3, "packageM2": 2.16, "truckPackages": 312, "truckM2": 673.92,  "trailerPackages": 572, "trailerM2": 1235.52, "listPricesByRegion": [488.69, 501.64, 517.83, 534.01, 561.53, 590.67, 626.28] },
+        { "thicknessMm": 80,  "packagePieces": 2, "packageM2": 1.44, "truckPackages": 408, "truckM2": 587.52,  "trailerPackages": 748, "trailerM2": 1077.12, "listPricesByRegion": [558.57, 573.42, 591.99, 610.56, 642.12, 675.55, 716.4] },
+        { "thicknessMm": 100, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 336, "truckM2": 483.84,  "trailerPackages": 616, "trailerM2": 887.04,  "listPricesByRegion": [697.55, 715.58, 738.13, 760.68, 799.01, 839.59, 889.2] },
+        { "thicknessMm": 120, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 264, "truckM2": 380.16,  "trailerPackages": 484, "trailerM2": 696.96,  "listPricesByRegion": [854.9, 877.85, 906.55, 935.24, 984.03, 1035.68, 1098.81] },
+        { "thicknessMm": 150, "packagePieces": 2, "packageM2": 1.44, "truckPackages": 216, "truckM2": 311.0,   "trailerPackages": 396, "trailerM2": 570.2,   "listPricesByRegion": [1067.82, 1095.88, 1130.95, 1166.03, 1225.65, 1288.78, 1365.94] }
+      ]
+    }
+  ]
+}

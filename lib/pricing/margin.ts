@@ -62,3 +62,20 @@ export function resolveMarginPct(
 export function applyMargin(netCost: number, marginPct: number): number {
   return roundToKurus(netCost * (1 + marginPct / 100))
 }
+
+/**
+ * Marka öncelikli marj çözümü (karar günlüğü Tur 4: yalnız Bonus %5).
+ * brands.margin_pct doluysa marka kuralı geçerlidir; boşsa mevcut
+ * malzeme-tipi kademe kuralına düşülür. Her iki kaynak da geçersizse
+ * null döner (fail-closed) — sessiz varsayım yok.
+ */
+export function resolveBrandMarginPctStrict(
+  brandMarginPct: number | null | undefined,
+  materialRule: MarginRuleInput | null | undefined,
+  areaM2: number,
+): number | null {
+  if (brandMarginPct != null) {
+    return isValidMarginPct(Number(brandMarginPct)) ? Number(brandMarginPct) : null
+  }
+  return resolveMarginPctStrict(materialRule, areaM2)
+}
