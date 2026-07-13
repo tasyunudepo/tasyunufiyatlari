@@ -3,8 +3,8 @@
   "created_at": "2026-07-13T03:41:37.573723+00:00",
   "files": {
     "kanonik-konsensus-fable-sol.md": {
-      "sha256": "0035c42917a48b3a57d1d7465a43609f20ad40226eb171d7bba21ac9fd01c1b9",
-      "size": 44811
+      "sha256": "07b7fb662847782a00052ea1c8ae6682920b6db4822fb5dccd001ddffd8e1570",
+      "size": 46328
     },
     "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
       "sha256": "455e03e45fc5990434c67e8d68d9f38ead8085db583d61221592b57e55eac858",

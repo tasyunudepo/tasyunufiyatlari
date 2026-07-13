@@ -1,6 +1,6 @@
 # Taşyünü Fiyatları — Kanonik Konsensus ve Paralel Sprint Sözleşmesi
 
-> Durum: Ana ticari kurallar kilitli, 13 Temmuz Claude/Opus ikinci hakem kontrolü **KABUL**; P0 kod uygulaması tamamlanma aşamasında, canlı migration/env/deploy kapısı bekliyor  
+> Durum: Ana ticari kurallar kilitli, 13 Temmuz Claude/Opus ikinci hakem kontrolü **KABUL**; **P0 canlıda kapatıldı** (kanıt: bölüm 8.1 sonundaki "13 Temmuz canlı kapanış kanıtı", release commit `8f4ebd9`). P1–P3 henüz başlamadı  
 > Tarih: 13 Temmuz 2026  
 > Sahip: Emrah  
 > Entegratör: Codex  
@@ -11,7 +11,18 @@ Bu dosya, kapsamlı Codex auditi ile Fable 5 denetiminin tekilleştirilmiş uygu
 
 ## 1. Ana sonuç
 
-Proje mevcut hâliyle yayına uygun değildir. Önce müşteri teklif akışındaki kayıt kopukluğu, yanlış WhatsApp toplamı, çalışmayan marj güncelleme zinciri, spam yüzeyi, public PDF erişimi, korumasız mutasyon rotaları, kişisel/ticari veri logları ve yanıltıcı müşteri vaatleri kapatılacaktır. Yeni CRO deneyi veya geniş tasarım çalışması P0 tamamlanmadan başlamaz.
+13 Temmuz denetiminin ana sonucu, projenin o günkü hâliyle yayına uygun olmadığıydı: müşteri teklif akışında kayıt kopukluğu, yanlış WhatsApp toplamı, çalışmayan marj güncelleme zinciri, spam yüzeyi, public PDF erişimi, korumasız mutasyon rotaları, kişisel/ticari veri logları ve yanıltıcı müşteri vaatleri vardı. Bu yayın engelleyicilerin tamamı aynı gün canlıda kapatıldı; kanıtlar bölüm 8.1'in sonundadır. P0 kapandığı için CRO/tasarım çalışmalarının önündeki sıralama engeli kalkmıştır; öncelik sırası P1–P3 planına tabidir.
+
+Güncel faz durumu:
+
+| Faz | Durum | Kapsam |
+|---|---|---|
+| **P0** | ✅ Canlıda kapatıldı (13 Temmuz 2026) | Teklif kaydı, doğru fiyat/marj, PDF güvenliği, spam koruması, nakliye/vaat temizliği, PII-marj logları, KVKK |
+| **P1** | ⏳ Bekliyor | Tek fiyat otoritesi, Bonus markası, TEKNO sevkiyat paneli, import (Excel) bütünlüğü, kalıcı gizlilik |
+| **P2** | ⏳ Bekliyor | SEO, erişilebilirlik, performans, ölçüm kalitesi, genel kod temizliği (tam repo lint borcu: 89 hata / 15 uyarı) |
+| **P3** | ⏳ Bekliyor | RBAC ve admin giriş güçlendirme, güvenlik başlıkları, gözlemlenebilirlik/otomatik arıza alarmı, mimari sadeleştirme |
+
+P1'in Bonus kalemi için karar ve veri hazırlığı tamamlandı: sekiz ürünlük karşılaştırma kararı `bonus-karsilastirma-fikir-turlari.md` dosyasında, uygulama devri `docs/fusion-runs/20260713-042146-bonus-tasyunu-fiyat-verisi-dogrulamasi-home-emra/05-codex-fable-handoff.md` içindedir. Kod uygulaması henüz başlamadı.
 
 ## 2. Kilitli ticari kararlar
 
@@ -448,7 +459,7 @@ Ek kontrolde AC-P0-04’ün Wizard/PDP kart, PDF ve WhatsApp yüzeylerinde net/b
 - `npm run verify:release` sekiz aşamalı tek komut olarak eklendi ve baştan sona geçti: kabul kilidi, ziyaretçi metni, `163` test+typecheck, P0 lint, gerçek PostgreSQL smoke, production yüksek/kritik audit eşiği, `308` sayfalık build ve `5` Playwright akışı.
 - Katalog veri kaynağındaki geçici hata artık sahte `404 Ürün Bulunamadı` sonucuna çevrilmiyor; bir kez yeniden deneniyor ve kalıcı servis hatası 404’ten ayrılıyor.
 
-Canlı release’i bloklayan teknik kapılar:
+Canlı release’i bloklayan teknik kapılar (13 Temmuz kapanışından önceki durum):
 
 1. `migration-v16-private-quote-pdfs.sql` ve `migration-v17-quote-submission-guard.sql` canlı Supabase’e henüz uygulanmadı.
 2. Production’da `QUOTE_ABUSE_HASH_SECRET` ve `PDF_CAPABILITY_SECRET` en az 32 bayt farklı rastgele değerlerle tanımlanmalı; signed/capability TTL env’leri eklenmeli. Kod eksik yapılandırmada bilinçli olarak `503` ile kapalı kalır.
@@ -458,7 +469,7 @@ Canlı release’i bloklayan teknik kapılar:
 6. Canlı salt-okunur kontrolde import/bulk rotaları yeni handler auth kodunu henüz taşımıyor; public PDF bucket’ı `public:true`, public nesne erişimi `200` ve `submit_quote_guarded` canlıda yok. Bunlar deploy eksikliği kanıtıdır; yerel test başarısı canlı kapanış sayılmaz.
 7. Tekrarlanabilir `npm run verify:live:readonly` sonucu: anon hassas tablo/katalog kontrolleri `3` geçti; handler auth, PDF capability, private bucket, public URL ve RPC varlığı toplam `6` kontrolde başarısız. Canlı release bu sonuç `0` başarısıza inmeden kapatılamaz.
 
-Bu nedenle P0, kod entegrasyonu olarak yeşil; canlıya hazır hükmü migration + production env + deploy sonrası storage/RPC smoke testi geçmeden verilmez.
+Bu kapılardan 1, 2, 3, 6 ve 7 numaralılar 13 Temmuz canlı release’iyle geçildi; kanıtlar 8.1’in sonundaki "13 Temmuz canlı kapanış kanıtı" bölümündedir. 4. madde (tam repo lint borcu: `89 hata / 15 uyarı`) P2 işi olarak, 5. madde web-copy-gate deseninin bilinen yanlış-pozitif notu olarak sürer. P0 hem kod hem canlı doğrulama olarak yeşildir.
 
 ## 8.1 — 13 Temmuz PDF/kayıt arızası kök neden doğrulaması
 
