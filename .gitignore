@@ -90,3 +90,7 @@ scripts/generated/AUDITSFINAL/
 # MemPalace per-project files (issue #185)
 mempalace.yaml
 entities.json
+
+# Playwright artefaktları ve yerel ekran görüntüleri
+.screens/
+test-results/
