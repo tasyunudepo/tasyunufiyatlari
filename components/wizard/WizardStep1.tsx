@@ -140,8 +140,10 @@ export function WizardStep1({
                                         {BRAND_CHIPS[brand.name]}
                                     </span>
                                 )}
+                                {/* Rozet kart İÇİNDE durur: .brand-card overflow-hidden
+                                    (shimmer kırpması) dışa taşan rozeti yarım gösteriyordu. */}
                                 {selectedBrandId === brand.id && (
-                                    <div className="absolute -top-2 -right-2 bg-brand-500 text-[#1a0f08] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
+                                    <div className="absolute top-1.5 right-1.5 bg-brand-500 text-[#1a0f08] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
                                         <Check size={12} weight="bold" />
                                     </div>
                                 )}
