@@ -42,7 +42,8 @@ export default function WizardLinkButton({
       });
       if (targetStep === 2 && prefill.markaId !== null) store.goToStep(2);
     }
-    router.push('/');
+    // Çapasız '/' kullanıcıyı hero'da bırakıyordu; hesaplayıcıya in.
+    router.push('/#mantolama-hesaplayici');
   }
 
   const base    = 'inline-flex items-center justify-center gap-2 rounded-lg transition-all duration-150 cursor-pointer';

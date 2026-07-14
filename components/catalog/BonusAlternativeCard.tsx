@@ -148,7 +148,9 @@ export default function BonusAlternativeCard({
       brandName: "Bonus",
       modelShortName: challenger ?? undefined,
     });
-    router.push("/");
+    // Çapasız '/' hero'ya bırakıyordu; müşteri hesaplayıcıyı görmeden
+    // kayboluyordu — doğrudan hesaplayıcıya in.
+    router.push("/#mantolama-hesaplayici");
   }
 
   return (

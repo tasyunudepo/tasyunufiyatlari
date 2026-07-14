@@ -38,7 +38,7 @@ test.describe('Bonus katalog PDP', () => {
 
     // Wizard prefill köprüsü: hesap makinesi Bonus + F 150 ile açılır.
     await page.getByRole('button', { name: /Takım Fiyatını Gör/ }).first().click()
-    await page.waitForURL(/\/$/)
+    await page.waitForURL(/#mantolama-hesaplayici/)
     const wizard = page.locator('#mantolama-hesaplayici')
     await expect(wizard.getByRole('button', { name: 'F 150', exact: true })).toBeVisible({ timeout: 20_000 })
     // Model listesi Bonus'a özel — üç Bonus modeli görünür (marka seçiminin kanıtı).

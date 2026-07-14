@@ -80,7 +80,7 @@ test.describe('Bonus meydan okuma yüzeyleri', () => {
     await expect(card.getByText(/tam araç levha fiyatı/)).toBeVisible()
 
     await card.getByRole('button', { name: /komple set hesapla/ }).click()
-    await page.waitForURL(/\/$/)
+    await page.waitForURL(/#mantolama-hesaplayici/)
     const wizard = page.locator('#mantolama-hesaplayici')
     await expect(wizard.getByRole('button', { name: 'F 150', exact: true })).toBeVisible({ timeout: 20_000 })
   })
