@@ -7,7 +7,7 @@
       "size": 46328
     },
     "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
-      "sha256": "455e03e45fc5990434c67e8d68d9f38ead8085db583d61221592b57e55eac858",
+      "sha256": "ec32497451428af8c29cb5de47fd82fcc3a6e9e64cb04fa875bdf1a699c2a067",
       "size": 8568
     },
     "tests/api/quotes-route.integration.test.ts": {

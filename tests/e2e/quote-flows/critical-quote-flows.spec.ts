@@ -6,6 +6,12 @@ async function completeWizard(page: Page) {
   await page.goto('/')
   const wizard = page.locator('#mantolama-hesaplayici')
 
+  // Bu akış Dalmaçyalı SW035 sayılarıyla kurgulandı; varsayılan marka
+  // değişimlerinden (14 Temmuz 2026: Bonus varsayılan oldu) bağımsız
+  // kalmak için marka açıkça seçilir. Test niyeti değişmedi: atomik
+  // teklif kaydı + idempotency + capability akışı.
+  await wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first().click()
+
   await wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' }).click()
   await expect(wizard.getByText('Yalıtım Kalınlığını Seçin')).toBeVisible()
   await wizard.getByRole('button', { name: 'Konum Seçimine Geç' }).click()

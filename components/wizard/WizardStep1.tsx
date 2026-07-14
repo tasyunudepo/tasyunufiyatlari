@@ -26,6 +26,9 @@ const MALZEME_CHIPS: Record<'tasyunu' | 'eps', string> = {
     eps:     'Ekonomik Isı ve Ses Yalıtımı',
 };
 
+// Wizard'da gösterilen markalar ve buton sırası (Bonus önde — Emrah, 14 Temmuz 2026)
+const WIZARD_BRAND_ORDER: readonly string[] = ['Bonus', 'Dalmaçyalı', 'Expert', 'Optimix'];
+
 const BRAND_CHIPS: Record<string, string> = {
     'Dalmaçyalı': 'PREMIUM',
     'Expert':     'Endüstriyel',
@@ -104,21 +107,23 @@ export function WizardStep1({
                 </div>
             </div>
 
-            {/* Marka — 4. marka (Bonus) aktifken 2×2, üç markada tek satır */}
+            {/* Marka — 4 marka: masaüstünde tek sıra, mobilde 2×2.
+                Sıra WIZARD_BRAND_ORDER'dan gelir (Bonus önde). */}
             <div className="mb-5">
                 <label className="block text-sm font-semibold text-white mb-3">Levha Markası</label>
                 <div className={`grid gap-3 ${
-                    brands.filter(b => ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name)).length >= 4
+                    brands.filter(b => WIZARD_BRAND_ORDER.includes(b.name)).length >= 4
                         ? 'grid-cols-2 sm:grid-cols-4'
                         : 'grid-cols-3'
                 }`}>
-                    {brands
-                        .filter(b => ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name))
+                    {WIZARD_BRAND_ORDER
+                        .map(name => brands.find(b => b.name === name))
+                        .filter((b): b is NonNullable<typeof b> => b != null)
                         .map(brand => (
                             <button
                                 key={brand.id}
                                 onClick={() => setSelectedBrandId(brand.id)}
-                                className={`relative p-2 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center min-h-[5.5rem] bg-fe-bg/40 ${
+                                className={`brand-card relative p-2 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center min-h-[5.5rem] ${
                                     selectedBrandId === brand.id
                                         ? "border-brand-500 ring-2 ring-brand-500/20"
                                         : "border-fe-border hover:border-fe-muted/50"

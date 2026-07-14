@@ -219,3 +219,19 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 2. **Kırmızı versiyon (`bonus-logo-red.svg`, açık zemin):** PDF teklifin "Seçilen Sistem" alanı — yalnız Bonus tekliflerinde görünür, diğer markalar etkilenmez.
 3. **Yol üstü düzeltme:** PDF sistem tanımındaki model tekrarı ("Bonus F 150 F 150") giderildi — plateBrandName zaten model içeriyor; tüm markaları etkileyen kozmetik bug'dı.
 4. Kanıt: 278 unit + 14/14 E2E + build/copy-gate temiz; PDF, mock API ile canlıya kayıt atmadan üretilip görsel doğrulandı (kırmızı logo + düzgün metin), wizard/şerit ekran görüntüleri koyu zeminde beyaz logoyla kontrol edildi.
+
+---
+
+## 2026-07-14 — Wizard: Bonus önde + varsayılan seçili + marka kartı shimmer
+
+1. **Sıra ve varsayılan (Emrah kararı):** Marka butonları `WIZARD_BRAND_ORDER` ile diziliyor (Bonus → Dalmaçyalı → Expert → Optimix); varsayılan seçili marka Bonus (aktif levhası yoksa Dalmaçyalı'ya düşer, malzeme-uyum effect'i korunuyor). PDP prefill üstünlüğü değişmedi (`prev ??` kuralı).
+2. **Görsel:** `.brand-card` — radyal ışık degradesi + 5,5 sn'de bir shimmer süpürmesi (globals.css); `prefers-reduced-motion`'da süpürme kapalı, degrade kalır.
+3. **UX kapısı:** Bonus + İstanbul/Kocaeli'de yaka/bölge seçilmeden "Metraj Gir" aktif olmaz — fiyat aşamasındaki alert'e düşme senaryosu kapandı (fail-closed, satır içi).
+
+### Korunan dosya değişikliği gerekçesi
+
+`critical-quote-flows.spec.ts` (kilitli) helper'ı varsayılan markayla akıyordu; varsayılan Bonus olunca Dalmaçyalı sayılarıyla kurgulanmış akış kırıldı. Testin kabul niyeti (atomik teklif kaydı + idempotency + capability) DEĞİŞMEDİ; helper artık markayı açıkça seçiyor (`Dalmaçyalı` tıklaması eklendi) ve gelecekteki varsayılan değişimlerinden bağımsız. Kilit hash'i bu gerekçeyle güncellendi; diğer 7 dosya aynen doğrulandı.
+
+### Kanıt
+
+278 unit + 14/14 E2E + build/copy-gate temiz + kabul kilidi geçti. Ekran görüntüleri: masaüstü tek sıra (Bonus seçili, F 150 otomatik), mobil 2×2, degrade/shimmer görünür.

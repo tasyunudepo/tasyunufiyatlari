@@ -234,7 +234,13 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         switch (activeStep) {
             case 1: return selectedBrandId != null;
             case 2: return !!selectedKalinlik;
-            case 3: return selectedCityCode != null;
+            case 3: {
+                if (selectedCityCode == null) return false;
+                // Bonus'ta İstanbul/Kocaeli fiyatı yaka/bölge seçimine bağlıdır;
+                // seçim yapılmadan metraj adımına geçilmez (alert yerine kapı).
+                if (isBonusSelected && citySubRegionQuestion(selectedCityCode) && !citySubRegion) return false;
+                return true;
+            }
             case 4: {
                 if (!metraj || Number(metraj) <= 0) return false;
                 const m2 = Number(metraj);
@@ -498,11 +504,14 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             if (logisticsRes.data) setLogisticsCapacity(logisticsRes.data);
 
             if (brandsRes.data) {
-                const dalmacyali = brandsRes.data.find((b: Brand) => b.name === 'Dalmaçyalı');
-                // Varsayılan marka yalnız henüz seçim yokken atanır; koşulsuz
+                // Varsayılan marka Bonus (Emrah, 14 Temmuz 2026); Bonus aktif
+                // değilse Dalmaçyalı. Yalnız henüz seçim yokken atanır; koşulsuz
                 // atama, PDP prefill'inin (situationPreset) seçtiği markayı
-                // geç gelen fetch'in ezmesine yol açıyordu.
-                if (dalmacyali) setSelectedBrandId(prev => prev ?? dalmacyali.id);
+                // geç gelen fetch'in ezmesine yol açıyordu. Bonus'un aktif
+                // levhası yoksa malzeme-uyum effect'i Dalmaçyalı'ya düşürür.
+                const defaultBrand = brandsRes.data.find((b: Brand) => b.name === 'Bonus')
+                    ?? brandsRes.data.find((b: Brand) => b.name === 'Dalmaçyalı');
+                if (defaultBrand) setSelectedBrandId(prev => prev ?? defaultBrand.id);
             }
         }
         fetchData();

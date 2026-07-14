@@ -26,6 +26,42 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Wizard marka kartı — hafif gradyan zemin + shimmer süpürmesi ──
+   Düz siyah zemin kartları görünmez kılıyordu; yumuşak ışık degradesi
+   ve seyrek parlaklık süpürmesi kartları belirginleştirir.
+   prefers-reduced-motion'da süpürme kapanır, degrade kalır. */
+@keyframes brand-shimmer {
+  0%        { transform: translateX(-180%) skewX(-18deg); }
+  55%, 100% { transform: translateX(340%) skewX(-18deg); }
+}
+.brand-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(130% 100% at 50% 0%,
+      rgba(255, 255, 255, 0.075),
+      rgba(255, 255, 255, 0.025) 55%,
+      rgba(212, 170, 84, 0.07) 100%);
+}
+.brand-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(100deg,
+    transparent,
+    rgba(255, 255, 255, 0.09),
+    transparent);
+  transform: translateX(-180%) skewX(-18deg);
+  animation: brand-shimmer 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-card::after { animation: none; opacity: 0; }
+}
+
 @theme inline {
   --animate-spin-slow: spin-slow 3s linear infinite;
   --animate-spin-slower: spin-slower 6s linear infinite;
