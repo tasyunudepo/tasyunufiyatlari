@@ -29,6 +29,18 @@ const MALZEME_CHIPS: Record<'tasyunu' | 'eps', string> = {
 // Wizard'da gösterilen markalar ve buton sırası (Bonus önde — Emrah, 14 Temmuz 2026)
 const WIZARD_BRAND_ORDER: readonly string[] = ['Bonus', 'Dalmaçyalı', 'Expert', 'Optimix'];
 
+// Kart sunumu (Emrah, 14 Temmuz 2026): Bonus/Dalmaçyalı'da logo konuşur —
+// isim görünmez (ekran okuyucu + test metni için sr-only kalır). Expert ve
+// Optimix ikisi de Fawori logosu taşıdığından ayırt edici olan İSİMDİR:
+// logo küçük ve soluk, isim tipografik olarak önde.
+const BRAND_DISPLAY: Record<string, { logoClass: string; visibleName: boolean }> = {
+    'Bonus':      { logoClass: 'h-10', visibleName: false },
+    'Dalmaçyalı': { logoClass: 'h-10', visibleName: false },
+    'Expert':     { logoClass: 'h-4 opacity-70', visibleName: true },
+    'Optimix':    { logoClass: 'h-4 opacity-70', visibleName: true },
+};
+const DEFAULT_BRAND_DISPLAY = { logoClass: 'h-7', visibleName: true };
+
 const BRAND_CHIPS: Record<string, string> = {
     'Dalmaçyalı': 'PREMIUM',
     'Expert':     'Endüstriyel',
@@ -119,22 +131,28 @@ export function WizardStep1({
                     {WIZARD_BRAND_ORDER
                         .map(name => brands.find(b => b.name === name))
                         .filter((b): b is NonNullable<typeof b> => b != null)
-                        .map(brand => (
+                        .map(brand => {
+                            const display = BRAND_DISPLAY[brand.name] ?? DEFAULT_BRAND_DISPLAY;
+                            return (
                             <button
                                 key={brand.id}
                                 onClick={() => setSelectedBrandId(brand.id)}
-                                className={`brand-card relative p-2 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center min-h-[5.5rem] ${
+                                className={`brand-card relative p-1.5 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center min-h-[5.5rem] ${
                                     selectedBrandId === brand.id
                                         ? "border-brand-500 ring-2 ring-brand-500/20"
                                         : "border-fe-border hover:border-fe-muted/50"
                                 }`}
                             >
                                 {MARKA_LOGOLARI[brand.name] ? (
-                                    <img src={MARKA_LOGOLARI[brand.name]} alt={brand.name} className="h-7 w-auto object-contain" />
+                                    <img src={MARKA_LOGOLARI[brand.name]} alt={brand.name} className={`${display.logoClass} w-auto object-contain`} />
                                 ) : (
                                     <span className="font-bold text-white text-sm">{brand.name}</span>
                                 )}
-                                <span className="mt-0.5 text-[11px] font-semibold text-fe-text">{brand.name}</span>
+                                {display.visibleName ? (
+                                    <span className="mt-1 text-sm font-bold text-white">{brand.name}</span>
+                                ) : (
+                                    <span className="sr-only">{brand.name}</span>
+                                )}
                                 {BRAND_CHIPS[brand.name] && (
                                     <span className="mt-1 inline-block rounded-full bg-brand/12 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-brand leading-snug whitespace-nowrap">
                                         {BRAND_CHIPS[brand.name]}
@@ -148,7 +166,8 @@ export function WizardStep1({
                                     </div>
                                 )}
                             </button>
-                        ))}
+                            );
+                        })}
                 </div>
             </div>
 
