@@ -31,6 +31,7 @@ import { getPriceDisplay } from "@/lib/catalog/decision";
 import SepetUI, { type SepetState } from "./SepetUI";
 import SingleProductQuoteButton from "./SingleProductQuoteButton";
 import WizardLinkButton from "./WizardLinkButton";
+import BonusRegionPrice from "./BonusRegionPrice";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 interface ShippingZone {
@@ -279,6 +280,10 @@ export default function ProductPricePanel({
   const showTierPrice =
     rules.pricing_visibility_mode === "from_price" ||
     rules.pricing_visibility_mode === "exact_price";
+
+  // Bonus levhası: fiyat sunucudan bölgeye göre gelir (Faz 2 canlı fiyat).
+  // Genel plate_prices/logistics hesapları Bonus'a uygulanmaz.
+  const isBonusPlate = product.product_type === "plate" && product.brand?.name === "Bonus";
 
   const showSepet =
     showTierPrice &&
@@ -583,6 +588,18 @@ export default function ProductPricePanel({
           </div>
         )}
 
+        {/* ─── Bonus canlı bölge fiyatı (Faz 2) ─── */}
+        {isBonusPlate && zone && product.model && (
+          <div className="mb-4">
+            <BonusRegionPrice
+              modelShortName={product.model}
+              thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
+              cityCode={zone.city_code}
+              cityName={zone.city_name}
+            />
+          </div>
+        )}
+
         {/* ─── SepetUI ─── */}
         {showSepet && lorryM2 !== null && truckM2 !== null && (
           <SepetUI
@@ -843,10 +860,12 @@ export default function ProductPricePanel({
       {(rules.requires_system_context || rules.sales_mode !== "single_only") && (
         <div className="rounded-xl border border-brand-500/30 bg-brand-950/20 p-5">
           <p className="mb-1 text-sm font-semibold leading-snug text-fe-text">
-            Sistem halinde %10-15 daha uygun
+            {isBonusPlate ? "Komple set fiyatı hesaplayıcıda" : "Sistem halinde %10-15 daha uygun"}
           </p>
           <p className="mb-4 text-xs text-fe-muted">
-            Dübel · Sıva · File eklenince metrekare maliyeti düşer. Takım fiyatını hesapla.
+            {isBonusPlate
+              ? "Levha + toz grubu (yapıştırıcı, sıva, dübel, file…) komple set fiyatını bölgenize göre üç paket seçeneğiyle hesaplayın."
+              : "Dübel · Sıva · File eklenince metrekare maliyeti düşer. Takım fiyatını hesapla."}
           </p>
           <WizardLinkButton
             prefill={prefill}

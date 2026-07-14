@@ -191,3 +191,22 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 - Faz 2: PDP'de bölge seçici + canlı bölge fiyatı (`/api/bonus-price`, istemci fetch — SSG bozulmaz).
 - PDP'lerde "Sistem halinde %10-15 daha uygun" bandı genel şablon metni; Bonus için ayrıca doğrulanmadı (düşük risk, Faz 2'de gözden geçirilecek).
 - PDP'de yapılandırılmış teknik tablo yok (açıklama metniyle veriliyor); karşılaştırma sayfası işiyle (P1) birlikte ele alınacak.
+
+---
+
+## 2026-07-14 — Bonus PDP Faz 2: canlı bölge fiyatı
+
+### Yapılanlar
+
+1. **`BonusRegionPrice` bileşeni:** PDP fiyat panelinde şehir seçimine bağlı canlı levha m² fiyatı. İstanbul/Kocaeli'de yaka/Gebze sorusu sorulur (fail-closed: seçim yapılmadan fiyat gösterilmez); fiyat tarayıcıdan `/api/bonus-price` ile çekilir — sunucuda hesaplanır, taban/iskonto/marj istemciye inmez. Kalınlık çipi ve şehir değişiminde fiyat reaktif güncellenir. Sayfa SSG kalır (revalidate yok, Vercel read artmaz).
+2. **"%10-15 daha uygun" bandı:** Bonus'ta doğrulanmamış iddia — Bonus PDP'lerinde nötr metinle değiştirildi ("Komple set fiyatı hesaplayıcıda"); diğer markalarda aynen duruyor.
+3. Panel kalınlık kaynağı düzeltmesi: Bonus'ta (thickness_prices yok) canlı fiyat bileşeni `effectiveThickness` (interaktif çip seçimi) kullanır; ilk sürümde statik prop okunuyor, çip değişimi fiyata yansımıyordu — lokalde yakalanıp düzeltildi.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | 37 dosya / 278 test + typecheck |
+| `npx playwright test` | 14/14 — `catalog-bonus-pdp.spec.ts` genişletildi: yaka sorusu → Avrupa → 370,03 golden fiyat, KDV hariç etiketi, %10-15 iddiasının yokluğu |
+| Lokal akış (Playwright) | İstanbul yaka sorusu ✓, Avrupa 370,03 ✓, Ankara doğrudan fiyat ✓, 8 cm reaktif ✓, konsol temiz |
+| Build + copy-gate + kabul kilidi | 329 HTML temiz, kilit 8 dosya geçti |
