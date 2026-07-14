@@ -43,20 +43,31 @@ interface BonusRegionPriceProps {
   cityName: string;
 }
 
+// Alt bölgeli şehirlerde ilk seçenek varsayılan gelir (İstanbul → Avrupa
+// Yakası, Kocaeli → Gebze): fiyat beklemeden görünür, tek tıkla değişir.
+function defaultSubChoice(cityCode: number): BonusSubRegionChoice | null {
+  const info = citySubRegionQuestion(cityCode);
+  if (!info) return null;
+  const keys = Object.keys(info.options) as BonusSubRegionChoice[];
+  return keys[0] ?? null;
+}
+
 export default function BonusRegionPrice({
   modelShortName,
   thicknessCm,
   cityCode,
   cityName,
 }: BonusRegionPriceProps) {
-  const [subChoice, setSubChoice] = useState<BonusSubRegionChoice | null>(null);
+  const [subChoice, setSubChoice] = useState<BonusSubRegionChoice | null>(
+    () => defaultSubChoice(cityCode),
+  );
   const [state, setState] = useState<FetchState>({ status: "idle" });
 
   const subInfo = citySubRegionQuestion(cityCode);
 
-  // Şehir değişince eski yaka/bölge seçimi geçersizleşir.
+  // Şehir değişince o şehrin varsayılan yaka/bölge seçimine dön.
   useEffect(() => {
-    setSubChoice(null);
+    setSubChoice(defaultSubChoice(cityCode));
   }, [cityCode]);
 
   useEffect(() => {
@@ -129,8 +140,8 @@ export default function BonusRegionPrice({
         <div className="mb-3">
           <p className="mb-1.5 text-xs text-fe-muted">
             {subInfo.question === "yaka"
-              ? "Fiyat yakaya göre değişir; teslimat yakasını seçin:"
-              : "Fiyat bölgeye göre değişir; teslimat bölgesini seçin:"}
+              ? "Fiyat yakaya göre değişir — teslimat yakası:"
+              : "Fiyat bölgeye göre değişir — teslimat bölgesi:"}
           </p>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(subInfo.options) as BonusSubRegionChoice[]).map((choice) => (

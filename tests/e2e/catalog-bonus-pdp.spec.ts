@@ -23,14 +23,15 @@ test.describe('Bonus katalog PDP', () => {
     expect(await page.getByText('15 cm', { exact: true }).count()).toBeGreaterThan(0)
     await expect(page.getByText('14 cm', { exact: true })).toHaveCount(0)
 
-    // Faz 2 — canlı bölge fiyatı: İstanbul varsayılanında yaka sorusu,
-    // seçim sonrası sunucudan gelen satış fiyatı (5 cm golden: 370,03).
+    // Faz 2 — canlı bölge fiyatı: İstanbul'da Avrupa Yakası varsayılan
+    // seçili gelir, fiyat beklemeden görünür (5 cm golden: 370,03).
     const priceBox = page.getByTestId('bonus-region-price')
     await expect(priceBox).toBeVisible()
-    await expect(priceBox.getByText(/teslimat yakasını seçin/)).toBeVisible()
-    await priceBox.getByRole('button', { name: 'Avrupa Yakası' }).click()
     await expect(priceBox.getByText('370,03')).toBeVisible({ timeout: 15_000 })
     await expect(priceBox.getByText('KDV hariç', { exact: false })).toBeVisible()
+    // Yaka değişince fiyat bölgeye göre güncellenir (Anadolu → 2. bölge).
+    await priceBox.getByRole('button', { name: 'Anadolu Yakası' }).click()
+    await expect(priceBox.getByText('359,37')).toBeVisible({ timeout: 15_000 })
 
     // Bonus'ta doğrulanmamış "%10-15" iddiası görünmez.
     await expect(page.getByText('%10-15')).toHaveCount(0)
