@@ -347,3 +347,31 @@ export function notifySituationSelected(p: SituationSelectedPayload): void {
     situation_label: p.situationLabel,
   });
 }
+
+// ─── 5. Bonus Meydan Okuma (Sprint 1 — ölçüm sözleşmesi) ─────────────
+// docs/verification/OLCUM-SOZLESMESI.md rezerve olay adları. Kişisel
+// veri taşımaz; yalnız yüzey, rakip ürün ve gerçek hesap farkı.
+const GA_EVENT_BONUS_CHALLENGE_SHOWN  = 'Bonus_Meydan_Okuma_Gosterildi';
+const GA_EVENT_BONUS_CHALLENGE_PICKED = 'Bonus_Karsilastirmadan_Secildi';
+
+export type BonusChallengeSurface = 'wizard_result' | 'pdp' | 'anasayfa';
+
+export interface BonusChallengePayload {
+  surface: BonusChallengeSurface;
+  rakip_marka?: string | null;
+  rakip_model?: string | null;
+  bonus_model?: string | null;
+  /** m² başına gerçek hesap farkı (KDV hariç); yalnız hesaplandıysa */
+  unit_diff_tl?: number | null;
+  city_code?: number | null;
+  thickness_cm?: number | null;
+  result_session_id?: string | null;
+}
+
+export function notifyBonusChallengeShown(p: BonusChallengePayload): void {
+  emit(GA_EVENT_BONUS_CHALLENGE_SHOWN, { ...p });
+}
+
+export function notifyBonusChallengePicked(p: BonusChallengePayload): void {
+  emit(GA_EVENT_BONUS_CHALLENGE_PICKED, { ...p });
+}

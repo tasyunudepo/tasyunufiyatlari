@@ -32,6 +32,7 @@ import SepetUI, { type SepetState } from "./SepetUI";
 import SingleProductQuoteButton from "./SingleProductQuoteButton";
 import WizardLinkButton from "./WizardLinkButton";
 import BonusRegionPrice from "./BonusRegionPrice";
+import BonusAlternativeCard from "./BonusAlternativeCard";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 interface ShippingZone {
@@ -596,6 +597,22 @@ export default function ProductPricePanel({
               thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
               cityCode={zone.city_code}
               cityName={zone.city_name}
+            />
+          </div>
+        )}
+
+        {/* ─── Bonus alternatif kartı (Sprint 1.3) — Filli grubu taşyünü
+            levhalarında; rakip eşleşmesi teknik profillerden gelir, profili
+            olmayan (çatı/endüstriyel) ürünlerde kart kendiliğinden çıkmaz. */}
+        {!isBonusPlate && product.product_type === "plate" && product.material_type === "tasyunu" && zone && product.model && (
+          <div className="mb-4">
+            <BonusAlternativeCard
+              sourceModel={product.model}
+              sourceBrandName={product.brand?.name ?? ""}
+              thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
+              cityCode={zone.city_code}
+              cityName={zone.city_name}
+              currentUnitPriceExVat={truckPrice}
             />
           </div>
         )}

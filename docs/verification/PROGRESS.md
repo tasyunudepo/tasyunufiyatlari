@@ -257,3 +257,30 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 | Build + copy-gate | 329 HTML temiz (proje yasakları aktif) |
 | Kabul kilidi | 8 dosya geçti |
 | v22 canlı doğrulama | 6 kolon + 2 kısıt + 1 trigger; trigger canlı kayıtta çalıştı |
+
+---
+
+## 2026-07-14 — Sprint 1: Bonus Meydan Okuma yüzeyleri
+
+### Yapılanlar
+
+1. **1.1 Hakem çekirdeği** (`lib/pricing/comparison/bonusChallenge.ts`): rakip eşleştirme teknik profillerin yoğunluk bandından (HD150→F 150, SW035/TR7.5→F 120; profili olmayan çatı/endüstriyel ürünler otomatik dışarıda); fark yalnız aynı şehir+yaka+kalınlık+toz grubu+kapsam+KDV koşulunda ve Bonus gerçekten düşükse üretilir (fail-closed, "özür kartı yok"). Fiyat verisi taşımaz. 11 unit test.
+2. **1.2 Wizard meydan okuma kartı:** Filli grubu sonucunun altında — Bonus rakip set (aynı Optimix tozuyla) m² fiyatı + m² farkı + Bonus'un kendi tam araç siparişi ve toplamı + koşul satırı. İstanbul/Kocaeli'de önce yaka/bölge sorar (fail-closed). "Bonus ile hesapla" mevcut prefill hattıyla akışı Bonus'a çevirir (metraj Bonus tam aracına çekilir, yaka taşınır).
+3. **1.3 Filli PDP alternatif kartı** (`BonusAlternativeCard`): iki levha m² fiyatı yan yana (Filli tarafı tam araç istemci hesabı, Bonus tarafı sunucu bölge fiyatı), fark rozeti yalnız Bonus düşükse, yaka seçici, föy etiketli yoğunluk; CTA hesaplayıcıya Bonus prefill.
+4. **1.4 Bonus PDP araç toplamları:** bölge fiyat kutusuna 1 Kamyon / 1 TIR levha toplamları — paket katına oturtulmuş metrajla, wizard/PDF ile kuruşu kuruşuna aynı (`buildBonusPlateOrder`).
+5. **1.5 Ana sayfa bandı** (`BonusChallengeBanner`): hero altı, rakamsız/iddiasız metin; buton hesaplayıcıyı Bonus F 150 seçili açar.
+6. **Ölçüm:** sözleşmedeki rezerve adlar bağlandı — `Bonus_Meydan_Okuma_Gosterildi` / `Bonus_Karsilastirmadan_Secildi` (surface, rakip, bonus_model, unit_diff_tl, result_session_id).
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | 39 dosya / 292 test + typecheck |
+| `npx playwright test` | 18/18 — yeni `bonus-challenge.spec.ts` (4 senaryo: Ankara kartı+geçiş, İstanbul yaka fail-closed, PDP kartı+köprü, ana sayfa bandı) |
+| Build + copy-gate + kabul kilidi | 329 HTML temiz; kilit 8 dosya |
+| Lokal akış (Playwright) | 5 yüzey tek turda; konsol hatasız. Örnek gerçek fark: Ankara/SW035 5cm → Bonus F 120 495,39 ₺/m², 34,47 ₺/m² düşük; PDP HD150 → F 150 8,87 ₺/m² |
+
+### Kalan işler (Sprint 1 kapsam dışı)
+
+- Karşılaştırma merkezi sayfaları (Sprint 2) — PDP kartındaki "Karşılaştır" bağlantısı şimdilik hesaplayıcıya gidiyor.
+- Meydan okuma kartının PDF/WhatsApp teklif çıktısına yansıması yok (bilinçli: teklif her zaman seçilen markadan).

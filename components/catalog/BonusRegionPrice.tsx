@@ -5,6 +5,7 @@ import {
   citySubRegionQuestion,
   type BonusSubRegionChoice,
 } from "@/lib/pricing/bonus/subRegions";
+import { buildBonusPlateOrder } from "@/lib/pricing/bonus/packageAssembly";
 
 // ============================================================
 // Bonus PDP canlı bölge fiyatı (Faz 2)
@@ -33,7 +34,7 @@ interface BonusPriceResponse {
 
 type FetchState =
   | { status: "idle" | "loading" }
-  | { status: "ok"; data: Required<Pick<BonusPriceResponse, "salePricePerM2" | "kamyonM2" | "tirM2">> }
+  | { status: "ok"; data: Required<Pick<BonusPriceResponse, "salePricePerM2" | "kamyonM2" | "tirM2" | "packageM2">> }
   | { status: "error"; reason: string };
 
 interface BonusRegionPriceProps {
@@ -45,7 +46,7 @@ interface BonusRegionPriceProps {
 
 // Alt bölgeli şehirlerde ilk seçenek varsayılan gelir (İstanbul → Avrupa
 // Yakası, Kocaeli → Gebze): fiyat beklemeden görünür, tek tıkla değişir.
-function defaultSubChoice(cityCode: number): BonusSubRegionChoice | null {
+export function defaultSubChoice(cityCode: number): BonusSubRegionChoice | null {
   const info = citySubRegionQuestion(cityCode);
   if (!info) return null;
   const keys = Object.keys(info.options) as BonusSubRegionChoice[];
@@ -99,7 +100,8 @@ export default function BonusRegionPrice({
           json?.ok &&
           typeof json.salePricePerM2 === "number" &&
           typeof json.kamyonM2 === "number" &&
-          typeof json.tirM2 === "number"
+          typeof json.tirM2 === "number" &&
+          typeof json.packageM2 === "number"
         ) {
           setState({
             status: "ok",
@@ -107,6 +109,7 @@ export default function BonusRegionPrice({
               salePricePerM2: json.salePricePerM2,
               kamyonM2: json.kamyonM2,
               tirM2: json.tirM2,
+              packageM2: json.packageM2,
             },
           });
         } else {
@@ -180,10 +183,41 @@ export default function BonusRegionPrice({
             KDV hariç · {modelShortName} · {thicknessCm} cm · {cityName}
             {subLabel} teslim
           </p>
+
+          {/* Araç toplamları (Sprint 1.4): müşteri sayfadan ayrılmadan
+              cebinden çıkacak gerçek tutarı görür. Metrajlar paket katına
+              oturtulur — wizard/PDF ile kuruşu kuruşuna aynı hesap. */}
+          {(() => {
+            const kamyon = buildBonusPlateOrder(
+              { salePricePerM2: state.data.salePricePerM2, packageM2: state.data.packageM2 },
+              state.data.kamyonM2,
+            );
+            const tir = buildBonusPlateOrder(
+              { salePricePerM2: state.data.salePricePerM2, packageM2: state.data.packageM2 },
+              state.data.tirM2,
+            );
+            if (!kamyon || !tir) return null;
+            return (
+              <div className="mt-3 space-y-1.5 rounded-lg border border-fe-border/60 bg-fe-bg/40 p-2.5">
+                <div className="flex items-baseline justify-between gap-2 text-sm">
+                  <span className="text-fe-muted">1 Kamyon · {fmt(kamyon.orderM2, 1)} m²</span>
+                  <span className="font-bold tabular-nums text-white">{fmt(kamyon.totalExVat)} ₺</span>
+                </div>
+                <div className="flex items-baseline justify-between gap-2 text-sm">
+                  <span className="text-fe-muted">1 TIR · {fmt(tir.orderM2, 1)} m²</span>
+                  <span className="font-bold tabular-nums text-white">{fmt(tir.totalExVat)} ₺</span>
+                </div>
+                <p className="text-[10px] leading-snug text-fe-muted">
+                  Levha toplamı · KDV hariç · nakliye fiyata dahil
+                </p>
+              </div>
+            );
+          })()}
+
           <p className="mt-2 text-[11px] leading-relaxed text-fe-muted">
-            Tam kamyon ({fmt(state.data.kamyonM2, 1)} m²) veya tam TIR ({fmt(state.data.tirM2, 1)} m²)
-            sevkiyatında nakliye fiyata dahildir; ara metraja teklif oluşturulmaz.
-            Toz grubu dahil komple set fiyatı hesaplayıcıdadır.
+            Sevkiyat tam kamyon / tam TIR veya kombinasyonuyla yapılır; ara
+            metraja teklif oluşturulmaz. Toz grubu dahil komple set fiyatı
+            hesaplayıcıdadır.
           </p>
         </div>
       )}

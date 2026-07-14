@@ -16,6 +16,7 @@ import { SituationSelector } from '@/components/cro/SituationSelector';
 import { RiskMistakesBlock } from '@/components/cro/RiskMistakesBlock';
 import { ProofBlock } from '@/components/cro/ProofBlock';
 import { BrandStrip } from '@/components/cro/BrandStrip';
+import BonusChallengeBanner from '@/components/cro/BonusChallengeBanner';
 import { Truck, Package, Check, ArrowRight, Star } from "@phosphor-icons/react";
 import { ICON_WEIGHT } from "@/lib/design/tokens";
 import { BUSINESS_INFO, WHATSAPP_URL } from "@/lib/business/info";
@@ -199,6 +200,7 @@ export default function Home() {
             </section>
 
             <TrustStrip />
+            <BonusChallengeBanner />
             <SituationSelector />
 
             {/* WIZARD CALCULATOR — id form kartına atandı (WizardCalculator içinde) */}

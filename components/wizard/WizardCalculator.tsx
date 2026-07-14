@@ -13,6 +13,8 @@ import {
   notifyWizardResultCtaClick,
   notifyWizardResultFormOpen,
   notifyWizardResultFormError,
+  notifyBonusChallengeShown,
+  notifyBonusChallengePicked,
   type WizardResultCtaLocation,
 } from "@/lib/notifyWizardEvent";
 import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
@@ -25,6 +27,12 @@ import { WizardStep2 } from "@/components/wizard/WizardStep2";
 import { WizardStep3 } from "@/components/wizard/WizardStep3";
 import { citySubRegionQuestion, type BonusSubRegionChoice } from "@/lib/pricing/bonus/subRegions";
 import { buildBonusPlateOrder } from "@/lib/pricing/bonus/packageAssembly";
+import {
+    getBonusChallengerModel,
+    buildBonusChallenge,
+    sameConditionLabel,
+    type BonusChallengeResult,
+} from "@/lib/pricing/comparison/bonusChallenge";
 import { WizardStep4 } from "@/components/wizard/WizardStep4";
 import {
     getOfferValidityDate,
@@ -58,6 +66,26 @@ import type {
 
 // Kuruş hassasiyetinde yuvarlama (floating-point hataları önlemek için)
 const roundToKurus = (value: number): number => Math.round(value * 100) / 100;
+
+// ─── Bonus meydan okuma kartı durumu (Sprint 1.2) ───────────────────
+// Kart, Filli grubu sonucunun altında yalnız hakem kuralları sağlanırsa
+// görünür: aynı şehir/yaka/kalınlık/toz grubu, fark gerçek hesaptan ve
+// Bonus gerçekten düşükse. İstanbul/Kocaeli'de önce yaka/bölge sorulur.
+interface ChallengeContext {
+    userNeedM2: number;
+    challengerModel: string;
+    rivalBrandName: string;
+    rivalModel: string;
+    currentUnit: number;
+    currentOrderM2: number;
+    currentTotal: number;
+    thicknessCm: number;
+    cityCode: number;
+}
+type BonusChallengeCardState =
+    | { status: 'hidden' }
+    | { status: 'need_sub'; context: ChallengeContext; options: BonusSubRegionChoice[] }
+    | { status: 'ready'; context: ChallengeContext; sub: BonusSubRegionChoice | null; result: BonusChallengeResult };
 const formatCurrency = (value: number): string =>
     value.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
 const formatM2 = (value: number): string =>
@@ -1311,8 +1339,178 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         }
     };
 
+    // ─── Bonus meydan okuma (Sprint 1.2) ─────────────────────────────
+    const [bonusChallenge, setBonusChallenge] = useState<BonusChallengeCardState>({ status: 'hidden' });
+    const [pendingBonusRun, setPendingBonusRun] = useState<string | null>(null);
+    const challengeRunRef = useRef(0);
+
+    const finalizeBonusChallenge = async (context: ChallengeContext, sub: BonusSubRegionChoice | null) => {
+        const runId = ++challengeRunRef.current;
+        try {
+            const params = new URLSearchParams({
+                model: context.challengerModel,
+                thicknessCm: String(context.thicknessCm),
+                cityCode: String(context.cityCode),
+            });
+            if (sub) params.set('sub', sub);
+            const res = await fetch(`/api/bonus-price?${params.toString()}`);
+            const json = await res.json().catch(() => null);
+            if (challengeRunRef.current !== runId) return;
+            if (!res.ok || !json?.ok || !(json.packageM2 > 0)) {
+                setBonusChallenge({ status: 'hidden' });
+                return;
+            }
+
+            // Bonus tarafının siparişi: müşterinin ihtiyacını karşılayan en
+            // küçük Bonus tam araç kombinasyonu (kendi kapasiteleriyle).
+            const pkgM2 = json.packageM2;
+            const bonusLog: LogisticsCapacity = {
+                thickness: context.thicknessCm * 10,
+                items_per_package: json.packagePieces ?? 0,
+                package_size_m2: pkgM2,
+                lorry_capacity_m2: json.kamyonM2,
+                truck_capacity_m2: json.tirM2,
+                lorry_capacity_packages: Math.max(1, Math.round(json.kamyonM2 / pkgM2)),
+                truck_capacity_packages: Math.max(1, Math.round(json.tirM2 / pkgM2)),
+                is_popular: false,
+                notes: null,
+            };
+            const coveringOptions = getValidFullVehicleOptions(context.userNeedM2, bonusLog)
+                .filter(o => o.m2 >= context.userNeedM2 - 0.05);
+            const targetM2 = coveringOptions.length
+                ? Math.min(...coveringOptions.map(o => o.m2))
+                : bonusLog.lorry_capacity_m2;
+            const order = buildBonusPlateOrder(
+                { salePricePerM2: json.salePricePerM2, packageM2: pkgM2 },
+                targetM2,
+            );
+            const matType = materialTypes.find(m => m.slug === 'tasyunu');
+            const marginPct = order ? selectMarginPct(matType, order.orderM2) : null;
+            const bonusBrand = brands.find(b => b.name === 'Bonus');
+            const bonusDef = bonusBrand
+                ? packageDefinitions.find(pd =>
+                    pd.plate_brand_id === bonusBrand.id &&
+                    brands.find(b => b.id === pd.accessory_brand_id)?.name === 'Optimix')
+                : null;
+            if (!order || marginPct === null || !bonusDef) {
+                setBonusChallenge({ status: 'hidden' });
+                return;
+            }
+
+            const acc = buildAccessoryItemsForDefinition(bonusDef, order.orderM2, marginPct, 'Bonus');
+            const bonusTotal = roundToKurus(order.totalExVat + acc.totalCost);
+            const bonusUnit = roundToKurus(bonusTotal / order.orderM2);
+
+            const result = buildBonusChallenge(
+                {
+                    pricePerM2ExVat: context.currentUnit,
+                    orderM2: context.currentOrderM2,
+                    totalExVat: context.currentTotal,
+                    thicknessCm: context.thicknessCm,
+                    cityCode: context.cityCode,
+                    subChoice: sub,
+                    accessoryBrandName: 'Optimix',
+                },
+                {
+                    pricePerM2ExVat: bonusUnit,
+                    orderM2: order.orderM2,
+                    totalExVat: bonusTotal,
+                    thicknessCm: context.thicknessCm,
+                    cityCode: context.cityCode,
+                    subChoice: sub,
+                    accessoryBrandName: 'Optimix',
+                },
+            );
+            if (challengeRunRef.current !== runId) return;
+            if (!result) {
+                setBonusChallenge({ status: 'hidden' });
+                return;
+            }
+            setBonusChallenge({ status: 'ready', context, sub, result });
+            notifyBonusChallengeShown({
+                surface: 'wizard_result',
+                rakip_marka: context.rivalBrandName,
+                rakip_model: context.rivalModel,
+                bonus_model: context.challengerModel,
+                unit_diff_tl: result.unitDiffTL,
+                city_code: context.cityCode,
+                thickness_cm: context.thicknessCm,
+                result_session_id: resultSessionId || null,
+            });
+        } catch {
+            if (challengeRunRef.current === runId) setBonusChallenge({ status: 'hidden' });
+        }
+    };
+
+    const prepareBonusChallenge = (calculated: CalculatedPackage[], userNeedM2: number) => {
+        setBonusChallenge({ status: 'hidden' });
+        if (selectedMalzeme !== 'tasyunu') return;
+        const rival = brands.find(b => b.id === selectedBrandId);
+        if (!rival || rival.name === 'Bonus' || !selectedModel || !selectedCityCode) return;
+        const challengerModel = getBonusChallengerModel(selectedModel);
+        if (!challengerModel) return;
+        // Aynı toz grubu şartı: kıyas iki tarafta da Optimix tozlu paketle.
+        const currentPkg = calculated.find(p => p.accessoryBrandName === 'Optimix');
+        if (!currentPkg?.logistics) return;
+        const context: ChallengeContext = {
+            userNeedM2,
+            challengerModel,
+            rivalBrandName: rival.name,
+            rivalModel: selectedModel,
+            currentUnit: currentPkg.pricePerM2,
+            currentOrderM2: roundToKurus(currentPkg.logistics.packageCount * currentPkg.logistics.packageSizeM2),
+            currentTotal: currentPkg.grandTotal,
+            thicknessCm: parseInt(selectedKalinlik) || 0,
+            cityCode: selectedCityCode,
+        };
+        const subInfo = citySubRegionQuestion(selectedCityCode);
+        if (subInfo) {
+            setBonusChallenge({
+                status: 'need_sub',
+                context,
+                options: Object.keys(subInfo.options) as BonusSubRegionChoice[],
+            });
+            return;
+        }
+        void finalizeBonusChallenge(context, null);
+    };
+
+    // "Bonus ile hesapla": mevcut prefill hattını (pendingBrandModel) kullanır;
+    // metraj Bonus'un kendi tam araç siparişine çekilir, yaka seçimi taşınır.
+    const handleChallengePick = () => {
+        if (bonusChallenge.status !== 'ready') return;
+        notifyBonusChallengePicked({
+            surface: 'wizard_result',
+            rakip_marka: bonusChallenge.context.rivalBrandName,
+            rakip_model: bonusChallenge.context.rivalModel,
+            bonus_model: bonusChallenge.context.challengerModel,
+            unit_diff_tl: bonusChallenge.result.unitDiffTL,
+            city_code: bonusChallenge.context.cityCode,
+            thickness_cm: bonusChallenge.context.thicknessCm,
+            result_session_id: resultSessionId || null,
+        });
+        if (bonusChallenge.sub) setCitySubRegion(bonusChallenge.sub);
+        setMetraj(String(bonusChallenge.result.bonusOrderM2));
+        setPendingBrandModel({
+            brandName: 'Bonus',
+            modelShortName: bonusChallenge.context.challengerModel,
+        });
+        setPendingBonusRun(bonusChallenge.context.challengerModel);
+    };
+
+    useEffect(() => {
+        if (!pendingBonusRun) return;
+        if (pendingBrandModel) return; // marka/model henüz uygulanmadı
+        if (!isBonusSelected || selectedModel !== pendingBonusRun) return;
+        setPendingBonusRun(null);
+        void handleShowPrices();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingBonusRun, pendingBrandModel, isBonusSelected, selectedModel]);
+
     // Fiyatları Göster
     const handleShowPrices = async () => {
+        setBonusChallenge({ status: 'hidden' });
+        challengeRunRef.current++;
         const brandForFlow = brands.find(b => b.id === selectedBrandId);
         if (brandForFlow?.name === 'Bonus') {
             await handleShowBonusPrices();
@@ -1593,6 +1791,10 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             recommended_package_name: recommended?.definition.name ?? null,
             result_session_id:      nextResultSessionId,
         });
+
+        // Bonus meydan okuma kartı (Sprint 1.2) — sonuçlar ekrana düştükten
+        // sonra arka planda hesaplanır; koşullar sağlanmazsa hiç görünmez.
+        prepareBonusChallenge(calculated, m2UserInput);
 
         setTimeout(() => {
             resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2205,6 +2407,81 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                 />
                             ))}
                         </div>
+
+                        {/* ─── Bonus meydan okuma kartı (Sprint 1.2) ─── */}
+                        {bonusChallenge.status !== 'hidden' && (
+                            <div
+                                className="mx-auto mt-8 max-w-3xl rounded-2xl border border-brand-500/40 bg-brand-950/20 p-5"
+                                data-testid="bonus-challenge-card"
+                            >
+                                <p className="mb-1 font-heading text-lg font-bold text-white">
+                                    Aynı koşullarda Bonus&apos;a da baktınız mı?
+                                </p>
+
+                                {bonusChallenge.status === 'need_sub' && (
+                                    <div>
+                                        <p className="mb-2 text-sm text-fe-muted">
+                                            Bonus fiyatı {citySubRegionQuestion(bonusChallenge.context.cityCode)?.question === 'yaka'
+                                                ? 'yakaya' : 'bölgeye'} göre değişir — teslimat {citySubRegionQuestion(bonusChallenge.context.cityCode)?.question === 'yaka' ? 'yakanızı' : 'bölgenizi'} seçin, farkı gerçek hesapla gösterelim:
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {bonusChallenge.options.map((choice) => (
+                                                <button
+                                                    key={choice}
+                                                    type="button"
+                                                    onClick={() => void finalizeBonusChallenge(bonusChallenge.context, choice)}
+                                                    className="cursor-pointer rounded-lg border border-fe-border bg-fe-raised/60 px-3 py-1.5 text-sm font-medium text-fe-text transition-colors hover:border-brand-500/40"
+                                                >
+                                                    {choice === 'avrupa' ? 'Avrupa Yakası'
+                                                        : choice === 'anadolu' ? 'Anadolu Yakası'
+                                                        : choice === 'gebze' ? 'Gebze'
+                                                        : 'Merkez ve diğer ilçeler'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {bonusChallenge.status === 'ready' && (
+                                    <div aria-live="polite">
+                                        <p className="text-sm text-fe-text">
+                                            Bonus {bonusChallenge.context.challengerModel} + Optimix toz grubu komple set:{' '}
+                                            <span className="font-bold tabular-nums text-white">
+                                                {bonusChallenge.result.bonusPricePerM2.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺/m²
+                                            </span>{' '}
+                                            — seçiminizden{' '}
+                                            <span className="font-bold tabular-nums text-emerald-300">
+                                                {bonusChallenge.result.unitDiffTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺/m² daha düşük
+                                            </span>
+                                        </p>
+                                        <p className="mt-1 text-sm text-fe-muted">
+                                            Bonus siparişi:{' '}
+                                            <span className="tabular-nums">{bonusChallenge.result.bonusOrderM2.toLocaleString('tr-TR')} m²</span>{' '}
+                                            → <span className="font-semibold tabular-nums text-white">{bonusChallenge.result.bonusTotalExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>{' '}
+                                            (KDV hariç)
+                                        </p>
+                                        <p className="mt-2 text-[11px] leading-snug text-fe-muted">
+                                            {sameConditionLabel({
+                                                cityName: shippingZones.find(z => z.city_code === bonusChallenge.context.cityCode)?.city_name ?? '',
+                                                subLabel: bonusChallenge.sub === 'avrupa' ? 'Avrupa Yakası'
+                                                    : bonusChallenge.sub === 'anadolu' ? 'Anadolu Yakası'
+                                                    : bonusChallenge.sub === 'gebze' ? 'Gebze'
+                                                    : bonusChallenge.sub === 'diger' ? 'Merkez ve diğer ilçeler'
+                                                    : null,
+                                                thicknessCm: bonusChallenge.context.thicknessCm,
+                                            })} · fark gerçek hesap sonucudur
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={handleChallengePick}
+                                            className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-[#1a0f08] transition-colors hover:bg-brand-400 sm:w-auto"
+                                        >
+                                            Bonus {bonusChallenge.context.challengerModel} ile hesapla →
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </section>
             )}

@@ -28,7 +28,7 @@ test.describe('Bonus katalog PDP', () => {
     const priceBox = page.getByTestId('bonus-region-price')
     await expect(priceBox).toBeVisible()
     await expect(priceBox.getByText('370,03')).toBeVisible({ timeout: 15_000 })
-    await expect(priceBox.getByText('KDV hariç', { exact: false })).toBeVisible()
+    await expect(priceBox.getByText('KDV hariç', { exact: false }).first()).toBeVisible()
     // Yaka değişince fiyat bölgeye göre güncellenir (Anadolu → 2. bölge).
     await priceBox.getByRole('button', { name: 'Anadolu Yakası' }).click()
     await expect(priceBox.getByText('359,37')).toBeVisible({ timeout: 15_000 })
