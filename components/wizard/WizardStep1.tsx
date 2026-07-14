@@ -109,7 +109,7 @@ export function WizardStep1({
                 <label className="block text-sm font-semibold text-white mb-3">Levha Markası</label>
                 <div className={`grid gap-3 ${
                     brands.filter(b => ['Dalmaçyalı', 'Expert', 'Optimix', 'Bonus'].includes(b.name)).length >= 4
-                        ? 'grid-cols-2'
+                        ? 'grid-cols-2 sm:grid-cols-4'
                         : 'grid-cols-3'
                 }`}>
                     {brands
