@@ -8,7 +8,7 @@ import { devtools, persist } from 'zustand/middleware';
 // Niyet kartı (SituationSelector) → wizard preset eşleşmesi
 // SituationSelector seçildiğinde set edilir, WizardCalculator mount edildiğinde
 // consumeSituationPreset() ile bir kez okunup temizlenir.
-export type SituationPresetKey = 'isi_yalitimi' | 'ses_yalitimi' | 'cati_yalitimi';
+export type SituationPresetKey = 'isi_yalitimi' | 'ses_yalitimi' | 'cati_yalitimi' | 'urun_sayfasi';
 
 export interface SituationPreset {
   key: SituationPresetKey;
@@ -66,6 +66,11 @@ interface WizardState {
 
   // ----- Niyet preseti -----
   setSituationPreset: (key: SituationPresetKey) => void;
+  // Ürün sayfasından (PDP) gelen doğrudan prefill — WizardCalculator'ın
+  // tükettiği TEK köprü situationPreset'tir; markaId/modelAdi alanlarını
+  // hesaplayıcı okumaz (WizardLinkButton geçmişte oraya yazdığı için
+  // PDP prefill'i sessizce çalışmıyordu).
+  setProductPreset: (preset: Omit<SituationPreset, 'key'>) => void;
   consumeSituationPreset: () => SituationPreset | null;
 }
 
@@ -252,6 +257,15 @@ export const useWizardStore = create<WizardState>()(
             'setSituationPreset'
           );
         },
+
+        setProductPreset: (preset) =>
+          set(
+            {
+              situationPreset: { key: 'urun_sayfasi', ...preset },
+            },
+            false,
+            'setProductPreset'
+          ),
 
         consumeSituationPreset: () => {
           const current = get().situationPreset;

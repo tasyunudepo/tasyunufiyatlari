@@ -164,3 +164,30 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 | Unit + kontrat | `npm run verify:fast` | 37 dosya / 278 test + typecheck geçti |
 | E2E | Bonus akışı (2 test) + kilitli `quote-flows` (5 test) | 7/7 geçti; yeni: EPS'te Bonus listelenmez, geçişte akış tıkanmaz |
 | Kilitli test dosyaları | değiştirilmedi | Bonus senaryoları AYRI dosyada (`quotes-route-bonus`) |
+
+---
+
+## 2026-07-14 — Bonus PDP entegrasyonu (Faz 1, fiyatsız) + prefill köprüsü onarımı
+
+### Yapılanlar
+
+1. **Görseller:** bonusyalitim.com.tr resmî Premium F ailesi render'ı (1000×1000 webp) üç slug adıyla `product-images` bucket'ına yüklendi (üretici üç varyantı tek görselle sunuyor; Emrah onayı).
+2. **Migration v21 (canlıda):** 3 Bonus levhasına slug + `quote_only`/`quote_required`/`requires_city_for_pricing` + föy-kaynaklı SEO meta ve katalog açıklaması + görsel. Kalınlıklar üretici listesiyle hizalandı: F 150 Pro'dan listede olmayan 3 cm çıktı (fiyat API'si 404 veriyordu), üç ürüne listede olan 15 cm eklendi (wizard'ı da düzeltir).
+3. **Faz 1 fiyatsız (Emrah kararı):** PDP fiyat kutusu "Teklif ile belirlenir"; fiyat yolu wizard CTA'sı. Faz 2'de PDP'ye bölge seçici + canlı /api/bonus-price gelecek.
+4. **Prefill köprüsü onarımı (site geneli bug):** `WizardLinkButton` store'un hiçbir bileşen tarafından okunmayan `markaId/modelAdi` alanlarına yazıyordu → PDP→wizard prefill TÜM ürünlerde sessizce çalışmıyordu. Yeni `setProductPreset` aksiyonu hesaplayıcının tükettiği `situationPreset` köprüsüne yazar. İkinci kök neden: `fetchData` varsayılan markayı koşulsuz atıyordu ve geç gelen fetch preset seçimini eziyordu → varsayılan artık yalnız seçim yokken atanır (`prev ?? dalmacyali.id`).
+
+### Kanıt
+
+| Kontrol | Komut | Sonuç |
+|---|---|---|
+| Unit + kontrat | `npm run verify:fast` | 37 dosya / 278 test + typecheck geçti |
+| E2E (tam paket) | `npx playwright test` | 14/14 (yeni `catalog-bonus-pdp.spec.ts`: içerik + fiyatsızlık + 15cm/14cm hizası + prefill köprüsü Bonus+F 150 açıyor) |
+| Build + copy-gate | `npm run build` + copy-gate | 329 HTML temiz; 3 PDP + kalınlık sayfaları SSG üretildi |
+| Görsel doğrulama | Playwright ekran görüntüleri (PDP, kategori, prefill) | Konsol hatası yok; kategoride 3 Bonus kartı "Teklif" rozetiyle |
+| Canlı DB durumu | v21 sonrası salt-okunur sorgu | 3 slug, kalınlık adetleri 13/8/12, görseller bağlı |
+
+### Kalan işler
+
+- Faz 2: PDP'de bölge seçici + canlı bölge fiyatı (`/api/bonus-price`, istemci fetch — SSG bozulmaz).
+- PDP'lerde "Sistem halinde %10-15 daha uygun" bandı genel şablon metni; Bonus için ayrıca doğrulanmadı (düşük risk, Faz 2'de gözden geçirilecek).
+- PDP'de yapılandırılmış teknik tablo yok (açıklama metniyle veriliyor); karşılaştırma sayfası işiyle (P1) birlikte ele alınacak.

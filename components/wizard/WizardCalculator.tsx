@@ -499,7 +499,10 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
             if (brandsRes.data) {
                 const dalmacyali = brandsRes.data.find((b: Brand) => b.name === 'Dalmaçyalı');
-                if (dalmacyali) setSelectedBrandId(dalmacyali.id);
+                // Varsayılan marka yalnız henüz seçim yokken atanır; koşulsuz
+                // atama, PDP prefill'inin (situationPreset) seçtiği markayı
+                // geç gelen fetch'in ezmesine yol açıyordu.
+                if (dalmacyali) setSelectedBrandId(prev => prev ?? dalmacyali.id);
             }
         }
         fetchData();

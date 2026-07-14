@@ -30,12 +30,16 @@ export default function WizardLinkButton({
   const store  = useWizardStore();
 
   function handleClick() {
-    if (prefill) {
+    // WizardCalculator yalnız situationPreset köprüsünü tüketir;
+    // markaId/modelAdi alanlarına yazmak prefill'i sessizce kaybettirir.
+    if (prefill && prefill.levhaTipi) {
       store.reset();
-      if (prefill.levhaTipi)                        store.setLevhaTipi(prefill.levhaTipi);
-      if (prefill.markaId !== null && prefill.markaAdi) store.setMarka(prefill.markaId, prefill.markaAdi);
-      if (prefill.modelId !== null && prefill.modelAdi) store.setModel(prefill.modelId, prefill.modelAdi);
-      if (prefill.kalinlik !== null)                 store.setKalinlik(prefill.kalinlik);
+      store.setProductPreset({
+        material: prefill.levhaTipi,
+        thicknessCm: prefill.kalinlik ?? 5,
+        brandName: prefill.markaAdi ?? undefined,
+        modelShortName: prefill.modelAdi ?? undefined,
+      });
       if (targetStep === 2 && prefill.markaId !== null) store.goToStep(2);
     }
     router.push('/');
