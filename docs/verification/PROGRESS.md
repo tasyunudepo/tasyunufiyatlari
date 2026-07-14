@@ -141,3 +141,26 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 - Bonus E2E kartlarda kalem birim fiyatı göremez (kart yalnız ad+miktar basar); çifte marj kilidi unit + kod yolu tekliği ile sağlanıyor.
 - `bonus-karsilastirma-fikir-turlari.md` karar bölümüne revizyon notu eklendi; karşılaştırma/SEO sayfaları (P1 kalan kalem) hâlâ açık.
 - Aksesuar seçimi artık deterministik (id sırası) ama "en ucuz uygun ürün" gibi açık bir kural değil; ürün ekleme sırası değişirse gözden geçirilmeli.
+
+---
+
+## 2026-07-14 — Bonus teklif kaydı 400 uyarısı + EPS'te Bonus sızıntısı
+
+### Kök nedenler
+
+1. **"Taşyünü teklifi yalnız tam Kamyon..." uyarısı (PDF indikten sonra):** PDF tarayıcıda teklif kaydından ÖNCE iniyor; `/api/quotes` tam araç doğrulamasını genel `logistics_capacity` kaydıyla yapıyordu. Bonus'un kamyonu (F 150/5 cm: 967,7 m²) genel gride uymadığından kayıt 400 dönüyor, istemci alert gösteriyordu — PDF inmiş, kayıt oluşmamış oluyordu.
+2. **EPS'te Bonus markası:** marka listesi malzeme tipine bakmıyordu; Bonus'un EPS ürünü olmadığından seçilince akış modelsiz tıkanıyordu.
+
+### Düzeltmeler
+
+1. `/api/quotes`: `brandName === 'Bonus'` ise kapasite `computeBonusCapacity`'den (model+kalınlık); genel `logistics_capacity` HİÇ sorgulanmaz. Kapasite çözülemezse fail-closed 400 ("Bonus araç kapasitesi doğrulanamadı"). `vehicleType` minimum metraj baremi de aynı kaynaktan.
+2. Wizard: `wizardSelectableBrands` malzeme tipine duyarlı — Bonus yalnız seçili malzemede aktif levhası varsa listelenir; Bonus seçiliyken EPS'e geçilirse seçim Dalmaçyalı'ya döner (tıkanma yok).
+
+### Kanıt
+
+| Kontrol | Komut | Sonuç |
+|---|---|---|
+| Yeni route testleri | `tests/api/quotes-route-bonus.integration.test.ts` | 4/4: tam kamyon/TIR kabul (genel lojistik sorgulanmadan), ara metraj 400 + RPC yan etkisiz, bilinmeyen kalınlık fail-closed |
+| Unit + kontrat | `npm run verify:fast` | 37 dosya / 278 test + typecheck geçti |
+| E2E | Bonus akışı (2 test) + kilitli `quote-flows` (5 test) | 7/7 geçti; yeni: EPS'te Bonus listelenmez, geçişte akış tıkanmaz |
+| Kilitli test dosyaları | değiştirilmedi | Bonus senaryoları AYRI dosyada (`quotes-route-bonus`) |

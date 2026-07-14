@@ -21,6 +21,7 @@ import {
   isValidFullVehicleArea,
   validateMinimumOrder,
 } from '@/lib/pricing/commercialRules'
+import { computeBonusCapacity } from '@/lib/pricing/bonus/sale'
 
 export const runtime = 'nodejs'
 
@@ -158,24 +159,57 @@ export async function POST(req: NextRequest) {
         && (payload.vehicleType === 'lorry' || payload.vehicleType === 'truck')
       )
     ) {
-      const thicknessMm = payload.thicknessCm * 10
-      const { data: logRow, error: logisticsError } = await supabase
-        .from('logistics_capacity')
-        .select('lorry_capacity_m2, truck_capacity_m2, package_size_m2')
-        .eq('thickness', thicknessMm)
-        .single()
+      // Bonus'un kamyon/TIR kapasiteleri üreticinin kendi bölge listesinden
+      // gelir; genel logistics_capacity kaydı Bonus metrajını yanlış reddeder
+      // (örn. F 150 / 5 cm kamyonu 967,7 m²'dir). Bonus'ta kendi kapasitesi,
+      // diğer markalarda genel kayıt kullanılır.
+      let lorryCapacityM2: number
+      let truckCapacityM2: number
+      let packageSizeM2: number
 
-      if (logisticsError) {
-        console.error('[quotes] Lojistik kuralı okunamadı:', logisticsError.message)
-        return configurationErrorResponse()
+      if (payload.brandName === 'Bonus') {
+        const capacity = payload.modelName
+          ? computeBonusCapacity({
+              modelShortName: payload.modelName,
+              thicknessCm: payload.thicknessCm,
+            })
+          : null
+        if (!capacity || !capacity.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: 'Bonus araç kapasitesi doğrulanamadı. Lütfen model ve kalınlık seçiminizi kontrol edin.',
+            },
+            { status: 400 },
+          )
+        }
+        lorryCapacityM2 = capacity.kamyonM2
+        truckCapacityM2 = capacity.tirM2
+        packageSizeM2 = capacity.packageM2
+      } else {
+        const thicknessMm = payload.thicknessCm * 10
+        const { data: logRow, error: logisticsError } = await supabase
+          .from('logistics_capacity')
+          .select('lorry_capacity_m2, truck_capacity_m2, package_size_m2')
+          .eq('thickness', thicknessMm)
+          .single()
+
+        if (logisticsError) {
+          console.error('[quotes] Lojistik kuralı okunamadı:', logisticsError.message)
+          return configurationErrorResponse()
+        }
+
+        lorryCapacityM2 = Number(logRow.lorry_capacity_m2)
+        truckCapacityM2 = Number(logRow.truck_capacity_m2)
+        packageSizeM2 = Number(logRow.package_size_m2)
       }
 
       if (materialRule.full_vehicle_only) {
         const isValidVehicleArea = isValidFullVehicleArea({
           areaM2: payload.areaM2,
-          lorryCapacityM2: Number(logRow.lorry_capacity_m2),
-          truckCapacityM2: Number(logRow.truck_capacity_m2),
-          packageSizeM2: Number(logRow.package_size_m2),
+          lorryCapacityM2,
+          truckCapacityM2,
+          packageSizeM2,
         })
         if (!isValidVehicleArea) {
           return NextResponse.json(
@@ -189,9 +223,9 @@ export async function POST(req: NextRequest) {
       }
 
       const minM2 = payload.vehicleType === 'lorry'
-        ? Number(logRow.lorry_capacity_m2)
+        ? lorryCapacityM2
         : payload.vehicleType === 'truck'
-          ? Number(logRow.truck_capacity_m2)
+          ? truckCapacityM2
           : null
       if (minM2 !== null && (!Number.isFinite(minM2) || payload.areaM2 < minM2)) {
         return NextResponse.json(

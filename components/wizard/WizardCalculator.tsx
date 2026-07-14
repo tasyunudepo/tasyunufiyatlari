@@ -205,12 +205,30 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         };
     }, [isBonusSelected, bonusCapacity, selectedKalinlik]);
 
-    // Bonus butonu yalnız canlıda AKTİF Bonus levhası varken görünür:
-    // migration uygulanmış ama aktivasyon yapılmamışken modelsiz marka
-    // butonu göstermeyelim (plates zaten is_active=true ile çekiliyor).
+    // Bonus butonu yalnız canlıda AKTİF ve seçili malzeme tipine uygun
+    // Bonus levhası varken görünür: EPS'te Bonus ürünü yok, marka listesine
+    // düşerse akış modelsiz tıkanır (plates zaten is_active=true ile çekilir).
+    const activeMaterialTypeIdForBrands = materialTypes.find(m => m.slug === selectedMalzeme)?.id;
     const wizardSelectableBrands = brands.filter(
-        b => b.name !== 'Bonus' || plates.some(p => p.brand_id === b.id),
+        b => b.name !== 'Bonus' || plates.some(p =>
+            p.brand_id === b.id
+            && (activeMaterialTypeIdForBrands == null || p.material_type_id === activeMaterialTypeIdForBrands)
+        ),
     );
+
+    // Bonus seçiliyken malzeme EPS'e çevrilirse seçim geçersizleşir;
+    // varsayılan markaya (Dalmaçyalı) dön ki akış tıkanmasın.
+    useEffect(() => {
+        if (!isBonusSelected || activeMaterialTypeIdForBrands == null) return;
+        const bonusHasPlatesForMaterial = plates.some(
+            p => p.brand_id === selectedBrandId
+                && p.material_type_id === activeMaterialTypeIdForBrands,
+        );
+        if (bonusHasPlatesForMaterial) return;
+        const fallback = brands.find(b => b.name === 'Dalmaçyalı')
+            ?? brands.find(b => b.name !== 'Bonus');
+        setSelectedBrandId(fallback?.id ?? null);
+    }, [isBonusSelected, activeMaterialTypeIdForBrands, plates, brands, selectedBrandId]);
 
     const isCurrentStepValid = (): boolean => {
         switch (activeStep) {

@@ -67,4 +67,32 @@ test.describe('Bonus harman paket teklifi', () => {
     expect(json.ok).toBe(true)
     expect(json.salePricePerM2).toBe(370.03)
   })
+
+  test('EPS seçiminde Bonus listelenmez; Bonus seçiliyken EPS\'e geçiş akışı tıkamaz', async ({ page }) => {
+    await page.goto('/')
+    const wizard = page.locator('#mantolama-hesaplayici')
+
+    await expect(
+      wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first(),
+    ).toBeVisible({ timeout: 20_000 })
+
+    const bonusButton = wizard.locator('button').filter({ hasText: 'Bonus' }).first()
+    if ((await bonusButton.count()) === 0) {
+      test.skip(true, 'Bonus markası canlıda aktif değil.')
+      return
+    }
+
+    // Bonus seçiliyken EPS'e geç: Bonus'un EPS ürünü yok.
+    await bonusButton.click()
+    await wizard.locator('button').filter({ hasText: 'EPS' }).first().click()
+
+    // Bonus butonu marka listesinden kalkar, seçim geçerli markaya döner
+    // ve akış ilerleyebilir (modelsiz tıkanma regresyonu).
+    await expect(wizard.locator('button').filter({ hasText: 'Bonus' })).toHaveCount(0)
+    await expect(wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' })).toBeEnabled()
+
+    // Taşyününe dönünce Bonus tekrar görünür.
+    await wizard.locator('button').filter({ hasText: 'Taşyünü' }).first().click()
+    await expect(wizard.locator('button').filter({ hasText: 'Bonus' }).first()).toBeVisible()
+  })
 })
