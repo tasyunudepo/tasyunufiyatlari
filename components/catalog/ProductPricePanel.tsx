@@ -617,6 +617,18 @@ export default function ProductPricePanel({
           </div>
         )}
 
+        {/* ─── Karşılaştırma merkezi çapraz linki (Sprint 2) ─── */}
+        {product.product_type === "plate" && product.material_type === "tasyunu" && (
+          <p className="mb-4 text-center text-xs">
+            <a
+              href="/tasyunu-karsilastir"
+              className="text-fe-muted underline-offset-2 transition-colors hover:text-brand-300 hover:underline"
+            >
+              Tüm taşyünü levhalarını aynı koşulda karşılaştır →
+            </a>
+          </p>
+        )}
+
         {/* ─── SepetUI ─── */}
         {showSepet && lorryM2 !== null && truckM2 !== null && (
           <SepetUI

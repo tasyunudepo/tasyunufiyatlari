@@ -375,3 +375,13 @@ export function notifyBonusChallengeShown(p: BonusChallengePayload): void {
 export function notifyBonusChallengePicked(p: BonusChallengePayload): void {
   emit(GA_EVENT_BONUS_CHALLENGE_PICKED, { ...p });
 }
+
+// ─── 6. Karşılaştırma Merkezi (Sprint 2) ─────────────────────────────
+const GA_EVENT_COMPARISON_OPENED = 'Karsilastirma_Acildi';
+
+export function notifyComparisonOpened(p: {
+  surface: 'genel' | 'yogunluk_150';
+  urun_sayisi: number;
+}): void {
+  emit(GA_EVENT_COMPARISON_OPENED, { ...p });
+}

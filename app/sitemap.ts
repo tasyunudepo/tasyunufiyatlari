@@ -13,6 +13,8 @@ export const dynamic = 'force-static';
 const STATIC_PATHS = [
   { path: '/',                   priority: 1.0,  changeFrequency: 'weekly' as const },
   { path: '/urunler',            priority: 0.9,  changeFrequency: 'weekly' as const },
+  { path: '/tasyunu-karsilastir', priority: 0.9,  changeFrequency: 'weekly' as const },
+  { path: '/tasyunu-yogunluk/150-kg-m3', priority: 0.8, changeFrequency: 'weekly' as const },
   { path: '/hakkimizda',         priority: 0.7,  changeFrequency: 'monthly' as const },
   { path: '/iletisim',           priority: 0.7,  changeFrequency: 'monthly' as const },
   { path: '/kvkk',               priority: 0.3,  changeFrequency: 'yearly' as const },

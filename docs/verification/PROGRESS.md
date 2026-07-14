@@ -284,3 +284,24 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 
 - Karşılaştırma merkezi sayfaları (Sprint 2) — PDP kartındaki "Karşılaştır" bağlantısı şimdilik hesaplayıcıya gidiyor.
 - Meydan okuma kartının PDF/WhatsApp teklif çıktısına yansıması yok (bilinçli: teklif her zaman seçilen markadan).
+
+---
+
+## 2026-07-14 — Sprint 2: Karşılaştırma Merkezi
+
+### Yapılanlar
+
+1. **`/tasyunu-karsilastir` (SSG):** 8 ürünlük teknik tablo (yoğunluk kaynak etiketli — föy beyanı / "üretici sözlü beyanı — değişken", λD, dik çekme, basma, yangın, kalınlık aralığı; satırlar PDP'lere linkli) + "Aynı koşulda levha fiyatları" bölümü: şehir(+yaka)+kalınlık seçici, 8 ürünün tam araç levha m² fiyatı canlı; koşulu sağlamayan ürün "bu koşulda fiyat yok" (fail-closed). Koşul satırı her zaman görünür.
+2. **`/tasyunu-yogunluk/150-kg-m3` (SSG):** ana tablonun 150 filtresi açık görünümü — föy-beyanlı üç 150'lik (F 150, F 150 Pro, HD150) önce ve vurgulu, diğer beş ürün bağlamda; "150 yoğunluk daha iyi ısı yalıtımı iddiası değildir" + "Pro otomatik üstünlük değildir" nötr metinleri (kilitli karar 3 ve 6).
+3. **Tek kaynaklı fiyat formülü:** `lib/pricing/plateUnitPrice.ts` — tam araç levha m² hesabı saf fonksiyon (fail-closed). Parite kanıtı: HD150 İstanbul 5 cm karşılaştırma sayfasında 378,90 = PDP paneliyle birebir.
+4. **Çapraz linkler + SEO:** taşyünü PDP'lerinde "aynı koşulda karşılaştır" linki; iki rota sitemap'te; meta başlık/açıklama buildMetadata ile.
+5. **Ölçüm:** `Karsilastirma_Acildi` (surface genel/yogunluk_150, urun_sayisi); satır CTA'ları hesaplayıcıya prefill ile gider (Bonus satırlarında `Bonus_Karsilastirmadan_Secildi`).
+6. Fiyat verisi gizliliği değişmedi: Bonus fiyatı sunucudan; Filli formül girdileri zaten anon-görünür katalog verisi; taban/iskonto/marj müşteri yüzeyine yazılmıyor (copy-gate).
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | 40 dosya / 295 test + typecheck |
+| `npx playwright test` | 21/21 (yeni `karsilastirma.spec.ts`: teknik tablo+etiketler, 370,03/378,90 canlı fiyat, kalınlık reaktifliği, 150 sıralaması+nötr uyarı, PDP çapraz link) — ilk koşudaki 8 hata soğuk derleme zaman aşımıydı, ısınmış iki tur art arda yeşil |
+| Build + copy-gate + kabul kilidi | /tasyunu-karsilastir + /tasyunu-yogunluk/150-kg-m3 SSG üretildi; 331 HTML temiz |
