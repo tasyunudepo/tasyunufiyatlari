@@ -1,6 +1,8 @@
 import Image from 'next/image';
 
 const BRANDS = [
+  // Koyu zemin + grayscale filtre: beyaz versiyon (açık zeminde bonus-logo-red.svg)
+  { src: '/images/markalogolar/bonus-logo.svg',                      alt: 'Bonus taşyünü' },
   { src: '/images/markalogolar/Knauf Mineral yünleri.webp',         alt: 'Knauf taşyünü' },
   { src: '/images/markalogolar/Tekno Taşyünü ve EPs Fiyatları.webp', alt: 'Tekno toz grubu ve aksesuar ürünleri' },
   { src: '/images/markalogolar/dalmaçyalı-taşyünü- fiyatları.webp',  alt: 'Dalmaçyalı taşyünü' },
@@ -21,7 +23,7 @@ export function BrandStrip() {
         >
           Çalıştığımız Markalar
         </p>
-        <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 items-center">
+        <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-6 items-center">
           {BRANDS.map((b) => (
             <li key={b.src} className="flex items-center justify-center">
               <Image

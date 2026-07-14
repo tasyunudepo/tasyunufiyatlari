@@ -376,7 +376,13 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
                 </div>
                 <div>
                      <div style="color:${COLORS.slate700};font-size:10px;">Seçilen Sistem</div>
-                     <div style="font-weight:600;color:${COLORS.slate900};">${escapeHtml(data.systemDescription || `${materialLabel} ${data.thickness} cm`)}</div>
+                     <div style="font-weight:600;color:${COLORS.slate900};">${
+                         // Beyaz PDF zemininde markanın kırmızı logosu kullanılır
+                         // (koyu site zemininde beyaz versiyon: bonus-logo.svg).
+                         data.plateBrandName?.startsWith('Bonus')
+                             ? `<img src="/images/markalogolar/bonus-logo-red.svg" style="height:16px;width:auto;vertical-align:middle;margin-right:6px;" onerror="this.style.display='none'" />`
+                             : ''
+                     }${escapeHtml(data.systemDescription || `${materialLabel} ${data.thickness} cm`)}</div>
                 </div>
             </div>
          </div>

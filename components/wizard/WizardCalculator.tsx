@@ -679,7 +679,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             // PDF tarafında birim ekleyip doğru isimlendireceğiz
             thickness: `${selectedKalinlik}`,
             materialType: selectedMalzeme,
-            systemDescription: `${pkg.plateBrandName} ${selectedModel || ''} ${materialLabel} ${selectedKalinlik}cm + ${pkg.accessoryBrandName} Toz Grubu`,
+            // plateBrandName zaten "Marka Model" biçimindedir; modeli tekrar
+            // eklemek "Bonus F 150 F 150" gibi çift yazıma yol açıyordu.
+            systemDescription: `${pkg.plateBrandName} ${materialLabel} ${selectedKalinlik}cm + ${pkg.accessoryBrandName} Toz Grubu`,
             cityName,
             city: customer.city || cityName,
             district: customer.district || "",

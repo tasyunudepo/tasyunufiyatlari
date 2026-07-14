@@ -210,3 +210,12 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 | `npx playwright test` | 14/14 — `catalog-bonus-pdp.spec.ts` genişletildi: yaka sorusu → Avrupa → 370,03 golden fiyat, KDV hariç etiketi, %10-15 iddiasının yokluğu |
 | Lokal akış (Playwright) | İstanbul yaka sorusu ✓, Avrupa 370,03 ✓, Ankara doğrudan fiyat ✓, 8 cm reaktif ✓, konsol temiz |
 | Build + copy-gate + kabul kilidi | 329 HTML temiz, kilit 8 dosya geçti |
+
+---
+
+## 2026-07-14 — Bonus marka logoları (beyaz/kırmızı) ilgili yüzeylere bağlandı
+
+1. **Beyaz versiyon (`bonus-logo.svg`, koyu zemin):** wizard marka butonu (çift "Bonus" metni yerine logo), ana sayfa "Çalıştığımız Markalar" şeridi (grid 6'ya çıkarıldı), BrandTrustLogos (ana sayfa hero rayı + PDP "Bayilikler").
+2. **Kırmızı versiyon (`bonus-logo-red.svg`, açık zemin):** PDF teklifin "Seçilen Sistem" alanı — yalnız Bonus tekliflerinde görünür, diğer markalar etkilenmez.
+3. **Yol üstü düzeltme:** PDF sistem tanımındaki model tekrarı ("Bonus F 150 F 150") giderildi — plateBrandName zaten model içeriyor; tüm markaları etkileyen kozmetik bug'dı.
+4. Kanıt: 278 unit + 14/14 E2E + build/copy-gate temiz; PDF, mock API ile canlıya kayıt atmadan üretilip görsel doğrulandı (kırmızı logo + düzgün metin), wizard/şerit ekran görüntüleri koyu zeminde beyaz logoyla kontrol edildi.

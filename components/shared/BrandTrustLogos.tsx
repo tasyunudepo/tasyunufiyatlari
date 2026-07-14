@@ -21,6 +21,13 @@ const TRUST_BRANDS = [
     width: 112,
     height: 34,
   },
+  {
+    // Koyu zemin için beyaz versiyon (açık zeminde bonus-logo-red.svg).
+    src: '/images/markalogolar/bonus-logo.svg',
+    alt: 'Bonus',
+    width: 90,
+    height: 34,
+  },
 ] as const;
 
 interface BrandTrustLogosProps {

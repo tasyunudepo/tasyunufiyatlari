@@ -7,6 +7,9 @@ import type { Brand } from "@/lib/types";
 import { filterMantolamaWizardModels } from '@/lib/wizard/eligibility';
 
 const MARKA_LOGOLARI: Record<string, string> = {
+    // Bonus: koyu zeminde beyaz versiyon; açık zeminler (PDF vb.) için
+    // bonus-logo-red.svg kullanılır.
+    'Bonus':      '/images/markalogolar/bonus-logo.svg',
     'Dalmaçyalı': '/images/markalogolar/dalmaçyalı-taşyünü- fiyatları.webp',
     'Expert':     '/images/markalogolar/fawori-taşyünü- fiyatları.webp',
     'Optimix':    '/images/markalogolar/fawori-taşyünü- fiyatları.webp',
