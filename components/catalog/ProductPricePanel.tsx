@@ -859,13 +859,14 @@ export default function ProductPricePanel({
       {/* ─── Sistem Teklifi ─── */}
       {(rules.requires_system_context || rules.sales_mode !== "single_only") && (
         <div className="rounded-xl border border-brand-500/30 bg-brand-950/20 p-5">
+          {/* Doğrulanmamış oran iddiası yasak (Sprint 0.2): "%10-15 daha
+              uygun" hiçbir markada kanıtlanmış değildi. Fark iddiası ancak
+              gerçek hesap sonucundan dinamik üretilirse geri gelebilir. */}
           <p className="mb-1 text-sm font-semibold leading-snug text-fe-text">
-            {isBonusPlate ? "Komple set fiyatı hesaplayıcıda" : "Sistem halinde %10-15 daha uygun"}
+            Komple set fiyatı hesaplayıcıda
           </p>
           <p className="mb-4 text-xs text-fe-muted">
-            {isBonusPlate
-              ? "Levha + toz grubu (yapıştırıcı, sıva, dübel, file…) komple set fiyatını bölgenize göre üç paket seçeneğiyle hesaplayın."
-              : "Dübel · Sıva · File eklenince metrekare maliyeti düşer. Takım fiyatını hesapla."}
+            Levha + toz grubu (yapıştırıcı, sıva, dübel, file…) komple set fiyatını bölgenize göre üç paket seçeneğiyle hesaplayın.
           </p>
           <WizardLinkButton
             prefill={prefill}

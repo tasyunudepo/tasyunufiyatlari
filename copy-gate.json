@@ -1,0 +1,12 @@
+{
+  "_aciklama": "Proje-özel müşteri metni yasakları (Sprint 0.2). Doğrulanmamış oran/tasarruf iddiaları müşteri yüzeyine çıkamaz; fark iddiası ancak gerçek hesap sonucundan dinamik üretilir.",
+  "yasakli": [
+    "%10-15 daha uygun",
+    "%10–15 daha uygun",
+    "10-15 daha uygun",
+    "daha ucuz garantisi",
+    "bayi iskonto",
+    "taban fiyat"
+  ],
+  "izinli": []
+}

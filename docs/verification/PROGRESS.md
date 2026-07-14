@@ -235,3 +235,25 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 ### Kanıt
 
 278 unit + 14/14 E2E + build/copy-gate temiz + kabul kilidi geçti. Ekran görüntüleri: masaüstü tek sıra (Bonus seçili, F 150 otomatik), mobil 2×2, degrade/shimmer görünür.
+
+---
+
+## 2026-07-14 — Sprint 0: Kırmızılar + ölçüm sözleşmesi
+
+### Yapılanlar
+
+1. **0.1 WhatsApp izin listesi:** `wizard_result_summary` / `wizard_result_card` kaynakları `/api/whatsapp-intent` izin listesine eklendi — sonuç ekranındaki en yüksek niyetli sinyal artık 400'e düşmüyor. Şemaya `resultSessionId`/`ctaLocation` alanları eklendi (ölçüm zinciri). Yeni test: `tests/api/whatsapp-intent-route.test.ts` (3 senaryo).
+2. **0.2 Doğrulanmamış iddia temizliği:** "Sistem halinde %10-15 daha uygun" TÜM markalarda nötr metinle değiştirildi (yalnız Bonus'ta değildi). Proje köküne `copy-gate.json` eklendi: oran iddiaları + "taban fiyat"/"bayi iskonto" müşteri HTML'inde yasak (build kapısı doğruladı: 6 yasak yüklendi, 329 HTML temiz).
+3. **0.3 Migration v22 (canlıda):** quotes'a satış sonucu alanları — `loss_category` (7 kategorili kısıt), `loss_reason`, `sales_final_price`, `gross_profit`, `quoted_by`, `closed_at`. Durum sözlüğü DB kısıtıyla sabitlendi (pending→contacted→quoted→approved→completed|rejected; completed=KAZANILDI, rejected=KAYBEDİLDİ). Kapanış anı trigger ile otomatik. Admin PATCH tüm alanları kabul ediyor (camelCase→snake_case eşleme). Canlı trigger doğrulaması: kontrollü test kaydı TY5026578 `rejected/diger` olarak kapatıldı, `closed_at` otomatik damgalandı — huniyi kirleten test verisi de temizlenmiş oldu.
+4. **0.4 Ölçüm sözleşmesi:** `docs/verification/OLCUM-SOZLESMESI.md` — ana metrik kazanılmış brüt kâr; olay zinciri, bağ anahtarları (result_session_id/quote_id/quote_code), mevcut GA4 olay eşlemesi, Sprint 1-2 yüzeyleri için rezerve olay adları, gizlilik sınırları, hipotez sözleşmesi şablonu.
+5. **0.5 Admin düzeltmesi:** "Toplam Ciro" → "Toplam Teklif Tutarı (ciro değildir)"; yeni kart "Gerçek Ciro (kazanılan)" = completed kayıtların `sales_final_price ?? total_price` toplamı.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | 38 dosya / 281 test + typecheck |
+| `npx playwright test` | 14/14 |
+| Build + copy-gate | 329 HTML temiz (proje yasakları aktif) |
+| Kabul kilidi | 8 dosya geçti |
+| v22 canlı doğrulama | 6 kolon + 2 kısıt + 1 trigger; trigger canlı kayıtta çalıştı |

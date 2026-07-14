@@ -30,6 +30,10 @@ const ALLOWED_SOURCES: WhatsappSource[] = [
   'header_mobile',
   'header_mobile_topbar',
   'wizard_help_step1',
+  // Sonuç ekranı CTA'ları: en yüksek niyetli sinyaller. Bu ikisi listede
+  // olmadığı için wizard sonuç bildirimleri sessizce 400'e düşüyordu.
+  'wizard_result_summary',
+  'wizard_result_card',
   'footer_link',
   'iletisim_card',
   'depomuz_cta',
@@ -43,6 +47,9 @@ const intentSchema = z.object({
   source: z.enum(ALLOWED_SOURCES as [WhatsappSource, ...WhatsappSource[]]),
   productName: z.string().max(120).optional(),
   page: z.string().max(200).optional(),
+  // Ölçüm sözleşmesi: oturum zinciri alanları (GA4 tarafıyla ortak).
+  resultSessionId: z.string().max(64).optional(),
+  ctaLocation: z.string().max(64).optional(),
 });
 
 export async function POST(req: NextRequest) {

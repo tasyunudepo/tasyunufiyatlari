@@ -221,10 +221,20 @@ export function QuotesTab() {
         uniqueQuoteCities > 1 ? `${uniqueQuoteCities} farklı şehirden talep geldi.` : "Teklifler henüz tek şehirde yoğunlaşıyor.",
     ];
 
+    // Gerçek ciro yalnız KAZANILMIŞ (completed) siparişlerden hesaplanır;
+    // teklif toplamı ciro değildir (ölçüm sözleşmesi, Sprint 0.5).
+    const wonQuotes = quotes.filter((q) => q.status === "completed");
+    const wonRevenue = wonQuotes.reduce(
+        (sum, q) => sum + (Number((q as { sales_final_price?: number | null }).sales_final_price ?? q.total_price) || 0),
+        0,
+    );
+    const fmtCompact = (v: number) =>
+        v >= 1_000_000 ? `₺${(v / 1_000_000).toFixed(2)}M` : v >= 1000 ? `₺${(v / 1000).toFixed(1)}K` : formatCurrency(v);
+
     const kpis = [
         { label: "Toplam Talep", value: String(quoteSummary.total), sub: `Bugün ${todayQuoteCount} yeni`, accent: "from-[rgba(201,168,76,0.16)] to-transparent", border: "border-[rgba(201,168,76,0.24)]", progress: "from-[var(--nx-gold)] to-[rgba(201,168,76,0.58)]", icon: "◈", pct: Math.min(100, quoteSummary.total * 4) },
-        { label: "Bekleyen Kritik", value: String(quoteSummary.pending), sub: quoteSummary.pending > 0 ? `${quoteSummary.pending} teklif yanıt bekliyor` : "Bekleyen talep yok", accent: "from-amber-400/15 to-transparent", border: "border-amber-400/25", progress: "from-amber-300 to-amber-500", icon: "⧖", pct: quoteSummary.total > 0 ? Math.round((quoteSummary.pending / quoteSummary.total) * 100) : 0 },
-        { label: "Toplam Ciro", value: totalQuoteValue >= 1_000_000 ? `₺${(totalQuoteValue / 1_000_000).toFixed(2)}M` : totalQuoteValue >= 1000 ? `₺${(totalQuoteValue / 1000).toFixed(1)}K` : formatCurrency(totalQuoteValue), sub: `Ort. ${formatCurrency(averageQuoteValue)} / teklif`, accent: "from-emerald-400/10 to-transparent", border: "border-emerald-400/20", progress: "from-emerald-300 to-emerald-500", icon: "⬢", pct: 68 },
+        { label: "Toplam Teklif Tutarı", value: fmtCompact(totalQuoteValue), sub: `Ort. ${formatCurrency(averageQuoteValue)} / teklif — ciro değildir`, accent: "from-sky-400/10 to-transparent", border: "border-sky-400/20", progress: "from-sky-300 to-sky-500", icon: "⬢", pct: 68 },
+        { label: "Gerçek Ciro (kazanılan)", value: fmtCompact(wonRevenue), sub: wonQuotes.length > 0 ? `${wonQuotes.length} kazanılmış sipariş` : "Henüz kazanılmış sipariş yok", accent: "from-emerald-400/10 to-transparent", border: "border-emerald-400/20", progress: "from-emerald-300 to-emerald-500", icon: "₺", pct: quoteSummary.total > 0 ? Math.round((wonQuotes.length / quoteSummary.total) * 100) : 0 },
         { label: "Onay Oranı", value: `%${onayOrani}`, sub: `${approvedCount} teklif onaylandı`, accent: "from-emerald-400/10 to-transparent", border: "border-[rgba(92,98,108,0.26)]", progress: "from-emerald-300 to-[var(--nx-gold)]", icon: "✓", pct: onayOrani },
     ];
 
