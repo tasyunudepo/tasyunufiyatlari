@@ -10,6 +10,7 @@ import {
     type QuoteRow,
     type QuoteSeries,
 } from "@/lib/admin/groupQuotesIntoSeries";
+import SalesOutcomePanel, { LOSS_CATEGORY_LABELS } from "./SalesOutcomePanel";
 
 const ofisPanel = "rounded-2xl border border-[var(--nx-border)] bg-[rgba(13,15,18,0.72)] shadow-[0_18px_44px_rgba(0,0,0,0.24)]";
 const ofisInner = "rounded-xl border border-[rgba(92,98,108,0.18)] bg-[rgba(255,255,255,0.025)]";
@@ -33,6 +34,17 @@ type OfficeQuote = QuoteRow & {
     lorry_fill_percentage?: number | null;
     truck_fill_percentage?: number | null;
     customer_address?: string | null;
+    // Satış sonucu alanları (migration v22 — Sprint 0.3/3)
+    contact_attempted_at?: string | null;
+    contact_successful?: boolean | null;
+    follow_up_date?: string | null;
+    admin_notes?: string | null;
+    quoted_by?: string | null;
+    sales_final_price?: number | null;
+    gross_profit?: number | null;
+    loss_category?: string | null;
+    loss_reason?: string | null;
+    closed_at?: string | null;
 };
 
 type QuoteEvent = {
@@ -221,6 +233,27 @@ export function QuotesTab() {
         uniqueQuoteCities > 1 ? `${uniqueQuoteCities} farklı şehirden talep geldi.` : "Teklifler henüz tek şehirde yoğunlaşıyor.",
     ];
 
+    // ─── Satış hunisi (Sprint 3) — ölçüm sözleşmesindeki alt metrikler ───
+    const isOpen = (q: OfficeQuote) => !["completed", "rejected"].includes(q.status ?? "");
+    const contactedQuotes = quotes.filter((q) => q.contact_attempted_at != null);
+    const lostQuotes = quotes.filter((q) => q.status === "rejected");
+    const uncontactedOpen = quotes.filter((q) => isOpen(q) && !q.contact_attempted_at);
+    const avgFirstContactHours = contactedQuotes.length > 0
+        ? Math.round(
+            contactedQuotes.reduce((sum, q) =>
+                sum + (new Date(q.contact_attempted_at as string).getTime() - new Date(q.created_at).getTime()) / 36e5, 0)
+            / contactedQuotes.length)
+        : null;
+    const lossBreakdown = lostQuotes.reduce<Record<string, number>>((acc, q) => {
+        const key = q.loss_category ?? "belirtilmedi";
+        acc[key] = (acc[key] ?? 0) + 1;
+        return acc;
+    }, {});
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const dueFollowUps = quotes
+        .filter((q) => isOpen(q) && q.follow_up_date && q.follow_up_date.slice(0, 10) <= todayStr)
+        .sort((a, b) => (a.follow_up_date ?? "").localeCompare(b.follow_up_date ?? ""));
+
     // Gerçek ciro yalnız KAZANILMIŞ (completed) siparişlerden hesaplanır;
     // teklif toplamı ciro değildir (ölçüm sözleşmesi, Sprint 0.5).
     const wonQuotes = quotes.filter((q) => q.status === "completed");
@@ -293,6 +326,91 @@ export function QuotesTab() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* ─── Satış Hunisi (Sprint 3) ─── */}
+            <div className={`${ofisPanel} p-5`} data-testid="sales-funnel">
+                <div className="mb-4 flex items-center justify-between">
+                    <div>
+                        <div className="text-xs uppercase tracking-[0.28em] text-amber-300/80">Satış Operasyonu</div>
+                        <h2 className="mt-1.5 text-xl font-semibold">Teklif → Temas → Satış hunisi</h2>
+                    </div>
+                    {uncontactedOpen.length > 0 && (
+                        <span className="rounded-full border border-red-400/30 bg-red-400/10 px-3 py-1 text-xs text-red-200">
+                            {uncontactedOpen.length} açık teklif temassız
+                        </span>
+                    )}
+                </div>
+
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+                    {[
+                        { label: "Teklif", value: quotes.length },
+                        { label: "Temas", value: contactedQuotes.length },
+                        { label: "Fiyat verildi", value: quotes.filter((q) => q.status === "quoted").length },
+                        { label: "Teyit", value: quotes.filter((q) => q.status === "approved").length },
+                        { label: "Kazanıldı", value: wonQuotes.length },
+                        { label: "Kaybedildi", value: lostQuotes.length },
+                    ].map((step, i, arr) => (
+                        <div key={step.label} className="flex items-center gap-2">
+                            <div className={`${ofisInner} px-3 py-2 text-center`}>
+                                <div className="text-lg font-semibold text-white tabular-nums">{step.value}</div>
+                                <div className="text-[10px] uppercase tracking-wide text-slate-400">{step.label}</div>
+                            </div>
+                            {i < arr.length - 1 && <span className="text-slate-600">→</span>}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="grid gap-3 text-sm sm:grid-cols-3">
+                    <div className={`${ofisInner} p-3`}>
+                        <div className="text-[10px] uppercase tracking-wide text-slate-400">Ortalama ilk temas</div>
+                        <div className="mt-1 font-semibold text-white">
+                            {avgFirstContactHours != null ? `${avgFirstContactHours} saat` : "veri yok"}
+                        </div>
+                    </div>
+                    <div className={`${ofisInner} p-3`}>
+                        <div className="text-[10px] uppercase tracking-wide text-slate-400">Kazanılan brüt kâr</div>
+                        <div className="mt-1 font-semibold text-emerald-300">
+                            {wonQuotes.reduce((s, q) => s + (Number(q.gross_profit) || 0), 0).toLocaleString("tr-TR")} ₺
+                        </div>
+                    </div>
+                    <div className={`${ofisInner} p-3`}>
+                        <div className="text-[10px] uppercase tracking-wide text-slate-400">Kayıp nedenleri</div>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                            {Object.keys(lossBreakdown).length === 0 && <span className="text-slate-500">henüz yok</span>}
+                            {Object.entries(lossBreakdown).map(([cat, count]) => (
+                                <span key={cat} className="rounded-full border border-red-400/25 bg-red-400/10 px-2 py-0.5 text-[10px] text-red-200">
+                                    {(LOSS_CATEGORY_LABELS[cat] ?? cat)} · {count}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {dueFollowUps.length > 0 && (
+                    <div className="mt-4">
+                        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-300/90">
+                            Bugünkü takipler ({dueFollowUps.length})
+                        </div>
+                        <div className="space-y-2">
+                            {dueFollowUps.map((q) => (
+                                <button
+                                    key={q.id}
+                                    type="button"
+                                    onClick={() => setSelectedQuote(q)}
+                                    className={`${ofisInner} flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-[rgba(255,255,255,0.05)]`}
+                                >
+                                    <span className="min-w-0 truncate text-white">
+                                        {q.customer_name} <span className="text-slate-500">· {q.customer_phone}</span>
+                                    </span>
+                                    <span className="shrink-0 text-xs text-amber-300">
+                                        takip: {new Date(q.follow_up_date as string).toLocaleDateString("tr-TR")}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Teklif Ritmi + Markalar */}
@@ -547,8 +665,29 @@ export function QuotesTab() {
                                                         <div className="mt-1 text-sm text-slate-400 truncate">
                                                             {quote.brand_name || "Marka yok"} • {quote.package_name || "Paket yok"} • {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm}cm • {quote.area_m2} m² • {quote.city_name || "—"}
                                                         </div>
-                                                        <div className="mt-0.5 text-xs text-slate-600">
-                                                            {new Date(quote.created_at).toLocaleDateString("tr-TR")} {new Date(quote.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-600">
+                                                            <span>
+                                                                {new Date(quote.created_at).toLocaleDateString("tr-TR")} {new Date(quote.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                                            </span>
+                                                            {/* Temas SLA rozeti (Sprint 3): açık teklif temassızsa yaşını göster */}
+                                                            {!quote.contact_attempted_at && !["completed", "rejected"].includes(quote.status ?? "") && (() => {
+                                                                const hours = Math.floor((Date.now() - new Date(quote.created_at).getTime()) / 36e5);
+                                                                const label = hours < 48 ? `${hours} saattir temassız` : `${Math.floor(hours / 24)} gündür temassız`;
+                                                                return (
+                                                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                                                                        hours >= 24
+                                                                            ? "border-red-400/40 bg-red-400/10 text-red-300"
+                                                                            : "border-amber-400/40 bg-amber-400/10 text-amber-300"
+                                                                    }`}>
+                                                                        ⏱ {label}
+                                                                    </span>
+                                                                );
+                                                            })()}
+                                                            {quote.status === "completed" && quote.gross_profit != null && (
+                                                                <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                                                                    kâr {Number(quote.gross_profit).toLocaleString("tr-TR")} ₺
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-5 flex-shrink-0">
@@ -689,6 +828,16 @@ export function QuotesTab() {
                                     </div>
                                 </div>
                             )}
+                            {/* Satış Sonucu (Sprint 3): temas, takip, kazanıldı/kaybedildi, brüt kâr */}
+                            <SalesOutcomePanel
+                                quote={selectedQuote}
+                                controlClass={ofisControl}
+                                onSaved={() => {
+                                    void loadQuotes();
+                                    setSelectedQuote(null);
+                                }}
+                            />
+
                             <div className="admin-nexus-subtle p-4">
                                 <h4 className="mb-3 font-semibold text-amber-300">Akış Zaman Çizgisi</h4>
                                 <div className="space-y-3">

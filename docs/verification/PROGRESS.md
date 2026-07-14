@@ -305,3 +305,27 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 | `npm run verify:fast` | 40 dosya / 295 test + typecheck |
 | `npx playwright test` | 21/21 (yeni `karsilastirma.spec.ts`: teknik tablo+etiketler, 370,03/378,90 canlı fiyat, kalınlık reaktifliği, 150 sıralaması+nötr uyarı, PDP çapraz link) — ilk koşudaki 8 hata soğuk derleme zaman aşımıydı, ısınmış iki tur art arda yeşil |
 | Build + copy-gate + kabul kilidi | /tasyunu-karsilastir + /tasyunu-yogunluk/150-kg-m3 SSG üretildi; 331 HTML temiz |
+
+---
+
+## 2026-07-14 — Sprint 3: Satış Operasyon Merkezi
+
+### Yapılanlar
+
+1. **Satış Sonucu paneli** (`app/ofis/tabs/SalesOutcomePanel.tsx`, teklif detayında): "Ulaştım/Ulaşamadım" temas butonları (temas anı + ilk temas süresi otomatik), takip tarihi, ilgilenen kişi, satışçı nihai fiyatı, satış notu; **KAZANILDI** kapanışı brüt kâr girişiyle (boşsa uyarı — ana metrik brüt kâr), **KAYBEDİLDİ** kapanışı zorunlu kayıp kategorisi (7 seçenek) + serbest notla. Kapanmış teklif özet satırıyla gösterilir.
+2. **Temas SLA rozetleri:** listede açık+temassız her teklifte "X saattir/gündür temassız" (24 saat üstü kırmızı); kazanılanlarda kâr rozeti.
+3. **Satış hunisi paneli:** Teklif → Temas → Fiyat verildi → Teyit → Kazanıldı/Kaybedildi adım sayaçları; ortalama ilk temas süresi, kazanılan brüt kâr toplamı, kayıp nedeni dağılımı; "N açık teklif temassız" uyarı rozeti; **Bugünkü takipler** listesi (vadesi gelen follow_up_date → tıkla-aç).
+4. **Test:** `tests/api/admin-quotes-patch.test.ts` — camelCase→snake_case eşleme, kazanıldı/kaybedildi kapanışları, sözlük dışı durum/kategori reddi (4 senaryo).
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | 41 dosya / 299 test + typecheck |
+| `npx playwright test` | 21/21 |
+| Build + copy-gate + kabul kilidi | 331 HTML temiz (satış alanları müşteri yüzeyine sızmıyor) |
+| Görsel (lokal, admin girişiyle) | Huni: 15 teklif → 0 temas → 1 kaybedildi (Diğer·1 = kontrollü test kaydı); "14 açık teklif temassız" rozeti; Satış Sonucu paneli tüm alanlarıyla render |
+
+### Not
+
+Konsoldaki tek 400 dashboard sekmesinden gelen eski bir kaynak isteği; bu sprintten bağımsız, sunucu logunda karşılığı yok (izlemeye alındı).
