@@ -92,7 +92,7 @@ export default function BrandTrustLogos({
           isHero
             ? 'relative flex items-center justify-start gap-x-6 xl:gap-x-8'
             : isHeroRail
-              ? 'grid grid-cols-3 gap-3'
+              ? 'grid grid-cols-4 gap-2.5'
               : 'flex flex-wrap items-center gap-2.5 sm:gap-3.5'
         }
       >
@@ -103,7 +103,7 @@ export default function BrandTrustLogos({
               isHero
                 ? 'flex h-24 min-w-[132px] items-center justify-center rounded-2xl border border-[#caa35a]/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] px-4 opacity-95 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.18)] transition-all duration-200 hover:translate-y-[-1px] hover:border-[#caa35a]/18 hover:opacity-100'
                 : isHeroRail
-                  ? 'flex h-16 items-center justify-center rounded-xl border border-[#caa35a]/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-[#caa35a]/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))]'
+                  ? 'flex h-16 items-center justify-center rounded-xl border border-[#caa35a]/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-[#caa35a]/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))]'
                   : compact
                     ? 'flex h-10 items-center opacity-80 transition-opacity hover:opacity-100'
                     : 'flex h-12 items-center opacity-85 transition-opacity hover:opacity-100'
