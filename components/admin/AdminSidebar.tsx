@@ -1,7 +1,7 @@
 "use client";
 
 import {
-    LayoutDashboard, FileText, DollarSign, Truck, Tag,
+    LayoutDashboard, FileText, Truck, Tag,
     Package, Upload, Settings, Flame, BarChart2, Sliders, Store, FlaskConical,
 } from "lucide-react";
 
@@ -10,7 +10,6 @@ const NAV_ITEMS = [
     { id: "quotes",       label: "Teklifler",         Icon: FileText },
     { id: "experiments",  label: "Satış Deneyleri",   Icon: FlaskConical },
     { id: "analytics",    label: "Talep Analizi",     Icon: BarChart2 },
-    { id: "prices",       label: "Fiyatlar",          Icon: DollarSign },
     { id: "margin-rules", label: "Marj Kuralları",   Icon: Sliders },
     { id: "brands",       label: "Markalar",          Icon: Store },
     { id: "logistics",    label: "Lojistik",          Icon: Truck },

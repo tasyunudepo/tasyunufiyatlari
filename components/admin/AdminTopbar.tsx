@@ -8,7 +8,6 @@ const SECTION_LABELS: Record<string, string> = {
     dashboard:    "Dashboard",
     quotes:       "Teklifler",
     analytics:    "Talep Analizi",
-    prices:       "Fiyatlar",
     logistics:    "Lojistik",
     discounts:    "İskontolar",
     products:     "Ürünler",

@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
 }))
 
+vi.mock('server-only', () => ({}))
 vi.mock('@/lib/supabase-server', () => ({
   createServerSupabaseClient: () => ({
     from: () => ({
@@ -27,10 +28,12 @@ vi.mock('@/lib/supabase-server', () => ({
 
 import { PATCH } from '@/app/api/admin/quotes/[id]/route'
 
+const AUTH = 'Basic ' + Buffer.from('admin:test-sifre-1234').toString('base64')
+
 function request(payload: Record<string, unknown>) {
   return new NextRequest('https://www.tasyunufiyatlari.com/api/admin/quotes/1', {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', authorization: AUTH },
     body: JSON.stringify(payload),
   })
 }
@@ -39,7 +42,22 @@ const params = { params: Promise.resolve({ id: '1' }) }
 
 describe('admin quotes PATCH — satış sonucu alanları', () => {
   beforeEach(() => {
+    process.env.ADMIN_USER = 'admin'
+    process.env.ADMIN_PASSWORD = 'test-sifre-1234'
     mocks.update.mockReset()
+  })
+
+  it('kimliksiz istek 401 ile reddedilir (audit kırmızısı)', async () => {
+    const res = await PATCH(
+      new NextRequest('https://www.tasyunufiyatlari.com/api/admin/quotes/1', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'contacted' }),
+      }),
+      params,
+    )
+    expect(res.status).toBe(401)
+    expect(mocks.update).not.toHaveBeenCalled()
   })
 
   it('kaybedildi kapanışını snake_case alanlara eşler', async () => {

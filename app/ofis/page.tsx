@@ -8,7 +8,6 @@ import { DashboardTab } from "./tabs/DashboardTab";
 import { AnalyticsTab } from "./tabs/AnalyticsTab";
 import { QuotesTab } from "./tabs/QuotesTab";
 import { ExperimentsTab } from "./tabs/ExperimentsTab";
-import { PricesTab } from "./tabs/PricesTab";
 import { LogisticsTab } from "./tabs/LogisticsTab";
 import { DiscountsTab } from "./tabs/DiscountsTab";
 import { ProductsTab } from "./tabs/ProductsTab";
@@ -56,7 +55,6 @@ export default function AdminPanel() {
                     {activeTab === "quotes"        && <QuotesTab />}
                     {activeTab === "experiments"   && <ExperimentsTab />}
                     {activeTab === "analytics"     && <AnalyticsTab />}
-                    {activeTab === "prices"        && <PricesTab />}
                     {activeTab === "margin-rules"  && <MarginRulesTab />}
                     {activeTab === "brands"        && <BrandsTab />}
                     {activeTab === "logistics"     && <LogisticsTab />}

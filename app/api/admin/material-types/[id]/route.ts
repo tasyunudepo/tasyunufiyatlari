@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { requireAdminMutationAuth } from '@/lib/security/adminMutationAuth';
 import { materialTypeRulesSchema } from '@/lib/schemas/materialTypeRules.schema';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +22,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Salt-okunur patron hesabı mutasyon yapamaz (audit kırmızısı, 15 Temmuz).
+  const auth = requireAdminMutationAuth(req);
+  if (!auth.ok) return auth.response;
+
   const { id: rawId } = await params;
   const id = parseInt(rawId, 10);
   if (isNaN(id)) {

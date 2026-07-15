@@ -353,3 +353,12 @@ Konsoldaki tek 400 dashboard sekmesinden gelen eski bir kaynak isteği; bu sprin
 ### İlgili
 
 Admin panel audit raporu ayrı ajanla üretildi (bkz. sohbet, 15 Temmuz) — kırmızılar: 4 mutasyon route'unda handler-seviyesi auth eksik (patron yazabiliyor), PricesTab bayat/işlevsiz. Audit uygulaması ayrı sprint olarak planlanacak.
+
+---
+
+## 2026-07-15 — Admin audit kırmızıları kapatıldı
+
+1. **Handler-seviyesi mutasyon kapısı:** `quotes/[id]` (PATCH+DELETE), `plates/[id]`, `accessories/[id]`, `material-types/[id]` route'larına `requireAdminMutationAuth` eklendi — salt-okunur "patron" hesabı artık teklif silemez, katalog/fiyat verisi değiştiremez (markalar route'uyla aynı sözleşme). Test: kimliksiz PATCH 401 senaryosu eklendi (`admin-quotes-patch.test.ts`, 5/5).
+2. **Fiyatlar sekmesi kaldırıldı:** 404 veren CSV linki, handler'sız "Toplu İşlemler" ve bayat talimatlar içeriyordu; menü (Sidebar+Topbar), page.tsx ve dosya temizlendi. Fiyat güncelleme tek kapıda: Excel Yükle.
+
+Kanıt: 304 unit + typecheck + build/copy-gate/kabul kilidi temiz. Audit'in kalan turuncu/sarıları (menü gruplama, mükerrer fetch/stil, ölü bileşenler) "Admin Yenileme" işi olarak bekliyor.

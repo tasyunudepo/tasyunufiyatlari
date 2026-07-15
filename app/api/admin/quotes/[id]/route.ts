@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { requireAdminMutationAuth } from '@/lib/security/adminMutationAuth'
 
 // Satış sonucu alanları (v22): completed = kazanıldı, rejected = kaybedildi.
 // sales_final_price ve gross_profit ADMIN-ONLY'dir; müşteri yüzeyine çıkmaz.
@@ -46,6 +47,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Salt-okunur patron hesabı mutasyon yapamaz (audit kırmızısı, 15 Temmuz).
+  const auth = requireAdminMutationAuth(req)
+  if (!auth.ok) return auth.response
+
   const { id } = await params
   const quoteId = Number(id)
 
@@ -97,9 +102,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Silme en yıkıcı mutasyon: patron hesabı ve kimliksiz istek giremez.
+  const auth = requireAdminMutationAuth(req)
+  if (!auth.ok) return auth.response
+
   const { id } = await params
   const quoteId = Number(id)
 
