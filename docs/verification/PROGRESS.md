@@ -329,3 +329,27 @@ Tam repo lint bilinçli koşulmadı: 89 hata / 15 uyarı P2 borcu olarak kayıtl
 ### Not
 
 Konsoldaki tek 400 dashboard sekmesinden gelen eski bir kaynak isteği; bu sprintten bağımsız, sunucu logunda karşılığı yok (izlemeye alındı).
+
+---
+
+## 2026-07-15 — Sprint 4A: Satış Hipotez Motoru — gözlem + deney defteri katmanı
+
+### Yapılanlar
+
+1. **Migration v24 değil v23 (canlıda):** `sales_experiments` tablosu — hipotez sözleşmesi alanları (problem/hedef/yüzey/metrik/koruma/karar/sonuç), durum ve karar sözlükleri CHECK'li, RLS açık (anon policy yok). 14 Temmuz yüzeyleri geriye dönük 3 deney olarak tohumlandı (öncesi/sonrası çizgisi bulanıklaşmadan).
+2. **Auth'lu API:** `/api/admin/experiments` (GET: `requireOfficeReadAuth`, POST: `requireAdminMutationAuth`) + `[id]` PATCH — mevcut bazı admin route'larının aksine bilinçli olarak handler seviyesinde kapılı doğdu (audit bulgusuyla uyumlu). 4 senaryolu test: auth reddi, snake_case eşleme, eksik sözleşme reddi, kapanış kararı sözlüğü.
+3. **"Satış Deneyleri" sekmesi:** deney kartları (sözleşme alanları + durum/karar rozetleri), gerçek veriden öncesi/sonrası penceresi (deney başlangıcından bugüne Bonus/tüm teklif sayısı vs eşit uzunlukta önceki dönem), duraklat/yayınla, kapanış (karar zorunlu + sonuç özeti — öğrenme belleği), yeni deney formu.
+4. **4B bilinçli ertelendi:** teşhis/öneri/otomasyon beyni yeterli kapanmış teklif (~20-30) birikince; sekmedeki açıklama bunu kullanıcıya da söylüyor.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| verify:fast | 42 dosya / 303 test + typecheck |
+| E2E | 21/21 (bir turda 1 flake: kritik akış canlı RPC oran limitine denk geldi — bugünkü değişikliklerden bağımsız, tekrar turunda yeşil) |
+| Build + copy-gate + kabul kilidi | 331 HTML temiz |
+| v23 canlı | 3 tohum deney doğrulandı; sekme lokalde girişli sürüldü — pencere gerçek veriyi gösteriyor (14 Temmuz'dan beri 2 teklifin 1'i Bonus) |
+
+### İlgili
+
+Admin panel audit raporu ayrı ajanla üretildi (bkz. sohbet, 15 Temmuz) — kırmızılar: 4 mutasyon route'unda handler-seviyesi auth eksik (patron yazabiliyor), PricesTab bayat/işlevsiz. Audit uygulaması ayrı sprint olarak planlanacak.

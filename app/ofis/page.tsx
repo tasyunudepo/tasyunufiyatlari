@@ -7,6 +7,7 @@ import { AdminLoadingScreen } from "@/components/admin/AdminLoadingScreen";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AnalyticsTab } from "./tabs/AnalyticsTab";
 import { QuotesTab } from "./tabs/QuotesTab";
+import { ExperimentsTab } from "./tabs/ExperimentsTab";
 import { PricesTab } from "./tabs/PricesTab";
 import { LogisticsTab } from "./tabs/LogisticsTab";
 import { DiscountsTab } from "./tabs/DiscountsTab";
@@ -53,6 +54,7 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                     {activeTab === "dashboard"     && <DashboardTab stats={stats} onNavigate={setActiveTab} />}
                     {activeTab === "quotes"        && <QuotesTab />}
+                    {activeTab === "experiments"   && <ExperimentsTab />}
                     {activeTab === "analytics"     && <AnalyticsTab />}
                     {activeTab === "prices"        && <PricesTab />}
                     {activeTab === "margin-rules"  && <MarginRulesTab />}

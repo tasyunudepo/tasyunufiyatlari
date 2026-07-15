@@ -2,12 +2,13 @@
 
 import {
     LayoutDashboard, FileText, DollarSign, Truck, Tag,
-    Package, Upload, Settings, Flame, BarChart2, Sliders, Store,
+    Package, Upload, Settings, Flame, BarChart2, Sliders, Store, FlaskConical,
 } from "lucide-react";
 
 const NAV_ITEMS = [
     { id: "dashboard",    label: "Dashboard",        Icon: LayoutDashboard },
     { id: "quotes",       label: "Teklifler",         Icon: FileText },
+    { id: "experiments",  label: "Satış Deneyleri",   Icon: FlaskConical },
     { id: "analytics",    label: "Talep Analizi",     Icon: BarChart2 },
     { id: "prices",       label: "Fiyatlar",          Icon: DollarSign },
     { id: "margin-rules", label: "Marj Kuralları",   Icon: Sliders },
