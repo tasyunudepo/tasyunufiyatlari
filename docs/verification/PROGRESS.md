@@ -362,3 +362,33 @@ Admin panel audit raporu ayrı ajanla üretildi (bkz. sohbet, 15 Temmuz) — kı
 2. **Fiyatlar sekmesi kaldırıldı:** 404 veren CSV linki, handler'sız "Toplu İşlemler" ve bayat talimatlar içeriyordu; menü (Sidebar+Topbar), page.tsx ve dosya temizlendi. Fiyat güncelleme tek kapıda: Excel Yükle.
 
 Kanıt: 304 unit + typecheck + build/copy-gate/kabul kilidi temiz. Audit'in kalan turuncu/sarıları (menü gruplama, mükerrer fetch/stil, ölü bileşenler) "Admin Yenileme" işi olarak bekliyor.
+
+---
+
+## 2026-07-15 — Admin Yenileme sprinti (menü + panel sadeleştirme)
+
+Audit'in kalan turuncu/sarıları uygulandı. Müşteri yüzeyine hiçbir dokunuş yok; salt admin (`/ofis`) yüzeyi.
+
+### Yapılanlar
+
+1. **Menü 11 → 6 gruba indi, tek kaynak:** `AdminSidebar.tsx` içindeki `NAV_ITEMS` artık tek kaynak; `SECTION_LABELS` ondan türetiliyor ve `AdminTopbar` bu türetilmişi import ediyor (etiketler iki dosyada kopyalanmıştı → tutarsızlık riski gitti). Yeni yapı: Genel Bakış · Teklifler · Satış Deneyleri · Analiz · **Fiyatlandırma** (çatı) · **Katalog** (çatı).
+2. **İki çatı sekmesi:** `PricingTab` (alt: Excel ile Güncelle / Marj Kuralları / Markalar / İskontolar) + başına eski Ayarlar'daki "kural haritası" bilgi kutusu; `CatalogTab` (alt: Ürünler / Lojistik Kapasite). `page.tsx` 11 dallı render'dan 6'ya indi.
+3. **Ayarlar sekmesi eritildi:** bilgi kutusu → PricingTab başlığına; sürüm bilgisi → sidebar footer'a; sahte "Sistem Durumu" ışıkları (hiçbir gerçek durumu ölçmüyordu) kaldırıldı. `SettingsTab.tsx` silindi.
+4. **Dashboard sadeleştirme:** ölü `stats` prop'u ve onu besleyen 4 sayım fetch'i (`page.tsx`) kaldırıldı; `metricsError` artık sessiz `void` değil, kullanıcıya kırmızı uyarı bandı basıyor; mükerrer "Malzeme Dengesi" gauge'i (pasta grafik zaten var) ve "EPS/Taşyünü Markaları (7g)" listeleri (Analiz sekmesinde birebir var) kaldırıldı — Ürün Kırılımı tek kart olarak kaldı.
+5. **QuotesTab sadeleştirme:** "Onay Oranı" KPI'ı kaldırıldı (satış hunisi zaten kazanılan/kaybedileni gösteriyor) → KPI 4→3; uydurma sabit `pct:68` ilerleme çubuğu gerçek orana (`kazanılan ciro / teklif toplamı`) bağlandı; "En Çok Talep Alan" ve statik "Anlık İçgörü" blokları (Analiz'le örtüşüyor / dinamik değil) kaldırıldı; yerel `fmtCompact` yerine lib `formatAmount`; ölü `buildBrandRanking` import'u temizlendi.
+6. **AdminTopbar:** işlevsiz arama kutusu ve zil (badge'li) kaldırıldı; saniyelik `setInterval` → dakikalık (gereksiz her-saniye re-render gitti).
+7. **ProductsTab dürüstlük:** ölü `calculateSalePrice` + `roundToKurus` temizlendi; sabit +%10 kâr varsayan "m² Satış" / "Satış Fiyatı" başlıkları "Kaba m² Tahmini (+%10, gösterge)" ve "Kaba Satış Tahmini" olarak dürüstleştirildi (gerçek satış fiyatı marka/malzeme marj kuralına göre değişir — tooltip'te açıklandı).
+8. **Ölü bileşenler silindi:** `MetricCard.tsx`, `ParticleBackground.tsx`, `AdminLoadingScreen.tsx`, `SettingsTab.tsx`.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| verify:fast (vitest + tsc) | 42 dosya / 304 test + typecheck temiz |
+| Build | başarılı (331 sayfa) |
+| copy-gate (.next) | 331 HTML temiz (6 proje yasağı) |
+| Görsel (lokal :3000, admin girişiyle) | 6 sekme de render, **0 konsol hatası**; menü/topbar/çatılar/dashboard/quotes doğrulandı (screenshot) |
+
+### Ertelenen yapısallar (bilinçli)
+
+Sekme başına yeniden fetch (SWR cache yok), quotes sayfalama, `plate_prices` anon okunabilirliği (site geneli ayrı iş), üç admin stil sisteminin (`nx-*`, `ofis*`, `admin-nexus-*`) tam birleşimi. Sprint 4B (teşhis/öneri beyni) hâlâ ~20-30 kapanmış teklif şartını bekliyor.

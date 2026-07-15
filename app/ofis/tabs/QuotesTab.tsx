@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Trash2, ChevronDown, Layers } from "lucide-react";
-import { buildBrandRanking, formatCurrency } from "@/lib/admin/utils";
+import { formatCurrency, formatAmount } from "@/lib/admin/utils";
 import {
     groupQuotesIntoSeries,
     formatSeriesDuration,
@@ -169,7 +169,6 @@ export function QuotesTab() {
         whatsappOrder: quotes.filter((q) => q.request_type === "whatsapp_order").length,
     };
 
-    const topQuoteBrands = buildBrandRanking(quotes, 4);
     const totalQuoteValue = quotes.reduce((sum, q) => sum + (Number(q.total_price) || 0), 0);
     const averageQuoteValue = quotes.length > 0 ? totalQuoteValue / quotes.length : 0;
     const todayQuoteCount = quotes.filter((q) => {
@@ -179,7 +178,6 @@ export function QuotesTab() {
             created.getMonth() === now.getMonth() &&
             created.getDate() === now.getDate();
     }).length;
-    const uniqueQuoteCities = new Set(quotes.map((q) => q.city_name).filter(Boolean)).size;
     const selectedQuoteEvents = selectedQuote ? (quoteEventsById[String(selectedQuote.id)] ?? []) : [];
 
     const filteredQuotes = quotes.filter((quote) => {
@@ -204,7 +202,6 @@ export function QuotesTab() {
     const multiQuoteSeriesCount = filteredSeries.filter(s => s.quoteCount > 1).length;
 
     const approvedCount = quotes.filter((q) => q.status === "approved").length;
-    const onayOrani = quoteSummary.total > 0 ? Math.round((approvedCount / quoteSummary.total) * 100) : 0;
 
     const last6Months = Array.from({ length: 6 }, (_, i) => {
         const d = new Date();
@@ -224,14 +221,6 @@ export function QuotesTab() {
         low:    "border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] text-[var(--nx-text-soft)]",
     };
     const urgencyLabel: Record<string, string> = { urgent: "Acil", high: "Yüksek", normal: "Normal", low: "Düşük" };
-
-    const topBrandToday = topQuoteBrands[0]?.[0] ?? null;
-    const pdfRate = quoteSummary.total > 0 ? Math.round((quoteSummary.pdfQuote / quoteSummary.total) * 100) : 0;
-    const insights = [
-        topBrandToday ? `${topBrandToday} markası şu an talepler arasında liderliğini sürdürüyor.` : "Henüz marka verisi oluşmadı.",
-        pdfRate > 50 ? `PDF teklif oranı yüksek seyrediyor (%${pdfRate}).` : `PDF teklif oranı %${pdfRate} — WhatsApp kanalı öne çıkıyor.`,
-        uniqueQuoteCities > 1 ? `${uniqueQuoteCities} farklı şehirden talep geldi.` : "Teklifler henüz tek şehirde yoğunlaşıyor.",
-    ];
 
     // ─── Satış hunisi (Sprint 3) — ölçüm sözleşmesindeki alt metrikler ───
     const isOpen = (q: OfficeQuote) => !["completed", "rejected"].includes(q.status ?? "");
@@ -261,21 +250,22 @@ export function QuotesTab() {
         (sum, q) => sum + (Number((q as { sales_final_price?: number | null }).sales_final_price ?? q.total_price) || 0),
         0,
     );
-    const fmtCompact = (v: number) =>
-        v >= 1_000_000 ? `₺${(v / 1_000_000).toFixed(2)}M` : v >= 1000 ? `₺${(v / 1000).toFixed(1)}K` : formatCurrency(v);
+    // KPI ilerleme çubukları gerçek orana bağlanır (audit: eski sabit
+    // pct:68 uydurmaydı). Teklif tutarı çubuğu kazanılan cironun teklif
+    // toplamına oranını gösterir — "ne kadarı gerçeğe döndü".
+    const wonToQuotedPct = totalQuoteValue > 0 ? Math.round((wonRevenue / totalQuoteValue) * 100) : 0;
 
     const kpis = [
         { label: "Toplam Talep", value: String(quoteSummary.total), sub: `Bugün ${todayQuoteCount} yeni`, accent: "from-[rgba(201,168,76,0.16)] to-transparent", border: "border-[rgba(201,168,76,0.24)]", progress: "from-[var(--nx-gold)] to-[rgba(201,168,76,0.58)]", icon: "◈", pct: Math.min(100, quoteSummary.total * 4) },
-        { label: "Toplam Teklif Tutarı", value: fmtCompact(totalQuoteValue), sub: `Ort. ${formatCurrency(averageQuoteValue)} / teklif — ciro değildir`, accent: "from-sky-400/10 to-transparent", border: "border-sky-400/20", progress: "from-sky-300 to-sky-500", icon: "⬢", pct: 68 },
-        { label: "Gerçek Ciro (kazanılan)", value: fmtCompact(wonRevenue), sub: wonQuotes.length > 0 ? `${wonQuotes.length} kazanılmış sipariş` : "Henüz kazanılmış sipariş yok", accent: "from-emerald-400/10 to-transparent", border: "border-emerald-400/20", progress: "from-emerald-300 to-emerald-500", icon: "₺", pct: quoteSummary.total > 0 ? Math.round((wonQuotes.length / quoteSummary.total) * 100) : 0 },
-        { label: "Onay Oranı", value: `%${onayOrani}`, sub: `${approvedCount} teklif onaylandı`, accent: "from-emerald-400/10 to-transparent", border: "border-[rgba(92,98,108,0.26)]", progress: "from-emerald-300 to-[var(--nx-gold)]", icon: "✓", pct: onayOrani },
+        { label: "Toplam Teklif Tutarı", value: formatAmount(totalQuoteValue), sub: `Ort. ${formatCurrency(averageQuoteValue)} / teklif — ciro değildir`, accent: "from-sky-400/10 to-transparent", border: "border-sky-400/20", progress: "from-sky-300 to-sky-500", icon: "⬢", pct: wonToQuotedPct },
+        { label: "Gerçek Ciro (kazanılan)", value: formatAmount(wonRevenue), sub: wonQuotes.length > 0 ? `${wonQuotes.length} kazanılmış sipariş` : "Henüz kazanılmış sipariş yok", accent: "from-emerald-400/10 to-transparent", border: "border-emerald-400/20", progress: "from-emerald-300 to-emerald-500", icon: "₺", pct: quoteSummary.total > 0 ? Math.round((wonQuotes.length / quoteSummary.total) * 100) : 0 },
     ];
 
     if (loading) {
         return (
             <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {[...Array(4)].map((_, i) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {[...Array(3)].map((_, i) => (
                         <div key={i} className={`${ofisPanel} h-36 animate-pulse`} />
                     ))}
                 </div>
@@ -309,7 +299,7 @@ export function QuotesTab() {
             </div>
 
             {/* KPI Kartlar */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {kpis.map((item) => (
                     <div key={item.label} className={`relative overflow-hidden rounded-2xl border ${item.border} bg-[rgba(13,15,18,0.76)] p-5 shadow-[0_16px_38px_rgba(0,0,0,0.24)]`}>
                         <div className={`absolute inset-0 bg-gradient-to-br ${item.accent}`} />
@@ -459,41 +449,11 @@ export function QuotesTab() {
                                     </div>
                                 ))}
                             </div>
-                            <div className={`${ofisInner} p-4`}>
-                                <div className="text-sm text-slate-300 mb-3">Anlık İçgörü</div>
-                                <div className="space-y-2">
-                                    {insights.map((txt, i) => (
-                                        <div key={i} className="rounded-lg border border-[rgba(92,98,108,0.16)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-xs text-slate-400">{txt}</div>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-4">
-                    <div className={`${ofisPanel} p-5`}>
-                        <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Nabız</div>
-                        <h3 className="mt-1.5 text-xl font-semibold">En Çok Talep Alan</h3>
-                        <div className="mt-4 space-y-2">
-                            {topQuoteBrands.length > 0 ? topQuoteBrands.map(([brand, count], i) => (
-                                <div key={brand} className={`${ofisInner} p-4`}>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-7 w-7 rounded-full bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-xs text-amber-200">{i + 1}</div>
-                                            <div>
-                                                <div className="text-sm font-medium text-slate-100">{brand}</div>
-                                                <div className="text-xs text-slate-500">Teklif sayısı</div>
-                                            </div>
-                                        </div>
-                                        <div className="font-semibold text-slate-50">{count}</div>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className={`${ofisInner} p-4 text-sm text-slate-500`}>Henüz marka verisi oluşmadı.</div>
-                            )}
-                        </div>
-                    </div>
                     <div className={`${ofisPanel} p-5`}>
                         <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Kanal</div>
                         <h3 className="mt-1.5 text-xl font-semibold">Talep Türleri</h3>

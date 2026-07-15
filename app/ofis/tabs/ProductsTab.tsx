@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import {
     ClipboardList, Wrench, CheckCircle2, XCircle, Flame, Snowflake, TrendingDown,
 } from "lucide-react";
-import { roundToKurus, formatCurrency } from "@/lib/admin/utils";
+import { formatCurrency } from "@/lib/admin/utils";
 import { validateRules, getRulesPreview } from "@/lib/catalog/decision";
 
 function StatCard({ title, value, icon, color, onClick }: any) {
@@ -141,15 +141,6 @@ export function ProductsTab() {
         if (logisticsRes.data) setLogisticsData(logisticsRes.data);
         setLoading(false);
     }
-
-    const calculateSalePrice = (basePrice: number, discount1: number, discount2: number, _brandName: string, isKdvIncluded: boolean = false): number => {
-        const profitMargin = 10;
-        const kdvHaricListe = isKdvIncluded ? basePrice / 1.20 : basePrice;
-        const iskontoluFiyat = kdvHaricListe * (1 - discount1 / 100) * (1 - discount2 / 100);
-        const karliKdvHaric = iskontoluFiyat * (1 + profitMargin / 100);
-        return roundToKurus(karliKdvHaric * 1.20);
-    };
-    void calculateSalePrice;
 
     const filteredPlates = plates.filter(plate => {
         const materialSlug = plate.material_types?.slug;
@@ -351,7 +342,7 @@ export function ProductsTab() {
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '130px' }}>İskontolar</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '100px' }}>Paket Metrajı</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-700/20" style={{ width: '160px' }}>Net Alış (KDV Hariç)</th>
-                                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider bg-green-500/10 text-green-400 border-x border-green-500/20" style={{ width: '160px' }}>m² Satış (Net + %10)</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider bg-green-500/10 text-green-400 border-x border-green-500/20" style={{ width: '170px' }} title="Kaba tahmin: net alış + sabit %10. Gerçek satış fiyatı Fiyatlandırma sekmesindeki marka/malzeme marj kuralına ve KDV'ye göre hesaplanır.">Kaba m² Tahmini <span className="normal-case text-[10px] text-green-500/70">(+%10, gösterge)</span></th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '100px' }}>Durum</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '60px' }}>Katalog</th>
                                                 </tr>
@@ -476,7 +467,7 @@ export function ProductsTab() {
                                                             <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '380px' }}>Ürün Adı</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '150px' }}>Liste Fiyatı</th>
                                                             <th className="px-2 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '130px' }}>İskontolar</th>
-                                                            <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '150px' }}>Satış Fiyatı</th>
+                                                            <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '150px' }} title="Kaba tahmin: şehir iskontolu net + sabit %10 + KDV. Gerçek satış fiyatı marka/malzeme marj kuralına göre değişir.">Kaba Satış Tahmini</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '120px' }}>Paket</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '100px' }}>Durum</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '60px' }}>Katalog</th>
@@ -525,7 +516,7 @@ export function ProductsTab() {
                                                                     <td className="px-3 py-3 text-sm">
                                                                         <div className="flex flex-col">
                                                                             <span className="text-green-300 font-semibold">{finalPrice.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-                                                                            <span className="text-xs text-slate-500">KDV Dahil + %10 Kar</span>
+                                                                            <span className="text-xs text-slate-500">tahmini · KDV dahil, sabit +%10</span>
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-3 py-3 text-sm"><span className="text-slate-300">{acc.unit_content || 1} {acc.unit || "PKT"}</span></td>

@@ -1,23 +1,25 @@
 "use client";
 
 import {
-    LayoutDashboard, FileText, Truck, Tag,
-    Package, Upload, Settings, Flame, BarChart2, Sliders, Store, FlaskConical,
+    LayoutDashboard, FileText, BarChart2, Sliders, Package, Flame, FlaskConical,
 } from "lucide-react";
 
-const NAV_ITEMS = [
-    { id: "dashboard",    label: "Dashboard",        Icon: LayoutDashboard },
-    { id: "quotes",       label: "Teklifler",         Icon: FileText },
-    { id: "experiments",  label: "Satış Deneyleri",   Icon: FlaskConical },
-    { id: "analytics",    label: "Talep Analizi",     Icon: BarChart2 },
-    { id: "margin-rules", label: "Marj Kuralları",   Icon: Sliders },
-    { id: "brands",       label: "Markalar",          Icon: Store },
-    { id: "logistics",    label: "Lojistik",          Icon: Truck },
-    { id: "discounts",    label: "İskontolar",        Icon: Tag },
-    { id: "products",     label: "Ürünler",           Icon: Package },
-    { id: "excel-import", label: "Excel Yükle",       Icon: Upload },
-    { id: "settings",     label: "Ayarlar",           Icon: Settings },
-];
+// Menü TEK kaynaktır: Topbar başlıkları da buradan türetilir (audit:
+// etiketler iki dosyada kopyalanmıştı). 12 sekme → 6 gruplu yapı
+// (15 Temmuz 2026 audit kararı): Fiyatlandırma ve Katalog çatı sekmeleri
+// alt-sekmelerini kendi içinde barındırır.
+export const NAV_ITEMS = [
+    { id: "dashboard",   label: "Genel Bakış",     Icon: LayoutDashboard },
+    { id: "quotes",      label: "Teklifler",        Icon: FileText },
+    { id: "experiments", label: "Satış Deneyleri",  Icon: FlaskConical },
+    { id: "analytics",   label: "Analiz",           Icon: BarChart2 },
+    { id: "pricing",     label: "Fiyatlandırma",    Icon: Sliders },
+    { id: "catalog",     label: "Katalog",          Icon: Package },
+] as const;
+
+export const SECTION_LABELS: Record<string, string> = Object.fromEntries(
+    NAV_ITEMS.map((item) => [item.id, item.label]),
+);
 
 interface Props {
     active: string;
@@ -65,32 +67,13 @@ export function AdminSidebar({ active, onNavigate }: Props) {
                 ))}
             </div>
 
-            {/* Status footer */}
-            <div className="px-3 py-4 border-t border-[var(--nx-border)]">
-                <p className="px-1 mb-2 text-[10px] uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">
-                    Sistem Durumu
+            {/* Sürüm bilgisi (eski sahte "Sistem Durumu" ışıklarının yerine —
+                ışıklar hiçbir gerçek durumu ölçmüyordu) */}
+            <div className="px-4 py-4 border-t border-[var(--nx-border)]">
+                <p className="text-[10px] leading-relaxed text-[var(--nx-text-muted)]">
+                    Next.js 16.2.9 · React 19.2.1 · Supabase
                 </p>
-                <div className="nx-card p-3 space-y-2">
-                    <StatusLine label="Veritabanı" color="green" />
-                    <StatusLine label="Teklif Akışı" color="cyan" />
-                    <StatusLine label="Import API" color="green" />
-                </div>
             </div>
         </nav>
-    );
-}
-
-function StatusLine({ label, color }: { label: string; color: "green" | "cyan" | "amber" | "red" }) {
-    const colors = {
-        green: "bg-[var(--nx-green)] shadow-[0_0_8px_rgba(34,197,94,0.5)]",
-        cyan:  "bg-[var(--nx-gold)] shadow-[0_0_8px_rgba(201,168,76,0.5)]",
-        amber: "bg-[var(--nx-amber)] shadow-[0_0_8px_rgba(245,158,11,0.5)]",
-        red:   "bg-[var(--nx-red)] shadow-[0_0_8px_rgba(239,68,68,0.5)]",
-    };
-    return (
-        <div className="flex items-center justify-between text-xs">
-            <span className="text-[var(--nx-text-soft)]">{label}</span>
-            <span className={`w-2 h-2 rounded-full ${colors[color]}`} />
-        </div>
     );
 }

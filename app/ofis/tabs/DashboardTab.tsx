@@ -94,8 +94,7 @@ function Gauge({ percent, label }: { percent: number; label: string }) {
     );
 }
 
-export function DashboardTab({ stats, onNavigate }: { stats: any; onNavigate: (tab: string) => void }) {
-    void stats;
+export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
     const [dashboardQuotes, setDashboardQuotes] = useState<any[]>([]);
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [metricsError, setMetricsError] = useState(false);
@@ -186,10 +185,13 @@ export function DashboardTab({ stats, onNavigate }: { stats: any; onNavigate: (t
         ? (dashboardQuoteSummary.approved / dashboardQuoteSummary.total) * 100
         : 0;
 
-    void metricsError;
-
     return (
         <div className="space-y-6">
+            {metricsError && (
+                <div className="rounded-xl border border-[rgba(220,80,80,0.35)] bg-[rgba(220,80,80,0.08)] px-4 py-3 text-sm text-red-300">
+                    Panel metrikleri yüklenemedi — aşağıdaki kartlar eksik veya sıfır görünebilir. Sayfayı yenileyin; sorun sürerse dashboard-metrics API&apos;sini kontrol edin.
+                </div>
+            )}
             {/* Row 1: KPI strip */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiTile
@@ -289,30 +291,18 @@ export function DashboardTab({ stats, onNavigate }: { stats: any; onNavigate: (t
                     </div>
                 </div>
 
-                <div className="grid gap-4">
-                    <div className="nx-hero-card">
-                        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Dönüşüm Oranı</p>
-                        <div className="mt-3 flex justify-center">
-                            <Gauge percent={conversionRate} label="Onaylanan" />
-                        </div>
-                        <div className="mt-4 flex items-center justify-center gap-4 text-xs text-[var(--nx-text-soft)]">
-                            <span className="flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--nx-green)]" />
-                                {dashboardQuoteSummary.approved} onay
-                            </span>
-                            <span className="text-[var(--nx-text-muted)]">·</span>
-                            <span>{dashboardQuoteSummary.total} toplam</span>
-                        </div>
+                <div className="nx-hero-card">
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Dönüşüm Oranı</p>
+                    <div className="mt-3 flex justify-center">
+                        <Gauge percent={conversionRate} label="Onaylanan" />
                     </div>
-                    <div className="nx-hero-card">
-                        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Malzeme Dengesi <span className="text-[var(--nx-text-muted)]">(30g)</span></p>
-                        <div className="mt-3 flex justify-center">
-                            <Gauge percent={metrics?.eps_ratio_30d ?? 0} label="EPS Oranı" />
-                        </div>
-                        <div className="mt-4 flex items-center justify-between text-xs text-[var(--nx-text-soft)]">
-                            <span>EPS %{metrics?.eps_ratio_30d ?? 0}</span>
-                            <span>Taşyünü %{metrics?.rockwool_ratio_30d ?? 0}</span>
-                        </div>
+                    <div className="mt-4 flex items-center justify-center gap-4 text-xs text-[var(--nx-text-soft)]">
+                        <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--nx-green)]" />
+                            {dashboardQuoteSummary.approved} onay
+                        </span>
+                        <span className="text-[var(--nx-text-muted)]">·</span>
+                        <span>{dashboardQuoteSummary.total} toplam</span>
                     </div>
                 </div>
             </div>
@@ -449,48 +439,12 @@ export function DashboardTab({ stats, onNavigate }: { stats: any; onNavigate: (t
                 </div>
             </div>
 
-            {/* Row 4: Marka sıralamaları + Ürün Kırılımı */}
-            <div className="grid gap-4 lg:grid-cols-3">
-                <div className="nx-hero-card">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">EPS Markaları <span className="text-[var(--nx-text-muted)]">(7g)</span></p>
-                    <div className="mt-3 space-y-2">
-                        {(metrics?.eps_brands_7d ?? []).length > 0 ? (metrics?.eps_brands_7d ?? []).map((item, index) => (
-                            <div key={item.brand} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-3">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.10)] text-xs font-semibold text-[var(--nx-gold)]">
-                                        {index + 1}
-                                    </span>
-                                    <span className="text-[var(--nx-text)]">{item.brand}</span>
-                                </div>
-                                <span className="font-semibold text-[var(--nx-text)]">{item.count}</span>
-                            </div>
-                        )) : (
-                            <p className="text-sm text-[var(--nx-text-soft)]">Son 7 günde EPS talebi yok.</p>
-                        )}
-                    </div>
-                </div>
-                <div className="nx-hero-card">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Taşyünü Markaları <span className="text-[var(--nx-text-muted)]">(7g)</span></p>
-                    <div className="mt-3 space-y-2">
-                        {(metrics?.rockwool_brands_7d ?? []).length > 0 ? (metrics?.rockwool_brands_7d ?? []).map((item, index) => (
-                            <div key={item.brand} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-3">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[rgba(184,115,51,0.30)] bg-[rgba(184,115,51,0.10)] text-xs font-semibold text-[var(--nx-copper)]">
-                                        {index + 1}
-                                    </span>
-                                    <span className="text-[var(--nx-text)]">{item.brand}</span>
-                                </div>
-                                <span className="font-semibold text-[var(--nx-text)]">{item.count}</span>
-                            </div>
-                        )) : (
-                            <p className="text-sm text-[var(--nx-text-soft)]">Son 7 günde Taşyünü talebi yok.</p>
-                        )}
-                    </div>
-                </div>
-                <div className="nx-hero-card">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Ürün Kırılımı <span className="text-[var(--nx-text-muted)]">(7g)</span></p>
-                    <div className="mt-3 space-y-2">
-                        {(metrics?.product_breakdown_7d ?? []).length > 0 ? (metrics?.product_breakdown_7d ?? []).slice(0, 6).map((item) => (
+            {/* Row 4: Ürün Kırılımı (marka sıralamaları Analiz sekmesinde —
+                buradaki kopyaları audit ile kaldırıldı) */}
+            <div className="nx-hero-card">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Ürün Kırılımı <span className="text-[var(--nx-text-muted)]">(7g)</span></p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {(metrics?.product_breakdown_7d ?? []).length > 0 ? (metrics?.product_breakdown_7d ?? []).slice(0, 6).map((item) => (
                             <div key={`${item.brand}-${item.model}-${item.material}`} className="flex items-center justify-between gap-3 text-sm">
                                 <div className="flex items-center gap-2.5 min-w-0">
                                     <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-[10px] font-bold ${item.material === "eps" ? "bg-[rgba(201,168,76,0.10)] text-[var(--nx-gold)] border border-[rgba(201,168,76,0.25)]" : "bg-[rgba(184,115,51,0.10)] text-[var(--nx-copper)] border border-[rgba(184,115,51,0.25)]"}`}>
@@ -506,7 +460,6 @@ export function DashboardTab({ stats, onNavigate }: { stats: any; onNavigate: (t
                         )) : (
                             <p className="text-sm text-[var(--nx-text-soft)]">Son 7 günde ürün verisi yok.</p>
                         )}
-                    </div>
                 </div>
             </div>
         </div>
