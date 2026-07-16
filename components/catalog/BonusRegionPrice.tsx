@@ -282,6 +282,7 @@ export default function BonusRegionPrice({
                       label={`PDF teklifimi hazırla · 1 ${vehicle === "kamyon" ? "Kamyon" : "TIR"}`}
                       resultSessionId={resultSessionId}
                       packageSizeM2={state.data.packageM2}
+                      modelNameOverride={modelShortName}
                     />
                     <p className="mt-1.5 text-center text-[10px] leading-snug text-fe-muted">
                       Seçili tam araç planıyla ({vehicle === "kamyon" ? "1 Kamyon" : "1 TIR"} ·{" "}

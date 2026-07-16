@@ -27,6 +27,11 @@ interface Props {
   label?: string;                // CTA buton metni
   resultSessionId?: string;      // PDP session zinciri için
   packageSizeM2?: number | null;  // plate_prices boşsa logistics_capacity fallback'i
+  // API'ye gidecek model adı override'ı. Bonus'ta /api/quotes kapasite
+  // doğrulaması KISA model adı (short_name = "F 150") bekler; product.name
+  // uzun ad olduğu için ("Bonus Premium F 150 Taşyünü…") eşleşmez ve
+  // "kapasite doğrulanamadı" ile reddedilir. Bonus PDP kısa adı geçer.
+  modelNameOverride?: string | null;
   onOpen?: () => void;
   buttonClassName?: string;
 }
@@ -52,9 +57,12 @@ export default function SingleProductQuoteButton({
   label,
   resultSessionId,
   packageSizeM2: fallbackPackageSizeM2,
+  modelNameOverride,
   onOpen,
   buttonClassName,
 }: Props) {
+  // API kapasite doğrulaması için model adı (Bonus'ta kısa ad şart).
+  const apiModelName = modelNameOverride ?? product.name;
   const [showModal, setShowModal]       = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
@@ -181,7 +189,7 @@ export default function SingleProductQuoteButton({
             brandId:         product.brand.id,
             brandName:       product.brand.name,
             modelId:         product.id,
-            modelName:       product.name,
+            modelName:       apiModelName,
             thicknessCm:     Math.min(15, Math.max(2, activeThickness ?? 5)),
             areaM2,
             cityCode:        String(cityCode),
