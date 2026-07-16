@@ -408,6 +408,13 @@ export default function ProductPricePanel({
 
         {/* ─── Fiyat Görünürlük Kontrolleri (decision.ts tek otorite) ─── */}
         {(() => {
+          // Bonus levhası: fiyatı BonusRegionPrice kartı (aşağıda) sunucudan
+          // bölgeye göre gösterir. Genel plate_prices yok → getPriceDisplay
+          // burada "görünmez" der ve yanıltıcı "Teklif ile belirlenir" basardı.
+          // Bu statik başlığı Bonus'ta hiç göstermeyip tek fiyat otoritesini
+          // BonusRegionPrice'a bırakıyoruz.
+          if (isBonusPlate) return null;
+
           // Hero dinamik fiyat hesaplandığında statik etiket gizlenir.
           if (showTierPrice && heroPrice !== null) return null;
 
@@ -589,7 +596,10 @@ export default function ProductPricePanel({
           </div>
         )}
 
-        {/* ─── Bonus canlı bölge fiyatı (Faz 2) ─── */}
+        {/* ─── Bonus canlı bölge fiyatı (Faz 2) + PDF teklif köprüsü ───
+            Bonus Direkt Alım'a geçince (single_only + from_price) product
+            geçilir → araç seçimli PDF teklif butonu açılır. quote_required
+            modunda product geçilmez → yalnız fiyat gösterilir. */}
         {isBonusPlate && zone && product.model && (
           <div className="mb-4">
             <BonusRegionPrice
@@ -597,6 +607,9 @@ export default function ProductPricePanel({
               thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
               cityCode={zone.city_code}
               cityName={zone.city_name}
+              product={rules.sales_mode === "quote_only" ? undefined : product}
+              activeThicknessCm={activeThickness ?? effectiveThickness ?? null}
+              resultSessionId={resultSessionId}
             />
           </div>
         )}
