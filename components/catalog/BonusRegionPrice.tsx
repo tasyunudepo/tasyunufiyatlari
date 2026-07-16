@@ -217,6 +217,12 @@ export default function BonusRegionPrice({
             if (!kamyon || !tir) return null;
             const pdfEnabled = product != null;
             const selected = vehicle === "kamyon" ? kamyon : tir;
+            // Ekranda snap'li orderM2 (paket gerçekliği) gösterilir; ancak
+            // /api/quotes tam-araç doğrulaması ham kapasiteyi (kamyonM2/tirM2)
+            // bekler — snap 2 cm² aşağı düşürünce "minimum m² gereklidir" ile
+            // reddediyordu. PDF/kayıt ham kapasiteyle gider (kanonik değer,
+            // eski tam-araç teklifleriyle tutarlı).
+            const capacityM2 = vehicle === "kamyon" ? state.data.kamyonM2 : state.data.tirM2;
             const rowClass = (v: BonusVehicle) =>
               `flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
                 pdfEnabled ? "cursor-pointer" : ""
@@ -267,7 +273,7 @@ export default function BonusRegionPrice({
                       product={product}
                       activeThickness={activeThicknessCm ?? thicknessCm ?? null}
                       pricePerM2KdvHaric={state.data.salePricePerM2}
-                      neededM2={selected.orderM2}
+                      neededM2={capacityM2}
                       cityCode={cityCode}
                       cityName={cityName}
                       tierLabel={vehicle === "kamyon" ? "Kamyon" : "TIR"}
