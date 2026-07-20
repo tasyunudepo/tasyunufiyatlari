@@ -34,6 +34,7 @@ import WizardLinkButton from "./WizardLinkButton";
 import BonusRegionPrice from "./BonusRegionPrice";
 import BonusAlternativeCard from "./BonusAlternativeCard";
 import { getBonusFamily, isUnpricedBonusModel } from "@/lib/pricing/bonus/families";
+import { getProfileByModel } from "@/lib/technical-profiles";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 interface ShippingZone {
@@ -300,6 +301,18 @@ export default function ProductPricePanel({
   // kartı yok; statik "Teklif ile belirlenir" akışı geçerli kalır.
   const isPricedBonusModel =
     isBonusPlate && !!product.model && !isUnpricedBonusModel(product.model);
+
+  // Takım/set teklifi yalnız mantolama ürününde anlamlıdır (20 Temmuz
+  // geri bildirimi): giydirme cephe, çatı, tesisat, endüstriyel ve marin
+  // ürünlerinde levha+toz seti diye bir şey yok — sistem-teklifi bloğu
+  // (Takım Fiyatını Gör) bu ürünlerde hiç render edilmez. Profili
+  // olmayan ürünlerde (EPS, aksesuar, toz) davranış değişmez.
+  const modelScope = product.model
+    ? getProfileByModel(product.model)?.applicationScope ?? null
+    : null;
+  const systemOfferIrrelevant =
+    (modelScope !== null && modelScope !== "sivali_dis_cephe_mantolama") ||
+    (isBonusPlate && !!product.model && isUnpricedBonusModel(product.model));
 
   const showSepet =
     showTierPrice &&
@@ -945,7 +958,7 @@ export default function ProductPricePanel({
       )}
 
       {/* ─── Sistem Teklifi ─── */}
-      {(rules.requires_system_context || rules.sales_mode !== "single_only") && (
+      {!systemOfferIrrelevant && (rules.requires_system_context || rules.sales_mode !== "single_only") && (
         <div className="rounded-xl border border-brand-500/30 bg-brand-950/20 p-5">
           {/* Doğrulanmamış oran iddiası yasak (Sprint 0.2): "%10-15 daha
               uygun" hiçbir markada kanıtlanmış değildi. Fark iddiası ancak
