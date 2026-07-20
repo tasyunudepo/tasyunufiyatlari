@@ -23,6 +23,66 @@ export interface BonusPlateOrder {
   totalExVat: number
 }
 
+export interface BonusVehiclePlan {
+  tir: number
+  kamyon: 0 | 1
+  /** Ham kapasite toplamı — /api/quotes tam-araç doğrulaması bu değeri bekler */
+  planM2: number
+  label: string
+  /** Saf plan araç tipi; karışık planda null (API'ye null gider) */
+  vehicleType: 'lorry' | 'truck' | null
+}
+
+/**
+ * Metraj → tam araç planları (karar: Emrah, 20 Temmuz 2026).
+ *
+ * Formül: metraj kamyona sığıyorsa 1 Kamyon; değilse tam TIR'lara
+ * bölünür, kalan kamyona sığıyorsa "N TIR + 1 Kamyon", sığmıyorsa bir
+ * üst tam TIR'a yuvarlanır. Birden fazla kamyon ASLA önerilmez.
+ * Varsayılan (ilk eleman) her zaman yukarı tam-TIR yuvarlamasıdır;
+ * kamyonlu kombinasyon varsa alternatif olarak ikinci sırada döner.
+ */
+export function buildBonusVehiclePlans(
+  neededM2: number,
+  kamyonM2: number,
+  tirM2: number,
+): BonusVehiclePlan[] {
+  if (
+    !Number.isFinite(neededM2) || neededM2 <= 0 ||
+    !Number.isFinite(kamyonM2) || kamyonM2 <= 0 ||
+    !Number.isFinite(tirM2) || tirM2 <= 0
+  ) {
+    return []
+  }
+
+  const plan = (tir: number, kamyon: 0 | 1): BonusVehiclePlan => {
+    const planM2 = roundToKurus(tir * tirM2 + kamyon * kamyonM2)
+    const parts: string[] = []
+    if (tir > 0) parts.push(`${tir} TIR`)
+    if (kamyon > 0) parts.push('1 Kamyon')
+    return {
+      tir,
+      kamyon,
+      planM2,
+      label: parts.join(' + '),
+      vehicleType: kamyon === 0 ? 'truck' : tir === 0 ? 'lorry' : null,
+    }
+  }
+
+  if (neededM2 <= kamyonM2) {
+    // Küçük metraj: 1 Kamyon yeter; 1 TIR alternatif olarak sunulur.
+    return [plan(0, 1), plan(1, 0)]
+  }
+
+  const tirFloor = Math.floor(neededM2 / tirM2)
+  const kalan = neededM2 - tirFloor * tirM2
+  if (kalan <= 1e-9) return [plan(tirFloor, 0)]
+
+  const plans: BonusVehiclePlan[] = [plan(tirFloor + 1, 0)]
+  if (kalan <= kamyonM2) plans.push(plan(tirFloor, 1))
+  return plans
+}
+
 /**
  * Kullanıcı metrajını paket adedine yuvarlar ve levha kalem tutarını
  * sunucu fiyatıyla (değiştirmeden) hesaplar.

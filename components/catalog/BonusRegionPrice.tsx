@@ -5,7 +5,7 @@ import {
   citySubRegionQuestion,
   type BonusSubRegionChoice,
 } from "@/lib/pricing/bonus/subRegions";
-import { buildBonusPlateOrder } from "@/lib/pricing/bonus/packageAssembly";
+import { buildBonusPlateOrder, buildBonusVehiclePlans } from "@/lib/pricing/bonus/packageAssembly";
 import SingleProductQuoteButton from "./SingleProductQuoteButton";
 import type { CatalogProductView } from "@/lib/catalog/types";
 
@@ -79,6 +79,11 @@ export default function BonusRegionPrice({
   const [state, setState] = useState<FetchState>({ status: "idle" });
   // PDF hangi tam-araç planıyla çıkacak — varsayılan Kamyon.
   const [vehicle, setVehicle] = useState<BonusVehicle>("kamyon");
+  // Metraj girişi (20 Temmuz kararı): büyük metrajlar tek araca sığmaz;
+  // girilen m² tam araç planına çevrilir (önce yukarı tam TIR, kalan
+  // kamyona sığıyorsa "N TIR + 1 Kamyon" alternatifi).
+  const [metraj, setMetraj] = useState<string>("");
+  const [planIdx, setPlanIdx] = useState<number>(0);
 
   const subInfo = citySubRegionQuestion(cityCode);
 
@@ -217,12 +222,31 @@ export default function BonusRegionPrice({
             if (!kamyon || !tir) return null;
             const pdfEnabled = product != null;
             const selected = vehicle === "kamyon" ? kamyon : tir;
+            // Metraj girildiyse tam araç planları (formül: tam TIR'lara böl;
+            // kalan kamyona sığıyorsa 1 Kamyon, sığmıyorsa +1 TIR; varsayılan
+            // yukarı tam-TIR yuvarlaması).
+            const neededM2 = (() => {
+              const n = parseFloat(metraj.replace(/\./g, "").replace(",", "."));
+              return Number.isFinite(n) && n > 0 ? n : null;
+            })();
+            const plans = neededM2
+              ? buildBonusVehiclePlans(neededM2, state.data.kamyonM2, state.data.tirM2)
+              : [];
+            const selectedPlan = plans.length > 0 ? plans[Math.min(planIdx, plans.length - 1)] : null;
+            const selectedPlanOrder = selectedPlan
+              ? buildBonusPlateOrder(
+                  { salePricePerM2: state.data.salePricePerM2, packageM2: state.data.packageM2 },
+                  selectedPlan.planM2,
+                )
+              : null;
             // Ekranda snap'li orderM2 (paket gerçekliği) gösterilir; ancak
-            // /api/quotes tam-araç doğrulaması ham kapasiteyi (kamyonM2/tirM2)
-            // bekler — snap 2 cm² aşağı düşürünce "minimum m² gereklidir" ile
-            // reddediyordu. PDF/kayıt ham kapasiteyle gider (kanonik değer,
-            // eski tam-araç teklifleriyle tutarlı).
-            const capacityM2 = vehicle === "kamyon" ? state.data.kamyonM2 : state.data.tirM2;
+            // /api/quotes tam-araç doğrulaması ham kapasiteyi (kamyonM2/tirM2
+            // veya plan toplamını) bekler — snap 2 cm² aşağı düşürünce
+            // "minimum m² gereklidir" ile reddediyordu. PDF/kayıt ham
+            // kapasiteyle gider (kanonik değer, eski tekliflerle tutarlı).
+            const capacityM2 = selectedPlan
+              ? selectedPlan.planM2
+              : vehicle === "kamyon" ? state.data.kamyonM2 : state.data.tirM2;
             const rowClass = (v: BonusVehicle) =>
               `flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
                 pdfEnabled ? "cursor-pointer" : ""
@@ -235,7 +259,64 @@ export default function BonusRegionPrice({
               }`;
             return (
               <div className="mt-3 space-y-1 rounded-lg border border-fe-border/60 bg-fe-bg/40 p-2.5">
-                {pdfEnabled ? (
+                {pdfEnabled && (
+                  <div className="flex items-center gap-2 px-2 pb-1.5">
+                    <label htmlFor="bonus-metraj" className="shrink-0 text-[11px] text-fe-muted">
+                      Metraj (m²)
+                    </label>
+                    <input
+                      id="bonus-metraj"
+                      inputMode="numeric"
+                      value={metraj}
+                      onChange={(e) => {
+                        setMetraj(e.target.value);
+                        setPlanIdx(0);
+                      }}
+                      placeholder="örn. 14500 — tam araca çevrilir"
+                      className="w-full rounded-md border border-fe-border bg-fe-bg/60 px-2.5 py-1.5 text-sm text-fe-text placeholder:text-fe-muted/60 focus:border-brand-400 focus:outline-none"
+                    />
+                    {metraj && (
+                      <button
+                        type="button"
+                        onClick={() => { setMetraj(""); setPlanIdx(0); }}
+                        className="shrink-0 text-[11px] text-fe-muted underline-offset-2 hover:underline"
+                      >
+                        temizle
+                      </button>
+                    )}
+                  </div>
+                )}
+                {pdfEnabled && plans.length > 0 ? (
+                  <>
+                    {plans.map((p, i) => {
+                      const order = buildBonusPlateOrder(
+                        { salePricePerM2: state.data.salePricePerM2, packageM2: state.data.packageM2 },
+                        p.planM2,
+                      );
+                      if (!order) return null;
+                      const active = i === Math.min(planIdx, plans.length - 1);
+                      return (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => setPlanIdx(i)}
+                          aria-pressed={active}
+                          className={`flex w-full items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors cursor-pointer ${
+                            active ? "bg-brand-900/30 ring-1 ring-brand-500/50" : "hover:bg-fe-raised/60"
+                          }`}
+                        >
+                          <span className={active ? "font-semibold text-brand-200" : "text-fe-muted"}>
+                            {p.label} · {fmt(order.orderM2, 1)} m²
+                          </span>
+                          <span className="font-bold tabular-nums text-white">{fmt(order.totalExVat)} ₺</span>
+                        </button>
+                      );
+                    })}
+                    <p className="px-2 text-[10px] leading-snug text-fe-muted">
+                      {fmt(neededM2 ?? 0, 0)} m² ihtiyaç tam araç planına yuvarlandı; ara metraja teklif oluşturulmaz.
+                    </p>
+                  </>
+                ) : pdfEnabled ? (
                   <>
                     <button type="button" onClick={() => setVehicle("kamyon")} className={`w-full text-left ${rowClass("kamyon")}`} aria-pressed={vehicle === "kamyon"}>
                       <span className={vehicle === "kamyon" ? "font-semibold text-brand-200" : "text-fe-muted"}>
@@ -276,17 +357,20 @@ export default function BonusRegionPrice({
                       neededM2={capacityM2}
                       cityCode={cityCode}
                       cityName={cityName}
-                      tierLabel={vehicle === "kamyon" ? "Kamyon" : "TIR"}
+                      tierLabel={selectedPlan ? selectedPlan.label : vehicle === "kamyon" ? "Kamyon" : "TIR"}
                       isShippingIncluded={true}
-                      vehicleType={vehicle === "kamyon" ? "lorry" : "truck"}
-                      label={`PDF teklifimi hazırla · 1 ${vehicle === "kamyon" ? "Kamyon" : "TIR"}`}
+                      vehicleType={selectedPlan ? selectedPlan.vehicleType : vehicle === "kamyon" ? "lorry" : "truck"}
+                      label={`PDF teklifimi hazırla · ${selectedPlan ? selectedPlan.label : vehicle === "kamyon" ? "1 Kamyon" : "1 TIR"}`}
                       resultSessionId={resultSessionId}
                       packageSizeM2={state.data.packageM2}
                       modelNameOverride={modelShortName}
                     />
                     <p className="mt-1.5 text-center text-[10px] leading-snug text-fe-muted">
-                      Seçili tam araç planıyla ({vehicle === "kamyon" ? "1 Kamyon" : "1 TIR"} ·{" "}
-                      {fmt(selected.orderM2, 1)} m²) hazırlanır.
+                      Seçili tam araç planıyla (
+                      {selectedPlan
+                        ? `${selectedPlan.label} · ${fmt(selectedPlanOrder?.orderM2 ?? selectedPlan.planM2, 1)} m²`
+                        : `${vehicle === "kamyon" ? "1 Kamyon" : "1 TIR"} · ${fmt(selected.orderM2, 1)} m²`}
+                      ) hazırlanır.
                     </p>
                   </div>
                 )}

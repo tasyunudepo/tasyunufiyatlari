@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildBonusPlateOrder } from '@/lib/pricing/bonus/packageAssembly'
+import { buildBonusPlateOrder, buildBonusVehiclePlans } from '@/lib/pricing/bonus/packageAssembly'
 
 // Çifte marj kilidi: sunucunun marjlı satış fiyatı istemcide DEĞİŞMEDEN
 // kaleme döner. Emrah kuralı (13 Temmuz 2026): toz grubu marjı zaten
@@ -49,5 +49,47 @@ describe('Bonus levha kalemi montajı', () => {
     expect(buildBonusPlateOrder({ salePricePerM2: 370.03, packageM2: 0 }, 100)).toBeNull()
     expect(buildBonusPlateOrder({ salePricePerM2: 370.03, packageM2: 2.88 }, 0)).toBeNull()
     expect(buildBonusPlateOrder({ salePricePerM2: NaN, packageM2: 2.88 }, 100)).toBeNull()
+  })
+})
+
+// ─── Tam araç planı (karar: Emrah, 20 Temmuz 2026) ───────────────
+// Formül: metraj kamyona sığıyorsa 1 Kamyon; değilse tam TIR'lara böl,
+// kalan kamyona sığıyorsa "N TIR + 1 Kamyon", sığmıyorsa +1 TIR.
+// Varsayılan (ilk plan) her zaman yukarı tam-TIR yuvarlamasıdır.
+
+describe('Bonus tam araç planı', () => {
+  // Gold Plus 50 · 6 cm gerçek kapasiteleri: kamyon 725,8 / TIR 1.330,6
+  const KAMYON = 725.8
+  const TIR = 1330.6
+
+  it('14.500 m²: kalan 1.194 kamyona sığmaz → tek plan 11 TIR', () => {
+    const plans = buildBonusVehiclePlans(14500, KAMYON, TIR)
+    expect(plans).toHaveLength(1)
+    expect(plans[0]).toMatchObject({ tir: 11, kamyon: 0, label: '11 TIR', vehicleType: 'truck' })
+    expect(plans[0].planM2).toBeCloseTo(14636.6, 1)
+  })
+
+  it('14.000 m²: kalan 694 kamyona sığar → varsayılan 11 TIR, alternatif 10 TIR + 1 Kamyon', () => {
+    const plans = buildBonusVehiclePlans(14000, KAMYON, TIR)
+    expect(plans.map((p) => p.label)).toEqual(['11 TIR', '10 TIR + 1 Kamyon'])
+    expect(plans[1]).toMatchObject({ tir: 10, kamyon: 1, vehicleType: null })
+    expect(plans[1].planM2).toBeCloseTo(14031.8, 1)
+  })
+
+  it('kamyon-altı metraj: 1 Kamyon varsayılan, 1 TIR alternatif', () => {
+    const plans = buildBonusVehiclePlans(500, KAMYON, TIR)
+    expect(plans.map((p) => p.label)).toEqual(['1 Kamyon', '1 TIR'])
+    expect(plans[0].vehicleType).toBe('lorry')
+  })
+
+  it('tam TIR katı metraj tek plana düşer', () => {
+    const plans = buildBonusVehiclePlans(2661.2, KAMYON, TIR)
+    expect(plans).toHaveLength(1)
+    expect(plans[0]).toMatchObject({ tir: 2, kamyon: 0, label: '2 TIR' })
+  })
+
+  it('geçersiz girişte boş liste (fail-closed)', () => {
+    expect(buildBonusVehiclePlans(0, KAMYON, TIR)).toEqual([])
+    expect(buildBonusVehiclePlans(100, 0, TIR)).toEqual([])
   })
 })

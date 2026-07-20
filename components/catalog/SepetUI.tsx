@@ -59,32 +59,30 @@ export function findOptimalCombination(
   lorryPrice: number,
   truckPrice: number
 ): OptimalResult {
-  if (ihtiyac <= 0) return null;
+  if (ihtiyac <= 0 || lorryM2 <= 0 || truckM2 <= 0) return null;
 
-  let best: OptimalResult = null;
-  let minTL = Infinity;
-  let minFazla = Infinity;
-
-  for (let t = 0; t <= 10; t++) {
-    for (let k = 0; k <= 5; k++) {
-      if (t === 0 && k === 0) continue;
-      const totalM2 = t * truckM2 + k * lorryM2;
-      if (totalM2 < ihtiyac) continue;
-      const totalTL = t * truckM2 * truckPrice + k * lorryM2 * lorryPrice;
-      const fazla = totalM2 - ihtiyac;
-
-      if (
-        totalTL < minTL ||
-        (Math.abs(totalTL - minTL) < 100 && fazla < minFazla)
-      ) {
-        minTL = totalTL;
-        minFazla = fazla;
-        best = { kamyon: k, tir: t, totalM2, totalTL };
-      }
+  // Karar (Emrah, 20 Temmuz 2026): plan formülü sabittir — ihtiyaç
+  // kamyona sığıyorsa 1 Kamyon; değilse tam TIR'lara bölünür, kalan
+  // kamyona sığıyorsa 1 Kamyon eklenir, sığmıyorsa bir üst tam TIR'a
+  // yuvarlanır. Birden fazla kamyon önerilmez. Önceki TL taraması hem
+  // "N TIR + 5 Kamyon" gibi saha gerçeğine aykırı planlar üretiyordu
+  // hem de 10 TIR tavanı yüzünden büyük metrajlarda (ör. 14.500 m²)
+  // hiç sonuç döndürmüyordu.
+  let kamyon = 0;
+  let tir = 0;
+  if (ihtiyac <= lorryM2) {
+    kamyon = 1;
+  } else {
+    tir = Math.floor(ihtiyac / truckM2);
+    const kalan = ihtiyac - tir * truckM2;
+    if (kalan > 1e-9) {
+      if (kalan <= lorryM2) kamyon = 1;
+      else tir += 1;
     }
   }
-
-  return best;
+  const totalM2 = tir * truckM2 + kamyon * lorryM2;
+  const totalTL = tir * truckM2 * truckPrice + kamyon * lorryM2 * lorryPrice;
+  return { kamyon, tir, totalM2, totalTL };
 }
 
 function buildEffectivePrice(
