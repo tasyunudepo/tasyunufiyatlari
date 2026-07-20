@@ -8,10 +8,12 @@ DECLARE
   n INTEGER;
   v NUMERIC;
 BEGIN
-  -- 231 fiyat hücresi: F 150 (13) + F 120 (12) + F 150 Pro (8) = 33 satır × 7 bölge
+  -- 1358 fiyat hücresi: çekirdek 3 ürün 33 satır + 20 Temmuz genişletmesi
+  -- 20 ürün 161 satır = 194 satır × 7 bölge (v22 + yeniden üretilmiş v19b).
+  -- Genişletme uygulanmamış eski canlıda bu değer 231'dir.
   SELECT count(*) INTO n FROM public.plate_region_prices;
-  IF n <> 231 THEN
-    RAISE EXCEPTION 'Beklenen 231 fiyat hücresi, bulunan %', n;
+  IF n <> 1358 THEN
+    RAISE EXCEPTION 'Beklenen 1358 fiyat hücresi, bulunan %', n;
   END IF;
 
   SELECT count(*) INTO n
@@ -37,6 +39,15 @@ BEGIN
   WHERE p.short_name = 'F 150' AND prp.thickness_mm = 50 AND prp.region = 3;
   IF v IS DISTINCT FROM 352.41 THEN
     RAISE EXCEPTION 'F 150 50mm 3.bölge taban fiyatı 352.41 olmalıydı, bulunan %', v;
+  END IF;
+
+  -- Golden (genişletme): Gold Yellow 70 / 30 mm / 1. Bölge — liste 149,66
+  SELECT prp.list_price INTO v
+  FROM public.plate_region_prices prp
+  JOIN public.plates p ON p.id = prp.plate_id
+  WHERE p.short_name = 'Gold Yellow 70' AND prp.thickness_mm = 30 AND prp.region = 1;
+  IF v IS DISTINCT FROM 149.66 THEN
+    RAISE EXCEPTION 'Gold Yellow 70 30mm 1.bölge liste fiyatı 149.66 olmalıydı, bulunan %', v;
   END IF;
 
   -- Taban her hücrede liste × 0,90 (kuruşa yuvarlı)

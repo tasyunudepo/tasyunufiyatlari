@@ -37,14 +37,27 @@ run_sql() {
     < "$repo_root/$1" >/dev/null
 }
 
+run_inline() {
+  docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
+    -c "$1" >/dev/null
+}
+
 run_sql tests/db/technical-profiles-bootstrap.sql
 run_sql scripts/migration-v18-plate-technical-profiles.sql
+run_sql tests/db/technical-profiles-assert.sql                    # v18 durumu (Bonus pasif)
 run_sql scripts/migration-v19-bonus-region-pricing.sql
-run_sql scripts/migration-v19b-seed-bonus-region-prices.sql
-run_sql tests/db/bonus-pricing-assert.sql
-run_sql scripts/migration-v19-bonus-region-pricing.sql            # idempotency
-run_sql scripts/migration-v19b-seed-bonus-region-prices.sql       # idempotency
-run_sql tests/db/bonus-pricing-assert.sql
-run_sql tests/db/technical-profiles-assert.sql                    # v18 regresyonu
 
-echo 'Bonus fiyat DB sözleşmesi geçti: 231 hücre, golden değerler, marka marjı, şehir eşlemesi, RLS ve idempotency doğru.'
+# Canlıda adim2'nin yaptığı çekirdek aktivasyon (v21 kapısı ister)
+run_inline "UPDATE public.plates SET is_active=true WHERE short_name IN ('F 150','F 150 Pro','F 120');"
+
+run_sql scripts/migration-v21-bonus-catalog-pdp.sql
+run_sql scripts/migration-v22-bonus-tasyunu-genisletme.sql
+run_sql scripts/migration-v19b-seed-bonus-region-prices.sql       # v22 çıpalarına muhtaç
+run_sql scripts/canli-bonus-genisletme-aktivasyon.sql
+run_sql tests/db/bonus-pricing-assert.sql
+run_sql scripts/migration-v22-bonus-tasyunu-genisletme.sql        # idempotency
+run_sql scripts/migration-v19b-seed-bonus-region-prices.sql       # idempotency
+run_sql scripts/canli-bonus-genisletme-aktivasyon.sql             # idempotency
+run_sql tests/db/bonus-pricing-assert.sql
+
+echo 'Bonus fiyat DB sözleşmesi geçti: 1358 hücre, golden değerler, marka marjı, şehir eşlemesi, RLS, v22 genişletmesi ve idempotency doğru.'

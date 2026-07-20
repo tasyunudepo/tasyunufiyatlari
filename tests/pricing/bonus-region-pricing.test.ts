@@ -18,15 +18,64 @@ import { getProfileByKey } from '@/lib/technical-profiles'
 // sayfa görüntülerinden elle doğrulanmıştır — karar günlüğü Tur 4.
 
 describe('veri bütünlüğü — doğrulanmış seed', () => {
-  it('üç Bonus ürünü ve beklenen satır sayıları', () => {
+  it('23 Bonus ürünü ve beklenen satır sayıları', () => {
+    // İlk üçü 13 Temmuz elle doğrulanmış çekirdek; kalanı 20 Temmuz
+    // genişletmesi (pdftotext -layout çıkarımı, çekirdekle altın test).
     expect(getBonusProductKeys()).toEqual([
       'bonus-premium-f-150',
       'bonus-premium-f-120',
       'bonus-premium-f-150-pro',
+      'bonus-gold-plus-50',
+      'bonus-gold-black-50',
+      'bonus-gold-yellow-50',
+      'bonus-gold-alu-50',
+      'bonus-gold-plus-70',
+      'bonus-gold-black-70',
+      'bonus-gold-yellow-70',
+      'bonus-gold-black-90',
+      'bonus-gold-plus-90',
+      'bonus-premium-f',
+      'bonus-premium-r',
+      'bonus-premium-r-150',
+      'bonus-platin-110',
+      'bonus-private-70',
+      'bonus-endustriyel-levha-70',
+      'bonus-endustriyel-levha-110',
+      'bonus-endustriyel-silte-650',
+      'bonus-endustriyel-silte-700',
+      'bonus-endustriyel-silte-720',
+      'bonus-endustriyel-silte-750',
     ])
     expect(getBonusPriceRows('bonus-premium-f-150')).toHaveLength(13)
     expect(getBonusPriceRows('bonus-premium-f-120')).toHaveLength(12)
     expect(getBonusPriceRows('bonus-premium-f-150-pro')).toHaveLength(8)
+    expect(getBonusPriceRows('bonus-gold-plus-50')).toHaveLength(10)
+    expect(getBonusPriceRows('bonus-premium-f')).toHaveLength(11)
+    expect(getBonusPriceRows('bonus-endustriyel-silte-650')).toHaveLength(8)
+  })
+
+  it('genişletme golden satırları — sayfa görüntüsünden elle doğrulandı', () => {
+    // s.53 Gold Yellow 70, 30 mm ve 150 mm satırları
+    const gy70 = getBonusPriceRows('bonus-gold-yellow-70')!
+    expect(gy70[0]).toEqual({
+      thicknessMm: 30,
+      packagePieces: 12,
+      packageM2: 8.64,
+      truckPackages: 192,
+      truckM2: 1658.9,
+      trailerPackages: 352,
+      trailerM2: 3041.3,
+      listPricesByRegion: [149.66, 154.92, 161.49, 168.07, 179.25, 191.09, 205.55],
+    })
+    expect(gy70[gy70.length - 1].listPricesByRegion).toEqual([
+      576.67, 604.73, 639.8, 674.88, 734.5, 797.63, 874.79,
+    ])
+    // s.73 Endüstriyel Şilte 650 (rabitz telli), 30 mm ve 120 mm bölge uçları
+    const silte = getBonusPriceRows('bonus-endustriyel-silte-650')!
+    expect(silte[0].listPricesByRegion[0]).toBe(254.02)
+    expect(silte[0].listPricesByRegion[6]).toBe(305.23)
+    expect(silte[silte.length - 1].listPricesByRegion[0]).toBe(587.58)
+    expect(silte[silte.length - 1].listPricesByRegion[6]).toBe(724.13)
   })
 
   it('her ürün anahtarı teknik profil havuzunda vardır', () => {

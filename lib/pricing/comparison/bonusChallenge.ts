@@ -32,16 +32,18 @@ export function getBonusChallengerModel(modelShortName: string): string | null {
   if (!profile) return null
   if (profile.brandName === 'Bonus') return null
   if (!profile.comparisonEligible) return null
+  if (!profile.density) return null
 
   const sourceMid = (profile.density.minKgM3 + profile.density.maxKgM3) / 2
 
   const candidates = getAllProfiles().filter(
-    (p) => p.brandName === 'Bonus' && p.wizardEligible && p.comparisonEligible,
+    (p) => p.brandName === 'Bonus' && p.wizardEligible && p.comparisonEligible && p.density !== null,
   )
   if (candidates.length === 0) return null
 
   let best: { model: string; diff: number; pref: number } | null = null
   for (const c of candidates) {
+    if (!c.density) continue
     const mid = (c.density.minKgM3 + c.density.maxKgM3) / 2
     const diff = Math.abs(mid - sourceMid)
     const pref = BONUS_PREFERENCE_ORDER.indexOf(c.modelShortName)

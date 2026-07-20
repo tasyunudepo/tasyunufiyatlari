@@ -53,7 +53,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     const all = getComparisonProfiles();
     if (variant !== "yogunluk_150") return all;
     // 150 görünümü: föy-beyanlı 150'likler önce, kalanlar bağlamda kalır.
-    const is150 = (p: TechnicalProfile) =>
+    const is150 = (p: (typeof all)[number]) =>
       p.density.sourceType === "datasheet" && p.density.minKgM3 >= 150;
     return [...all.filter(is150), ...all.filter((p) => !is150(p))];
   }, [variant]);

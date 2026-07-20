@@ -47,6 +47,17 @@ CREATE TABLE public.plates (
   density INTEGER,
   thickness_options JSONB,
   is_active BOOLEAN DEFAULT true,
+  -- v21/v22 katalog PDP kolonları (canlı şemanın migration'ların
+  -- dokunduğu alt kümesi)
+  slug TEXT UNIQUE,
+  image_cover TEXT,
+  preferred_thickness NUMERIC,
+  sales_mode TEXT,
+  pricing_visibility_mode TEXT,
+  requires_city_for_pricing BOOLEAN DEFAULT false,
+  meta_title TEXT,
+  meta_description TEXT,
+  catalog_description TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

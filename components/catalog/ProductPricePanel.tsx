@@ -33,6 +33,7 @@ import SingleProductQuoteButton from "./SingleProductQuoteButton";
 import WizardLinkButton from "./WizardLinkButton";
 import BonusRegionPrice from "./BonusRegionPrice";
 import BonusAlternativeCard from "./BonusAlternativeCard";
+import { getBonusFamily, isUnpricedBonusModel } from "@/lib/pricing/bonus/families";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 interface ShippingZone {
@@ -93,6 +94,8 @@ export default function ProductPricePanel({
   const [debouncedM2, setDebouncedM2] = useState<string>("");
   type MetrajMode = "custom" | "lorry" | "truck";
   const [, setMetrajMode] = useState<MetrajMode>("custom");
+  // Bonus aile-PDP'de seçili yoğunluk varyantı (null = plate'in kendi modeli)
+  const [bonusVariantModel, setBonusVariantModel] = useState<string | null>(null);
   const [resultSessionId] = useState(() =>
     `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
   );
@@ -286,6 +289,18 @@ export default function ProductPricePanel({
   // Genel plate_prices/logistics hesapları Bonus'a uygulanmaz.
   const isBonusPlate = product.product_type === "plate" && product.brand?.name === "Bonus";
 
+  // Aile-PDP yoğunluk seçici (20 Temmuz kararı): Gold / Endüstriyel
+  // aileleri tek PDP'de yoğunluk varyantlarıyla sunulur. Seçim yalnız
+  // fiyat sorgusundaki modeli değiştirir; fiyat yine sunucudan iner.
+  const bonusFamily =
+    isBonusPlate && product.model ? getBonusFamily(product.model) : null;
+  const effectiveBonusModel = bonusVariantModel ?? product.model;
+
+  // Fiyatı listede olmayan Bonus modeli (Desibel, Marin vb.): canlı fiyat
+  // kartı yok; statik "Teklif ile belirlenir" akışı geçerli kalır.
+  const isPricedBonusModel =
+    isBonusPlate && !!product.model && !isUnpricedBonusModel(product.model);
+
   const showSepet =
     showTierPrice &&
     logistics !== null &&
@@ -412,8 +427,10 @@ export default function ProductPricePanel({
           // bölgeye göre gösterir. Genel plate_prices yok → getPriceDisplay
           // burada "görünmez" der ve yanıltıcı "Teklif ile belirlenir" basardı.
           // Bu statik başlığı Bonus'ta hiç göstermeyip tek fiyat otoritesini
-          // BonusRegionPrice'a bırakıyoruz.
-          if (isBonusPlate) return null;
+          // BonusRegionPrice'a bırakıyoruz. İstisna: fiyat listesinde
+          // olmayan modeller (Desibel, Marin vb.) — onlarda canlı kart
+          // yoktur, statik "Teklif ile belirlenir" akışı doğru mesajdır.
+          if (isPricedBonusModel) return null;
 
           // Hero dinamik fiyat hesaplandığında statik etiket gizlenir.
           if (showTierPrice && heroPrice !== null) return null;
@@ -600,10 +617,39 @@ export default function ProductPricePanel({
             Bonus Direkt Alım'a geçince (single_only + from_price) product
             geçilir → araç seçimli PDF teklif butonu açılır. quote_required
             modunda product geçilmez → yalnız fiyat gösterilir. */}
-        {isBonusPlate && zone && product.model && (
+        {isPricedBonusModel && zone && bonusFamily && bonusFamily.variants.length > 1 && (
+          <div className="mb-3">
+            <p className="mb-1.5 text-xs font-medium text-fe-muted">
+              {bonusFamily.selectorTitle}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {bonusFamily.variants.map((v) => {
+                const active = v.modelShortName === effectiveBonusModel;
+                return (
+                  <button
+                    key={v.modelShortName}
+                    type="button"
+                    onClick={() => setBonusVariantModel(v.modelShortName)}
+                    aria-pressed={active}
+                    className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                      active
+                        ? "border-brand-400 bg-brand-500/15 text-brand-200"
+                        : "border-fe-border text-fe-muted hover:border-brand-400/50 hover:text-fe-text"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {isPricedBonusModel && zone && effectiveBonusModel && (
           <div className="mb-4">
             <BonusRegionPrice
-              modelShortName={product.model}
+              key={effectiveBonusModel}
+              modelShortName={effectiveBonusModel}
               thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
               cityCode={zone.city_code}
               cityName={zone.city_name}
