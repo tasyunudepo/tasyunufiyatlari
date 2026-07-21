@@ -102,11 +102,14 @@ export default async function KategoriPage({ params }: Props) {
           <>
             <p className="text-xs text-fe-muted mb-5">{products.length} ürün</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map((product) => (
+              {products.map((product, index) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   kategori={kategori}
+                  // İlk iki satır (3 sütun × 2) ekran üstündedir; LCP görseli
+                  // lazy kalırsa Next uyarı verir ve LCP gecikir.
+                  imagePriority={index < 6}
                 />
               ))}
             </div>

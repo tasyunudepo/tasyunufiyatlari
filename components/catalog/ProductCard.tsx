@@ -6,6 +6,8 @@ import type { CatalogProductView } from '@/lib/catalog/types';
 interface ProductCardProps {
   product: CatalogProductView;
   kategori: string; // URL segmenti için
+  /** Ekran üstü kartlarda LCP görseli lazy kalmasın (next/image priority) */
+  imagePriority?: boolean;
 }
 
 const SALES_MODE_BADGE: Record<string, { label: string; color: string }> = {
@@ -15,7 +17,7 @@ const SALES_MODE_BADGE: Record<string, { label: string; color: string }> = {
   system_only:      { label: 'Sistem Ürünü',   color: 'bg-fe-raised text-fe-muted border-fe-border'   },
 };
 
-export default function ProductCard({ product, kategori }: ProductCardProps) {
+export default function ProductCard({ product, kategori, imagePriority = false }: ProductCardProps) {
   const badge = SALES_MODE_BADGE[product.rules.sales_mode] ?? SALES_MODE_BADGE.quote_only;
   const href = `/urunler/${kategori}/${product.slug}`;
 
@@ -30,6 +32,7 @@ export default function ProductCard({ product, kategori }: ProductCardProps) {
         src={product.image_cover}
         alt={product.name}
         className="h-36 w-full"
+        priority={imagePriority}
       />
 
       {/* İçerik */}
