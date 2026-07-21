@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import ProductCard from '@/components/catalog/ProductCard';
 import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
+import { TASYUNU_SECTIONS, resolveTasyunuSection } from '@/lib/catalog/sections';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
 import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
@@ -98,6 +99,62 @@ export default async function KategoriPage({ params }: Props) {
               {info.emptyHint ? 'Hesap Makinesine Git' : 'Tüm kategorilere dön'}
             </Link>
           </div>
+        ) : kategori === 'tasyunu-levha' ? (
+          // ── Faz 1 (21 Temmuz kararı): taşyünü listesi kullanım alanına
+          // göre bölümlenir; mantolama müşterisi ile gemi/endüstriyel
+          // müşterisi aynı düz listede boğulmaz. Faz 2'de bölümler ayrı
+          // SEO sayfalarına taşınacak. ──
+          (() => {
+            const grouped = TASYUNU_SECTIONS.map((section) => ({
+              section,
+              items: products.filter(
+                (p) => resolveTasyunuSection(p.model) === section.key,
+              ),
+            })).filter((g) => g.items.length > 0);
+            let cardIndex = 0;
+            return (
+              <>
+                {/* Bölüm çipleri — tıklayınca ilgili bölüme kaydırır */}
+                <nav
+                  aria-label="Kullanım alanına göre bölümler"
+                  className="sticky top-0 z-20 -mx-4 mb-6 border-b border-fe-border bg-fe-bg/95 px-4 py-2.5 backdrop-blur"
+                >
+                  <div className="flex gap-2 overflow-x-auto">
+                    {grouped.map(({ section, items }) => (
+                      <a
+                        key={section.key}
+                        href={`#${section.key}`}
+                        className="shrink-0 rounded-full border border-fe-border px-3 py-1 text-xs text-fe-muted transition-colors hover:border-brand-400/60 hover:text-fe-text"
+                      >
+                        {section.title} ({items.length})
+                      </a>
+                    ))}
+                  </div>
+                </nav>
+
+                <p className="text-xs text-fe-muted mb-5">{products.length} ürün · {grouped.length} kullanım alanı</p>
+
+                {grouped.map(({ section, items }) => (
+                  <section key={section.key} id={section.key} className="mb-10 scroll-mt-16">
+                    <h2 className="text-lg font-bold text-white mb-1">{section.title}</h2>
+                    <p className="text-sm text-fe-muted mb-4 max-w-3xl">{section.desc}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {items.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          kategori={kategori}
+                          // İlk iki satır ekran üstündedir; LCP görseli lazy
+                          // kalırsa Next uyarı verir ve LCP gecikir.
+                          imagePriority={cardIndex++ < 6}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </>
+            );
+          })()
         ) : (
           <>
             <p className="text-xs text-fe-muted mb-5">{products.length} ürün</p>

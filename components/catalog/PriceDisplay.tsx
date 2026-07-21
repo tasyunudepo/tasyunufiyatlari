@@ -8,6 +8,12 @@ interface PriceDisplayProps {
   basePrice: number | null;
   /** "paket" | "m²" | "adet" — listede ek bilgi için */
   unitLabel?: string;
+  /**
+   * Fiyat görünmez durumundaki genel not yerine bağlama özel metin
+   * (ör. liste kartında "Şehrini seç…"). Fiyat KARARI yine decision.ts'te;
+   * bu yalnız fiyatsız durumun yardımcı cümlesini özelleştirir.
+   */
+  emptyNoteOverride?: string;
 }
 
 /**
@@ -16,13 +22,13 @@ interface PriceDisplayProps {
  * Listede ve detayda farklı render gösterirse hata buraya değil
  * decision.ts'ye gider.
  */
-export default function PriceDisplay({ rules, basePrice, unitLabel = 'paket' }: PriceDisplayProps) {
+export default function PriceDisplay({ rules, basePrice, unitLabel = 'paket', emptyNoteOverride }: PriceDisplayProps) {
   const display = getPriceDisplay(rules, basePrice, unitLabel);
 
   if (!display.visible) {
     return (
       <span className="text-sm text-fe-muted italic">
-        {display.note ?? 'Teklif ile belirlenir'}
+        {emptyNoteOverride ?? display.note ?? 'Teklif ile belirlenir'}
       </span>
     );
   }

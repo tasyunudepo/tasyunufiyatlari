@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import PriceDisplay from './PriceDisplay';
 import ProductImage from './ProductImage';
+import { formatThicknessSummary, getDensityBadge } from '@/lib/catalog/sections';
 import type { CatalogProductView } from '@/lib/catalog/types';
 
 interface ProductCardProps {
@@ -20,6 +21,24 @@ const SALES_MODE_BADGE: Record<string, { label: string; color: string }> = {
 export default function ProductCard({ product, kategori, imagePriority = false }: ProductCardProps) {
   const badge = SALES_MODE_BADGE[product.rules.sales_mode] ?? SALES_MODE_BADGE.quote_only;
   const href = `/urunler/${kategori}/${product.slug}`;
+
+  // Kartın ayırt edici bilgileri: yoğunluk (föy beyanı; aile kartında
+  // varyantlar birleşik) + tek satır kalınlık özeti. Kalınlık çip
+  // listesi kart alanını yiyip bilgi taşımıyordu (21 Temmuz kararı).
+  const densityBadge =
+    product.product_type === 'plate' && product.material_type === 'tasyunu'
+      ? getDensityBadge(product.model)
+      : null;
+  const thicknessSummary = formatThicknessSummary(product.thickness_options);
+
+  // Fiyatsız durumda genel "şehir ve miktara göre değişir" yerine
+  // yönlendiren mikro-metin (fiyat kararı decision.ts'te kalır).
+  const emptyNote =
+    product.rules.sales_mode === 'quote_only'
+      ? 'Proje bazlı teklif — formu doldurun, aynı gün dönüş'
+      : product.rules.requires_city_for_pricing
+        ? 'Şehrini seç, m² fiyatını anında gör'
+        : undefined;
 
   return (
     <Link
@@ -52,20 +71,22 @@ export default function ProductCard({ product, kategori, imagePriority = false }
         </span>
       </div>
 
-      {/* Model / kalınlıklar */}
+      {/* Model + ayırt edici özet: yoğunluk rozeti ve kalınlık aralığı */}
       {product.model && (
-        <p className="text-xs text-fe-muted-strong mb-1">{product.model}</p>
+        <p className="text-xs text-fe-muted-strong mb-1.5">{product.model}</p>
       )}
-      {product.thickness_options && product.thickness_options.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {product.thickness_options.map((t) => (
-            <span
-              key={t}
-              className="text-xs px-1.5 py-0.5 bg-fe-raised text-fe-text rounded"
-            >
-              {t} cm
+      {(densityBadge || thicknessSummary) && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          {densityBadge && (
+            <span className="text-xs px-2 py-0.5 rounded border border-brand-800/60 bg-brand-900/30 text-brand-300 font-medium">
+              {densityBadge}
             </span>
-          ))}
+          )}
+          {thicknessSummary && (
+            <span className="text-xs px-2 py-0.5 rounded bg-fe-raised text-fe-text">
+              {thicknessSummary}
+            </span>
+          )}
         </div>
       )}
 
@@ -75,6 +96,7 @@ export default function ProductCard({ product, kategori, imagePriority = false }
           rules={product.rules}
           basePrice={product.base_price}
           unitLabel={product.product_type === 'plate' ? 'm²' : 'paket'}
+          emptyNoteOverride={emptyNote}
         />
       </div>
 
