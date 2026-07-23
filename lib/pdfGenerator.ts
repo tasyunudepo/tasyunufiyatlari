@@ -392,12 +392,19 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
          <div style="flex:1; background:#fff; border:2px solid ${COLORS.slate900}; border-radius:8px; padding:16px; display:flex; flex-direction:column; justify-content:center;">
             
             <div style="font-size:11px; font-weight:700; color:${COLORS.slate700}; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${shippingPresentation.heroLabel}</div>
-            
-            <div style="font-size:32px; font-weight:800; color:${COLORS.slate900}; line-height:1; margin-bottom:12px; font-feature-settings:'tnum';">
-                ${escapeHtml(fmtMoney(calculatedM2Price))}
+
+            <!-- Büyük rakam KDV DAHİL: ekrandaki 3 paket kartıyla aynı taban (PackageCard m2PriceWithVat) -->
+            <div style="font-size:32px; font-weight:800; color:${COLORS.slate900}; line-height:1; margin-bottom:8px; font-feature-settings:'tnum';">
+                ${escapeHtml(fmtMoney(calculatedM2Price * 1.2))}
                 <span style="font-size:14px; font-weight:600; color:${COLORS.slate500};">/ m²</span>
+                <span style="font-size:10px; font-weight:700; color:${COLORS.slate700}; letter-spacing:0.5px;"> KDV DAHİL</span>
             </div>
-            
+
+            <div style="padding-top:6px; border-top:1px solid ${COLORS.border}; display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:11px; font-weight:600; color:${COLORS.slate700};">KDV hariç</span>
+                <span style="font-size:13px; font-weight:700; color:${COLORS.slate900}; font-feature-settings:'tnum';">${escapeHtml(fmtMoney(calculatedM2Price))} / m²</span>
+            </div>
+
             <!-- Alt Çizgi: Açık Lacivert (COLORS.border) -->
             <div style="margin-top:auto; padding-top:8px; border-top:2px solid ${COLORS.border}; display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:11px; font-weight:600; color:${COLORS.slate700};">Toplam Metraj</span>

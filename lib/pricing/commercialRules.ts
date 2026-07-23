@@ -14,7 +14,7 @@ export function getShippingPresentation(mode: ShippingMode) {
   if (mode === 'included_in_sale_price') {
     return {
       isIncluded: true,
-      heroLabel: 'NAKLİYE DAHİL M² MALİYETİ · KDV HARİÇ',
+      heroLabel: 'NAKLİYE DAHİL M² MALİYETİ',
       statusLabel: 'DAHİL',
       termsLabel: 'FİYATA DAHİLDİR',
       footerLabel: 'DAHİL',
@@ -24,7 +24,7 @@ export function getShippingPresentation(mode: ShippingMode) {
   if (mode === 'separate_quote_required') {
     return {
       isIncluded: false,
-      heroLabel: 'ÜRÜN M² MALİYETİ · KDV HARİÇ',
+      heroLabel: 'ÜRÜN M² MALİYETİ',
       statusLabel: 'SATIŞ GÖRÜŞMESİNDE NETLEŞİR',
       termsLabel: 'SATIŞ GÖRÜŞMESİNDE NETLEŞİR',
       footerLabel: 'TEYİT GEREKİR',
@@ -33,7 +33,7 @@ export function getShippingPresentation(mode: ShippingMode) {
 
   return {
     isIncluded: false,
-    heroLabel: 'M² MALİYETİ · KDV VE NAKLİYE HARİÇ',
+    heroLabel: 'M² MALİYETİ · NAKLİYE HARİÇ',
     statusLabel: 'ALICIYA AİT',
     termsLabel: 'ALICIYA AİTTİR',
     footerLabel: 'HARİÇ',
