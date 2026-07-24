@@ -391,24 +391,29 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
          <!-- Zemin BEYAZ, Border LACİVERT, Yazılar LACİVERT -->
          <div style="flex:1; background:#fff; border:2px solid ${COLORS.slate900}; border-radius:8px; padding:16px; display:flex; flex-direction:column; justify-content:center;">
             
-            <div style="font-size:11px; font-weight:700; color:${COLORS.slate700}; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${shippingPresentation.heroLabel}</div>
+            <!-- Karar (Emrah, 24 Temmuz 2026): kutunun kahramanı TOPLAM
+                 METRAJ — en üstte ve büyük. KDV dahil/hariç m² fiyatları
+                 altta EŞİT boyutta iki satır. Değer tabanları değişmedi:
+                 dahil = calculatedM2Price × 1,2 (ekran kartıyla aynı),
+                 hariç = calculatedM2Price. -->
+            <div style="font-size:11px; font-weight:700; color:${COLORS.slate700}; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Toplam Metraj</div>
 
-            <!-- Büyük rakam KDV DAHİL: ekrandaki 3 paket kartıyla aynı taban (PackageCard m2PriceWithVat) -->
-            <div style="font-size:32px; font-weight:800; color:${COLORS.slate900}; line-height:1; margin-bottom:8px; font-feature-settings:'tnum';">
-                ${escapeHtml(fmtMoney(calculatedM2Price * 1.2))}
-                <span style="font-size:14px; font-weight:600; color:${COLORS.slate500};">/ m²</span>
-                <span style="font-size:10px; font-weight:700; color:${COLORS.slate700}; letter-spacing:0.5px;"> KDV DAHİL</span>
+            <div style="font-size:34px; font-weight:800; color:${COLORS.slate900}; line-height:1; margin-bottom:10px; font-feature-settings:'tnum';">
+                ${(data.items[0]?.quantity || metrajValue).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                <span style="font-size:16px; font-weight:600; color:${COLORS.slate500};">m²</span>
             </div>
 
-            <div style="padding-top:6px; border-top:1px solid ${COLORS.border}; display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <div style="padding-top:8px; border-top:2px solid ${COLORS.border}; font-size:10px; font-weight:700; color:${COLORS.slate700}; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">${shippingPresentation.heroLabel}</div>
+
+            <!-- KDV DAHİL: ekrandaki 3 paket kartıyla aynı taban (PackageCard m2PriceWithVat) -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:11px; font-weight:600; color:${COLORS.slate700};">KDV DAHİL</span>
+                <span style="font-size:15px; font-weight:800; color:${COLORS.slate900}; font-feature-settings:'tnum';">${escapeHtml(fmtMoney(calculatedM2Price * 1.2))} / m²</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
                 <span style="font-size:11px; font-weight:600; color:${COLORS.slate700};">KDV hariç</span>
-                <span style="font-size:13px; font-weight:700; color:${COLORS.slate900}; font-feature-settings:'tnum';">${escapeHtml(fmtMoney(calculatedM2Price))} / m²</span>
-            </div>
-
-            <!-- Alt Çizgi: Açık Lacivert (COLORS.border) -->
-            <div style="margin-top:auto; padding-top:8px; border-top:2px solid ${COLORS.border}; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:11px; font-weight:600; color:${COLORS.slate700};">Toplam Metraj</span>
-                <span style="font-size:14px; font-weight:800; color:${COLORS.slate900}; font-feature-settings:'tnum';">${(data.items[0]?.quantity || metrajValue).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m²</span>
+                <span style="font-size:15px; font-weight:800; color:${COLORS.slate900}; font-feature-settings:'tnum';">${escapeHtml(fmtMoney(calculatedM2Price))} / m²</span>
             </div>
          </div>
       </div>
