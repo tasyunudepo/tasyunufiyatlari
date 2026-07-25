@@ -90,7 +90,7 @@ export function MarginRulesTab() {
           <div>
             <h2 className="text-lg font-semibold text-white">Marj Kuralları</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Mantolama wizard'ında uygulanan hacim-bazlı kâr marjı kademeleri ve
+              Mantolama wizard&apos;ında uygulanan hacim-bazlı kâr marjı kademeleri ve
               tam-araç kuralı. Değişiklikler anında geçerli olur (sayfa yenilemesi gerekir).
             </p>
           </div>
@@ -245,7 +245,7 @@ export function MarginRulesTab() {
                       </p>
                       <p className="mt-0.5 text-[11px] text-slate-400">
                         Açıkken yalnızca tam Kamyon, tam TIR ya da bunların kombinasyonları kabul edilir;
-                        ara metrajlar wizard'da bloklanır.
+                        ara metrajlar wizard&apos;da bloklanır.
                       </p>
                     </div>
                   </label>

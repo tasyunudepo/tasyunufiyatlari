@@ -13,6 +13,32 @@ import { formatCurrency, formatAmount, formatM2 } from "@/lib/admin/utils";
 
 type LucideIcon = typeof FileText;
 
+interface DashboardQuote {
+    id: number;
+    created_at: string;
+    status: string | null;
+    request_type: string | null;
+    customer_name: string | null;
+    brand_name: string | null;
+    area_m2: number | null;
+    total_price: number | null;
+}
+
+/** Son 24 saatin saatlik kovaları — `now` render'da değil veri yüklendiği anda alınır. */
+function buildHourlyBuckets(
+    quotes: DashboardQuote[],
+    now: number,
+    filter?: (q: DashboardQuote) => boolean,
+): number[] {
+    const buckets = new Array(24).fill(0);
+    for (const q of quotes) {
+        if (filter && !filter(q)) continue;
+        const diff = (now - new Date(q.created_at).getTime()) / (1000 * 60 * 60);
+        if (diff >= 0 && diff < 24) buckets[23 - Math.floor(diff)]++;
+    }
+    return buckets;
+}
+
 function Sparkline({ data }: { data: number[] }) {
     if (!data.length) return null;
     const max = Math.max(...data, 1);
@@ -95,7 +121,8 @@ function Gauge({ percent, label }: { percent: number; label: string }) {
 }
 
 export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
-    const [dashboardQuotes, setDashboardQuotes] = useState<any[]>([]);
+    const [dashboardQuotes, setDashboardQuotes] = useState<DashboardQuote[]>([]);
+    const [quotesLoadedAt, setQuotesLoadedAt] = useState(0);
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [metricsError, setMetricsError] = useState(false);
 
@@ -105,6 +132,7 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
             const payload = await res.json().catch(() => null);
             if (res.ok && payload?.ok) {
                 setDashboardQuotes(payload.quotes ?? []);
+                setQuotesLoadedAt(Date.now());
             }
         }
         loadDashboardQuotes();
@@ -125,48 +153,25 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
         .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
         .slice(0, 4);
 
-    const hourlyBuckets = useMemo(() => {
-        const buckets = new Array(24).fill(0);
-        const now = Date.now();
-        for (const q of dashboardQuotes) {
-            const diff = (now - new Date(q.created_at).getTime()) / (1000 * 60 * 60);
-            if (diff >= 0 && diff < 24) buckets[23 - Math.floor(diff)]++;
-        }
-        return buckets;
-    }, [dashboardQuotes]);
+    const hourlyBuckets = useMemo(
+        () => buildHourlyBuckets(dashboardQuotes, quotesLoadedAt),
+        [dashboardQuotes, quotesLoadedAt],
+    );
 
-    const hourlyPdfBuckets = useMemo(() => {
-        const buckets = new Array(24).fill(0);
-        const now = Date.now();
-        for (const q of dashboardQuotes) {
-            if (q.request_type !== "pdf_quote") continue;
-            const diff = (now - new Date(q.created_at).getTime()) / (1000 * 60 * 60);
-            if (diff >= 0 && diff < 24) buckets[23 - Math.floor(diff)]++;
-        }
-        return buckets;
-    }, [dashboardQuotes]);
+    const hourlyPdfBuckets = useMemo(
+        () => buildHourlyBuckets(dashboardQuotes, quotesLoadedAt, (q) => q.request_type === "pdf_quote"),
+        [dashboardQuotes, quotesLoadedAt],
+    );
 
-    const hourlyWaBuckets = useMemo(() => {
-        const buckets = new Array(24).fill(0);
-        const now = Date.now();
-        for (const q of dashboardQuotes) {
-            if (q.request_type !== "whatsapp_order") continue;
-            const diff = (now - new Date(q.created_at).getTime()) / (1000 * 60 * 60);
-            if (diff >= 0 && diff < 24) buckets[23 - Math.floor(diff)]++;
-        }
-        return buckets;
-    }, [dashboardQuotes]);
+    const hourlyWaBuckets = useMemo(
+        () => buildHourlyBuckets(dashboardQuotes, quotesLoadedAt, (q) => q.request_type === "whatsapp_order"),
+        [dashboardQuotes, quotesLoadedAt],
+    );
 
-    const hourlyPendingBuckets = useMemo(() => {
-        const buckets = new Array(24).fill(0);
-        const now = Date.now();
-        for (const q of dashboardQuotes) {
-            if (q.status !== "pending") continue;
-            const diff = (now - new Date(q.created_at).getTime()) / (1000 * 60 * 60);
-            if (diff >= 0 && diff < 24) buckets[23 - Math.floor(diff)]++;
-        }
-        return buckets;
-    }, [dashboardQuotes]);
+    const hourlyPendingBuckets = useMemo(
+        () => buildHourlyBuckets(dashboardQuotes, quotesLoadedAt, (q) => q.status === "pending"),
+        [dashboardQuotes, quotesLoadedAt],
+    );
 
     const areaChartData = hourlyBuckets.map((value, i) => ({
         hour: i === 23 ? "Şimdi" : `${23 - i}s`,
@@ -337,7 +342,7 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                                         <p className="text-[10px] uppercase tracking-wider text-[var(--nx-gold)]">
                                             {q.request_type === "pdf_quote" ? "PDF" : "WhatsApp"}
                                         </p>
-                                        <p className="text-[11px] text-[var(--nx-text-soft)]">{formatCurrency(q.total_price)}</p>
+                                        <p className="text-[11px] text-[var(--nx-text-soft)]">{formatCurrency(q.total_price ?? 0)}</p>
                                     </div>
                                 </div>
                             </div>

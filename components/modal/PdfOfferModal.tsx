@@ -28,6 +28,14 @@ export function PdfOfferModal({
   // gizli ama erişilebilir tutar; sürtünme azaltır.
   const [showDetails, setShowDetails] = useState(false);
 
+  // Modal her açılışta detaylar kapalı başlar — effect yerine render
+  // sırasında uyarlama (cascading render tetiklemez).
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) setShowDetails(false);
+  }
+
   const {
     register,
     handleSubmit,
@@ -49,7 +57,6 @@ export function PdfOfferModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setShowDetails(false);
     reset((prev) => ({
       ...prev,
       relatedPerson: '',

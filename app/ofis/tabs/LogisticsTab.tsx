@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import type { LogisticsCapacity } from "@/lib/types";
 
 export function LogisticsTab() {
-    const [logisticsData, setLogisticsData] = useState<any[]>([]);
+    const [logisticsData, setLogisticsData] = useState<LogisticsCapacity[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

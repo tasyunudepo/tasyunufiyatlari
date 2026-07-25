@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import type { ShippingZone } from "@/lib/types";
 
 export function DiscountsTab() {
-    const [zones, setZones] = useState<any[]>([]);
+    const [zones, setZones] = useState<ShippingZone[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -69,7 +70,7 @@ export function DiscountsTab() {
                             </thead>
                             <tbody>
                                 {zones.slice(0, 10).map((zone, index) => (
-                                    <tr key={`${zone.id}-${index}`}>
+                                    <tr key={`${zone.city_code}-${index}`}>
                                         <td className="px-4 py-3 text-sm text-white">{zone.city_name}</td>
                                         <td className="px-4 py-3 text-sm">
                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${zone.zone === "green" ? "bg-green-500/20 text-green-400 border-green-500/30" : zone.zone === "yellow" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>
