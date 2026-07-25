@@ -147,6 +147,28 @@ if (objectPath) {
   console.log('BİLGİ: Bucket boş veya nesne listelenemedi; public nesne HEAD testi atlandı.')
 }
 
+// Tekno fiyat kuralları bekçisi (karar: 2026-07-23).
+// Tedarikçi listesi KDV hariçtir; is_kdv_included=true sızarsa motor
+// olmayan KDV'yi ayırıp ~%16,7 düşük satar. İskonto zinciri ortak
+// kararıyla 40+5'tir. Yanlış import bu kontrolle kırmızıya düşer.
+const teknoResponse = await fetch(
+  `${supabaseUrl}/rest/v1/accessories?select=slug,is_kdv_included,discount_1,discount_2&brand_id=eq.6&is_active=eq.true`,
+  { headers: supabaseHeaders(serviceKey) },
+)
+const teknoRows = await jsonOrNull(teknoResponse)
+if (!teknoResponse.ok || !Array.isArray(teknoRows) || teknoRows.length === 0) {
+  fail('Tekno (brand_id=6) aksesuar satırları okunamadı')
+} else {
+  const bozuk = teknoRows.filter(
+    (r) => r.is_kdv_included !== false || r.discount_1 !== 40 || r.discount_2 !== 5,
+  )
+  if (bozuk.length === 0) {
+    pass(`Tekno fiyat kuralları doğru (${teknoRows.length} satır: KDV hariç, iskonto 40+5)`)
+  } else {
+    fail(`Tekno fiyat kuralı ihlali: ${bozuk.map((r) => r.slug).join(', ')}`)
+  }
+}
+
 const rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/submit_quote_guarded`, {
   method: 'POST',
   headers: supabaseHeaders(serviceKey, { 'Content-Type': 'application/json' }),

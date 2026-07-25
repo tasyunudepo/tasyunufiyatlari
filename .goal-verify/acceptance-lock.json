@@ -33,6 +33,26 @@
     "scripts/migration-v17-quote-submission-guard.sql": {
       "sha256": "22d193205f8103cf5b2dcc7ed5d6b632aafb1c8d15be330a6d8319f87c0404b4",
       "size": 22219
+    },
+    "tests/pricing/calc-pricing.test.ts": {
+      "sha256": "f0fa4f99150967cca583976564a0f5aab57c07fc951da172e900c2ae55a0d445",
+      "locked_at": "2026-07-23",
+      "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
+    },
+    "tests/contracts/pdf-screen-consistency.test.ts": {
+      "sha256": "0a87ca1c9097613db6d662e41f5682aba8a3d16c2dea5a0fcbd213b74d74998b",
+      "locked_at": "2026-07-23",
+      "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
+    },
+    "scripts/verify-p0-live-readonly.mjs": {
+      "sha256": "651cd2af27c9190bc77fbe04444ae522e750536d6ed6792a483aa17ccf453e1b",
+      "locked_at": "2026-07-23",
+      "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
+    },
+    "tests/e2e/quote-flows/pricing-consistency.spec.ts": {
+      "sha256": "095d079d65494d0e10ce9d2dd0b4f2222850798e8359b745aa34f6e5e0c1d53f",
+      "locked_at": "2026-07-23",
+      "reason": "hesap/fiyat doğruluk güvencesi — KDV taban tutarlılığı E2E"
     }
   },
   "note": "Bu kilit test değişikliğini yasaklamaz; sessiz değişikliği görünür kılar."
