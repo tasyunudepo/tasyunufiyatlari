@@ -40,9 +40,9 @@
       "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
     },
     "tests/contracts/pdf-screen-consistency.test.ts": {
-      "sha256": "0a87ca1c9097613db6d662e41f5682aba8a3d16c2dea5a0fcbd213b74d74998b",
-      "locked_at": "2026-07-23",
-      "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
+      "sha256": "7f2db883265b190df980338fd1ee8efaa54389f3b7712c861f2ffc77e4ff2e95",
+      "locked_at": "2026-07-25",
+      "reason": "24 Temmuz kutu düzeni kararı (Emrah): Toplam Metraj üstte, KDV satırları eşit boy — KDV taban sözleşmesi korunarak test güncellendi"
     },
     "scripts/verify-p0-live-readonly.mjs": {
       "sha256": "651cd2af27c9190bc77fbe04444ae522e750536d6ed6792a483aa17ccf453e1b",
