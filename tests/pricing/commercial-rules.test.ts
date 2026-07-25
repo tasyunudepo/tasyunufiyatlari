@@ -103,4 +103,20 @@ describe('EPS ticari kuralları', () => {
     expect(wizardSource).toContain('requiredAccessoriesComplete')
     expect(wizardSource).toContain("selectedMalzeme === 'eps' && !requiredAccessoriesComplete")
   })
+
+  it('Wizard nakliyeyi aksesuar sevkiyat flag\'ine bağlamaz — Tekno her metrajda dahil', () => {
+    // Karar (2026-07-25): requires_separate_shipping artık wizard nakliye
+    // kararını etkilemez; TEKNO dahil aksesuar markalarında nakliye her
+    // metrajda satış fiyatına dahildir. Flag okuması geri eklenirse bu test
+    // kırılarak "satış görüşmesinde netleşir" regresyonunu yakalar.
+    const wizardSource = readFileSync(
+      fileURLToPath(
+        new URL('../../components/wizard/WizardCalculator.tsx', import.meta.url),
+      ),
+      'utf8',
+    )
+
+    expect(wizardSource).not.toContain('requires_separate_shipping')
+    expect(wizardSource).toContain('requiresSeparateShipping: false')
+  })
 })

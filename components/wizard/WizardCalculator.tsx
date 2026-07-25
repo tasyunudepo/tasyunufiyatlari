@@ -1251,15 +1251,12 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
                 // Bölge fiyatı nakliye bölgesine göredir; tam araçta nakliye
                 // satış fiyatına dahildir (kilitli karar 3) → ayrı nakliye 0.
-                // TEKNO tozunda sevkiyat verisi kesinleşmedi → ayrı teyit uyarısı.
+                // Karar (2026-07-25): TEKNO dahil tüm aksesuar markalarında nakliye
+                // her metrajda satış fiyatına dahildir; "ayrı teyit / satış
+                // görüşmesinde netleşir" uyarısı kaldırıldı.
                 const accBrand = brands.find(b => b.id === pkgDef.accessory_brand_id);
-                const requiresSeparateShipping = accBrand?.requires_separate_shipping === true;
-                const shippingMode = requiresSeparateShipping
-                    ? 'separate_quote_required' as const
-                    : 'included_in_sale_price' as const;
-                const shippingWarning = requiresSeparateShipping
-                    ? `${accBrand?.name ?? 'Bu aksesuar grubu'} için sevkiyat verisi henüz kesinleşmedi. Görünen tutar ürün referansıdır; nakliye ve kesin teklif satış görüşmesinde netleşir.`
-                    : undefined;
+                const shippingMode = 'included_in_sale_price' as const;
+                const shippingWarning = undefined;
 
                 calculated.push({
                     definition: pkgDef,
@@ -1286,7 +1283,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             lorryCapacityPackages: lorryPkgs,
                             truckCapacityPackages: truckPkgs,
                         }),
-                        isShippingIncluded: shippingMode === 'included_in_sale_price',
+                        isShippingIncluded: true,
                         shippingMode,
                         shippingWarning,
                     }
@@ -1683,11 +1680,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 && logistics
                 && packageCount < logistics.lorry_capacity_packages;
 
-            // Sevkiyat verisi kesinleşmemiş aksesuar markaları (örn. TEKNO)
-            // için nakliye tarafını varsaymayız; ayrı teyit gerekir.
-            const accBrand = brands.find(b => b.id === pkgDef.accessory_brand_id);
-            const requiresSeparateShipping = accBrand?.requires_separate_shipping === true;
-
+            // Karar (2026-07-25): TEKNO dahil aksesuar markalarında sevkiyat
+            // artık "ayrı teyit" yoluna girmez; nakliye kararı normal
+            // EPS/taşyünü mantığından üretilir (Tekno her metrajda dahil).
             const epsShippingDecision = selectedMalzeme === 'eps'
                 ? resolveEpsShippingDecision({
                     saleMode: 'complete_set',
@@ -1695,22 +1690,18 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     minimumSetM2: matType?.min_order_m2 ?? 400,
                     requiredAccessoriesComplete,
                     isFullVehicle: false,
-                    requiresSeparateShipping,
+                    requiresSeparateShipping: false,
                 })
                 : null;
             const shippingMode = epsShippingDecision?.mode
-                ?? (requiresSeparateShipping
-                    ? 'separate_quote_required'
-                    : isLowMetrageTasyunu
-                        ? 'buyer_pays'
-                        : 'included_in_sale_price');
+                ?? (isLowMetrageTasyunu
+                    ? 'buyer_pays'
+                    : 'included_in_sale_price');
             const isShippingIncluded = shippingMode === 'included_in_sale_price';
-            const shippingWarning = requiresSeparateShipping
-                ? `${accBrand?.name ?? 'Bu aksesuar grubu'} için sevkiyat verisi henüz kesinleşmedi. Görünen tutar ürün referansıdır; nakliye ve kesin teklif satış görüşmesinde netleşir.`
-                : isLowMetrageTasyunu
-                    ? "Metraj kamyon kapasitesinin altında olduğu için nakliye alıcıya aittir. Ancak fabrikadan en iyi 'Tır İskontosu' fiyatları uygulanmıştır."
-                    : epsShippingDecision && !epsShippingDecision.isPriceFinal
-                        ? epsShippingDecision.customerMessage
+            const shippingWarning = isLowMetrageTasyunu
+                ? "Metraj kamyon kapasitesinin altında olduğu için nakliye alıcıya aittir. Ancak fabrikadan en iyi 'Tır İskontosu' fiyatları uygulanmıştır."
+                : epsShippingDecision && !epsShippingDecision.isPriceFinal
+                    ? epsShippingDecision.customerMessage
                     : undefined;
 
             calculated.push({
@@ -2310,8 +2301,10 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                             </div>
                                             <div className="mt-1 text-xs text-fe-muted">
                                                 KDV hariç: {formatCurrency(recommendedM2PriceWithoutVat)} ₺/m²
+                                                {recommendedShippingMode === 'included_in_sale_price' && (
+                                                    <span className="font-semibold text-emerald-400"> · ✅ Nakliye dahil</span>
+                                                )}
                                                 {recommendedShippingMode === 'buyer_pays' && ' · Nakliye alıcıya ait'}
-                                                {recommendedShippingMode === 'separate_quote_required' && ' · Nakliye satış görüşmesinde netleşir'}
                                             </div>
                                         </div>
 
