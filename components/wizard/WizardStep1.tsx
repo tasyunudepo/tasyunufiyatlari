@@ -104,6 +104,7 @@ export function WizardStep1({
                                     : "bg-fe-surface border-fe-border hover:border-fe-muted/50"
                             }`}
                         >
+                            {/* eslint-disable-next-line @next/next/no-img-element -- küçük ikon/logo, next/image getirisi yok */}
                             <img src={img} alt={label} className="w-9 h-9 object-contain shrink-0" />
                             <div className="text-left min-w-0">
                                 <div className={`font-bold text-sm leading-tight ${selectedMalzeme === value ? "text-white" : "text-fe-text"}`}>{label}</div>
@@ -144,6 +145,7 @@ export function WizardStep1({
                                 }`}
                             >
                                 {MARKA_LOGOLARI[brand.name] ? (
+                                    // eslint-disable-next-line @next/next/no-img-element -- küçük ikon/logo, next/image getirisi yok
                                     <img src={MARKA_LOGOLARI[brand.name]} alt={brand.name} className={`${display.logoClass} w-auto object-contain`} />
                                 ) : (
                                     <span className="font-bold text-white text-sm">{brand.name}</span>

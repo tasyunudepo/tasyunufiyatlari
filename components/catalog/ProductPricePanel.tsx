@@ -419,6 +419,9 @@ export default function ProductPricePanel({
     lastPriceViewRef.current = signature;
 
     notifyProductDetailPriceView(buildProductDetailPayload());
+    // Bilinçli: signature guard çift bildirimi engeller; payload builder'ı
+    // bağımlılığa eklemek her render'da efekt tetikler.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     showTierPrice,
     heroPrice,

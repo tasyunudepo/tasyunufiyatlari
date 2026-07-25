@@ -131,6 +131,7 @@ export function Step1ProductSelection({
                             }
                         `}
                     >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- küçük ikon/logo, next/image getirisi yok */}
                         <img
                             src="/images/ikonlar/tas-yunu-levha.webp"
                             alt="Taşyünü"
@@ -158,6 +159,7 @@ export function Step1ProductSelection({
                             }
                         `}
                     >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- küçük ikon/logo, next/image getirisi yok */}
                         <img
                             src="/images/ikonlar/EPS Levha.webp"
                             alt="EPS"
@@ -197,6 +199,7 @@ export function Step1ProductSelection({
                                 `}
                             >
                                 {MARKA_LOGOLARI[brand.name] ? (
+                                    // eslint-disable-next-line @next/next/no-img-element -- küçük ikon/logo, next/image getirisi yok
                                     <img 
                                         src={MARKA_LOGOLARI[brand.name]} 
                                         alt={brand.name} 

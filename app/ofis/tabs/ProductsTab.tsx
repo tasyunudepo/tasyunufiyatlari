@@ -842,6 +842,7 @@ export function ProductsTab() {
                                     <div className="flex items-start gap-3">
                                         <div className="w-24 h-24 shrink-0 rounded-lg border border-slate-600 bg-slate-800 overflow-hidden flex items-center justify-center">
                                             {editingAccessory.image_cover ? (
+                                                // eslint-disable-next-line @next/next/no-img-element -- admin galeri küçük görseli
                                                 <img src={editingAccessory.image_cover} alt="" className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="text-[10px] text-slate-500">Görsel yok</span>
@@ -936,6 +937,7 @@ export function ProductsTab() {
                                                 }}
                                                 className={`group relative aspect-square rounded-lg border-2 overflow-hidden transition-all ${editingAccessory?.image_cover === f.url ? 'border-orange-500' : 'border-slate-700 hover:border-slate-500'}`}
                                             >
+                                                {/* eslint-disable-next-line @next/next/no-img-element -- admin galeri küçük görseli */}
                                                 <img src={f.url} alt={f.name} className="w-full h-full object-cover" loading="lazy" />
                                                 <div className="absolute inset-x-0 bottom-0 bg-black/70 px-1.5 py-1 text-[10px] text-white font-mono truncate">{f.name}</div>
                                             </button>

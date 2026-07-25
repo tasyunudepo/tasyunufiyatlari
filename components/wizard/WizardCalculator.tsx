@@ -161,7 +161,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
     // Dynamic Slider State
     const [currentLogistics, setCurrentLogistics] = useState<LogisticsCapacity | null>(null);
-    const [isLoadingLogistics, setIsLoadingLogistics] = useState(false);
+    const [, setIsLoadingLogistics] = useState(false);
 
     // Sonuçlar
     const [calculatedPackages, setCalculatedPackages] = useState<CalculatedPackage[]>([]);
@@ -491,6 +491,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
         // Tüm faz işlendi — pending'i temizle
         setPendingBrandModel(null);
+    // Bilinçli kısmi bağımlılık: efekt pendingBrandModel fazı işlerken dizi
+    // referansları yerine length imzaları yeterli; tam diziler döngü tetikler.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingBrandModel, brands.length, selectedBrandId, availableModels.length]);
 
     // Sayfa yüklendiğinde verileri çek
@@ -543,6 +546,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             }
         }
         fetchData();
+    // Yalnız ilk yüklemede koşar; sortShippingZones saf yardımcı, bağımlılığa gerek yok.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Otomatik şehir seçimi: URL'den gelen şehir varsa onu kullan,
@@ -597,18 +602,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         setIsLoadingLogistics(false);
     }, [selectedKalinlik, logisticsCapacity]);
 
-    const getSliderMetrics = () => {
-        if (!currentLogistics || !metraj) return null;
-        const currentM2 = parseFloat(metraj);
-        const packageCount = Math.round(currentM2 / currentLogistics.package_size_m2);
-        return {
-            packageCount,
-            lorryFillPercentage: (currentM2 / currentLogistics.lorry_capacity_m2) * 100,
-            truckFillPercentage: (currentM2 / currentLogistics.truck_capacity_m2) * 100,
-            isOverLorry: currentM2 > currentLogistics.lorry_capacity_m2,
-            isOverTruck: currentM2 > currentLogistics.truck_capacity_m2
-        };
-    };
 
     const handleCityChange = (cityCode: number) => {
         setSelectedCityCode(cityCode);
@@ -689,10 +682,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const materialLongName = materialTypes.find(m => m.slug === selectedMalzeme)?.name || materialLabel;
 
         const itemsForPdf = (pkg.items || []).map((it) => {
-            const baseName = `${it.brandName} ${it.shortName}`.trim();
-            const description = it.isPlate
-                ? `${baseName} ${materialLabel} ${selectedKalinlik} cm`
-                : baseName;
             const consumptionRate = metrajNumber > 0 ? it.quantity / metrajNumber : 0;
 
             return {
@@ -2284,6 +2273,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                     <div>
                                         <div className="mb-4 flex items-center gap-3">
                                             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-brand-600/35 bg-fe-bg/80 p-2 shadow-inner shadow-black/40">
+                                                {/* eslint-disable-next-line @next/next/no-img-element -- küçük ikon/logo, next/image getirisi yok */}
                                                 <img
                                                     src={resultPanelTexture}
                                                     alt=""

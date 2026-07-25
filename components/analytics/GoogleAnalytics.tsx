@@ -13,6 +13,9 @@ export default function GoogleAnalytics({ measurementId }: Props) {
   return (
     <>
       {/* 1) Consent Mode v2 — analitik açık, tüm reklam sinyalleri kapalı */}
+      {/* Consent default'u GA yüklenmeden ÖNCE koşmalı; app router'da
+          root layout'ta beforeInteractive geçerli, kural pages-router çağı. */}
+      {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
       <Script id="ga-consent-default" strategy="beforeInteractive">{`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
