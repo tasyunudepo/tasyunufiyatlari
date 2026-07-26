@@ -17,7 +17,8 @@
     "verify:visitor-copy": "bash scripts/verify-visitor-copy.sh",
     "verify:fast": "vitest run && tsc --noEmit",
     "verify:full": "vitest run && tsc --noEmit && eslint && next build",
-    "verify:release": "bash scripts/verify-p0-release.sh"
+    "verify:release": "bash scripts/verify-p0-release.sh",
+    "deploy:prod": "bash -c \"set -a; source .env.local; set +a; npx vercel deploy --prod --yes --scope $VERCEL_SCOPE --token $VERCEL_TOKEN\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
