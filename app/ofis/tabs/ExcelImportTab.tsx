@@ -191,7 +191,7 @@ export function ExcelImportTab() {
                     <div>
                         <h2 className="text-xl font-bold text-white">Excel&apos;den Fiyat Güncelle</h2>
                         <p className="text-sm text-slate-400">Güncel fiyat listesini (.xlsx) yükleyerek sistemi senkronize edin.</p>
-                        <div className="mt-2 flex gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        <div className="mt-2 flex gap-4 text-[10px] font-bold uppercase tracking-widest text-[var(--nx-text-muted)]">
                             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Kalem Bazında (KDV Dahil)</span>
                             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Taşyünü Listesi (KDV Hariç)</span>
                             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-green-500" /> Optimix Sayfası (KDV Dahil)</span>
@@ -201,9 +201,9 @@ export function ExcelImportTab() {
 
                 <div className={`relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-all ${isBusy ? "border-slate-700/30 bg-slate-900/35 opacity-60" : "border-amber-400/20 bg-slate-900/28 hover:border-amber-400/45 hover:bg-amber-400/[0.04]"}`}>
                     <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} disabled={isBusy} className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-not-allowed" />
-                    <Upload className={`mb-4 h-12 w-12 ${isUploading ? "animate-pulse text-orange-400" : "text-slate-500"}`} />
+                    <Upload className={`mb-4 h-12 w-12 ${isUploading ? "animate-pulse text-orange-400" : "text-[var(--nx-text-muted)]"}`} />
                     <p className="font-medium text-slate-300">{isUploading ? "Analiz ediliyor..." : fileName || "Excel dosyasını buraya sürükleyin veya tıklayın"}</p>
-                    <p className="mt-2 text-xs text-slate-500">Maximum dosya boyutu: 10MB</p>
+                    <p className="mt-2 text-xs text-[var(--nx-text-muted)]">Maximum dosya boyutu: 10MB</p>
                 </div>
 
                 {statusMsg && (
@@ -218,7 +218,7 @@ export function ExcelImportTab() {
                         <button
                             onClick={() => handleApply(false)}
                             disabled={isBusy || fileStatus === "applied"}
-                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
+                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-[var(--nx-text-muted)]"
                         >
                             <Database className="h-4 w-4" />
                             {isApplying ? "Uygulanıyor..." : fileStatus === "applied" ? "Uygulandı ✓" : "Fiyatları Uygula"}
@@ -260,7 +260,7 @@ export function ExcelImportTab() {
                             <span className="text-xs font-medium text-emerald-400">✓ {newCreated.created} aksesuar oluşturuldu</span>
                         )}
 
-                        <span className="ml-1 text-xs text-slate-500">
+                        <span className="ml-1 text-xs text-[var(--nx-text-muted)]">
                             {fileStatus === "matched"
                                 ? "• Staging - production'a henüz yazılmadı"
                                 : fileStatus === "applied"

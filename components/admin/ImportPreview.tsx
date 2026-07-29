@@ -83,10 +83,10 @@ function EmptyState() {
     return (
         <div className="bg-slate-900/80 backdrop-blur-md rounded-xl border border-slate-800/50 p-16 flex flex-col items-center gap-3 text-center">
             <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
-                <HelpCircle className="w-6 h-6 text-slate-500" />
+                <HelpCircle className="w-6 h-6 text-[var(--nx-text-muted)]" />
             </div>
             <p className="text-slate-400 text-sm">Henüz dosya yüklenmedi.</p>
-            <p className="text-slate-600 text-xs max-w-xs">
+            <p className="text-[var(--nx-text-muted)] text-xs max-w-xs">
                 Dosya yüklenip analiz edildikten sonra eşleşme sonuçları ve uyarılar burada görünecek.
             </p>
         </div>
@@ -121,7 +121,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                         label="Toplam Satır"
                         value={summary.totalRows}
                         colorClass="text-slate-200"
-                        icon={<Info className="w-4 h-4 text-slate-500" />}
+                        icon={<Info className="w-4 h-4 text-[var(--nx-text-muted)]" />}
                     />
                     <SummaryCard
                         label="Eşleşti"
@@ -226,7 +226,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                 <div className="bg-slate-900/80 backdrop-blur-md rounded-xl border border-slate-800/50 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-800/50 flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-white">Satır Önizleme</h3>
-                        <span className="text-xs text-slate-500">{rows.length} satır</span>
+                        <span className="text-xs text-[var(--nx-text-muted)]">{rows.length} satır</span>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -265,7 +265,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                             }`}
                                         >
                                             {/* # */}
-                                            <td className="px-4 py-3 text-slate-600 tabular-nums">
+                                            <td className="px-4 py-3 text-[var(--nx-text-muted)] tabular-nums">
                                                 {row.raw.rowIndex + 1}
                                             </td>
 
@@ -281,7 +281,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                                         )}
                                                         {row.raw.rawProductName}
                                                     </span>
-                                                    <div className="text-[10px] leading-tight text-slate-500">
+                                                    <div className="text-[10px] leading-tight text-[var(--nx-text-muted)]">
                                                         <div>class: {debug.productClass}</div>
                                                         <div>family: {debug.familyCanonical ?? '—'}</div>
                                                         <div>variant: {debug.variantCanonical ?? '—'}</div>
@@ -295,7 +295,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                                 <span className={
                                                     debug.productType === 'plate'     ? 'text-orange-400' :
                                                     debug.productType === 'accessory' ? 'text-green-400' :
-                                                    'text-slate-500 italic'
+                                                    'text-[var(--nx-text-muted)] italic'
                                                 }>
                                                     {debug.productType === 'plate'     ? 'Levha'    :
                                                      debug.productType === 'accessory' ? 'Aksesuar' : '?'}
@@ -307,7 +307,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                                 <span className={
                                                     debug.materialType === 'eps'     ? 'text-orange-400' :
                                                     debug.materialType === 'tasyunu' ? 'text-amber-400'   :
-                                                    'text-slate-500 italic'
+                                                    'text-[var(--nx-text-muted)] italic'
                                                 }>
                                                     {debug.materialType === 'eps'     ? 'EPS'      :
                                                      debug.materialType === 'tasyunu' ? 'Taşyünü'  : '?'}
@@ -315,7 +315,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                             </td>
 
                                             {/* Ham Fiyat */}
-                                            <td className="px-4 py-3 text-right text-slate-500 tabular-nums">
+                                            <td className="px-4 py-3 text-right text-[var(--nx-text-muted)] tabular-nums">
                                                 {formatPrice(debug.base_price_raw)}
                                             </td>
 
@@ -329,7 +329,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                                 <span className={
                                                     row.raw.rawKdvHint === 'kdv_dahil' ? 'text-amber-400' :
                                                     row.raw.rawKdvHint === 'kdv_haric' ? 'text-slate-400' :
-                                                    'text-slate-600 italic'
+                                                    'text-[var(--nx-text-muted)] italic'
                                                 }>
                                                     {row.raw.rawKdvHint === 'kdv_dahil' ? 'Dahil' :
                                                      row.raw.rawKdvHint === 'kdv_haric' ? 'Hariç' : '?'}
@@ -340,7 +340,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                             <td className="px-4 py-3 text-center text-slate-400 tabular-nums">
                                                 {debug.thicknessCm !== null
                                                     ? `${debug.thicknessCm} cm`
-                                                    : <span className="text-slate-600">—</span>
+                                                    : <span className="text-[var(--nx-text-muted)]">—</span>
                                                 }
                                             </td>
 
@@ -348,7 +348,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                             <td className="px-4 py-3 text-center">
                                                 {match
                                                     ? <StatusBadge status={match.status} />
-                                                    : <span className="text-slate-600">—</span>
+                                                    : <span className="text-[var(--nx-text-muted)]">—</span>
                                                 }
                                             </td>
 
@@ -359,13 +359,13 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                                         Math.abs(match.priceChangePct) > 30 ? 'text-purple-400 font-bold' :
                                                         match.priceChangePct > 0            ? 'text-green-400'            :
                                                         match.priceChangePct < 0            ? 'text-red-400'              :
-                                                        'text-slate-500'
+                                                        'text-[var(--nx-text-muted)]'
                                                     }>
                                                         {match.priceChangePct > 0 ? '+' : ''}
                                                         {match.priceChangePct.toFixed(1)}%
                                                     </span>
                                                 ) : (
-                                                    <span className="text-slate-600">—</span>
+                                                    <span className="text-[var(--nx-text-muted)]">—</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -384,7 +384,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                         <h3 className="text-sm font-semibold text-white">
                             Uyarılar
                         </h3>
-                        <span className="text-xs text-slate-500">{allWarnings.length} uyarı</span>
+                        <span className="text-xs text-[var(--nx-text-muted)]">{allWarnings.length} uyarı</span>
                     </div>
 
                     <div className="divide-y divide-slate-800/40 max-h-72 overflow-y-auto">
@@ -393,7 +393,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                 {SEVERITY_ICON[w.severity]}
                                 <p className="text-xs text-slate-300 leading-relaxed">
                                     {w.rowIndex !== undefined && (
-                                        <span className="text-slate-500 mr-1.5">Satır {w.rowIndex + 1} —</span>
+                                        <span className="text-[var(--nx-text-muted)] mr-1.5">Satır {w.rowIndex + 1} —</span>
                                     )}
                                     {w.message}
                                 </p>

@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Home, User, LogOut } from "lucide-react";
+import { Home, User, LogOut, Eye, Menu, X } from "lucide-react";
 import { SECTION_LABELS } from "./AdminSidebar";
+import { useAdminRole } from "@/lib/admin/useAdminRole";
+import { READ_ONLY_HINT } from "@/lib/admin/roles";
 
 interface Props {
     activeSection: string;
+    drawerOpen?: boolean;
+    onToggleDrawer?: () => void;
 }
 
-export function AdminTopbar({ activeSection }: Props) {
+export function AdminTopbar({ activeSection, drawerOpen = false, onToggleDrawer }: Props) {
     const [time, setTime] = useState("");
     const [date, setDate] = useState("");
-    const [authUser, setAuthUser] = useState("");
+    // Kimlik/rol tek kaynaktan (useAdminRole) gelir; eski yerel fetch
+    // kaldırıldı — aynı isteği hem topbar hem sekmeler atıyordu.
+    const { user: authUser, isReadOnly } = useAdminRole();
 
     useEffect(() => {
         const tick = () => {
@@ -23,13 +29,6 @@ export function AdminTopbar({ activeSection }: Props) {
         tick();
         const id = setInterval(tick, 60_000);
         return () => clearInterval(id);
-    }, []);
-
-    useEffect(() => {
-        fetch("/api/admin/me", { cache: "no-store" })
-            .then((r) => (r.ok ? r.json() : { user: "" }))
-            .then((d) => setAuthUser(d.user ?? ""))
-            .catch(() => setAuthUser(""));
     }, []);
 
     const handleLogout = async () => {
@@ -47,6 +46,18 @@ export function AdminTopbar({ activeSection }: Props) {
 
     return (
         <header className="nx-topbar">
+            {/* Çekmece düğmesi — yalnız <1024px'te görünür (CSS) */}
+            <button
+                type="button"
+                onClick={onToggleDrawer}
+                data-testid="admin-drawer-toggle"
+                aria-label={drawerOpen ? "Menüyü kapat" : "Menüyü aç"}
+                aria-expanded={drawerOpen}
+                className="nx-drawer-toggle h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(92,98,108,0.24)] bg-[rgba(18,20,24,0.72)] text-[var(--nx-text-soft)] transition-colors hover:text-[var(--nx-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.2)]"
+            >
+                {drawerOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm min-w-0">
                 <span className="text-[var(--nx-text-muted)]">Admin</span>
@@ -58,6 +69,18 @@ export function AdminTopbar({ activeSection }: Props) {
 
             {/* Right: time + actions */}
             <div className="ml-auto flex items-center gap-3">
+                {/* Salt-okunur hesap uyarısı: patron mutasyon kontrollerini hiç
+                    görmez, bu rozet nedenini açıklar (audit B1/B3). */}
+                {isReadOnly && (
+                    <span
+                        data-testid="read-only-badge"
+                        title={READ_ONLY_HINT}
+                        className="hidden md:inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-400/30 bg-sky-400/10 px-3 text-xs font-medium text-sky-200"
+                    >
+                        <Eye className="w-3.5 h-3.5" />
+                        Salt okunur
+                    </span>
+                )}
                 <div className="hidden sm:flex flex-col items-end leading-none">
                     <span className="font-mono text-xs text-[var(--nx-gold)] tracking-wider">{time}</span>
                     <span className="font-mono text-[10px] text-[var(--nx-text-muted)] mt-0.5">{date}</span>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useAdminRole } from "@/lib/admin/useAdminRole";
+
 // ============================================================
 // Satış Sonucu paneli (Sprint 3) — teklif detayında temas, takip,
 // kazanıldı/kaybedildi ve brüt kâr girişi. v22 alanlarına admin
@@ -42,6 +44,7 @@ interface SalesOutcomePanelProps {
 }
 
 export default function SalesOutcomePanel({ quote, controlClass, onSaved }: SalesOutcomePanelProps) {
+    const { canMutate } = useAdminRole();
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [followUpDate, setFollowUpDate] = useState(quote.follow_up_date?.slice(0, 10) ?? "");
@@ -136,6 +139,54 @@ export default function SalesOutcomePanel({ quote, controlClass, onSaved }: Sale
               (new Date(quote.contact_attempted_at).getTime() - new Date(quote.created_at).getTime()) / 36e5,
           )
         : null;
+
+    // Salt-okunur hesap: hiçbir yazma kontrolü render edilmez, yalnız özet
+    // gösterilir. Sunucu kapısı (requireAdminMutationAuth) yerinde durur;
+    // burası kullanıcıyı boşuna tıklatmamak içindir (audit B1).
+    if (!canMutate) {
+        return (
+            <div className="rounded-xl border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.05)] p-4" data-testid="sales-outcome-panel">
+                <h4 className="mb-3 font-semibold text-[var(--nx-gold)]">Satış Sonucu</h4>
+                <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <dt className="text-xs text-slate-400">Temas</dt>
+                        <dd className="text-white">
+                            {quote.contact_attempted_at
+                                ? `${new Date(quote.contact_attempted_at).toLocaleString("tr-TR")}${quote.contact_successful === false ? " · ulaşılamadı" : ""}`
+                                : "Henüz temas kurulmadı"}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt className="text-xs text-slate-400">Takip tarihi</dt>
+                        <dd className="text-white">
+                            {quote.follow_up_date ? new Date(quote.follow_up_date).toLocaleDateString("tr-TR") : "—"}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt className="text-xs text-slate-400">İlgilenen kişi</dt>
+                        <dd className="text-white">{quote.quoted_by || "—"}</dd>
+                    </div>
+                    <div>
+                        <dt className="text-xs text-slate-400">Durum</dt>
+                        <dd className="text-white">
+                            {quote.status === "completed"
+                                ? "Kazanıldı"
+                                : quote.status === "rejected"
+                                    ? `Kaybedildi${quote.loss_category ? ` · ${LOSS_CATEGORY_LABELS[quote.loss_category] ?? quote.loss_category}` : ""}`
+                                    : "Açık"}
+                        </dd>
+                    </div>
+                    {quote.admin_notes && (
+                        <div className="col-span-2">
+                            <dt className="text-xs text-slate-400">Satış notu</dt>
+                            <dd className="whitespace-pre-wrap text-white">{quote.admin_notes}</dd>
+                        </div>
+                    )}
+                </dl>
+                <p className="mt-3 text-xs text-sky-200">Salt okunur hesap — bu alanlar değiştirilemez.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="rounded-xl border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.05)] p-4" data-testid="sales-outcome-panel">

@@ -24,11 +24,17 @@ export const SECTION_LABELS: Record<string, string> = Object.fromEntries(
 interface Props {
     active: string;
     onNavigate: (id: string) => void;
+    /** Dar ekranda çekmece açık mı (masaüstünde yok sayılır). */
+    open?: boolean;
 }
 
-export function AdminSidebar({ active, onNavigate }: Props) {
+export function AdminSidebar({ active, onNavigate, open = false }: Props) {
     return (
-        <nav className="nx-sidebar">
+        <nav
+            className="nx-sidebar"
+            data-open={open ? "true" : "false"}
+            aria-label="Ofis navigasyonu"
+        >
             {/* Logo */}
             <div className="flex items-center gap-3 px-4 py-5 border-b border-[var(--nx-border)]">
                 <div

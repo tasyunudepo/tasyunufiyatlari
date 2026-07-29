@@ -86,7 +86,7 @@ export function DiscountsTab() {
                     </tbody>
                 </table>
                 {filtered.length === 0 && (
-                    <p className="text-sm text-slate-500 text-center py-6">
+                    <p className="text-sm text-[var(--nx-text-muted)] text-center py-6">
                         “{query}” ile eşleşen şehir yok.
                     </p>
                 )}

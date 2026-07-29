@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useAdminRole } from "@/lib/admin/useAdminRole";
+import { useAdminQuotes } from "@/lib/hooks/useAdminQuotes";
+
 // ============================================================
 // Satış Deneyleri sekmesi (Sprint 4A) — Hipotez Motoru'nun gözlem +
 // kayıt katmanı. Her satış fikri sözleşmeyle kaydedilir; öncesi/sonrası
@@ -49,8 +52,10 @@ const STATUS_LABELS: Record<Experiment["status"], string> = {
 };
 
 export function ExperimentsTab() {
+    const { canMutate } = useAdminRole();
+    const { quotes: sharedQuotes } = useAdminQuotes();
+    const quotes = sharedQuotes as unknown as QuoteLite[];
     const [experiments, setExperiments] = useState<Experiment[]>([]);
-    const [quotes, setQuotes] = useState<QuoteLite[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
@@ -66,23 +71,19 @@ export function ExperimentsTab() {
         startedAt: new Date().toISOString().slice(0, 10),
     });
 
+    // Teklif verisi ortak önbellekten gelir; burada yalnız deney defteri
+    // çekilir (audit: aynı tablo bir gezintide 7 kez çekiliyordu).
     async function load() {
         setLoading(true);
         setError(null);
         try {
-            const [expRes, quotesRes] = await Promise.all([
-                fetch("/api/admin/experiments"),
-                fetch("/api/admin/quotes"),
-            ]);
+            const expRes = await fetch("/api/admin/experiments");
             const expJson = await expRes.json().catch(() => null);
-            const quotesJson = await quotesRes.json().catch(() => null);
             if (!expRes.ok || !expJson?.ok) {
                 setError(expJson?.error ?? "Deneyler alınamadı.");
             } else {
                 setExperiments(expJson.experiments ?? []);
             }
-            const rows = Array.isArray(quotesJson) ? quotesJson : quotesJson?.quotes ?? quotesJson?.data ?? [];
-            if (Array.isArray(rows)) setQuotes(rows);
         } catch {
             setError("Bağlantı hatası.");
         } finally {
@@ -158,6 +159,22 @@ export function ExperimentsTab() {
         void load();
     }
 
+    async function deleteExperiment(exp: Experiment) {
+        if (!confirm(`"${exp.name}" deneyi silinsin mi?\nBu işlem geri alınamaz.`)) return;
+        setError(null);
+        try {
+            const res = await fetch(`/api/admin/experiments/${exp.id}`, { method: "DELETE" });
+            const json = await res.json().catch(() => null);
+            if (!res.ok || !json?.ok) {
+                setError(json?.error ?? `Deney silinemedi (HTTP ${res.status}).`);
+                return;
+            }
+            void load();
+        } catch {
+            setError("Bağlantı hatası — deney silinemedi.");
+        }
+    }
+
     function completeExperiment(exp: Experiment) {
         const c = closing[exp.id];
         if (!c?.decision) {
@@ -188,10 +205,12 @@ export function ExperimentsTab() {
                             Öneri beyni (teşhis/otomasyon) yeterli kapanmış teklif birikince açılacak — kazanan ilanını veri verir, biz onaylarız.
                         </p>
                     </div>
-                    <button type="button" onClick={() => setShowForm((s) => !s)}
-                        className={`${ofisControl} shrink-0 px-4 py-2 text-sm font-semibold hover:bg-[rgba(255,255,255,0.06)]`}>
-                        {showForm ? "Vazgeç" : "+ Yeni deney"}
-                    </button>
+                    {canMutate && (
+                        <button type="button" onClick={() => setShowForm((s) => !s)}
+                            className={`${ofisControl} shrink-0 px-4 py-2 text-sm font-semibold hover:bg-[rgba(255,255,255,0.06)]`}>
+                            {showForm ? "Vazgeç" : "+ Yeni deney"}
+                        </button>
+                    )}
                 </div>
 
                 {showForm && (
@@ -269,7 +288,7 @@ export function ExperimentsTab() {
                                         )}
                                     </div>
                                     <p className="mt-2 max-w-3xl text-sm text-slate-300">{exp.hypothesis}</p>
-                                    <p className="mt-2 text-xs text-slate-500">
+                                    <p className="mt-2 text-xs text-[var(--nx-text-muted)]">
                                         Yüzey: {exp.surface} · Metrik: {exp.primary_metric}
                                         {exp.guardrails && <> · Koruma: {exp.guardrails}</>}
                                     </p>
@@ -285,17 +304,17 @@ export function ExperimentsTab() {
                                     <div className="mt-2 grid grid-cols-2 gap-3">
                                         <div>
                                             <div className="text-lg font-semibold tabular-nums text-slate-400">{w.beforeBonus}<span className="text-xs">/{w.beforeTotal}</span></div>
-                                            <div className="text-[10px] text-slate-500">önce (Bonus/tüm)</div>
+                                            <div className="text-[10px] text-[var(--nx-text-muted)]">önce (Bonus/tüm)</div>
                                         </div>
                                         <div>
                                             <div className="text-lg font-semibold tabular-nums text-white">{w.afterBonus}<span className="text-xs">/{w.afterTotal}</span></div>
-                                            <div className="text-[10px] text-slate-500">sonra (Bonus/tüm)</div>
+                                            <div className="text-[10px] text-[var(--nx-text-muted)]">sonra (Bonus/tüm)</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {exp.status !== "tamamlandi" && (
+                            {exp.status !== "tamamlandi" && canMutate && (
                                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[rgba(92,98,108,0.18)] pt-3">
                                     <button type="button"
                                         onClick={() => void patchExperiment(exp.id, { status: exp.status === "yayinda" ? "duraklatildi" : "yayinda" })}
@@ -316,6 +335,13 @@ export function ExperimentsTab() {
                                     <button type="button" onClick={() => completeExperiment(exp)}
                                         className={`${ofisControl} px-3 py-1.5 text-xs font-semibold text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.1)]`}>
                                         Deneyi kapat
+                                    </button>
+                                    {/* Audit B5: yanlış girilen deney defterde kalıcı kalıyordu.
+                                        Tamamlanmış deney silinemez — sunucu 409 döner. */}
+                                    <button type="button" onClick={() => void deleteExperiment(exp)}
+                                        title="Deneyi sil"
+                                        className="ml-auto rounded-xl border border-red-500/20 bg-red-500/[0.08] px-3 py-1.5 text-xs text-red-400/80 transition-colors hover:bg-red-500/15 hover:text-red-300">
+                                        Sil
                                     </button>
                                 </div>
                             )}

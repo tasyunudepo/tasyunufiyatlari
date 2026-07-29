@@ -5,8 +5,10 @@ import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import {
     ClipboardList, Wrench, CheckCircle2, XCircle, Flame, Snowflake, TrendingDown,
+    Layers, Ruler, Package, FolderTree, ChevronDown,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/admin/utils";
+import { useAdminRole } from "@/lib/admin/useAdminRole";
 import { validateRules, getRulesPreview } from "@/lib/catalog/decision";
 import type { Accessory, LogisticsCapacity, Plate, PlatePrice, ShippingZone } from "@/lib/types";
 import type { MinimumOrderType, PricingVisibilityMode, ProductRules, SalesMode } from "@/lib/catalog/types";
@@ -60,10 +62,13 @@ interface StatCardProps {
     value: number | string;
     icon: ReactNode;
     color: "blue" | "green" | "orange" | "purple";
-    onClick?: () => void;
 }
 
-function StatCard({ title, value, icon, color, onClick }: StatCardProps) {
+// Audit G5: `onClick` prop'u tanımlıydı ama dört çağrının hiçbiri geçmiyordu —
+// cursor-pointer/hover mantığı hiç çalışmıyordu. Prop kaldırıldı.
+// Audit G6: emoji ikonlar (🧱 📏 🧰 🗂️) platforma göre değişiyor ve panelin
+// geri kalanının Lucide dilini bozuyordu; SVG ikonlara geçildi.
+function StatCard({ title, value, icon, color }: StatCardProps) {
     const colors: Record<string, string> = {
         blue: "from-amber-500/14 to-amber-500/4 text-amber-300 border-amber-400/20",
         green: "from-emerald-500/14 to-emerald-500/4 text-emerald-300 border-emerald-400/20",
@@ -71,19 +76,20 @@ function StatCard({ title, value, icon, color, onClick }: StatCardProps) {
         purple: "from-fuchsia-500/14 to-fuchsia-500/4 text-fuchsia-300 border-fuchsia-400/20",
     };
     return (
-        <div className={`admin-nexus-card bg-gradient-to-br p-6 ${colors[color] || colors.blue} ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(2,8,23,0.46)] transition-all duration-300' : ''}`} onClick={onClick}>
+        <div className={`admin-nexus-card bg-gradient-to-br p-6 ${colors[color] || colors.blue}`}>
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-[11px] uppercase tracking-[0.22em] text-slate-400">{title}</p>
                     <p className="text-3xl font-bold mt-2 text-slate-50">{value}</p>
                 </div>
-                <div className="text-4xl opacity-90">{icon}</div>
+                <div className="opacity-90">{icon}</div>
             </div>
         </div>
     );
 }
 
 export function ProductsTab() {
+    const { canMutate } = useAdminRole();
     const [activeProductTab, setActiveProductTab] = useState<"plates" | "accessories">("plates");
     const [plates, setPlates] = useState<AdminPlate[]>([]);
     const [accessories, setAccessories] = useState<AdminAccessory[]>([]);
@@ -96,6 +102,11 @@ export function ProductsTab() {
     const [logisticsData, setLogisticsData] = useState<LogisticsCapacity[]>([]);
     const [editingPlate, setEditingPlate] = useState<EditingPlate | null>(null);
     const [editingAccessory, setEditingAccessory] = useState<AdminAccessory | null>(null);
+    // Audit E2: bu sekme 261 varyant + 134 aksesuarı tek seferde DOM'a
+    // basıyordu (19.222px sayfa). Gruplar artık katlanır ve varsayılan kapalı;
+    // açılan grup akılda tutulur.
+    const [expandedBrands, setExpandedBrands] = useState<Record<string, boolean>>({});
+    const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
 
     const patchEditingPlate = (patch: Partial<EditingPlate>) =>
         setEditingPlate((prev) => (prev ? { ...prev, ...patch } : prev));
@@ -237,10 +248,10 @@ export function ProductsTab() {
             <h2 className="text-lg font-semibold text-white mb-4">Ürün Kataloğu</h2>
 
             <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <StatCard title="Levha Ailesi" value={plates.length} icon="🧱" color="blue" />
-                <StatCard title="Levha Varyantı" value={totalPlateVariantCount} icon="📏" color="purple" />
-                <StatCard title="Aksesuar Kaydı" value={accessories.length} icon="🧰" color="green" />
-                <StatCard title="Aksesuar Türü" value={accessoryTypeCount} icon="🗂️" color="orange" />
+                <StatCard title="Levha Ailesi" value={plates.length} icon={<Layers className="w-7 h-7" strokeWidth={1.6} />} color="blue" />
+                <StatCard title="Levha Varyantı" value={totalPlateVariantCount} icon={<Ruler className="w-7 h-7" strokeWidth={1.6} />} color="purple" />
+                <StatCard title="Aksesuar Kaydı" value={accessories.length} icon={<Package className="w-7 h-7" strokeWidth={1.6} />} color="green" />
+                <StatCard title="Aksesuar Türü" value={accessoryTypeCount} icon={<FolderTree className="w-7 h-7" strokeWidth={1.6} />} color="orange" />
             </div>
 
             <div className="mb-6 grid gap-4 xl:grid-cols-[1.35fr_1fr]">
@@ -251,7 +262,7 @@ export function ProductsTab() {
                     </p>
                 </div>
                 <div className="admin-nexus-subtle p-5">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Canlı Kapsam</p>
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-muted)]">Canlı Kapsam</p>
                     <div className="mt-4 space-y-3 text-sm">
                         <div className="flex items-center justify-between text-slate-300"><span>Aktif levha varyantı</span><span className="font-semibold text-slate-50">{activePlateVariantCount}</span></div>
                         <div className="flex items-center justify-between text-slate-300"><span>Aktif aksesuar kaydı</span><span className="font-semibold text-slate-50">{activeAccessoryCount}</span></div>
@@ -265,12 +276,12 @@ export function ProductsTab() {
                 <button onClick={() => setActiveProductTab("plates")} className={`admin-nexus-tab flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${activeProductTab === "plates" ? "admin-nexus-tab-active" : ""}`}>
                     <ClipboardList className="w-4 h-4" />
                     Levha Aileleri ({filteredPlates.length}/{plates.length})
-                    <span className="text-xs text-slate-500">• {filteredPlateVariantCount}/{totalPlateVariantCount} varyant</span>
+                    <span className="text-xs text-[var(--nx-text-muted)]">• {filteredPlateVariantCount}/{totalPlateVariantCount} varyant</span>
                 </button>
                 <button onClick={() => setActiveProductTab("accessories")} className={`admin-nexus-tab flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${activeProductTab === "accessories" ? "admin-nexus-tab-active" : ""}`}>
                     <Wrench className="w-4 h-4" />
                     Aksesuar Kayıtları ({accessories.length})
-                    <span className="text-xs text-slate-500">• {accessoryTypeCount} tür</span>
+                    <span className="text-xs text-[var(--nx-text-muted)]">• {accessoryTypeCount} tür</span>
                 </button>
             </div>
 
@@ -286,26 +297,26 @@ export function ProductsTab() {
                         </div>
                         <div className="mt-4 grid gap-3 sm:grid-cols-3">
                             <div className="rounded-2xl border border-slate-700/50 bg-slate-950/40 p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Filtrelenen Varyant</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">Filtrelenen Varyant</p>
                                 <p className="mt-2 text-2xl font-semibold text-white">{filteredPlateVariantCount}</p>
-                                <p className="mt-1 text-xs text-slate-500">Toplam {totalPlateVariantCount} varyant içinde</p>
+                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">Toplam {totalPlateVariantCount} varyant içinde</p>
                             </div>
                             <div className="rounded-2xl border border-slate-700/50 bg-slate-950/40 p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Aktif Varyant</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">Aktif Varyant</p>
                                 <p className="mt-2 text-2xl font-semibold text-emerald-300">{filteredActivePlateVariantCount}</p>
-                                <p className="mt-1 text-xs text-slate-500">Canlı satışta görünür varyantlar</p>
+                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">Canlı satışta görünür varyantlar</p>
                             </div>
                             <div className="rounded-2xl border border-slate-700/50 bg-slate-950/40 p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Şehir / Araç</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">Şehir / Araç</p>
                                 <p className="mt-2 text-base font-semibold text-white">
                                     {selectedCityCode ? shippingZones.find((zone) => zone.city_code === selectedCityCode)?.city_name || "Seçili şehir" : "Varsayılan görünüm"}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-500">{filterType !== "eps" ? `Taşyünü ${tasyunuVehicle === "tir" ? "tır" : "kamyon"} indirimi uygulanır` : "EPS filtresi aktif"}</p>
+                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">{filterType !== "eps" ? `Taşyünü ${tasyunuVehicle === "tir" ? "tır" : "kamyon"} indirimi uygulanır` : "EPS filtresi aktif"}</p>
                             </div>
                         </div>
                     </div>
                     <div className="admin-nexus-subtle p-5">
-                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Filtre Özeti</p>
+                        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-muted)]">Filtre Özeti</p>
                         <div className="mt-4 space-y-3 text-sm text-slate-300">
                             <div className="flex items-center justify-between"><span>Tip filtresi</span><span className="font-medium text-slate-50">{filterType === "all" ? "Tümü" : filterType === "tasyunu" ? "Taşyünü" : "EPS"}</span></div>
                             <div className="flex items-center justify-between"><span>Marka filtresi</span><span className="font-medium text-slate-50">{filterBrand === "all" ? "Tüm markalar" : filterBrand}</span></div>
@@ -327,24 +338,24 @@ export function ProductsTab() {
                         </div>
                         <div className="mt-4 grid gap-3 sm:grid-cols-3">
                             <div className="rounded-2xl border border-slate-700/50 bg-slate-950/40 p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Toplam Kayıt</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">Toplam Kayıt</p>
                                 <p className="mt-2 text-2xl font-semibold text-white">{accessories.length}</p>
-                                <p className="mt-1 text-xs text-slate-500">Ham katalog satırları</p>
+                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">Ham katalog satırları</p>
                             </div>
                             <div className="rounded-2xl border border-slate-700/50 bg-slate-950/40 p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Aktif Kayıt</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">Aktif Kayıt</p>
                                 <p className="mt-2 text-2xl font-semibold text-emerald-300">{activeAccessoryCount}</p>
-                                <p className="mt-1 text-xs text-slate-500">{activeAccessoryTypeCount} aktif tür içinde</p>
+                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">{activeAccessoryTypeCount} aktif tür içinde</p>
                             </div>
                             <div className="rounded-2xl border border-slate-700/50 bg-slate-950/40 p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Şehir Etkisi</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">Şehir Etkisi</p>
                                 <p className="mt-2 text-base font-semibold text-white">{selectedCityCode ? shippingZones.find((zone) => zone.city_code === selectedCityCode)?.city_name || "Seçili şehir" : "Varsayılan fiyat"}</p>
-                                <p className="mt-1 text-xs text-slate-500">EPS/Toz bölge iskontosu şehir bazlı uygulanır</p>
+                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">EPS/Toz bölge iskontosu şehir bazlı uygulanır</p>
                             </div>
                         </div>
                     </div>
                     <div className="admin-nexus-subtle p-5">
-                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Kapsam Özeti</p>
+                        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-muted)]">Kapsam Özeti</p>
                         <div className="mt-4 space-y-3 text-sm text-slate-300">
                             <div className="flex items-center justify-between"><span>Aktif tür oranı</span><span className="font-medium text-slate-50">%{accessoryTypeCount > 0 ? Math.round((activeAccessoryTypeCount / accessoryTypeCount) * 100) : 0}</span></div>
                             <div className="flex items-center justify-between"><span>Marka sayısı</span><span className="font-medium text-slate-50">{uniqueBrands.length}</span></div>
@@ -383,15 +394,25 @@ export function ProductsTab() {
                                 )}
                             </div>
 
-                            {Object.entries(platesByBrand).map(([brand, brandPlates]) => (
+                            {Object.entries(platesByBrand).map(([brand, brandPlates]) => {
+                                const brandVariantCount = brandPlates.reduce((total: number, plate) => total + (plate.thickness_options?.length || 0), 0);
+                                const brandOpen = expandedBrands[brand] ?? false;
+                                return (
                                 <div key={brand} className="admin-nexus-group">
-                                    <div className="admin-nexus-group-header">
+                                    <button
+                                        type="button"
+                                        onClick={() => setExpandedBrands((prev) => ({ ...prev, [brand]: !brandOpen }))}
+                                        aria-expanded={brandOpen}
+                                        aria-controls={`marka-${brand}`}
+                                        className="admin-nexus-group-header w-full text-left cursor-pointer hover:bg-slate-800/40 transition-colors"
+                                    >
                                         <h3 className="font-semibold text-white">
                                             {brand}
-                                            <span className="ml-2 text-sm font-normal text-slate-400">({brandPlates.reduce((total: number, plate) => total + (plate.thickness_options?.length || 0), 0)} varyant)</span>
+                                            <span className="ml-2 text-sm font-normal text-slate-400">({brandVariantCount} varyant)</span>
                                         </h3>
-                                    </div>
-                                    <div className="admin-nexus-table-wrap rounded-none border-0">
+                                        <ChevronDown className={`w-5 h-5 text-[var(--nx-text-muted)] transition-transform ${brandOpen ? "rotate-180" : ""}`} />
+                                    </button>
+                                    <div id={`marka-${brand}`} hidden={!brandOpen} className="admin-nexus-table-wrap rounded-none border-0">
                                         <table className="admin-nexus-table w-full" style={{ tableLayout: 'fixed' }}>
                                             <thead>
                                                 <tr>
@@ -401,7 +422,6 @@ export function ProductsTab() {
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '130px' }}>İskontolar</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '100px' }}>Paket Metrajı</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-700/20" style={{ width: '160px' }}>Net Alış (KDV Hariç)</th>
-                                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider bg-green-500/10 text-green-400 border-x border-green-500/20" style={{ width: '170px' }} title="Kaba tahmin: net alış + sabit %10. Gerçek satış fiyatı Fiyatlandırma sekmesindeki marka/malzeme marj kuralına ve KDV'ye göre hesaplanır.">Kaba m² Tahmini <span className="normal-case text-[10px] text-green-500/70">(+%10, gösterge)</span></th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '100px' }}>Durum</th>
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider" style={{ width: '60px' }}>Katalog</th>
                                                 </tr>
@@ -469,10 +489,6 @@ export function ProductsTab() {
                                                                     <div className="text-slate-200 font-medium">{formatCurrency(paketAlis)} /Pkt</div>
                                                                     <div className="text-slate-400 text-xs">{formatCurrency(m2Alis)} /m²</div>
                                                                 </td>
-                                                                <td className="px-4 py-3 text-sm bg-green-500/10 border-x border-green-500/10">
-                                                                    <div className="text-green-300 font-semibold">{formatCurrency(paketAlis * 1.10)} /Pkt</div>
-                                                                    <div className="text-green-500 font-bold text-base">{formatCurrency(m2Alis * 1.10)} /m²</div>
-                                                                </td>
                                                                 <td className="px-4 py-3 text-sm">
                                                                     {plate.is_active ? (
                                                                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30"><CheckCircle2 className="w-3 h-3" />Aktif</span>
@@ -481,8 +497,8 @@ export function ProductsTab() {
                                                                     )}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-sm">
-                                                                    {idx === 0 && (
-                                                                        <button type="button" onClick={() => setEditingPlate({ ...plate, _depotStocks: (plate.plate_prices || []).slice().sort((a, b) => a.thickness - b.thickness).map((p) => ({ id: p.id, thickness: p.thickness, stock_tuzla: p.stock_tuzla ?? 0 })) })} title="Katalog kurallarını düzenle" className="p-1.5 rounded text-slate-500 hover:text-orange-400 hover:bg-slate-700/50 transition-colors">
+                                                                    {idx === 0 && canMutate && (
+                                                                        <button type="button" onClick={() => setEditingPlate({ ...plate, _depotStocks: (plate.plate_prices || []).slice().sort((a, b) => a.thickness - b.thickness).map((p) => ({ id: p.id, thickness: p.thickness, stock_tuzla: p.stock_tuzla ?? 0 })) })} title="Katalog kurallarını düzenle" className="p-1.5 rounded text-[var(--nx-text-muted)] hover:text-orange-400 hover:bg-slate-700/50 transition-colors">
                                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                                         </button>
                                                                     )}
@@ -495,8 +511,9 @@ export function ProductsTab() {
                                         </table>
                                     </div>
                                 </div>
-                            ))}
-                            {filteredPlates.length === 0 && <p className="text-center text-slate-500 py-8">Bu filtreyle eşleşen levha bulunamadı</p>}
+                                );
+                            })}
+                            {filteredPlates.length === 0 && <p className="text-center text-[var(--nx-text-muted)] py-8">Bu filtreyle eşleşen levha bulunamadı</p>}
                         </div>
                     )}
 
@@ -511,22 +528,30 @@ export function ProductsTab() {
                                 {selectedCityCode && <span className="text-xs text-slate-400 self-center">Seçilen şehir için bölge/Optimix iskontoları uygulanır.</span>}
                             </div>
                             {accessories.length === 0 ? (
-                                <p className="text-center text-slate-500 py-8">Aksesuar bulunamadı</p>
+                                <p className="text-center text-[var(--nx-text-muted)] py-8">Aksesuar bulunamadı</p>
                             ) : (
                                 <>
-                                    {Object.entries(accessoriesByType).map(([type, typeAccessories]) => (
+                                    {Object.entries(accessoriesByType).map(([type, typeAccessories]) => {
+                                        const typeOpen = expandedTypes[type] ?? false;
+                                        return (
                                         <div key={type} className="admin-nexus-group">
-                                            <div className="admin-nexus-group-header">
+                                            <button
+                                                type="button"
+                                                onClick={() => setExpandedTypes((prev) => ({ ...prev, [type]: !typeOpen }))}
+                                                aria-expanded={typeOpen}
+                                                aria-controls={`tur-${type}`}
+                                                className="admin-nexus-group-header w-full text-left cursor-pointer hover:bg-slate-800/40 transition-colors"
+                                            >
                                                 <h3 className="font-semibold text-white">{type}<span className="ml-2 text-sm font-normal text-slate-400">({typeAccessories.length} ürün)</span></h3>
-                                            </div>
-                                            <div className="admin-nexus-table-wrap rounded-none border-0">
+                                                <ChevronDown className={`w-5 h-5 text-[var(--nx-text-muted)] transition-transform ${typeOpen ? "rotate-180" : ""}`} />
+                                            </button>
+                                            <div id={`tur-${type}`} hidden={!typeOpen} className="admin-nexus-table-wrap rounded-none border-0">
                                                 <table className="admin-nexus-table w-full" style={{ tableLayout: 'fixed' }}>
                                                     <thead>
                                                         <tr>
                                                             <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '380px' }}>Ürün Adı</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '150px' }}>Liste Fiyatı</th>
                                                             <th className="px-2 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '130px' }}>İskontolar</th>
-                                                            <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '150px' }} title="Kaba tahmin: şehir iskontolu net + sabit %10 + KDV. Gerçek satış fiyatı marka/malzeme marj kuralına göre değişir.">Kaba Satış Tahmini</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '120px' }}>Paket</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '100px' }}>Durum</th>
                                                             <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase" style={{ width: '60px' }}>Katalog</th>
@@ -535,8 +560,6 @@ export function ProductsTab() {
                                                     <tbody>
                                                         {typeAccessories.map((acc) => {
                                                             const listPrice = acc.base_price || 0;
-                                                            const kdvRate = acc.is_kdv_included ? 1.20 : 1;
-                                                            const priceWithoutKdv = listPrice / kdvRate;
                                                             const selectedCity = shippingZones.find((z) => z.city_code === selectedCityCode);
                                                             const brandName: string = acc.brands?.name || "";
                                                             let isk1 = acc.discount_1 || 0;
@@ -548,9 +571,6 @@ export function ProductsTab() {
                                                             if (brandName === "Optimix" && (acc.discount_2 || 0) >= 10 && selectedCity) {
                                                                 isk2 = selectedCity.optimix_toz_discount ?? isk2;
                                                             }
-                                                            const afterDiscount1 = priceWithoutKdv * (1 - isk1 / 100);
-                                                            const afterDiscount2 = afterDiscount1 * (1 - isk2 / 100);
-                                                            const finalPrice = afterDiscount2 * 1.10 * 1.20;
                                                             return (
                                                                 <tr key={acc.id} className={!acc.is_active ? "opacity-50" : ""}>
                                                                     <td className="px-4 py-3 text-sm font-medium text-slate-200" title={acc.name || "-"}>
@@ -562,20 +582,14 @@ export function ProductsTab() {
                                                                     <td className="px-3 py-3 text-sm">
                                                                         <div className="flex flex-col">
                                                                             <span className="text-slate-300 font-medium">{listPrice.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-                                                                            <span className="text-xs text-slate-500">{acc.is_kdv_included ? "KDV Dahil" : "KDV Hariç"}</span>
+                                                                            <span className="text-xs text-[var(--nx-text-muted)]">{acc.is_kdv_included ? "KDV Dahil" : "KDV Hariç"}</span>
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-2 py-3 text-sm">
                                                                         <div className="flex gap-1">
                                                                             {isk1 > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30"><TrendingDown className="w-3 h-3" />%{isk1}</span>}
                                                                             {isk2 > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30"><TrendingDown className="w-3 h-3" />%{isk2}</span>}
-                                                                            {!isk1 && !isk2 && <span className="text-xs text-slate-500">-</span>}
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="px-3 py-3 text-sm">
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-green-300 font-semibold">{finalPrice.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-                                                                            <span className="text-xs text-slate-500">tahmini · KDV dahil, sabit +%10</span>
+                                                                            {!isk1 && !isk2 && <span className="text-xs text-[var(--nx-text-muted)]">-</span>}
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-3 py-3 text-sm"><span className="text-slate-300">{acc.unit_content || 1} {acc.unit || "PKT"}</span></td>
@@ -587,9 +601,11 @@ export function ProductsTab() {
                                                                         )}
                                                                     </td>
                                                                     <td className="px-3 py-3 text-sm">
-                                                                        <button type="button" onClick={() => setEditingAccessory({ ...acc })} title="Katalog kurallarını düzenle" className="p-1.5 rounded text-slate-500 hover:text-orange-400 hover:bg-slate-700/50 transition-colors">
+                                                                        {canMutate && (
+                                                                        <button type="button" onClick={() => setEditingAccessory({ ...acc })} title="Katalog kurallarını düzenle" className="p-1.5 rounded text-[var(--nx-text-muted)] hover:text-orange-400 hover:bg-slate-700/50 transition-colors">
                                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                                         </button>
+                                                                        )}
                                                                     </td>
                                                                 </tr>
                                                             );
@@ -598,7 +614,8 @@ export function ProductsTab() {
                                                 </table>
                                             </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </>
                             )}
                         </div>
@@ -686,7 +703,7 @@ export function ProductsTab() {
                                 <legend className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-1 border-b border-slate-700 w-full">Depo Stoku (Tuzla)</legend>
                                 {(editingPlate._depotStocks ?? []).length > 0 ? (
                                     <div className="rounded-lg border border-slate-700 overflow-hidden">
-                                        <div className="grid grid-cols-2 px-3 py-1.5 bg-slate-800/60 text-[11px] text-slate-500 font-medium"><span>Kalınlık</span><span>Stok (m²)</span></div>
+                                        <div className="grid grid-cols-2 px-3 py-1.5 bg-slate-800/60 text-[11px] text-[var(--nx-text-muted)] font-medium"><span>Kalınlık</span><span>Stok (m²)</span></div>
                                         {(editingPlate._depotStocks ?? []).map((row) => (
                                             <div key={row.id} className="grid grid-cols-2 items-center px-3 py-2 border-t border-slate-700/50">
                                                 <span className="text-xs text-slate-300">{row.thickness} cm</span>
@@ -695,7 +712,7 @@ export function ProductsTab() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-[11px] text-slate-500">Bu ürün için kalınlık fiyatı tanımlanmamış.</p>
+                                    <p className="text-[11px] text-[var(--nx-text-muted)]">Bu ürün için kalınlık fiyatı tanımlanmamış.</p>
                                 )}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
@@ -707,7 +724,7 @@ export function ProductsTab() {
                                         <input type="number" min={1} value={editingPlate.depot_min_m2 ?? 300} onChange={(e) => patchEditingPlate({ depot_min_m2: Number(e.target.value) })} className="w-full bg-slate-800 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-orange-500" />
                                     </div>
                                 </div>
-                                <p className="text-[11px] text-slate-500">0 olan kalınlıklar için Depo tier&apos;ı gösterilmez.</p>
+                                <p className="text-[11px] text-[var(--nx-text-muted)]">0 olan kalınlıklar için Depo tier&apos;ı gösterilmez.</p>
                             </fieldset>
                             {editError && <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">{editError}</p>}
                         </div>
@@ -768,7 +785,7 @@ export function ProductsTab() {
                                         <option value="single_only">Direkt Alım</option>
                                         <option value="quote_only">Sadece Teklif</option>
                                     </select>
-                                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                    <p className="text-[11px] text-[var(--nx-text-muted)] mt-1 leading-relaxed">
                                         Müşteri bu ürünle ne yapabilir?<br/>
                                         <span className="text-slate-400">• Sistem Ürünü: Tek başına satılmaz, paket içinde<br/>• Alım veya Teklif: Hem direkt sipariş, hem teklif<br/>• Direkt Alım: Sepete ekleyip sipariş ver<br/>• Sadece Teklif: Yalnız teklif iste</span>
                                     </p>
@@ -781,7 +798,7 @@ export function ProductsTab() {
                                         <option value="exact_price">Tam fiyat göster</option>
                                         <option value="hidden">Fiyat gizle</option>
                                     </select>
-                                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                    <p className="text-[11px] text-[var(--nx-text-muted)] mt-1 leading-relaxed">
                                         Müşteri sayfada fiyatı nasıl görür?<br/>
                                         <span className="text-slate-400">• Teklif ile belirlenir: &ldquo;Fiyat için teklif al&rdquo;<br/>• Başlangıç fiyatı: &ldquo;850 ₺&apos;ten başlayan&rdquo;<br/>• Tam fiyat: Net rakam görünür<br/>• Gizle: Hiçbir fiyat gösterme</span>
                                     </p>
@@ -804,7 +821,7 @@ export function ProductsTab() {
                                 {hasError('minimum_order_type') && (
                                     <p className="text-xs text-red-400">⚠ {hasError('minimum_order_type')!.message}</p>
                                 )}
-                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <p className="text-[11px] text-[var(--nx-text-muted)] leading-relaxed">
                                     En az ne kadar alınmalı? Birim ile değer (örn. 10 paket).
                                 </p>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -818,18 +835,18 @@ export function ProductsTab() {
                                 <legend className="text-xs font-semibold text-orange-400 uppercase tracking-wider px-2">Önizleme</legend>
                                 <div className="text-xs text-slate-400 space-y-2">
                                     <div>
-                                        <span className="text-slate-500">📦 Listede:</span>{' '}
+                                        <span className="text-[var(--nx-text-muted)]">📦 Listede:</span>{' '}
                                         <span className="text-slate-200">{preview.cardSummary}</span>
                                     </div>
                                     <div>
-                                        <span className="text-slate-500">📄 Detay sayfasında:</span>{' '}
+                                        <span className="text-[var(--nx-text-muted)]">📄 Detay sayfasında:</span>{' '}
                                         <span className="text-slate-200">{preview.detailPrice}</span>
-                                        <span className="text-slate-500"> · CTA: </span>
+                                        <span className="text-[var(--nx-text-muted)]"> · CTA: </span>
                                         <span className="text-orange-300">[{preview.detailCta}]</span>
                                     </div>
                                     {preview.minOrderNote && (
                                         <div>
-                                            <span className="text-slate-500">📐 </span>
+                                            <span className="text-[var(--nx-text-muted)]">📐 </span>
                                             <span className="text-slate-200">{preview.minOrderNote}</span>
                                         </div>
                                     )}
@@ -845,7 +862,7 @@ export function ProductsTab() {
                                                 // eslint-disable-next-line @next/next/no-img-element -- admin galeri küçük görseli
                                                 <img src={editingAccessory.image_cover} alt="" className="w-full h-full object-cover" />
                                             ) : (
-                                                <span className="text-[10px] text-slate-500">Görsel yok</span>
+                                                <span className="text-[10px] text-[var(--nx-text-muted)]">Görsel yok</span>
                                             )}
                                         </div>
                                         <div className="flex-1 space-y-2">

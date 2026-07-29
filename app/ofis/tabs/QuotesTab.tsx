@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Trash2, ChevronDown, Layers } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Trash2, ChevronDown, Layers, Download } from "lucide-react";
 import { formatCurrency, formatAmount } from "@/lib/admin/utils";
 import {
     groupQuotesIntoSeries,
@@ -11,6 +11,10 @@ import {
     type QuoteSeries,
 } from "@/lib/admin/groupQuotesIntoSeries";
 import SalesOutcomePanel, { LOSS_CATEGORY_LABELS } from "./SalesOutcomePanel";
+import { useAdminRole } from "@/lib/admin/useAdminRole";
+import { useAdminQuotes } from "@/lib/hooks/useAdminQuotes";
+import { SIDDET_RENGI, bekleyisSuresi, sureGosterimi } from "@/lib/admin/formatDuration";
+import { buildQuotesCsvBlob, csvFileName, type CsvQuote } from "@/lib/admin/quotesCsv";
 
 const ofisPanel = "rounded-2xl border border-[var(--nx-border)] bg-[rgba(13,15,18,0.72)] shadow-[0_18px_44px_rgba(0,0,0,0.24)]";
 const ofisInner = "rounded-xl border border-[rgba(92,98,108,0.18)] bg-[rgba(255,255,255,0.025)]";
@@ -58,11 +62,52 @@ type QuoteEvent = {
     created_at: string;
 };
 
+/** Teklif durum sözlüğü (v22 CHECK kısıtıyla aynı anahtarlar). */
+const STATUS_LABELS: Record<string, string> = {
+    pending: "Bekliyor",
+    contacted: "İletişimde",
+    quoted: "Teklif Verildi",
+    approved: "Onaylandı",
+    rejected: "Reddedildi",
+    completed: "Tamamlandı",
+};
+
+/**
+ * Mutasyon yanıtını tek yerden okur ve başarısızlığı GÖRÜNÜR hale getirir.
+ * Audit B2 (26 Temmuz 2026): üç mutasyon da `if (res.ok && payload?.ok)` ile
+ * sarılıydı, `else` dalı yoktu — 403/500/ağ hatası sessizce yutuluyordu ve
+ * kullanıcı işlemin geçtiğini sanıyordu.
+ */
+async function readMutationResult(res: Response): Promise<{ ok: true } | { ok: false; message: string }> {
+    const payload = await res.json().catch(() => null);
+    if (res.ok && payload?.ok) return { ok: true };
+    if (res.status === 403) {
+        return { ok: false, message: "Bu hesabın veri değiştirme yetkisi yok — işlem uygulanmadı." };
+    }
+    if (res.status === 401) {
+        return { ok: false, message: "Oturum doğrulanamadı. Sayfayı yenileyip tekrar giriş yapın." };
+    }
+    return {
+        ok: false,
+        message: payload?.error ?? `İşlem başarısız (HTTP ${res.status}). Değişiklik kaydedilmedi.`,
+    };
+}
+
 export function QuotesTab() {
-    const [quotes, setQuotes] = useState<OfficeQuote[]>([]);
-    const [quoteEventsById, setQuoteEventsById] = useState<Record<string, QuoteEvent[]>>({});
-    const [funnelSummary, setFunnelSummary] = useState<Record<string, number>>({});
-    const [loading, setLoading] = useState(true);
+    const { canMutate, isReadOnly } = useAdminRole();
+    const [actionError, setActionError] = useState<string | null>(null);
+    // Veri artık react-query üzerinden gelir ve DashboardTab/ExperimentsTab
+    // ile aynı önbelleği paylaşır (audit: aynı tablo 7 kez çekiliyordu).
+    const {
+        quotes: rawQuotes,
+        eventsByQuoteId: rawEvents,
+        funnelSummary,
+        isLoading: loading,
+        dataUpdatedAt: loadedAt,
+        refresh,
+    } = useAdminQuotes();
+    const quotes = rawQuotes as unknown as OfficeQuote[];
+    const quoteEventsById = rawEvents as unknown as Record<string, QuoteEvent[]>;
     const [selectedQuote, setSelectedQuote] = useState<OfficeQuote | null>(null);
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [requestTypeFilter, setRequestTypeFilter] = useState<string>("all");
@@ -70,70 +115,132 @@ export function QuotesTab() {
     // Seri açıklık state — varsayılan kapalı, çok teklifli serilerde toggle.
     // Tek teklifli seriler her zaman açık görünür.
     const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({});
+    const modalRef = useRef<HTMLDivElement | null>(null);
+    const PAGE_SIZE = 12;
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [dateRangeDays, setDateRangeDays] = useState(0);
 
-    async function loadQuotes() {
-        setLoading(true);
-        const res = await fetch(`/api/admin/quotes`, { cache: "no-store" });
-        const payload = await res.json().catch(() => null);
-        if (res.ok && payload?.ok) {
-            setQuotes(payload.quotes ?? []);
-            setQuoteEventsById(payload.eventsByQuoteId ?? {});
-            setFunnelSummary(payload.funnelSummary ?? {});
-        } else {
-            setQuotes([]);
-            setQuoteEventsById({});
-            setFunnelSummary({});
-        }
-        setLoading(false);
+    // Filtre/arama değişince sayfalama başa döner — aksi hâlde kullanıcı
+    // 3. sayfadayken filtre daraltınca boş liste görüyor.
+    function resetPagination() {
+        setVisibleCount(PAGE_SIZE);
+    }
+
+    /** Mutasyon sonrası önbelleği geçersiz kıl — tam yeniden çekim değil. */
+    function loadQuotes() {
+        void refresh();
     }
 
     async function deleteQuote(quoteId: number | string) {
         // QuoteRow.id `number | string`; URL template literal her ikisini de string'e
         // çevirir. API tarafı (app/api/admin/quotes/[id]/route.ts) Number(id) ile coerce
         // eder, dolayısıyla burada cast gereksiz.
-        const res = await fetch(`/api/admin/quotes/${quoteId}`, { method: "DELETE" });
-        const payload = await res.json().catch(() => null);
-        if (res.ok && payload?.ok) {
-            if (selectedQuote?.id === quoteId) setSelectedQuote(null);
-            loadQuotes();
+        setActionError(null);
+        let res: Response;
+        try {
+            res = await fetch(`/api/admin/quotes/${quoteId}`, { method: "DELETE" });
+        } catch {
+            setActionError("Bağlantı hatası — teklif silinemedi.");
+            return;
         }
+        const result = await readMutationResult(res);
+        if (!result.ok) {
+            setActionError(result.message);
+            return;
+        }
+        if (selectedQuote?.id === quoteId) setSelectedQuote(null);
+        loadQuotes();
     }
 
+    // Audit E9: teklif detayı bir modal ama Esc ile kapanmıyordu ve odağı
+    // tuzaklamıyordu — klavye kullanıcısı arkadaki listeye sekmeyle
+    // kaçabiliyordu. Açıkken arka plan kaydırması da kilitlenir.
     useEffect(() => {
-        const timer = window.setTimeout(() => {
-            void loadQuotes();
-        }, 0);
+        if (!selectedQuote) return;
 
-        return () => window.clearTimeout(timer);
-    }, []);
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setSelectedQuote(null);
+                return;
+            }
+            if (e.key !== "Tab") return;
+
+            const root = modalRef.current;
+            if (!root) return;
+            const odaklanabilir = root.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            );
+            if (odaklanabilir.length === 0) return;
+            const ilk = odaklanabilir[0];
+            const son = odaklanabilir[odaklanabilir.length - 1];
+
+            if (e.shiftKey && document.activeElement === ilk) {
+                e.preventDefault();
+                son.focus();
+            } else if (!e.shiftKey && document.activeElement === son) {
+                e.preventDefault();
+                ilk.focus();
+            }
+        };
+
+        const oncekiOdak = document.activeElement as HTMLElement | null;
+        const oncekiOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        window.addEventListener("keydown", onKeyDown);
+        modalRef.current?.focus();
+
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+            document.body.style.overflow = oncekiOverflow;
+            oncekiOdak?.focus?.();
+        };
+    }, [selectedQuote]);
 
     async function updateQuoteStatus(quoteId: number | string, newStatus: string) {
-        const res = await fetch(`/api/admin/quotes/${quoteId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus }),
-        });
-        const payload = await res.json().catch(() => null);
-        if (res.ok && payload?.ok) {
-            loadQuotes();
-            if (selectedQuote?.id === quoteId) {
-                setSelectedQuote({ ...selectedQuote, status: newStatus });
-            }
+        setActionError(null);
+        let res: Response;
+        try {
+            res = await fetch(`/api/admin/quotes/${quoteId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+            });
+        } catch {
+            setActionError("Bağlantı hatası — durum güncellenemedi.");
+            return;
+        }
+        const result = await readMutationResult(res);
+        if (!result.ok) {
+            setActionError(result.message);
+            return;
+        }
+        loadQuotes();
+        if (selectedQuote?.id === quoteId) {
+            setSelectedQuote({ ...selectedQuote, status: newStatus });
         }
     }
 
     async function updateQuotePriority(quoteId: number | string, newPriority: string) {
-        const res = await fetch(`/api/admin/quotes/${quoteId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ priority: newPriority }),
-        });
-        const payload = await res.json().catch(() => null);
-        if (res.ok && payload?.ok) {
-            loadQuotes();
-            if (selectedQuote?.id === quoteId) {
-                setSelectedQuote({ ...selectedQuote, priority: newPriority });
-            }
+        setActionError(null);
+        let res: Response;
+        try {
+            res = await fetch(`/api/admin/quotes/${quoteId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ priority: newPriority }),
+            });
+        } catch {
+            setActionError("Bağlantı hatası — öncelik güncellenemedi.");
+            return;
+        }
+        const result = await readMutationResult(res);
+        if (!result.ok) {
+            setActionError(result.message);
+            return;
+        }
+        loadQuotes();
+        if (selectedQuote?.id === quoteId) {
+            setSelectedQuote({ ...selectedQuote, priority: newPriority });
         }
     }
 
@@ -180,14 +287,23 @@ export function QuotesTab() {
     }).length;
     const selectedQuoteEvents = selectedQuote ? (quoteEventsById[String(selectedQuote.id)] ?? []) : [];
 
-    const filteredQuotes = quotes.filter((quote) => {
+    // Audit E3: tarih aralığı filtresi yoktu — "bu ay ne oldu?" sorusunun
+    // cevabı panelde yoktu. Gün sayısı 0 = tümü.
+    const rangeCutoff = dateRangeDays > 0 && loadedAt
+        ? loadedAt - dateRangeDays * 24 * 60 * 60 * 1000
+        : null;
+
+    const filteredQuotes = useMemo(() => quotes.filter((quote) => {
+        const matchesRange = rangeCutoff == null
+            || new Date(quote.created_at).getTime() >= rangeCutoff;
+        if (!matchesRange) return false;
         const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
         const matchesRequestType = requestTypeFilter === "all" || quote.request_type === requestTypeFilter;
         const haystack = [quote.customer_name, quote.customer_email, quote.customer_phone, quote.brand_name, quote.package_name, quote.city_name, quote.quote_code]
             .filter(Boolean).join(" ").toLocaleLowerCase("tr-TR");
         const matchesSearch = searchTerm.trim().length === 0 || haystack.includes(searchTerm.trim().toLocaleLowerCase("tr-TR"));
         return matchesStatus && matchesRequestType && matchesSearch;
-    });
+    }), [quotes, rangeCutoff, statusFilter, requestTypeFilter, searchTerm]);
 
     // Filtrelenmiş quote'ları "teklif serileri" olarak grupla.
     // Filtre quote seviyesinde uygulanır → seri içinde sadece filtreyi
@@ -200,6 +316,27 @@ export function QuotesTab() {
         [filteredQuotes]
     );
     const multiQuoteSeriesCount = filteredSeries.filter(s => s.quoteCount > 1).length;
+
+    /** Ekrandaki filtrelenmiş listeyi CSV olarak indirir (audit E4). */
+    function exportCsv() {
+        const blob = buildQuotesCsvBlob(filteredQuotes as CsvQuote[]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        // loadedAt react-query damgası; veri yüklenmeden düğme zaten kapalı.
+        a.download = csvFileName(new Date(loadedAt));
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+
+    // Audit E2: 34 teklifte sayfa 4.410px'ti; her kayıt DOM'daydı.
+    // KPI ve huni panelleri TÜM tekliflere ihtiyaç duyduğu için veri tek
+    // seferde çekilmeye devam ediyor; sayfalanan yalnız RENDER edilen liste.
+    const visibleSeries = filteredSeries.slice(0, visibleCount);
+    const hasMore = filteredSeries.length > visibleCount;
 
     const approvedCount = quotes.filter((q) => q.status === "approved").length;
 
@@ -250,15 +387,15 @@ export function QuotesTab() {
         (sum, q) => sum + (Number((q as { sales_final_price?: number | null }).sales_final_price ?? q.total_price) || 0),
         0,
     );
-    // KPI ilerleme çubukları gerçek orana bağlanır (audit: eski sabit
-    // pct:68 uydurmaydı). Teklif tutarı çubuğu kazanılan cironun teklif
-    // toplamına oranını gösterir — "ne kadarı gerçeğe döndü".
-    const wonToQuotedPct = totalQuoteValue > 0 ? Math.round((wonRevenue / totalQuoteValue) * 100) : 0;
-
+    // Audit G2: KPI kartlarındaki ilerleme çubukları kaldırıldı. "Toplam Talep"
+    // çubuğu `Math.min(100, total * 4)` ile doluyordu — 25 teklifte %100 olup
+    // orada kalıyordu, yani ölçtüğü bir şey yoktu. Sayı zaten kartın üstünde;
+    // çubuk yalnızca gürültüydü. Anlamlı olan tek oran (kazanılan/teklif)
+    // aşağıdaki satış hunisinde zaten var.
     const kpis = [
-        { label: "Toplam Talep", value: String(quoteSummary.total), sub: `Bugün ${todayQuoteCount} yeni`, accent: "from-[rgba(201,168,76,0.16)] to-transparent", border: "border-[rgba(201,168,76,0.24)]", progress: "from-[var(--nx-gold)] to-[rgba(201,168,76,0.58)]", icon: "◈", pct: Math.min(100, quoteSummary.total * 4) },
-        { label: "Toplam Teklif Tutarı", value: formatAmount(totalQuoteValue), sub: `Ort. ${formatCurrency(averageQuoteValue)} / teklif — ciro değildir`, accent: "from-sky-400/10 to-transparent", border: "border-sky-400/20", progress: "from-sky-300 to-sky-500", icon: "⬢", pct: wonToQuotedPct },
-        { label: "Gerçek Ciro (kazanılan)", value: formatAmount(wonRevenue), sub: wonQuotes.length > 0 ? `${wonQuotes.length} kazanılmış sipariş` : "Henüz kazanılmış sipariş yok", accent: "from-emerald-400/10 to-transparent", border: "border-emerald-400/20", progress: "from-emerald-300 to-emerald-500", icon: "₺", pct: quoteSummary.total > 0 ? Math.round((wonQuotes.length / quoteSummary.total) * 100) : 0 },
+        { label: "Toplam Talep", value: String(quoteSummary.total), sub: `Bugün ${todayQuoteCount} yeni`, accent: "from-[rgba(201,168,76,0.16)] to-transparent", border: "border-[rgba(201,168,76,0.24)]", icon: "◈" },
+        { label: "Toplam Teklif Tutarı", value: formatAmount(totalQuoteValue), sub: `Ort. ${formatCurrency(averageQuoteValue)} / teklif — ciro değildir`, accent: "from-sky-400/10 to-transparent", border: "border-sky-400/20", icon: "⬢" },
+        { label: "Gerçek Ciro (kazanılan)", value: formatAmount(wonRevenue), sub: wonQuotes.length > 0 ? `${wonQuotes.length} kazanılmış sipariş` : "Henüz kazanılmış sipariş yok", accent: "from-emerald-400/10 to-transparent", border: "border-emerald-400/20", icon: "₺" },
     ];
 
     if (loading) {
@@ -278,9 +415,35 @@ export function QuotesTab() {
 
     return (
         <div className="space-y-5">
+            {/* Mutasyon hata bandı — sessiz başarısızlık yasağı (audit B2). */}
+            {actionError && (
+                <div
+                    role="alert"
+                    data-testid="quote-action-error"
+                    className="flex items-start justify-between gap-4 rounded-xl border border-red-400/35 bg-red-400/10 px-4 py-3 text-sm text-red-200"
+                >
+                    <span>{actionError}</span>
+                    <button
+                        type="button"
+                        onClick={() => setActionError(null)}
+                        aria-label="Uyarıyı kapat"
+                        className="shrink-0 rounded-lg px-2 text-red-300 transition-colors hover:bg-red-400/15 hover:text-red-100"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+            {isReadOnly && (
+                <div
+                    data-testid="quotes-read-only-note"
+                    className="rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-3 text-sm text-sky-200"
+                >
+                    Salt okunur hesap — teklifleri görüntüleyebilir, değiştiremezsiniz.
+                </div>
+            )}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <div className="text-xs uppercase tracking-[0.26em] text-slate-500">Operasyon • Canlı</div>
+                    <div className="text-xs uppercase tracking-[0.26em] text-[var(--nx-text-muted)]">Operasyon • Canlı</div>
                     <h1 className="mt-1 text-2xl font-semibold tracking-tight">Teklif Komuta Merkezi</h1>
                     <p className="mt-1 text-sm text-slate-400 max-w-xl">
                         Teklif akışını, durum dağılımını ve kanal performansını tek ekrandan izleyin.
@@ -310,9 +473,6 @@ export function QuotesTab() {
                             </div>
                             <div className="mt-3 text-3xl font-semibold tracking-tight">{item.value}</div>
                             <div className="mt-4 text-xs text-slate-400">{item.sub}</div>
-                            <div className="mt-3 h-1.5 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
-                                <div className={`h-full rounded-full bg-gradient-to-r ${item.progress}`} style={{ width: `${Math.max(4, item.pct)}%` }} />
-                            </div>
                         </div>
                     </div>
                 ))}
@@ -346,17 +506,26 @@ export function QuotesTab() {
                                 <div className="text-lg font-semibold text-white tabular-nums">{step.value}</div>
                                 <div className="text-[10px] uppercase tracking-wide text-slate-400">{step.label}</div>
                             </div>
-                            {i < arr.length - 1 && <span className="text-slate-600">→</span>}
+                            {i < arr.length - 1 && <span className="text-[var(--nx-text-muted)]">→</span>}
                         </div>
                     ))}
                 </div>
 
                 <div className="grid gap-3 text-sm sm:grid-cols-3">
+                    {/* Audit V3: burada canlıda "1674 saat" yazıyordu — 70 günü
+                        saat cinsinden okumak metriği kullanılamaz kılıyor ve
+                        alarm nötr görünüyordu. */}
                     <div className={`${ofisInner} p-3`}>
                         <div className="text-[10px] uppercase tracking-wide text-slate-400">Ortalama ilk temas</div>
-                        <div className="mt-1 font-semibold text-white">
-                            {avgFirstContactHours != null ? `${avgFirstContactHours} saat` : "veri yok"}
-                        </div>
+                        {(() => {
+                            const g = sureGosterimi(avgFirstContactHours);
+                            if (!g) return <div className="mt-1 font-semibold text-[var(--nx-text-muted)]">veri yok</div>;
+                            return (
+                                <div className={`mt-1 font-semibold ${SIDDET_RENGI[g.siddet]}`} title={`${Math.round(g.saat)} saat`}>
+                                    {g.metin}
+                                </div>
+                            );
+                        })()}
                     </div>
                     <div className={`${ofisInner} p-3`}>
                         <div className="text-[10px] uppercase tracking-wide text-slate-400">Kazanılan brüt kâr</div>
@@ -367,7 +536,7 @@ export function QuotesTab() {
                     <div className={`${ofisInner} p-3`}>
                         <div className="text-[10px] uppercase tracking-wide text-slate-400">Kayıp nedenleri</div>
                         <div className="mt-1 flex flex-wrap gap-1.5">
-                            {Object.keys(lossBreakdown).length === 0 && <span className="text-slate-500">henüz yok</span>}
+                            {Object.keys(lossBreakdown).length === 0 && <span className="text-[var(--nx-text-muted)]">henüz yok</span>}
                             {Object.entries(lossBreakdown).map(([cat, count]) => (
                                 <span key={cat} className="rounded-full border border-red-400/25 bg-red-400/10 px-2 py-0.5 text-[10px] text-red-200">
                                     {(LOSS_CATEGORY_LABELS[cat] ?? cat)} · {count}
@@ -391,7 +560,7 @@ export function QuotesTab() {
                                     className={`${ofisInner} flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-[rgba(255,255,255,0.05)]`}
                                 >
                                     <span className="min-w-0 truncate text-white">
-                                        {q.customer_name} <span className="text-slate-500">· {q.customer_phone}</span>
+                                        {q.customer_name} <span className="text-[var(--nx-text-muted)]">· {q.customer_phone}</span>
                                     </span>
                                     <span className="shrink-0 text-xs text-amber-300">
                                         takip: {new Date(q.follow_up_date as string).toLocaleDateString("tr-TR")}
@@ -417,14 +586,14 @@ export function QuotesTab() {
                         <div className={`${ofisInner} p-4`}>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="text-sm text-slate-300">Aylık Teklif Hacmi</div>
-                                <div className="text-xs text-slate-500">Son 6 ay</div>
+                                <div className="text-xs text-[var(--nx-text-muted)]">Son 6 ay</div>
                             </div>
                             <div className="h-40 flex items-end gap-3 px-1">
                                 {last6Months.map((m, i) => (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-2">
                                         <div className="w-full rounded-t-lg border border-[rgba(201,168,76,0.18)] bg-gradient-to-t from-[rgba(201,168,76,0.22)] to-[rgba(201,168,76,0.72)] min-h-[6px]"
                                             style={{ height: `${Math.max(6, (m.count / maxMonthly) * 100)}%` }} />
-                                        <span className="text-[10px] text-slate-500">{m.label}</span>
+                                        <span className="text-[10px] text-[var(--nx-text-muted)]">{m.label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -455,22 +624,33 @@ export function QuotesTab() {
 
                 <div className="space-y-4">
                     <div className={`${ofisPanel} p-5`}>
-                        <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Kanal</div>
+                        <div className="text-xs uppercase tracking-[0.28em] text-[var(--nx-text-muted)]">Kanal</div>
                         <h3 className="mt-1.5 text-xl font-semibold">Talep Türleri</h3>
+                        {/* Audit G3: çubuk genişliği `value * 8` ile hesaplanıyordu —
+                            33 teklif de %100 doluyordu, 13 teklif de. Ortak bir ölçek
+                            olmadığı için çubuklar birbiriyle kıyaslanamıyordu. Artık
+                            hepsi grubun en büyüğüne göre normalize ediliyor. */}
                         <div className="mt-4 space-y-3">
-                            {[
-                                { label: "PDF Teklif", value: quoteSummary.pdfQuote, gradient: "from-[var(--nx-gold)] to-amber-500" },
-                                { label: "WhatsApp Onay", value: quoteSummary.whatsappOrder, gradient: "from-emerald-400 to-teal-400" },
-                                { label: "PDF İndirme", value: funnelSummary.pdf_downloaded || 0, gradient: "from-[var(--nx-gold)] to-amber-500" },
-                                { label: "WA Açılışı", value: funnelSummary.whatsapp_opened || 0, gradient: "from-green-400 to-emerald-500" },
-                            ].map(({ label, value, gradient }) => (
-                                <div key={label}>
-                                    <div className="mb-1.5 flex items-center justify-between text-xs text-slate-300"><span>{label}</span><span>{value}</span></div>
-                                    <div className="h-2 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
-                                        <div className={`h-full rounded-full bg-gradient-to-r ${gradient}`} style={{ width: `${Math.max(4, Math.min(100, value * 8))}%` }} />
+                            {(() => {
+                                const kanallar = [
+                                    { label: "PDF Teklif", value: quoteSummary.pdfQuote, gradient: "from-[var(--nx-gold)] to-amber-500" },
+                                    { label: "WhatsApp Onay", value: quoteSummary.whatsappOrder, gradient: "from-emerald-400 to-teal-400" },
+                                    { label: "PDF İndirme", value: funnelSummary.pdf_downloaded || 0, gradient: "from-[var(--nx-gold)] to-amber-500" },
+                                    { label: "WA Açılışı", value: funnelSummary.whatsapp_opened || 0, gradient: "from-green-400 to-emerald-500" },
+                                ];
+                                const enBuyuk = Math.max(...kanallar.map((k) => k.value), 1);
+                                return kanallar.map(({ label, value, gradient }) => (
+                                    <div key={label}>
+                                        <div className="mb-1.5 flex items-center justify-between text-xs text-slate-300"><span>{label}</span><span>{value}</span></div>
+                                        <div className="h-2 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full bg-gradient-to-r ${gradient}`}
+                                                style={{ width: `${value === 0 ? 0 : Math.max(4, Math.round((value / enBuyuk) * 100))}%` }}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ));
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -480,9 +660,9 @@ export function QuotesTab() {
             <div className={`${ofisPanel} p-5`}>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                     <div>
-                        <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Operasyon</div>
+                        <div className="text-xs uppercase tracking-[0.28em] text-[var(--nx-text-muted)]">Operasyon</div>
                         <h2 className="mt-1.5 text-xl font-semibold">Teklif Masası</h2>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--nx-text-muted)]">
                             {filteredSeries.length} seri • {filteredQuotes.length} / {quotes.length} teklif gösteriliyor
                             {multiQuoteSeriesCount > 0 && (
                                 <span className="ml-1 text-[var(--nx-gold)]">· {multiQuoteSeriesCount} çoklu seri</span>
@@ -498,33 +678,55 @@ export function QuotesTab() {
                             { value: "rejected", label: "Reddedildi" },
                             { value: "completed", label: "Tamamlandı" },
                         ].map((f) => (
-                            <button key={f.value} onClick={() => setStatusFilter(f.value)}
+                            <button key={f.value} onClick={() => { setStatusFilter(f.value); resetPagination(); }}
                                 className={`${ofisChip} ${statusFilter === f.value ? "border-[var(--nx-gold)] bg-[var(--nx-gold)] text-[#101114]" : "border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] text-[var(--nx-text-soft)] hover:bg-[rgba(255,255,255,0.055)] hover:text-[var(--nx-text)]"}`}>
                                 {f.label}
                             </button>
                         ))}
                     </div>
                 </div>
-                <div className="grid gap-3 md:grid-cols-[200px_1fr] mb-5">
-                    <select value={requestTypeFilter} onChange={(e) => setRequestTypeFilter(e.target.value)}
+                <div className="grid gap-3 md:grid-cols-[180px_180px_1fr_auto] mb-5">
+                    <select value={requestTypeFilter} onChange={(e) => { setRequestTypeFilter(e.target.value); resetPagination(); }}
                         aria-label="Talep türüne göre filtrele"
                         className={`${ofisControl} px-4 py-2.5 text-sm`}>
                         <option value="all">Tüm Talep Türleri</option>
                         <option value="pdf_quote">PDF Teklif</option>
                         <option value="whatsapp_order">WhatsApp Onay</option>
+                        <option value="manual_quote">Ofis Teklifi</option>
+                    </select>
+                    <select value={dateRangeDays} onChange={(e) => { setDateRangeDays(Number(e.target.value)); resetPagination(); }}
+                        aria-label="Tarih aralığına göre filtrele"
+                        className={`${ofisControl} px-4 py-2.5 text-sm [color-scheme:dark]`}>
+                        <option value={0}>Tüm zamanlar</option>
+                        <option value={7}>Son 7 gün</option>
+                        <option value={30}>Son 30 gün</option>
+                        <option value={90}>Son 90 gün</option>
                     </select>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">⌕</span>
-                        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--nx-text-muted)] text-sm">⌕</span>
+                        <input type="text" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
                             aria-label="Tekliflerde ara"
                             placeholder="Müşteri, marka, şehir veya paket ara…"
-                            className={`${ofisControl} w-full pl-9 pr-4 py-2.5 text-sm placeholder:text-slate-600`} />
+                            className={`${ofisControl} w-full pl-9 pr-4 py-2.5 text-sm placeholder:text-[var(--nx-text-muted)]`} />
                     </div>
+                    {/* Audit E4: panelde hiç dışa aktarım yoktu. Filtrelenmiş
+                        liste indirilir — ekranda ne görüyorsa o iner. */}
+                    <button
+                        type="button"
+                        onClick={exportCsv}
+                        disabled={filteredQuotes.length === 0}
+                        data-testid="quotes-export-csv"
+                        title="Filtrelenmiş teklifleri CSV olarak indir"
+                        className={`${ofisControl} inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-sm hover:bg-[rgba(255,255,255,0.05)] hover:text-[var(--nx-text)] disabled:opacity-40`}
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        CSV ({filteredQuotes.length})
+                    </button>
                 </div>
                 <div className="space-y-3">
                     {filteredSeries.length === 0 ? (
-                        <div className={`${ofisInner} p-8 text-center text-slate-500`}>Seçili filtrelerde teklif talebi bulunmuyor.</div>
-                    ) : filteredSeries.map((series) => {
+                        <div className={`${ofisInner} p-8 text-center text-[var(--nx-text-muted)]`}>Seçili filtrelerde teklif talebi bulunmuyor.</div>
+                    ) : visibleSeries.map((series) => {
                         const isMulti = series.quoteCount > 1;
                         // Tek teklifli seriler default açık; çok teklifliler default kapalı.
                         const isOpen = isMulti ? (expandedSeries[series.seriesKey] ?? false) : true;
@@ -571,17 +773,17 @@ export function QuotesTab() {
                                                 {matLabel ? ` • ${matLabel}` : ""}
                                                 {series.thicknesses.length > 0 ? ` • ${formatThicknesses(series.thicknesses)}` : ""}
                                             </div>
-                                            <div className="mt-0.5 text-xs text-slate-600">
+                                            <div className="mt-0.5 text-xs text-[var(--nx-text-muted)]">
                                                 {series.brands.length > 0 ? series.brands.join(" / ") : "—"}
                                                 {series.packageNames.length > 0 ? ` · ${series.packageNames.join(" / ")}` : ""}
                                             </div>
-                                            <div className="mt-0.5 text-xs text-slate-600">
+                                            <div className="mt-0.5 text-xs text-[var(--nx-text-muted)]">
                                                 Son teklif: {new Date(series.endedAt).toLocaleDateString("tr-TR")} {new Date(series.endedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 flex-shrink-0">
                                             <div className="text-right">
-                                                <div className="text-xs text-slate-500">
+                                                <div className="text-xs text-[var(--nx-text-muted)]">
                                                     {series.minPrice != null && series.maxPrice != null && series.minPrice !== series.maxPrice
                                                         ? "Teklif aralığı"
                                                         : "Teklif tutarı"}
@@ -594,7 +796,7 @@ export function QuotesTab() {
                                                         : "—"}
                                                 </div>
                                             </div>
-                                            <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                                            <ChevronDown className={`w-5 h-5 text-[var(--nx-text-muted)] transition-transform ${isOpen ? "rotate-180" : ""}`} />
                                         </div>
                                     </button>
                                 )}
@@ -625,21 +827,21 @@ export function QuotesTab() {
                                                         <div className="mt-1 text-sm text-slate-400 truncate">
                                                             {quote.brand_name || "Marka yok"} • {quote.package_name || "Paket yok"} • {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm}cm • {quote.area_m2} m² • {quote.city_name || "—"}
                                                         </div>
-                                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-600">
+                                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-[var(--nx-text-muted)]">
                                                             <span>
                                                                 {new Date(quote.created_at).toLocaleDateString("tr-TR")} {new Date(quote.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                                                             </span>
                                                             {/* Temas SLA rozeti (Sprint 3): açık teklif temassızsa yaşını göster */}
                                                             {!quote.contact_attempted_at && !["completed", "rejected"].includes(quote.status ?? "") && (() => {
-                                                                const hours = Math.floor((Date.now() - new Date(quote.created_at).getTime()) / 36e5);
-                                                                const label = hours < 48 ? `${hours} saattir temassız` : `${Math.floor(hours / 24)} gündür temassız`;
+                                                                const hours = (loadedAt - new Date(quote.created_at).getTime()) / 36e5;
+                                                                if (!Number.isFinite(hours) || hours < 0) return null;
                                                                 return (
                                                                     <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
                                                                         hours >= 24
                                                                             ? "border-red-400/40 bg-red-400/10 text-red-300"
                                                                             : "border-amber-400/40 bg-amber-400/10 text-amber-300"
                                                                     }`}>
-                                                                        ⏱ {label}
+                                                                        ⏱ {bekleyisSuresi(hours)} temassız
                                                                     </span>
                                                                 );
                                                             })()}
@@ -653,26 +855,36 @@ export function QuotesTab() {
                                                     <div className="flex items-center gap-5 flex-shrink-0">
                                                         <div className="text-right">
                                                             <div className="text-xl font-semibold text-white">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</div>
-                                                            <div className="text-xs text-slate-500">{(quote.price_per_m2 ?? 0).toFixed(2)} ₺/m²</div>
+                                                            <div className="text-xs text-[var(--nx-text-muted)]">{(quote.price_per_m2 ?? 0).toFixed(2)} ₺/m²</div>
                                                         </div>
-                                                        <select value={quote.status ?? "pending"} onChange={(e) => updateQuoteStatus(quote.id, e.target.value)}
-                                                            aria-label={`${quote.customer_name} teklif durumu`}
-                                                            className={`${ofisControl} px-3 py-2 text-xs min-w-[130px]`}>
-                                                            <option value="pending">Bekliyor</option>
-                                                            <option value="contacted">İletişimde</option>
-                                                            <option value="quoted">Teklif Verildi</option>
-                                                            <option value="approved">Onaylandı</option>
-                                                            <option value="rejected">Reddedildi</option>
-                                                            <option value="completed">Tamamlandı</option>
-                                                        </select>
-                                                        <select value={quote.priority ?? "normal"} onChange={(e) => updateQuotePriority(quote.id, e.target.value)}
-                                                            aria-label={`${quote.customer_name} teklif önceliği`}
-                                                            className={`${ofisControl} px-3 py-2 text-xs min-w-[100px]`}>
-                                                            <option value="low">Düşük</option>
-                                                            <option value="normal">Normal</option>
-                                                            <option value="high">Yüksek</option>
-                                                            <option value="urgent">Acil</option>
-                                                        </select>
+                                                        {/* Salt-okunur hesapta değiştirme kontrolü hiç render edilmez;
+                                                            bilgi rozet olarak kalır (audit B1). */}
+                                                        {canMutate ? (
+                                                            <select value={quote.status ?? "pending"} onChange={(e) => updateQuoteStatus(quote.id, e.target.value)}
+                                                                aria-label={`${quote.customer_name} teklif durumu`}
+                                                                className={`${ofisControl} px-3 py-2 text-xs min-w-[130px]`}>
+                                                                <option value="pending">Bekliyor</option>
+                                                                <option value="contacted">İletişimde</option>
+                                                                <option value="quoted">Teklif Verildi</option>
+                                                                <option value="approved">Onaylandı</option>
+                                                                <option value="rejected">Reddedildi</option>
+                                                                <option value="completed">Tamamlandı</option>
+                                                            </select>
+                                                        ) : (
+                                                            <span className={`${ofisInner} px-3 py-2 text-xs min-w-[130px] text-center text-slate-300`}>
+                                                                {STATUS_LABELS[quote.status ?? "pending"] ?? quote.status}
+                                                            </span>
+                                                        )}
+                                                        {canMutate ? (
+                                                            <select value={quote.priority ?? "normal"} onChange={(e) => updateQuotePriority(quote.id, e.target.value)}
+                                                                aria-label={`${quote.customer_name} teklif önceliği`}
+                                                                className={`${ofisControl} px-3 py-2 text-xs min-w-[100px]`}>
+                                                                <option value="low">Düşük</option>
+                                                                <option value="normal">Normal</option>
+                                                                <option value="high">Yüksek</option>
+                                                                <option value="urgent">Acil</option>
+                                                            </select>
+                                                        ) : null}
                                                         {(quote.pdf_storage_path || quote.pdf_url) && (
                                                             <a
                                                                 href={`/api/admin/quotes/${quote.id}/pdf`}
@@ -688,10 +900,12 @@ export function QuotesTab() {
                                                             className={`${ofisControl} border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-4 py-2 text-xs text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.14)] whitespace-nowrap`}>
                                                             Detay →
                                                         </button>
-                                                        <button onClick={() => { if (confirm(`"${quote.customer_name}" teklifini silmek istiyor musunuz?\nBu işlem geri alınamaz.`)) { deleteQuote(quote.id); } }}
-                                                            className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-2 text-red-400/70 transition-colors hover:bg-red-500/15 hover:text-red-300 hover:border-red-500/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/25" title="Teklifi sil" aria-label="Teklifi sil">
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </button>
+                                                        {canMutate && (
+                                                            <button onClick={() => { if (confirm(`"${quote.customer_name}" teklifini silmek istiyor musunuz?\nBu işlem geri alınamaz.`)) { deleteQuote(quote.id); } }}
+                                                                className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-2 text-red-400/70 transition-colors hover:bg-red-500/15 hover:text-red-300 hover:border-red-500/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/25" title="Teklifi sil" aria-label="Teklifi sil">
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -701,13 +915,34 @@ export function QuotesTab() {
                             </div>
                         );
                     })}
+
+                    {hasMore && (
+                        <button
+                            type="button"
+                            onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                            data-testid="quotes-load-more"
+                            className={`${ofisInner} w-full py-3 text-sm text-slate-300 transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-white`}
+                        >
+                            Daha fazla göster — {filteredSeries.length - visibleCount} seri daha
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Quote Detail Modal */}
             {selectedQuote && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="admin-nexus-panel max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl">
+                <div
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) setSelectedQuote(null); }}
+                >
+                    <div
+                        ref={modalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={`Teklif detayı ${selectedQuote.id}`}
+                        tabIndex={-1}
+                        className="admin-nexus-panel max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl focus:outline-none"
+                    >
                         <div className="sticky top-0 rounded-t-2xl border-b border-[rgba(92,98,108,0.24)] bg-[rgba(15,17,21,0.96)] p-6 text-white shadow-[0_14px_30px_rgba(0,0,0,0.28)]">
                             <div className="flex justify-between items-start">
                                 <div>
@@ -805,18 +1040,18 @@ export function QuotesTab() {
                                         <div key={event.id} className="flex items-start justify-between gap-4 rounded-xl border border-[rgba(92,98,108,0.20)] bg-[rgba(255,255,255,0.025)] p-4">
                                             <div>
                                                 <p className="font-medium text-slate-100">{getEventLabel(event.event_type)}</p>
-                                                <p className="mt-1 text-xs text-slate-500">{event.brand_name || selectedQuote.brand_name || "Marka yok"} • {event.package_name || selectedQuote.package_name || "Paket yok"}</p>
+                                                <p className="mt-1 text-xs text-[var(--nx-text-muted)]">{event.brand_name || selectedQuote.brand_name || "Marka yok"} • {event.package_name || selectedQuote.package_name || "Paket yok"}</p>
                                                 {event.metadata && Object.keys(event.metadata).length > 0 && (
-                                                    <p className="mt-2 text-xs text-slate-500">Kanal: {event.metadata.sourceChannel || "bilinmiyor"}</p>
+                                                    <p className="mt-2 text-xs text-[var(--nx-text-muted)]">Kanal: {event.metadata.sourceChannel || "bilinmiyor"}</p>
                                                 )}
                                             </div>
-                                            <div className="text-right text-xs text-slate-500">
+                                            <div className="text-right text-xs text-[var(--nx-text-muted)]">
                                                 {new Date(event.created_at).toLocaleDateString("tr-TR")}
                                                 <div className="mt-1">{new Date(event.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</div>
                                             </div>
                                         </div>
                                     )) : (
-                                        <div className="rounded-xl border border-[rgba(92,98,108,0.20)] bg-[rgba(255,255,255,0.025)] p-4 text-sm text-slate-500">Bu teklif için henüz funnel event kaydı görünmüyor.</div>
+                                        <div className="rounded-xl border border-[rgba(92,98,108,0.20)] bg-[rgba(255,255,255,0.025)] p-4 text-sm text-[var(--nx-text-muted)]">Bu teklif için henüz funnel event kaydı görünmüyor.</div>
                                     )}
                                 </div>
                             </div>

@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
-    FileText, Clock, MessageSquare, TrendingUp, TrendingDown, CheckCircle2,
+    FileText, MessageSquare, TrendingUp, TrendingDown, CheckCircle2,
+    PhoneOff, CalendarClock, ArrowRight,
 } from "lucide-react";
 import {
     PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer,
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from "recharts";
-import type { DashboardMetrics } from "@/app/api/admin/dashboard-metrics/types";
 import { formatCurrency, formatAmount, formatM2 } from "@/lib/admin/utils";
+import { useAdminQuotes } from "@/lib/hooks/useAdminQuotes";
+import { useDashboardMetrics } from "@/lib/hooks/useAdminMetrics";
+import { SIDDET_RENGI, bekleyisSuresi, saatFarki, sureGosterimi } from "@/lib/admin/formatDuration";
 
 type LucideIcon = typeof FileText;
 
@@ -22,6 +25,9 @@ interface DashboardQuote {
     brand_name: string | null;
     area_m2: number | null;
     total_price: number | null;
+    // Satış takibi alanları (migration v22) — iş listesi bunlara bakar.
+    contact_attempted_at?: string | null;
+    follow_up_date?: string | null;
 }
 
 /** Son 24 saatin saatlik kovaları — `now` render'da değil veri yüklendiği anda alınır. */
@@ -70,11 +76,25 @@ function KpiTile({ label, value, icon: Icon, trend, spark, onClick }: {
     spark: number[];
     onClick?: () => void;
 }) {
+    // Audit E9: kart `role="button"` alıyordu ama `tabIndex`/`onKeyDown` yoktu —
+    // klavyeyle ne odaklanılabiliyor ne tetiklenebiliyordu. Tıklanabilir kart
+    // artık gerçek bir <button> gibi davranır.
     return (
         <div
             className="nx-kpi-tile"
             onClick={onClick}
+            onKeyDown={
+                onClick
+                    ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onClick();
+                        }
+                    }
+                    : undefined
+            }
             role={onClick ? "button" : undefined}
+            tabIndex={onClick ? 0 : undefined}
             style={{ cursor: onClick ? "pointer" : "default" }}
         >
             <span className="nx-kpi-tile__icon"><Icon className="w-4 h-4" /></span>
@@ -121,29 +141,16 @@ function Gauge({ percent, label }: { percent: number; label: string }) {
 }
 
 export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
-    const [dashboardQuotes, setDashboardQuotes] = useState<DashboardQuote[]>([]);
-    const [quotesLoadedAt, setQuotesLoadedAt] = useState(0);
-    const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-    const [metricsError, setMetricsError] = useState(false);
+    // Teklif verisi QuotesTab ve ExperimentsTab ile ortak önbellekten gelir
+    // (audit: aynı tablo bir gezintide 7 kez çekiliyordu).
+    const { quotes: sharedQuotes, dataUpdatedAt } = useAdminQuotes();
+    const dashboardQuotes = sharedQuotes as unknown as DashboardQuote[];
+    const { metrics, isError: metricsError } = useDashboardMetrics();
 
-    useEffect(() => {
-        async function loadDashboardQuotes() {
-            const res = await fetch("/api/admin/quotes", { cache: "no-store" });
-            const payload = await res.json().catch(() => null);
-            if (res.ok && payload?.ok) {
-                setDashboardQuotes(payload.quotes ?? []);
-                setQuotesLoadedAt(Date.now());
-            }
-        }
-        loadDashboardQuotes();
-    }, []);
+    // Saatlik kovalar verinin çekildiği ana göre hesaplanır — react-query'nin
+    // damgası kullanılır, render içinde Date.now() çağrılmaz.
+    const quotesLoadedAt = dataUpdatedAt;
 
-    useEffect(() => {
-        fetch("/api/admin/dashboard-metrics")
-            .then((r) => r.json())
-            .then((d) => { if (d.ok) setMetrics(d.metrics); else setMetricsError(true); })
-            .catch(() => setMetricsError(true));
-    }, []);
 
     const dashboardQuoteSummary = {
         total: dashboardQuotes.length,
@@ -190,6 +197,26 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
         ? (dashboardQuoteSummary.approved / dashboardQuoteSummary.total) * 100
         : 0;
 
+    // ── Bugünün iş listesi (audit V2 / E6) ──
+    // Eski üst şerit "Bugünkü Teklif 0 · Bekleyen 0 · PDF 0 · WhatsApp 0"
+    // gösteriyordu: gün içinde teklif gelmediyse panel bomboş hissettiriyordu,
+    // oysa 22 teklif temassız bekliyordu. Şerit artık EYLEME dönük.
+    const isOpen = (q: DashboardQuote) => !["completed", "rejected"].includes(q.status ?? "");
+    // react-query'nin veri damgası; render içinde Date.now() çağrılmaz.
+    const olcumAni = quotesLoadedAt || 0;
+    const todayStr = new Date(olcumAni).toISOString().slice(0, 10);
+
+    const openQuotes = dashboardQuotes.filter(isOpen);
+    const uncontacted = openQuotes.filter((q) => !q.contact_attempted_at);
+    const dueFollowUps = openQuotes.filter(
+        (q) => q.follow_up_date && q.follow_up_date.slice(0, 10) <= todayStr,
+    );
+
+    /** En uzun bekleyen temassız teklifler — önce onlar aranmalı. */
+    const worklist = [...uncontacted]
+        .sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at))
+        .slice(0, 5);
+
     return (
         <div className="space-y-6">
             {metricsError && (
@@ -199,39 +226,93 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
             )}
             {/* Row 1: KPI strip */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Audit V2: şerit "bugün" yerine YAPILACAK İŞ gösterir.
+                    Gün içinde teklif gelmemiş olabilir; bekleyen iş durur. */}
                 <KpiTile
-                    label="Bugünkü Teklif"
-                    value={metrics?.daily_total ?? 0}
-                    icon={FileText}
-                    trend={generalTrend}
-                    spark={hourlyBuckets}
-                    onClick={() => onNavigate("quotes")}
-                />
-                <KpiTile
-                    label="Bekleyen Talep"
-                    value={metrics?.daily_pending_count ?? 0}
-                    icon={Clock}
+                    label="Temassız Teklif"
+                    value={uncontacted.length}
+                    icon={PhoneOff}
                     trend={null}
                     spark={hourlyPendingBuckets}
                     onClick={() => onNavigate("quotes")}
                 />
                 <KpiTile
-                    label="PDF Talepleri"
-                    value={metrics?.daily_pdf_count ?? 0}
+                    label="Bugün Takip"
+                    value={dueFollowUps.length}
+                    icon={CalendarClock}
+                    trend={null}
+                    spark={hourlyBuckets}
+                    onClick={() => onNavigate("quotes")}
+                />
+                <KpiTile
+                    label="Açık Teklif"
+                    value={openQuotes.length}
                     icon={FileText}
                     trend={null}
                     spark={hourlyPdfBuckets}
                     onClick={() => onNavigate("quotes")}
                 />
                 <KpiTile
-                    label="WhatsApp Onayı"
-                    value={metrics?.daily_whatsapp_count ?? 0}
+                    label="Bugün Gelen"
+                    value={metrics?.daily_total ?? 0}
                     icon={MessageSquare}
-                    trend={null}
+                    trend={generalTrend}
                     spark={hourlyWaBuckets}
                     onClick={() => onNavigate("quotes")}
                 />
             </div>
+
+            {/* Bugünün iş listesi — audit E6: bu veri zaten hesaplanıyordu ama
+                Teklifler sekmesinin ortasına gömülüydü; panelin açılış ekranında
+                yoktu. Artık ilk görülen şey yapılacak iş. */}
+            {(worklist.length > 0 || dueFollowUps.length > 0) && (
+                <div className="nx-hero-card" data-testid="dashboard-worklist">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Bugün Yapılacaklar</p>
+                            <h3 className="mt-1 text-base font-semibold text-[var(--nx-text)]">
+                                {uncontacted.length} temassız
+                                {dueFollowUps.length > 0 && ` · ${dueFollowUps.length} takip`}
+                            </h3>
+                        </div>
+                        <button
+                            onClick={() => onNavigate("quotes")}
+                            className="inline-flex items-center gap-1 rounded-full border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.10)] px-3 py-1.5 text-[11px] text-[var(--nx-gold)] transition-colors hover:bg-[rgba(201,168,76,0.18)]"
+                        >
+                            Tümü <ArrowRight className="h-3 w-3" />
+                        </button>
+                    </div>
+
+                    <ul className="mt-3 space-y-2">
+                        {worklist.map((q) => {
+                            const bekleme = olcumAni ? saatFarki(q.created_at, new Date(olcumAni)) : null;
+                            const g = sureGosterimi(bekleme);
+                            return (
+                                <li key={q.id}>
+                                    <button
+                                        onClick={() => onNavigate("quotes")}
+                                        className="flex w-full items-center justify-between gap-3 rounded-xl border border-[rgba(72,65,52,0.2)] bg-[rgba(26,24,22,0.6)] p-3 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                                    >
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-sm font-medium text-[var(--nx-text)]">
+                                                {q.customer_name}
+                                            </span>
+                                            <span className="mt-0.5 block truncate text-[11px] text-[var(--nx-text-soft)]">
+                                                {q.brand_name || "Markasız"} · {q.area_m2} m² · {formatCurrency(q.total_price ?? 0)}
+                                            </span>
+                                        </span>
+                                        {g && (
+                                            <span className={`shrink-0 text-[11px] font-medium ${SIDDET_RENGI[g.siddet]}`}>
+                                                {bekleyisSuresi(g.saat)} bekliyor
+                                            </span>
+                                        )}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
 
             {/* Row 2: hero chart + gauges */}
             <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
@@ -250,8 +331,17 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                             </span>
                         </div>
                     </div>
-                    <div style={{ width: "100%", height: 220 }}>
-                        <ResponsiveContainer>
+                    {/* Audit B6: sekme geçişlerinde konsola
+                        "width(-1) and height(-1)" uyarısı düşüyordu — kapsayıcı
+                        henüz düzen almadan ölçülüyordu. minWidth/minHeight=0
+                        ölçümü negatif değerden korur. */}
+                    {/* Audit B6: ResponsiveContainer ölçüm yapılana kadar
+                        width/height'i -1 tutuyor ve her sekme geçişinde konsola
+                        uyarı düşüyordu. initialDimension ilk render'a geçerli
+                        bir boyut verir; ResizeObserver sonrası gerçek ölçüye
+                        geçer. */}
+                    <div style={{ width: "100%", height: 220, minWidth: 0 }}>
+                        <ResponsiveContainer initialDimension={{ width: 640, height: 220 }}>
                             <AreaChart data={areaChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="nx-area-grad" x1="0" x2="0" y1="0" y2="1">
@@ -317,9 +407,11 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                 {/* Son Talep Akışı */}
                 <div className="nx-hero-card">
                     <div className="flex items-center justify-between mb-3">
+                        {/* Audit G4: bu etiket 24 saatlik grafikte de aynıydı;
+                            aynı ekranda iki "Talep Akışı" başlığı vardı. */}
                         <div>
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Talep Akışı</p>
-                            <h3 className="mt-1 text-base font-semibold text-[var(--nx-text)]">Son Kayıtlar</h3>
+                            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Son Talepler</p>
+                            <h3 className="mt-1 text-base font-semibold text-[var(--nx-text)]">Gelen Kayıtlar</h3>
                         </div>
                         <button
                             onClick={() => onNavigate("quotes")}
@@ -359,7 +451,7 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                         {metrics && (metrics.eps_ratio_30d > 0 || metrics.rockwool_ratio_30d > 0) ? (
                             <>
                                 <div className="flex justify-center">
-                                    <ResponsiveContainer width={160} height={160}>
+                                    <ResponsiveContainer width={160} height={160} initialDimension={{ width: 160, height: 160 }}>
                                         <PieChart>
                                             <Pie
                                                 data={[

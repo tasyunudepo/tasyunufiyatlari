@@ -47,16 +47,16 @@ export function LogisticsTab() {
                                 <td className="px-4 py-3 text-sm text-slate-300">{item.items_per_package} adet</td>
                                 <td className="px-4 py-3 text-sm text-slate-300">{item.package_size_m2} m²</td>
                                 <td className="px-4 py-3 text-sm text-slate-300 font-medium">
-                                    {(item.lorry_capacity_packages * item.package_size_m2).toFixed(1)} m² <span className="text-slate-500">({item.lorry_capacity_packages} paket)</span>
+                                    {(item.lorry_capacity_packages * item.package_size_m2).toFixed(1)} m² <span className="text-[var(--nx-text-muted)]">({item.lorry_capacity_packages} paket)</span>
                                 </td>
                                 <td className="px-4 py-3 text-sm text-slate-300 font-medium">
-                                    {(item.truck_capacity_packages * item.package_size_m2).toFixed(1)} m² <span className="text-slate-500">({item.truck_capacity_packages} paket)</span>
+                                    {(item.truck_capacity_packages * item.package_size_m2).toFixed(1)} m² <span className="text-[var(--nx-text-muted)]">({item.truck_capacity_packages} paket)</span>
                                 </td>
                                 <td className="px-4 py-3 text-sm">
                                     {item.is_popular ? (
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">⭐ Popüler</span>
                                     ) : (
-                                        <span className="text-slate-500">-</span>
+                                        <span className="text-[var(--nx-text-muted)]">-</span>
                                     )}
                                 </td>
                             </tr>
@@ -64,7 +64,7 @@ export function LogisticsTab() {
                     </tbody>
                 </table>
             </div>
-            {logisticsData.length === 0 && <p className="text-center text-slate-500 py-8">Lojistik verisi bulunamadı</p>}
+            {logisticsData.length === 0 && <p className="text-center text-[var(--nx-text-muted)] py-8">Lojistik verisi bulunamadı</p>}
         </div>
     );
 }
