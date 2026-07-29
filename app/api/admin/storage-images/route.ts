@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { requireOfficeReadAuth } from '@/lib/security/adminMutationAuth';
 
 export const dynamic = 'force-dynamic';
 
 const BUCKET = 'product-images';
 
-export async function GET() {
+// Audit S1: depo dosya listesi yayımlanmamış görselleri de içerir.
+export async function GET(req: NextRequest) {
+  const auth = requireOfficeReadAuth(req);
+  if (!auth.ok) return auth.response;
+
   const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase.storage

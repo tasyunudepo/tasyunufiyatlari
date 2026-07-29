@@ -138,6 +138,52 @@ function canonicalizeLegacyUrl(req: NextRequest): NextResponse | null {
   return NextResponse.redirect(url, 301);
 }
 
+/**
+ * Sabit süreli dize karşılaştırması (audit S2).
+ *
+ * Eski hâlinde `user === adminUser && pass === adminPass` kullanılıyordu;
+ * `===` ilk farklı karakterde kısa devre yapar ve teorik olarak zamanlama
+ * sızıntısı verir. Handler katmanı (lib/security/adminMutationAuth.ts)
+ * zaten `timingSafeEqual` kullanıyordu — proxy geride kalmıştı.
+ *
+ * Edge runtime'da node:crypto yok; uzunluk farkı da maskelenerek
+ * karşılaştırma her zaman en uzun dize boyunca yürütülür.
+ */
+function safeEqual(a: string, b: string): boolean {
+  const len = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < len; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return diff === 0;
+}
+
+/**
+ * Basic kimlik başlığını çözer (audit S2).
+ *
+ * Eski hâlinde `atob()` doğrudan çağrılıyordu; bozuk base64 gönderen bir
+ * istemci istisna fırlatıp 401 yerine 500 aldırıyordu. Artık her hatalı
+ * girdi "kimlik yok" sayılır ve normal 401 yoluna düşer.
+ */
+function parseBasicCredentials(
+  header: string | null,
+): { user: string; pass: string } | null {
+  if (!header) return null;
+
+  const match = header.match(/^Basic\s+([A-Za-z0-9+/]+={0,2})$/i);
+  if (!match) return null;
+
+  try {
+    const bytes = Uint8Array.from(atob(match[1]), (c) => c.charCodeAt(0));
+    const decoded = new TextDecoder('utf-8').decode(bytes);
+    const colonIdx = decoded.indexOf(':');
+    if (colonIdx <= 0) return null;
+    return { user: decoded.slice(0, colonIdx), pass: decoded.slice(colonIdx + 1) };
+  } catch {
+    return null;
+  }
+}
+
 // HTTP Basic Auth — /ofis ve /api/admin/* rotalarını korur.
 // Next.js 16'da "proxy" convention'ı kullanılır (eski adı: middleware).
 // Edge runtime'da otomatik çalışır.
@@ -175,22 +221,19 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const authHeader = req.headers.get('authorization');
+  const credentials = parseBasicCredentials(req.headers.get('authorization'));
 
-  if (authHeader) {
-    const base64 = authHeader.replace('Basic ', '');
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const decoded = new TextDecoder('utf-8').decode(bytes);
-    const colonIdx = decoded.indexOf(':');
-    const user = decoded.slice(0, colonIdx);
-    const pass = decoded.slice(colonIdx + 1);
+  if (credentials) {
+    const { user, pass } = credentials;
 
     const adminUser = process.env.ADMIN_USER ?? 'admin';
     const adminPass = process.env.ADMIN_PASSWORD;
     const patronPass = process.env.PATRON_PASSWORD;
 
-    const isAdmin = !!adminPass && user === adminUser && pass === adminPass;
-    const isPatron = !!patronPass && user === 'patron' && pass === patronPass;
+    const isAdmin =
+      !!adminPass && safeEqual(user, adminUser) && safeEqual(pass, adminPass);
+    const isPatron =
+      !!patronPass && safeEqual(user, 'patron') && safeEqual(pass, patronPass);
 
     if (isAdmin || isPatron) {
       const headers = new Headers(req.headers);

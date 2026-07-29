@@ -66,3 +66,61 @@ export async function PATCH(
   }
   return NextResponse.json({ ok: true, experiment: data })
 }
+
+/**
+ * Deney silme (audit B5).
+ *
+ * Rota yoktu; yanlış girilen bir deney defterde kalıcı olarak kalıyordu.
+ * Tamamlanmış deneyler öğrenme belleğidir — onlar silinmez, yalnız
+ * yayında/duraklatılmış kayıtlar temizlenebilir.
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = requireAdminMutationAuth(req)
+  if (!auth.ok) return auth.response
+
+  const { id } = await params
+  const experimentId = Number(id)
+  if (!Number.isFinite(experimentId)) {
+    return NextResponse.json({ ok: false, error: 'Geçersiz deney kimliği.' }, { status: 400 })
+  }
+
+  const supabase = createServerSupabaseClient()
+
+  const { data: mevcut, error: okumaHatasi } = await supabase
+    .from('sales_experiments')
+    .select('id, status')
+    .eq('id', experimentId)
+    .maybeSingle()
+
+  if (okumaHatasi) {
+    console.error('[experiments] okunamadı:', okumaHatasi)
+    return NextResponse.json({ ok: false, error: 'Deney okunamadı.' }, { status: 500 })
+  }
+  if (!mevcut) {
+    return NextResponse.json({ ok: false, error: 'Deney bulunamadı.' }, { status: 404 })
+  }
+  if (mevcut.status === 'tamamlandi') {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Tamamlanmış deney silinemez — sonucu öğrenme belleğinin parçasıdır.',
+      },
+      { status: 409 },
+    )
+  }
+
+  const { error } = await supabase
+    .from('sales_experiments')
+    .delete()
+    .eq('id', experimentId)
+
+  if (error) {
+    console.error('[experiments] silinemedi:', error)
+    return NextResponse.json({ ok: false, error: 'Deney silinemedi.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

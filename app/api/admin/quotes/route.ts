@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { requireOfficeReadAuth } from '@/lib/security/adminMutationAuth'
 
+// Audit S1 (26 Temmuz 2026): bu uç tam müşteri PII'si döndürüyor
+// (ad, e-posta, telefon, firma, adres) ama yalnızca proxy.ts koruyordu —
+// handler seviyesinde kapı yoktu. Kardeş uçlar (experiments GET,
+// quotes/[id]/pdf GET) zaten requireOfficeReadAuth kullanıyordu.
+// Matcher'da ileride yapılacak bir düzenleme bu ucu sessizce açardı.
 export async function GET(req: NextRequest) {
+  const auth = requireOfficeReadAuth(req)
+  if (!auth.ok) return auth.response
+
   const status = req.nextUrl.searchParams.get('status')
   const supabase = createServerSupabaseClient()
 

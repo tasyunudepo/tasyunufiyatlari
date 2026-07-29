@@ -117,7 +117,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!quote || quote.request_type !== 'pdf_quote') {
+    // 'manual_quote' = /ofis'te elle yazılan teklif. Bu kapı açılmazsa elle
+    // teklifin PDF'i sessizce 403 alır ve arşivlenmez. Capability tokenı
+    // yine zorunlu — yetki gevşemiyor, yalnız kanal tanınıyor.
+    const PDF_UPLOAD_ALLOWED_TYPES = ['pdf_quote', 'manual_quote']
+    if (!quote || !PDF_UPLOAD_ALLOWED_TYPES.includes(quote.request_type)) {
       return invalidCapabilityResponse()
     }
 
