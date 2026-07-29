@@ -371,7 +371,7 @@ function MechanicalThicknessPicker({
                         ? "text-brand-200"
                         : isNear
                           ? "text-fe-text/55"
-                          : "text-fe-muted/35"
+                          : "text-fe-muted"
                     }`}
                   >
                     <span
@@ -390,8 +390,8 @@ function MechanicalThicknessPicker({
                         isActive
                           ? "text-[9px] text-brand-200/85"
                           : isNear
-                            ? "text-[8px] text-fe-muted/55"
-                            : "text-[7px] text-fe-muted/35"
+                            ? "text-[8px] text-fe-muted"
+                            : "text-[7px] text-fe-muted"
                       }`}
                     >
                       cm
@@ -431,7 +431,7 @@ function MechanicalThicknessPicker({
             <span className="text-[34px] font-semibold leading-none text-white">
               {selectedThickness}
             </span>
-            <span className="pb-1 text-sm uppercase tracking-[0.22em] text-fe-muted/80">
+            <span className="pb-1 text-sm uppercase tracking-[0.22em] text-fe-muted">
               cm
             </span>
           </div>
@@ -498,14 +498,14 @@ function MechanicalThicknessPicker({
                       ? "scale-[1.02] text-white"
                       : isNear
                         ? "text-fe-text/82"
-                        : "text-fe-muted/70"
+                        : "text-fe-muted"
                   }`}
                 >
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[28px] font-semibold tracking-tight">
                       {thickness}
                     </span>
-                    <span className="text-xs uppercase tracking-[0.2em] text-fe-muted/75">
+                    <span className="text-xs uppercase tracking-[0.2em] text-fe-muted">
                       cm
                     </span>
                   </div>
@@ -544,7 +544,7 @@ function MechanicalThicknessPicker({
         </button>
       </div>
 
-      <p className="mt-2 text-[11px] leading-4 text-fe-muted/80">
+      <p className="mt-2 text-[11px] leading-4 text-fe-muted">
         Kaydırın ya da oklarla değiştirin.
       </p>
     </div>

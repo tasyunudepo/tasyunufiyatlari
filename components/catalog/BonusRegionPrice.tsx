@@ -273,7 +273,7 @@ export default function BonusRegionPrice({
                         setPlanIdx(0);
                       }}
                       placeholder="örn. 14500 — tam araca çevrilir"
-                      className="w-full rounded-md border border-fe-border bg-fe-bg/60 px-2.5 py-1.5 text-sm text-fe-text placeholder:text-fe-muted/60 focus:border-brand-400 focus:outline-none"
+                      className="w-full rounded-md border border-fe-border bg-fe-bg/60 px-2.5 py-1.5 text-sm text-fe-text placeholder:text-fe-muted focus:border-brand-400 focus:outline-none"
                     />
                     {metraj && (
                       <button

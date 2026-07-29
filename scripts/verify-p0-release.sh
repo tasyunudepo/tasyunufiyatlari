@@ -35,8 +35,15 @@ npm audit --omit=dev --audit-level=high
 echo '7/8 Production build'
 npm run build
 
-echo '8/8 Kritik tarayıcı akışları'
+echo '8/9 Kritik tarayıcı akışları'
 npm run test:e2e
+
+# 27 Temmuz 2026: kullanıcı hem panelde hem ana sayfada "OKUNMUYOR" dedi ve
+# haklıydı — 578 birim testinin ve 36 E2E testinin hiçbiri bir yazının
+# okunup okunmadığını sormuyordu. Bu kapı o boşluğu kapatır: kontrast
+# EKRANDAKİ GERÇEK PİKSEL üzerinden ölçülür, kaynak taraması yetmez.
+echo '9/9 Okunabilirlik (WCAG AA kontrast, gerçek ekran ölçümü)'
+npm run verify:contrast
 
 echo 'P0 yerel release kapısı geçti. Canlı RLS/storage/env smoke ayrıca zorunludur.'
 

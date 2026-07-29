@@ -180,7 +180,7 @@ export default async function KategoriPage({ params }: Props) {
           </p>
           <Link
             href="/"
-            className="shrink-0 bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+            className="shrink-0 bg-brand-600 hover:bg-brand-500 text-[#0b0b0c] px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
           >
             Hesap Makinesi
           </Link>

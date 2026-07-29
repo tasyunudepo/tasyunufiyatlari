@@ -71,17 +71,17 @@ export default function BrandTrustLogos({
         <p
           className={
             isHero
-              ? 'text-[12px] font-semibold uppercase tracking-[0.3em] text-brand/95'
+              ? 'text-[12px] font-semibold uppercase tracking-[0.3em] text-brand'
               : isHeroRail
-                ? 'text-[13px] font-semibold uppercase tracking-[0.26em] text-brand/95'
-                : 'text-[11px] font-semibold uppercase tracking-[0.18em] text-brand/85'
+                ? 'text-[13px] font-semibold uppercase tracking-[0.26em] text-brand'
+                : 'text-[11px] font-semibold uppercase tracking-[0.18em] text-brand'
           }
         >
           {title}
         </p>
 
         {isHero && (
-          <p className="max-w-[320px] text-sm leading-relaxed text-fe-muted/80">
+          <p className="max-w-[320px] text-sm leading-relaxed text-fe-muted">
             Ürün, kalınlık, metraj ve şehir koşullarını birlikte değerlendiriyoruz.
           </p>
         )}

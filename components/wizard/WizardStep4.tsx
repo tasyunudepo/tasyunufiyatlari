@@ -417,19 +417,19 @@ export function WizardStep4({
                                 <cfg.Icon
                                     size={20}
                                     weight={isActive ? 'fill' : 'regular'}
-                                    className={`mb-0.5 ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}
+                                    className={`mb-0.5 ${isActive ? 'text-brand-200' : 'text-fe-muted'}`}
                                 />
-                                <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? 'text-brand-200' : 'text-fe-muted/70'}`}>
+                                <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? 'text-brand-200' : 'text-fe-muted'}`}>
                                     {cfg.label}
                                 </span>
                                 {/* İskonto oranı badge */}
                                 {t === 'kamyon' && discKamyon != null && (
-                                    <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}>
+                                    <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted'}`}>
                                         %{discKamyon}
                                     </span>
                                 )}
                                 {t === 'tir' && discTir != null && (
-                                    <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted/60'}`}>
+                                    <span className={`mt-1 text-[10px] font-bold tabular-nums ${isActive ? 'text-brand-200' : 'text-fe-muted'}`}>
                                         {isActive && isMultiVehicle ? `×${fullTirCount} TIR` : `%${discTir}`}
                                     </span>
                                 )}

@@ -348,7 +348,7 @@ export default function Home() {
                                     </p>
                                 )}
                                 {tier.notForWho && (
-                                    <p className="mt-1 text-xs text-fe-muted/70 leading-relaxed">
+                                    <p className="mt-1 text-xs text-fe-muted leading-relaxed">
                                         <span className="font-semibold">Kimin için değil: </span>{tier.notForWho}
                                     </p>
                                 )}

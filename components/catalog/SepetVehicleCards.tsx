@@ -94,7 +94,7 @@ function AracKarti({
           <div className="min-w-0 flex-1">
             {roleLabel && (
               <p className={`text-[8px] font-semibold uppercase tracking-[0.14em] leading-none ${
-                roleLabel === "Önerilen" ? "text-brand-400" : "text-fe-muted/60"
+                roleLabel === "Önerilen" ? "text-brand-400" : "text-fe-muted"
               }`}>
                 {roleLabel}
               </p>
@@ -161,7 +161,7 @@ function AracKarti({
 
       {roleLabel && (
         <p className={`mb-1.5 text-[9px] font-semibold uppercase tracking-wider ${
-          roleLabel === "Önerilen" ? "text-brand-400" : "text-fe-muted/60"
+          roleLabel === "Önerilen" ? "text-brand-400" : "text-fe-muted"
         }`}>
           {roleLabel}
         </p>

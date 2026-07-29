@@ -437,7 +437,7 @@ export async function ProductDetailPage({
                     <span className="text-xs text-brand-500 font-semibold uppercase tracking-wider">
                       {product.brand.name}
                     </span>
-                    <span className="text-fe-muted/60">·</span>
+                    <span className="text-fe-muted">·</span>
                     <span className="text-xs text-fe-muted">{product.category.name}</span>
                   </div>
                   <h1 className="text-xl font-bold text-white leading-tight">
@@ -494,7 +494,7 @@ export async function ProductDetailPage({
                 <span className="text-xs text-brand-500 font-semibold uppercase tracking-wider">
                   {product.brand.name}
                 </span>
-                <span className="text-fe-muted/60">·</span>
+                <span className="text-fe-muted">·</span>
                 <span className="text-xs text-fe-muted">{product.category.name}</span>
                 <span className={`text-xs px-2 py-0.5 rounded border font-medium ${badge.cls}`}>
                   {badge.label}

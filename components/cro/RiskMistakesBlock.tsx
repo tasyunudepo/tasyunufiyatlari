@@ -64,7 +64,7 @@ export function RiskMistakesBlock() {
               <div className="lg:col-span-1">
                 <span
                   aria-hidden
-                  className="font-mono text-3xl sm:text-4xl font-light text-brand/70 leading-none tabular-nums"
+                  className="font-mono text-3xl sm:text-4xl font-light text-brand leading-none tabular-nums"
                 >
                   {item.n}
                 </span>
@@ -72,7 +72,7 @@ export function RiskMistakesBlock() {
 
               {/* Sol: Hata */}
               <div className="lg:col-span-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fe-muted/80">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fe-muted">
                   Hata
                 </p>
                 <p className="mt-1.5 text-base sm:text-lg font-semibold text-fe-text leading-snug">

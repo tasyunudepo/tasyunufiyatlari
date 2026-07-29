@@ -45,7 +45,7 @@ export function ProofBlock() {
             </div>
             <p className="mt-2 text-sm text-fe-muted leading-relaxed">
               Taşyünü Fiyatları; Filli Boya, Tekno ve Bestkim ürünlerini Özergrup tedarik altyapısı üzerinden hesaplayan teklif ve maliyet ekranıdır.
-              <span className="block mt-1.5 text-xs text-fe-muted/80">
+              <span className="block mt-1.5 text-xs text-fe-muted">
                 Aşağıdaki örnek anonimleştirilmiştir; tarih ve referans numarası gerçek teklifte sizin tarihinizle yenilenir.
               </span>
             </p>
@@ -96,11 +96,11 @@ export function ProofBlock() {
                   <li key={s.t} className="flex items-start gap-4">
                     <span
                       aria-hidden
-                      className="font-mono text-sm font-semibold text-brand/70 leading-none mt-1 tabular-nums shrink-0 w-5"
+                      className="font-mono text-sm font-semibold text-brand leading-none mt-1 tabular-nums shrink-0 w-5"
                     >
                       0{i + 1}
                     </span>
-                    <s.Icon size={22} weight={ICON_WEIGHT} className="mt-0.5 shrink-0 text-brand/80" aria-hidden />
+                    <s.Icon size={22} weight={ICON_WEIGHT} className="mt-0.5 shrink-0 text-brand" aria-hidden />
                     <div>
                       <p className="text-sm font-semibold text-fe-text leading-snug">{s.t}</p>
                       <p className="mt-0.5 text-xs text-fe-muted leading-relaxed">{s.d}</p>

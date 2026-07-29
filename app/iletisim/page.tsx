@@ -168,7 +168,7 @@ export default function IletisimPage() {
                     <m.Icon weight={ICON_WEIGHT} size={18} />
                   </span>
                   <div>
-                    <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-hub-ink-2/65 mb-1">
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-hub-ink-2 mb-1">
                       {m.label}
                     </div>
                     <div className="font-heading font-bold text-hub-ink text-base sm:text-lg leading-snug">
@@ -257,7 +257,7 @@ export default function IletisimPage() {
 function CorpRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-[0.14em] text-hub-ink-2/65 mb-1">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-[0.14em] text-hub-ink-2 mb-1">{label}</dt>
       <dd className="text-hub-ink">{children}</dd>
     </div>
   );

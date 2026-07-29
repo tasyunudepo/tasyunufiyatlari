@@ -108,7 +108,7 @@ export function WizardStep1({
                             <img src={img} alt={label} className="w-9 h-9 object-contain shrink-0" />
                             <div className="text-left min-w-0">
                                 <div className={`font-bold text-sm leading-tight ${selectedMalzeme === value ? "text-white" : "text-fe-text"}`}>{label}</div>
-                                <div className="mt-0.5 text-[11px] text-brand/85 leading-tight">
+                                <div className="mt-0.5 text-[11px] text-brand leading-tight">
                                     {MALZEME_CHIPS[value]}
                                 </div>
                             </div>

@@ -32,7 +32,7 @@ export default function HeroSystemVisual() {
           </div>
 
           <div className="space-y-1.5 sm:space-y-2">
-            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-brand/90">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-brand">
               8 Ana Kalem
             </p>
             <ul className="space-y-1 sm:space-y-1.5">

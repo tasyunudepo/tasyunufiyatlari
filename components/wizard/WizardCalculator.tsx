@@ -27,6 +27,7 @@ import { WizardStep2 } from "@/components/wizard/WizardStep2";
 import { WizardStep3 } from "@/components/wizard/WizardStep3";
 import { citySubRegionQuestion, type BonusSubRegionChoice } from "@/lib/pricing/bonus/subRegions";
 import { buildBonusPlateOrder } from "@/lib/pricing/bonus/packageAssembly";
+import { buildPlateItemName } from "@/lib/catalog/productLabel";
 import {
     getBonusChallengerModel,
     buildBonusChallenge,
@@ -1233,7 +1234,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
             for (const pkgDef of bonusDefs) {
                 const items: CalculatedPackageItem[] = [{
-                    name: `Bonus ${selectedModel} ${selectedKalinlik} cm Taşyünü`,
+                    name: buildPlateItemName('Bonus', selectedModel, selectedKalinlik, 'Taşyünü'),
                     shortName: selectedModel,
                     brandName: 'Bonus',
                     quantity: order.orderM2,
@@ -1648,7 +1649,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 const materialSuffix = selectedMalzeme === "tasyunu" ? "Taşyünü" : "EPS";
 
                 items.push({
-                    name: `${plateBrand?.name || ''} ${plate.short_name} ${selectedKalinlik} cm ${materialSuffix}`.trim(),
+                    // Marka, short_name içinde zaten geçiyorsa tekrar edilmez —
+                    // "Optimix Optimix Karbonlu 5 cm EPS" hatası (lib/catalog/productLabel.ts).
+                    name: buildPlateItemName(plateBrand?.name, plate.short_name, selectedKalinlik, materialSuffix),
                     shortName: plate.short_name,
                     brandName: plateBrand?.name || '',
                     quantity: totalM2,

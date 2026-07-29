@@ -50,9 +50,12 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
   void tone;
 
   const surface    = 'bg-hub-dark border-t border-hub-rule-strong';
-  const eyebrow    = 'text-hub-warm/55';
-  const linkText   = 'text-hub-warm/75 hover:text-hub-gold-soft';
-  const sloganText = 'text-hub-warm/60';
+  // Saydamlık oranları KALDIRILDI (27 Tem 2026). /55 ve /60 seviyeleri
+  // koyu zeminde metni WCAG AA eşiğinin (4.5) altına düşürüyordu; footer
+  // dışarıda, gündüz, telefonda okunan bir yer. Renkler artık tam güçte.
+  const eyebrow    = 'text-hub-gold-soft';
+  const linkText   = 'text-hub-warm hover:text-hub-gold-soft';
+  const sloganText = 'text-hub-warm/85';
   const ruleSoft   = 'border-hub-rule-strong/60';
   const copyText   = 'text-hub-warm/55';
 
@@ -77,10 +80,12 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
           {/* 4 grup */}
           {GROUPS.map((group) => (
             <div key={group.eyebrow}>
-              <div
-                className={`eyebrow ${eyebrow} mb-4`}
-                style={{ color: 'currentColor' }}
-              >
+              {/* `style={{ color: 'currentColor' }}` KALDIRILDI (27 Tem 2026).
+                  Satır içi stil sınıf rengini eziyordu ve `currentColor`
+                  rengi ebeveynden miras alınana eşitliyordu; sonuç, footer
+                  başlıklarının koyu zeminde koyu renkle basılmasıydı —
+                  ölçülen kontrast 1,03 (görünmez sayılır). */}
+              <div className={`eyebrow ${eyebrow} mb-4`}>
                 {group.eyebrow}
               </div>
               <ul className="space-y-2.5">
