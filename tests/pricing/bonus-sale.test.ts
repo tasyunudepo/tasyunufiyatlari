@@ -19,6 +19,10 @@ describe('Bonus levha birim satış hesabı', () => {
       region: 3,
       thicknessMm: 50,
       salePricePerM2: 370.03,
+      // Net alış = bölge listesi × 0,90. /ofis kâr göstergesi bunu kullanır;
+      // public rota (app/api/bonus-price) bu alanı DÖNDÜRMEZ — beyaz liste
+      // kilidi `tests/contracts/bonus-price-privacy.test.ts` içinde.
+      netCostPerM2: 352.41,
       packageM2: 2.88,
       packagePieces: 4,
       kamyonM2: 967.7,

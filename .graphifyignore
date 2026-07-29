@@ -1,0 +1,66 @@
+# Bağımlılıklar / build
+node_modules/
+.next/
+.vercel/
+.turbo/
+dist/
+build/
+out/
+coverage/
+.cache/
+.parcel-cache/
+.svelte-kit/
+
+# Görsel/medya assetleri — graf için anlamsız
+public/
+static/
+assets/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.ico
+*.avif
+*.mp4
+*.mp3
+*.wav
+
+# Yedekler
+_yedek/
+*_yedekleri/
+wordpress_yedekleri/
+backup/
+*.bak
+
+# Lock / generated
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+poetry.lock
+Cargo.lock
+*.tsbuildinfo
+
+# Büyük JSON raporları (analizler hariç tutulmasın)
+lighthouse-report*.json
+lighthouse-report*.html
+*.log
+
+# IDE / git
+.git/
+.idea/
+.vscode/
+.cursor/
+
+# Test artefaktları
+.pytest_cache/
+__pycache__/
+*.pyc
+.mypy_cache/
+.tox/
+dogfood-output/
+reports/
+test-results/
+playwright-report/
+artifacts/

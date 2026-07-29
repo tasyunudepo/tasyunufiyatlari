@@ -1,0 +1,41 @@
+{
+  "task": "tasyunufiyatlari P0 uygulama öncesi salt-okunur kod hakemliği: kanonik-konsensus-fable-sol.md P0-A01..A11, P0-B01..B05 ve P0-C01..C05 için minimal test-first uygulama sırası; özellikle quote API rate-limit/idempotency/KVKK, marj tek kaynağı, EPS 400, private PDF ve auth. Gerçek repo dosyalarını kanıt al; dosya değiştirme.",
+  "cwd": "/home/emrah/projeler/aktif/tasyunufiyatlari",
+  "outDir": "/home/emrah/projeler/aktif/tasyunufiyatlari/docs/fusion-runs/20260713-015625-tasyunufiyatlari-p0-uygulama-oncesi-salt-okunur-",
+  "startedAt": "20260713-015625",
+  "models": [
+    {
+      "id": "glm",
+      "label": "GLM 5.2",
+      "skipped": false,
+      "healthOk": false,
+      "ok": false,
+      "timedOut": true,
+      "durationMs": 480224,
+      "fallbackTried": false,
+      "fallbackOk": false
+    },
+    {
+      "id": "minimax",
+      "label": "MiniMax M3",
+      "skipped": false,
+      "healthOk": false,
+      "ok": false,
+      "timedOut": false,
+      "durationMs": 207043,
+      "fallbackTried": false,
+      "fallbackOk": false
+    },
+    {
+      "id": "deepseek",
+      "label": "DeepSeek V4 Pro",
+      "skipped": false,
+      "healthOk": false,
+      "ok": true,
+      "timedOut": false,
+      "durationMs": 336387,
+      "fallbackTried": false,
+      "fallbackOk": false
+    }
+  ]
+}

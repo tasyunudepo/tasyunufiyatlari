@@ -32,6 +32,16 @@ export type BonusSaleResult =
       thicknessMm: number
       /** KDV hariç, marj uygulanmış müşteri m² fiyatı */
       salePricePerM2: number
+      /**
+       * KDV hariç net ALIŞ m² fiyatı (bölge listesi × 0,90).
+       *
+       * MÜŞTERİ YÜZEYİNE ÇIKMAZ. Bu modül sunucu tarafıdır ve
+       * `tests/contracts/bonus-price-privacy.test.ts` zaten `components/**`
+       * altından import edilmesini engelliyor. Alan, /ofis panelinin kâr ve
+       * marj göstergeleri için var: Bonus levhası teklifin en büyük kalemi
+       * ve maliyeti bilinmeden brüt kâr eksik ölçülüyordu.
+       */
+      netCostPerM2: number
       packageM2: number
       packagePieces: number
       /** Kamyon yükleme kapasitesi (m²) — üretici listesindeki değer */
@@ -117,6 +127,7 @@ export function computeBonusUnitSale(input: {
     region,
     thicknessMm,
     salePricePerM2: applyMargin(basePrice, marginPct),
+    netCostPerM2: basePrice,
     packageM2: row.packageM2,
     packagePieces: row.packagePieces,
     // Üretici tablosu: "Kamyon m²" / "Tır m²" — JSON alan adları truckM2

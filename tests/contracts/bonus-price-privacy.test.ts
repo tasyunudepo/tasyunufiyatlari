@@ -36,6 +36,33 @@ describe('Bonus fiyat verisi client bundle sızıntı koruması', () => {
     expect(offenders).toEqual([])
   })
 
+  // 27 Temmuz 2026: `computeBonusUnitSale` sonucuna `netCostPerM2` (net alış)
+  // eklendi — /ofis panelinin kâr göstergesi Bonus levhasını da ölçebilsin
+  // diye. Public rota o güne kadar `NextResponse.json(result)` ile nesnenin
+  // TAMAMINI döndürüyordu; alan eklenir eklenmez maliyet müşterinin
+  // tarayıcısına düşecekti. Rota açık beyaz listeye çevrildi.
+  describe('public /api/bonus-price ucu net alış sızdırmaz', () => {
+    const routeRaw = readFileSync(resolve(ROOT, 'app/api/bonus-price/route.ts'), 'utf8')
+    // Yorumlar elenir: sınırın NEDEN var olduğunu anlatan açıklama satırları
+    // alan adını geçirmek zorunda ve testi kendi belgesine takmamalı.
+    const route = routeRaw.replace(/\/\*[\s\S]*?\*\//gu, '').replace(/\/\/.*$/gmu, '')
+
+    it('sonuç nesnesi olduğu gibi yayılmaz', () => {
+      expect(route).not.toMatch(/NextResponse\.json\(\s*result\s*\)/u)
+      expect(route).not.toMatch(/\.\.\.result/u)
+    })
+
+    it('net alış alanı yanıtta geçmez', () => {
+      expect(route).not.toMatch(/netCostPerM2/u)
+    })
+
+    it('müşterinin ihtiyacı olan alanlar hâlâ dönüyor', () => {
+      for (const alan of ['salePricePerM2', 'packageM2', 'kamyonM2', 'tirM2']) {
+        expect(route).toMatch(new RegExp(`${alan}:`, 'u'))
+      }
+    })
+  })
+
   it('subRegions modülü iskonto/fiyat verisi içermez', () => {
     const content = readFileSync(resolve(ROOT, 'lib/pricing/bonus/subRegions.ts'), 'utf8')
     expect(content).not.toMatch(/discount|iskonto\s*[:=]|listPrice|basePrice|bonus-region-prices/iu)

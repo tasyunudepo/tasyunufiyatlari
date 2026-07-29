@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
 // köprü artık situationPreset üzerinden akar.
 
 test.describe('Bonus katalog PDP', () => {
-  test('PDP içerik doğru, fiyat yok, hesaplayıcı köprüsü Bonus + F 150 açar', async ({ page }) => {
+  test('PDP içerik doğru, bölge fiyatı görünür, hesaplayıcı köprüsü Bonus + F 150 açar', async ({ page }) => {
     const response = await page.goto('/urunler/tasyunu-levha/bonus-f-150-tasyunu')
     if (response?.status() === 404) {
       test.skip(true, 'Bonus PDP kayıtları (v21) bu ortamda uygulanmamış.')
@@ -14,8 +14,11 @@ test.describe('Bonus katalog PDP', () => {
     }
 
     await expect(page.getByRole('heading', { name: /Bonus Premium F 150/ }).first()).toBeVisible()
-    // Faz 1 fiyatsız: teklif notu görünür, föy kaynaklı yoğunluk metni var.
-    await expect(page.getByText('Teklif ile belirlenir').first()).toBeVisible()
+    // Faz 1'de bu sayfa fiyatsızdı ve "Teklif ile belirlenir" yazıyordu.
+    // Commit 277a876 ("20 fiyatlı ürün") Bonus PDP'lerini fiyatlı hâle
+    // getirdi ama bu satır silinmemişti; test kendi içinde çelişiyordu
+    // (aşağıda 370,03 bölge fiyatı bekleniyor). Faz 1 kalıntısı kaldırıldı.
+    await expect(page.getByText('Teklif ile belirlenir')).toHaveCount(0)
     await expect(page.getByText(/150 kg\/m³/).first()).toBeVisible()
     await expect(page.getByText(/föyü beyanına göre/).first()).toBeVisible()
 
@@ -36,13 +39,17 @@ test.describe('Bonus katalog PDP', () => {
     // Bonus'ta doğrulanmamış "%10-15" iddiası görünmez.
     await expect(page.getByText('%10-15')).toHaveCount(0)
 
-    // Wizard prefill köprüsü: hesap makinesi Bonus + F 150 ile açılır.
-    await page.getByRole('button', { name: /Takım Fiyatını Gör/ }).first().click()
-    await page.waitForURL(/#mantolama-hesaplayici/)
-    const wizard = page.locator('#mantolama-hesaplayici')
-    await expect(wizard.getByRole('button', { name: 'F 150', exact: true })).toBeVisible({ timeout: 20_000 })
-    // Model listesi Bonus'a özel — üç Bonus modeli görünür (marka seçiminin kanıtı).
-    await expect(wizard.getByRole('button', { name: 'F 150 Pro' })).toBeVisible()
-    await expect(wizard.getByRole('button', { name: 'F 120' })).toBeVisible()
+    // Fiyatlı Bonus PDP'sinde "Takım Fiyatını Gör" CTA'sı RENDER EDİLMEZ.
+    //
+    // Commit 7e27a73 ("mantolama dışı PDP'lerde takım CTA'sı kaldırıldı, PDF
+    // teklif açıldı") bu bloğu kaldırdı ama hiçbir testi güncellemedi; bu
+    // spec o tarihten beri CTA'yı tıklamaya çalışıp zaman aşımına uğruyordu.
+    // Yeni sözleşme: bu sayfanın dönüşüm yolu PDF teklifidir.
+    await expect(page.getByRole('button', { name: /Takım Fiyatını Gör/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /PDF teklifimi hazırla/ }).first()).toBeVisible()
+
+    // Tam araç planı seçilebilir olmalı — ara metraja teklif üretilmez.
+    await expect(page.getByRole('button', { name: /1 Kamyon/ }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /1 TIR/ }).first()).toBeVisible()
   })
 })

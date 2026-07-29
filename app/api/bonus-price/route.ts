@@ -58,5 +58,21 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  return NextResponse.json(result)
+  // AÇIK BEYAZ LİSTE — `result`'ı olduğu gibi döndürme.
+  //
+  // Bu rota MÜŞTERİ wizard'ının çağırdığı public uçtur. `computeBonusUnitSale`
+  // sonucuna sunucu-içi bir alan eklendiği anda (ör. `netCostPerM2` — net
+  // alış fiyatı) nesneyi yaymak onu doğrudan müşterinin tarayıcısına
+  // düşürürdü. Alan alan yazmak bu sızıntıyı yapısal olarak imkânsız kılar:
+  // yeni bir alan buraya bilinçli eklenmedikçe dışarı çıkmaz.
+  return NextResponse.json({
+    ok: true,
+    region: result.region,
+    thicknessMm: result.thicknessMm,
+    salePricePerM2: result.salePricePerM2,
+    packageM2: result.packageM2,
+    packagePieces: result.packagePieces,
+    kamyonM2: result.kamyonM2,
+    tirM2: result.tirM2,
+  })
 }

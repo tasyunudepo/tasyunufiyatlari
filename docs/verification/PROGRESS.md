@@ -392,3 +392,908 @@ Audit'in kalan turuncu/sarıları uygulandı. Müşteri yüzeyine hiçbir dokunu
 ### Ertelenen yapısallar (bilinçli)
 
 Sekme başına yeniden fetch (SWR cache yok), quotes sayfalama, `plate_prices` anon okunabilirliği (site geneli ayrı iş), üç admin stil sisteminin (`nx-*`, `ofis*`, `admin-nexus-*`) tam birleşimi. Sprint 4B (teşhis/öneri beyni) hâlâ ~20-30 kapanmış teklif şartını bekliyor.
+
+---
+
+## 2026-07-27 — F0: Ofis rol ayrımı + sessiz mutasyon hatalarının kapatılması
+
+**Sözleşme:** `docs/verification/GOAL-teklif-crm-2026-07-27.md` §5 (F0)
+**Kaynak audit:** `docs/verification/OFIS-AUDIT-2026-07-26.md` (B1, B2, B3)
+
+### Neden
+
+26 Temmuz audit'i `/ofis` panelinde tarayıcı ölçümüyle şunu kanıtladı: `patron`
+salt-okunur hesabı **23 silme butonu** ve **23 durum menüsü** görüyordu; durum
+değiştirilince `PATCH /api/admin/quotes/:id` **403** dönüyor, ekranda **hiçbir
+açıklama çıkmıyor**, menü sessizce eski değerine dönüyordu. Kök neden: panelin
+rol kavramı yoktu (`/api/admin/me` yalnız kullanıcı adı dönüyordu) ve QuotesTab'in
+üç mutasyonu da `if (res.ok && payload?.ok)` ile sarılıydı — `else` dalı yoktu.
+
+### Yapılan
+
+1. **Rol sinyali:** `/api/admin/me` artık `{ user, role: 'admin' | 'patron' | null }`
+   dönüyor (`Cache-Control: no-store`). Rol bir yetki kapısı değil, arayüz
+   sinyalidir; asıl kapı her mutasyonda `requireAdminMutationAuth` olarak duruyor.
+2. **Tek kaynak:** `lib/admin/roles.ts` (`AdminRole`, `canMutate`, `READ_ONLY_HINT`)
+   + `lib/admin/useAdminRole.ts` (react-query, `queryKey: ['admin','me']`).
+   Fail-closed: rol yüklenmemiş/bilinmiyorsa `canMutate` false.
+3. **Sessiz hatalar kapatıldı:** `QuotesTab`'e `readMutationResult()` yardımcısı;
+   403/401/diğer HTTP ve ağ hatası için ayrı Türkçe mesaj, `role="alert"` bandı
+   (`data-testid="quote-action-error"`).
+4. **Patron kontrolleri kaldırıldı:** QuotesTab (durum/öncelik menüleri, silme),
+   SalesOutcomePanel (tamamen salt-okunur özet), BrandsTab (marj girişi+kaydet),
+   MarginRulesTab (`fieldset disabled` + kaydet gizli), ExperimentsTab (yeni deney,
+   duraklat/kapat), ProductsTab (katalog kuralı düzenleme butonları).
+5. **Görünürlük:** Topbar'da "Salt okunur" rozeti; Teklifler sekmesinde bilgi notu.
+   Topbar'ın kendi `/api/admin/me` fetch'i kaldırıldı → hook ile tek istek.
+
+### Kanıt
+
+| Kontrol | Öncesi | Sonrası |
+|---|---|---|
+| Patron: silme butonu | 23 | **0** |
+| Patron: durum menüsü | 23 | **0** |
+| Patron: öncelik menüsü | 23 | **0** |
+| Patron: salt-okunur uyarısı | yok | **topbar rozeti + sekme notu** |
+| Admin: silme butonu / durum menüsü | 23 / 23 | **23 / 23** (değişmedi) |
+| 403'te ekranda hata | **false** | **true** — "Bu hesabın veri değiştirme yetkisi yok — işlem uygulanmadı." |
+| `npm run verify:fast` | 377 test | **383 test + tsc temiz** |
+| `npx eslint` | 0/0 | **0/0** |
+| `npx playwright test tests/e2e/ofis-patron-readonly.spec.ts` | — | **3/3 geçti** |
+
+Yeni testler: `tests/security/admin-role-signal.test.ts` (6 test, rol türetimi +
+fail-closed + no-store), `tests/e2e/ofis-patron-readonly.spec.ts` (AC-01 patron,
+AC-01 admin, AC-02 görünür hata).
+
+### Not
+
+AC-02 specinde patron kimliğiyle değil, admin kimliğiyle girip PATCH yanıtı
+route interception ile 403'e çevriliyor. Gerekçe: patron artık kontrolü hiç
+görmediği için o yoldan 403 tetiklenemiyor; testin ölçmek istediği şey ise
+"403 geldiğinde arayüz ne yapıyor" — bu kurgu onu doğrudan ölçüyor.
+
+### Kalan
+
+F1 (müşteri varlığı + mobil kabuk) başlamadı. Audit'in diğer kırmızıları
+(mobil düzen E1, sayfalama E2, react-query retrofit) sözleşme gereği F1/Hat B
+içine gömülü olarak ilerleyecek.
+
+---
+
+## 2026-07-27 — F1: Müşteri varlığı + mobil kabuk
+
+**Sözleşme:** `docs/verification/GOAL-teklif-crm-2026-07-27.md` §5 (F1)
+
+### Yapılan
+
+1. **Mobil kabuk (audit E1/V1).** `.nx-sidebar` sabit 240px + AdminShell'de inline
+   `marginLeft:240px` vardı, hiçbir medya sorgusu yoktu; 375px'te içeriğe 135px
+   kalıyordu. Artık `<1024px`'te kenar çubuğu çekmece: `.nx-content`, `.nx-drawer-toggle`,
+   `.nx-sidebar-backdrop` sınıfları + `prefers-reduced-motion`. Çekmece Esc ile ve
+   sekme seçilince kapanır (effect'te setState yerine gezinme olayında).
+2. **v24 migration yazıldı** (`scripts/migration-v24-musteri-varligi.sql`):
+   `customers` (doğal anahtar: `business_unit` + `phone_normalized`),
+   `customer_interactions` (append-only defter), `quotes`'a 7 NULL kolon,
+   `normalize_phone_tr()`, geriye dönük eşleştirme (5a-5e), `trg_quotes_link_customer`,
+   RLS + FORCE + REVOKE, 8 doğrulama kapısı.
+3. **Müşteri API'leri:** `GET/POST /api/admin/customers`,
+   `GET/PATCH /api/admin/customers/[id]`,
+   `GET/POST /api/admin/customers/[id]/interactions`.
+   Okuma uçları baştan `requireOfficeReadAuth` kullanıyor — audit S1'deki açık
+   (`/api/admin/quotes` GET'inde handler kapısı yok) yeni yüzeyde tekrarlanmadı.
+   Liste ilk günden sunucu taraflı sayfalı (audit E2).
+
+### Kararlar
+
+- **Trigger ciro yolunu düşüremez.** `quotes_link_customer()` gövdesi
+  `EXCEPTION WHEN OTHERS` ile sarılı; bağlanamayan teklif `customer_link_status='failed'`
+  damgalanır ve yine yazılır. CRM eksikliği < ciro kaybı.
+- **quotes'a eklenen 7 kolonun hiçbiri NOT NULL değil.** `submit_quote_guarded`
+  açık kolon listesiyle INSERT ettiği için bu kural bozulursa RPC kırılır;
+  testle kilitlendi.
+- **KVKK'da sahte rıza yok.** Ofis kaynaklı kayıtta `kvkk_consent=false`,
+  `consent_basis='sozlesme_hazirligi'` (m.5/2-c). Saklama/imha politikası
+  bilinçli ertelendi (kullanıcı kararı) — `retention_until` kolonu boş durur,
+  migration hiçbir otomatik silme kurmaz.
+- **Telefon PATCH ile değiştirilemez** — doğal anahtar ve teklif bağı ona dayanıyor;
+  düzeltme ayrı bir birleştirme işi.
+- **POST /customers kopya üretmez:** aynı normalize telefon varsa mevcut müşteriyi
+  `existing: true` ile döner.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | **49 dosya / 419 test + tsc temiz** (F0 öncesi 377) |
+| `npx eslint` | **0/0** |
+| `tests/e2e/ofis-responsive.spec.ts` | **6/6** — 375/768/1440'ta yatay kaydırma yok, çekmece çalışıyor |
+| `tests/e2e/ofis-patron-readonly.spec.ts` | **3/3** |
+| `tests/security/phone-normalize-parity.test.ts` | **25 test** — TS↔SQL dal paritesi + migration güvenlik sözleşmesi |
+| `tests/security/customer-routes-auth.test.ts` | **11 test** — 6 uçta kimliksiz 401, patron 403, DB'ye dokunulmuyor |
+| Mobil görsel (375px) | içerik 135px → **tam genişlik** (ekran görüntüsüyle doğrulandı) |
+
+### Açık
+
+**v24 migration üretime UYGULANMADI** — sözleşme gereği ayrı onay bekliyor.
+Uygulanana kadar müşteri API'leri canlıda 500 döner (tablolar yok); hiçbir
+mevcut yüzey bu uçları henüz çağırmadığı için canlı davranış etkilenmiyor.
+
+---
+
+## 2026-07-27 — Katalog + Analiz düzeltmeleri (audit G5/G6/E2/B7 + model tekrarı)
+
+### Ürün adı tekrarı — kök neden bulundu ve tek yerde çözüldü
+
+Kullanıcı hem `/ofis` Analiz sekmesinde hem müşteriye giden **PDF'lerde**
+"Optimix Optimix" tekrarını gördü. Canlı veriyle izlendi:
+
+- `plates.short_name` bazı ürünlerde markayı ZATEN içeriyor:
+  `brand_name="Optimix"`, `short_name="Optimix Karbonlu"`.
+- `WizardCalculator.tsx:1651` kalem adını `${marka} ${short_name}` diye koşulsuz
+  birleştiriyordu → PDF'te **"Optimix Optimix Karbonlu 5 cm EPS"**
+  (gerçek `quotes.package_items` kaydında doğrulandı).
+- Analiz sekmesinde ikinci bir kat vardı: RPC `plate_brand`i bazı satırlarda
+  zaten "marka + model" döndürüyor, arayüz modeli bir kez daha ekliyordu →
+  "Bonus F 150 Pro F 150 Pro × TEKNO".
+
+**Çözüm:** `lib/catalog/productLabel.ts` (yeni, saf):
+`joinBrandAndModel`, `composePlateLabel`, `buildPlateItemName`.
+Üç yüzey de bu tek kaynağı kullanıyor — wizard kalem adı (PDF'e giden),
+Bonus dalı ve Analiz. Veri değiştirilmedi: `short_name` katalog sayfalarında
+ve PDP başlıklarında da kullanılıyor, oradaki adı değiştirmek SEO'yu etkilerdi.
+
+### "-" toz grubu markası değilmiş
+
+Analiz'de "Toz Grubu Markaları" sıralamasında 2. sırada `-` görünüyordu
+(6 teklif, 2,5M ₺). Canlı veri: 6 kaydın **6'sı da `source_channel='catalog'`**
+— katalogdan tek ürün teklifi, toz grubu seçilmiyor. `apiQuoteSchema`
+`accessoryBrandName`i zorunlu tuttuğu için (`min(1)`) boş yazılamıyor, yerine
+tire konuyor. Artık "Toz grubu yok" olarak etiketleniyor, italik/soluk
+gösteriliyor ve sıralamanın sonuna alınıyor.
+
+### Katalog sekmesi 19.222px → 1.250px
+
+Marka ve aksesuar türü grupları katlanır yapıldı (varsayılan kapalı,
+`aria-expanded` + `aria-controls`). 261 varyant + 134 aksesuar artık tek
+seferde DOM'a basılmıyor.
+
+### Diğer
+
+- **G6:** emoji ikonlar (🧱 📏 🧰 🗂️) → Lucide SVG (Layers/Ruler/Package/FolderTree)
+- **G5:** `StatCard.onClick` ölü prop'u kaldırıldı (dört çağrının hiçbiri geçmiyordu)
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | **50 dosya / 442 test** + tsc temiz |
+| `npx eslint` | 0/0 |
+| `tests/contracts/analytics-labels.test.ts` | **23 test** — canlı RPC satırlarıyla |
+| Katalog sayfa yüksekliği | 19.222px → **1.250px** (tarayıcıda ölçüldü) |
+| Analiz ekranı | tekrar gitti, "Toz grubu yok" sonda (ekran görüntüsü) |
+
+### Yan bulgu
+
+`get_combination_metrics` RPC'sinin SQL tanımı **repoda yok** — yalnız
+Supabase'de yaşıyor, migration dosyası bulunmuyor. Bu yüzden `plate_brand`
+bileşiminin neden satır bazında değiştiği kaynaktan doğrulanamadı; düzeltme
+arayüzde yapıldı. RPC'nin bir migration dosyasına çıkarılması açık iş.
+
+---
+
+## 2026-07-27 — Audit Faz 3 ve Faz 5 tamamlandı
+
+### Güvenlik sertleştirmesi
+
+**S1 — admin okuma uçlarına handler kapısı.** Altı uç yalnızca `proxy.ts` ile
+korunuyordu; kardeş uçlar (experiments GET, quotes/[id]/pdf GET) zaten
+`requireOfficeReadAuth` kullanıyordu. Matcher'da yapılacak bir düzenleme bu
+uçları sessizce açardı. Kapatılanlar ve ne döndürdükleri:
+
+| Uç | İçerik |
+|---|---|
+| `quotes` | tam müşteri PII'si (ad, e-posta, telefon, adres) |
+| `dashboard-metrics` | ciro ve teklif hacmi |
+| `combination-metrics` | marka/kombinasyon kırılımı |
+| `brands` | `margin_pct` — kâr marjı |
+| `material-types` | `tier1/2/3_margin_pct` — kademe marjları |
+| `storage-images` | yayımlanmamış görsel listesi |
+
+**S2 — proxy.** Kimlik karşılaştırması `===` yerine sabit süreli `safeEqual`
+(handler katmanı zaten `timingSafeEqual` kullanıyordu, proxy geride kalmıştı).
+`atob()` artık `parseBasicCredentials` içinde korunuyor: bozuk base64 gönderen
+istemci 500 yerine normal 401 alıyor.
+
+### Yanıltıcı göstergeler kaldırıldı
+
+- **G1** — "Kaba m² Tahmini (+%10)" ve "Kaba Satış Tahmini" sütunları silindi.
+  Sabit %10 ekleyen, hiçbir yerde kullanılmayan sayılardı; ekranın en dikkat
+  çekici (yeşil, kalın) sütunuydu. Gerçek fiyat marj kuralı + KDV ile hesaplanır.
+- **G2** — KPI ilerleme çubukları kaldırıldı. "Toplam Talep" çubuğu
+  `Math.min(100, total * 4)` ile doluyordu; 25 teklifte %100 olup orada kalıyordu.
+- **G3** — "Talep Türleri" çubukları ortak ölçeğe bağlandı. Genişlik `value * 8`
+  ile hesaplanıyordu, çubuklar birbiriyle kıyaslanamıyordu.
+- **G4** — Genel Bakış'ta iki farklı kart aynı "Talep Akışı" başlığını
+  taşıyordu; alttaki "Son Talepler / Gelen Kayıtlar" oldu.
+
+### Kalan hatalar
+
+- **B5** — Deney silme yoktu (`DELETE /api/admin/experiments/[id]` + arayüz
+  düğmesi eklendi). Tamamlanmış deney silinemez, sunucu 409 döner —
+  sonucu öğrenme belleğinin parçası.
+- **B6** — Recharts `width(-1)` uyarısı: `initialDimension` ile ilk render'a
+  geçerli boyut verildi. Konsol artık temiz.
+- **E9** — Teklif detay penceresi `Esc` ile kapanıyor, odak tuzağı kuruyor,
+  arka plan kaydırması kilitleniyor, kapanışta odak geri veriliyor
+  (`role="dialog"`, `aria-modal`). KPI kartları `tabIndex` + Enter/Space aldı.
+
+### Faz 3 — ortak önbellek
+
+`lib/hooks/useAdminQuotes.ts` ve `lib/hooks/useAdminMetrics.ts` eklendi;
+Dashboard/Quotes/Experiments/Analytics artık tek anahtarı paylaşıyor
+(`staleTime` 60 sn, mutasyon sonrası `invalidateQueries`).
+
+`Date.now()` render içinde çağrılıyordu (React saflık kuralı ihlali);
+react-query'nin `dataUpdatedAt` damgasına geçildi.
+
+### Kanıt
+
+Yeni ölçüm aracı: `node scripts/verify-ofis-network.mjs`
+
+| Ölçüm | Öncesi | Sonrası |
+|---|---|---|
+| `/api/admin/quotes` çağrısı | **7** | **1** |
+| `dashboard-metrics` | 3 | 1 |
+| `combination-metrics` | 2 | 1 |
+| Toplam admin isteği | 13 | **6** |
+| Konsol hata/uyarı | 1 (Recharts) | **0** |
+| `verify:fast` | 377 | **458 test** + tsc temiz |
+| `eslint` | 0/0 | **0/0** |
+| E2E (patron + responsive) | — | **9/9** |
+
+---
+
+## 2026-07-27 — Hat A: Elle teklif yazma ekranı (ilk sürüm çalışıyor)
+
+### Migration olmadan çalışır hâle getirildi
+
+Plan v25 tabloları (`quote_items`, `quote_revisions`) öngörüyordu ama `quotes`
+tablosu incelendiğinde bunlara gerek olmadığı görüldü: `status` dışında CHECK
+kısıtı yok, kalemler zaten `package_items JSONB` kolonunda duruyor. Böylece
+ekran **onay bekleyen hiçbir migration'a bağlı olmadan** teslim edildi.
+
+### Neden ayrı yazma yolu
+
+`submit_quote_guarded` RPC'si operatör akışıyla bağdaşmıyor:
+IP başına 5/10dk ve telefon başına 3/30dk hız limiti, 30 dk dedupe, zorunlu
+`kvkk_consent=true`, 25 zorunlu anahtar. Bunun yerine
+`POST /api/admin/quotes/manual` → service-role insert + kendi doğrulaması.
+**Public ciro yolu (`app/api/quotes`) hiç değişmedi.**
+
+### Eklenenler
+
+| Dosya | İş |
+|---|---|
+| `app/api/admin/catalog-items/route.ts` | Ürün kaynağı — İSK1 (şehir/araç), İSK2 (ürün/Optimix) ve marka/malzeme marjı **sunucuda** uygulanıp `suggestedUnitPrice` döner. Ham `base_price`/`discount_*` tarayıcıya inmez. |
+| `app/api/admin/quotes/manual/route.ts` | Kayıt yolu. Toplam sunucuda yeniden hesaplanır; 2 kuruştan fazla sapmada 409. |
+| `lib/schemas/manualQuote.schema.ts` | Ürün alanları opsiyonel, para alanları katı. `apiQuoteSchema`'yı import etmez. |
+| `components/admin/quote-editor/*` | Satır tablosu, katalog seçici, editör durumu + Excel yapıştırma ayrıştırıcısı. |
+| `app/ofis/tabs/quotes/ManualQuoteEditor.tsx` | Ekran. |
+| `app/ofis/tabs/QuotesShell.tsx` | Teklifler çatı sekmesi (Liste / Yeni Teklif). |
+
+### Kararlar
+
+- **Sistem fiyat önerir, operatör ezer.** Birim fiyat katalogdan marj+iskonto
+  uygulanmış gelir; üstüne yazılırsa satırda rozet çıkar, tek tıkla geri alınır.
+- **Tarayıcının hesabına güvenilmez.** Ekran ve sunucu aynı `buildQuoteTotals`
+  fonksiyonunu kullanır (KDV %20 tek kaynak), sunucu yine de yeniden hesaplar.
+  Denemede bilerek yanlış toplam gönderildi → 409 ile reddedildi.
+- **KVKK'da sahte rıza yok.** `kvkk_consent=false`,
+  `consent_basis='sozlesme_hazirligi'` (m.5/2-c), temas kanalı operatörden.
+- **Ticari kural engellemez, uyarır.** Min sipariş ihlalinde 422 + `needsOverride`;
+  operatör gerekçe yazarak geçer, gerekçe `admin_notes`'a kaydedilir.
+- **Teklif kodu sunucuda üretilir:** `TE-2026-000128`. Wizard'ın istemci
+  ürettiği `TY…` önekinden ayrı — çakışma uzayı bağımsız.
+- `upload-pdf` kapısı `manual_quote` kanalını da tanıyor (plan R6);
+  açılmasaydı elle teklifin PDF'i sessizce 403 alacaktı.
+
+### Kanıt — uçtan uca çalıştırıldı
+
+| Adım | Sonuç |
+|---|---|
+| `GET /api/admin/catalog-items?cityCode=34&areaM2=1000` | **251 ürün**, marj ve iskonto uygulanmış (ör. Dalmaçyalı CS60 5 cm: net 382,83 → satış 401,97 ₺/m², marj %5) |
+| Yanlış toplamla `POST` | **409** — "sunucu 431.378,40 ₺ hesapladı, ekran 430.386,75 ₺ gönderdi" |
+| Doğru toplamla `POST` | **201** — `TE-2026-000128`, kanal `ofis`, tip `manual_quote`, durum `quoted` |
+| Kayıt doğrulaması | kalemler `package_items.items` içinde satır satır; `quoted_by`, `consent_channel`, iskonto meta doğru |
+| Tarayıcıda tam akış | müşteri → şehir → metraj → katalogdan ürün → serbest satır → %3 iskonto → **1.347.655,92 ₺**, konsol hatası yok |
+| Test kaydı | temizlendi (DELETE 200) |
+
+### Yan bulgu — veri bozukluğu
+
+Katalogdaki **251 üründen 18'inde** karakter bozulması var:
+`"Dalmaçyalı ?elik D?bel 11.5"` → olması gereken "Çelik Dübel". Bozukluk
+veritabanındaki `accessories` kayıtlarında; bu ekran yalnız görünür kıldı.
+Aynı adlar müşteriye giden PDF'e de girer. Ayrı bir veri düzeltme işi.
+
+### Kalan (Hat A)
+
+Revizyon/iskonto senaryoları (aynı teklifin %3 / %4 varyantı), PDF şablonuna
+ayrı iskonto satırı, `private-pdf-client` sözleşme listesine yeni ekranın
+eklenmesi, teklif listesi sayfalaması.
+
+---
+
+## 2026-07-27 — Ürün adı onarımı + Bonus'un katalogda görünmesi
+
+### 1. Bozuk Türkçe karakterler onarıldı (canlı veri)
+
+`accessories.short_name` içinde 18 kayıt bozuktu: `"?elik D?bel 11.5"`.
+Bu adlar teklif ekranında ve **müşteriye giden PDF'te** görünüyordu.
+
+**Tahminle düzeltilmedi:** aynı satırın `name` kolonu sağlamdı
+("Dalmaçyalı Taşyünü Dübeli Çelik Çivili 11,5cm 200 adet"). Onarım scripti
+(`scripts/fix-accessory-mojibake.mjs`) her düzeltmeyi `name` kolonuyla
+doğruluyor; doğrulayamadığı satıra dokunmuyor. Varsayılan mod kuru çalışma.
+
+| | Sonuç |
+|---|---|
+| Bozuk kayıt | 18 / 134 |
+| Doğrulanan düzeltme | **18** |
+| Atlanan (şüpheli) | 0 |
+| Uygulandı | **18/18** |
+| Kalan bozuk | **0** |
+
+`?elik → Çelik`, `D?bel → Dübel`, `D?beli → Dübeli`. `plates` tablosunda
+bozuk kayıt yok (0/43).
+
+### 2. Bonus ürünleri katalogda görünmüyordu
+
+Elle teklif ekranının ürün listesinde **251 üründen 0'ı Bonus'tu.**
+
+**Kök neden:** Bonus levhalarının `base_price` ve `base_price_per_cm` değerleri
+NULL ve `plate_prices` tablosunda hiç satırı yok (27 levha ailesi, **0 fiyat
+satırı**). Bonus fiyatı bölge bazlı listede yaşıyor
+(`lib/pricing/bonus/bonus-region-prices.json`) ve yalnız `computeBonusUnitSale()`
+ile hesaplanabiliyor. Genel hesap yolu `basePrice <= 0` kontrolünde hepsini
+atlıyordu.
+
+**Çözüm:** `catalog-items` rotasına ayrı Bonus dalı. Fail-closed kaldı: şehir
+seçilmeden, fiyat çözülemeyince veya marj yoksa ürün listelenmiyor. Bonus taban
+fiyatı istemciye inmiyor (`netCost: 0`).
+
+Alt-bölge kuralı da bağlandı: İstanbul yaka / Kocaeli Gebze ayrımı seçilmeden
+Bonus fiyatı üretilemiyor; ekran artık bunu sessizce yutmak yerine uyarı
+gösterip seçim kutusu açıyor.
+
+| Sorgu | Bonus | Toplam | Not |
+|---|---|---|---|
+| İstanbul, yaka seçilmemiş | 0 | 251 | "Bonus fiyatı bölge seçimi ister" uyarısı |
+| İstanbul + Anadolu yakası | **117** | 368 | F 150 5cm → 359,37 ₺/m² |
+| Ankara | **117** | 368 | F 150 5cm farklı bölge fiyatı |
+
+Tarayıcı doğrulaması: "Bonus F 150" araması **21 sonuç**, marj %5 (marka
+kuralı), konsol hatası yok. "Dübel" araması → "Dalmaçyalı Çelik Dübel 11.5".
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | **52 dosya / 468 test** + tsc temiz |
+| `npx eslint` | 0/0 |
+| `tests/contracts/catalog-items-bonus.test.ts` | 10 test — Bonus dalı, fail-closed kapılar, taban fiyat sızıntısı yok, onarım scriptinin doğrulama zorunluluğu |
+
+---
+
+## 2026-07-27 — Elle teklifte PDF üretimi bağlandı
+
+### Akış
+
+Sıra wizard'ın tersi ve bu daha güvenli: **önce teklif kaydı** (kodu sunucu
+verir) → **sonra PDF** → **sonra private storage'a yükleme**. Wizard'da kod
+istemcide üretildiği için PDF önce basılıyor; burada kod sunucudan geldiğinden
+bu sıra zorunlu.
+
+PDF üretimi veya yüklemesi başarısız olsa bile **teklif kayıtlıdır**; ekran
+uyarı gösterip tarayıcıda üretilen kopyayı indirmeye açar.
+
+`lib/quote/buildManualPdfData.ts` (yeni, saf) editör durumunu `PDFQuoteData`
+sözleşmesine çeviriyor. Wizard ile **aynı şablon** kullanılıyor — müşteri iki
+kanaldan da aynı belgeyi görüyor.
+
+### Sözleşme testi kapsamı yapısal olarak kapatıldı
+
+`tests/contracts/private-pdf-client.test.ts` iki dosyayı **sabit listede**
+tutuyordu; yeni bir PDF üreten ekran eklendiğinde test yeşil kalıyor ama ekran
+hiç denetlenmiyordu (audit riski R1).
+
+Eklenen meta-test: `generateQuotePDF` import eden **her** dosya listede olmak
+zorunda. Liste bayatlamasın diye ters yön de kontrol ediliyor (listede olup
+artık PDF üretmeyen dosya).
+
+Kasten bozularak doğrulandı — `ManualQuoteEditor` listeden çıkarıldığında test
+kırılıyor:
+```
+Bu dosyalar PDF üretiyor ama private-pdf-client sözleşmesinde yok:
+  app/ofis/tabs/quotes/ManualQuoteEditor.tsx
+```
+
+Sözleşme ayrıca kanal bazlı ayrıldı: public akış `Idempotency-Key` göndermek
+zorunda (guard'lı RPC bunu istiyor), ofis akışı zorunda değil (o RPC'yi
+kullanmıyor). Ortak değişmez kural her ikisinde de aynı: **PDF, kaydedilmiş bir
+teklife bağlanmadan yüklenemez.**
+
+### PDF şablonunda iki görüntü hatası düzeltildi
+
+Üretilen ilk PDF'te iskonto satırı tutar yerine "📦 Paket İçeriği" gösteriyor,
+TUTAR sütununa "-" basıyordu. Kök neden `lib/pdfGenerator.ts:290`:
+
+```ts
+const isZeroPrice = (it.unitPrice === 0 || it.unitPrice < 0.01) && !it.isPlate
+```
+
+`< 0.01` kontrolü **negatif fiyatı da** kapsıyordu. Ofis teklifinde toplu alım
+iskontosu negatif kalem satırı olarak basıldığı için müşteriye giden belgede
+iskonto görünmüyordu. `it.unitPrice >= 0 && it.unitPrice < 0.01` oldu.
+
+İkincisi: levha satırında paket bilgisi yokken "(0 PKT)" yazılıyordu — yanlış
+bilgi; artık `packageCount > 0` değilse hiç yazılmıyor.
+
+**Güvenlik notu:** bu değişiklikler `pdf-screen-consistency` testinin koruduğu
+bölgenin (satır 399–421, "Toplam Metraj" ↔ "&lt;!-- Tablo --&gt;") DIŞINDA
+(satır 284–312). Test değiştirilmeden geçmeye devam ediyor; ayrıca bu iki
+davranış aynı dosyaya yeni assertion olarak eklendi.
+
+### Kanıt — uçtan uca
+
+| Adım | Sonuç |
+|---|---|
+| Bonus levha + Dübel + %3 iskonto | ekranda **446.767,87 ₺** |
+| Kayıt | `TE-2026-000131`, kanal `ofis` |
+| PDF üretimi | başarılı, tarayıcıdan indirildi |
+| PDF içeriği | iskonto satırı **−11.514,64 ₺**, "(0 PKT)" yok, toplam ekranla birebir |
+| Ürün adları | "Dalmaçyalı Çelik Dübel 11.5" — mojibake onarımı belgede görünüyor |
+| Konsol | hata yok |
+| Test kayıtları | temizlendi (34 gerçek teklife dönüldü) |
+
+### Düzeltilen UX hatası
+
+`QuotesShell` kayıttan sonra otomatik olarak listeye geçiyordu; operatör başarı
+ekranını ve PDF indirme düğmesini hiç göremiyordu. Sekme değişimi kaldırıldı.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | **52 dosya / 475 test** + tsc temiz |
+| `npx eslint` | 0/0 |
+| `node scripts/verify-ofis-network.mjs` | AC-05 ✓ (1 çağrı), AC-08 ✓ (konsol temiz) |
+
+### Açık
+
+- **`PDF_CAPABILITY_SECRET` lokalde tanımlı değil** — bu yüzden arşivleme
+  denenmedi, ekran "yapılandırılmamış" uyarısı gösterip indirmeye açtı.
+  Üretimde tanımlıysa arşivleme de çalışır; canlıda bir kez doğrulanmalı.
+- Kaydet düğmesi kayıt sırasında devre dışı kalıyor (çift tıklama koruması);
+  sunucu tarafı idempotency anahtarı yok — ofis rotası bilerek guard'sız.
+
+---
+
+## 2026-07-27 — Pazarlık senaryoları + açık kalan doğrulamalar kapatıldı
+
+### Açık #1 kapandı: PDF arşivlemesi
+
+Önceki turda "lokalde `PDF_CAPABILITY_SECRET` yok, arşivleme denenmedi"
+notu bırakılmıştı. Kapatıldı:
+
+1. **Canlı veri kontrolü:** 33 `pdf_quote` kaydının **32'sinde**
+   `pdf_storage_path` dolu → üretimde arşivleme zaten çalışıyor.
+2. **Elle teklif yolu ayrıca doğrulandı:** dev sunucusu ortam değişkeni
+   enjekte edilerek çalıştırıldı (kullanıcının `.env.local` dosyasına
+   dokunulmadı). Sonuç: PDF `132/33a4a548-….pdf` yoluna yüklendi,
+   `GET /api/admin/quotes/132/pdf` → **302** (imzalı URL yönlendirmesi).
+
+### Pazarlık senaryoları
+
+alcifiyatlari'nda elle yapılan iş (`AFM-Teklif_..._3-Iskonto.pdf` /
+`_4-Iskonto.pdf` — **aynı teklif no**, farklı oran) artık ekranda.
+
+**Model: tek kayıt, N belge.** Senaryo değiştirmek kaydı değiştirmez;
+yalnız PDF varyantı üretir. Şema değişikliği gerekmedi.
+
+- Kaydetmeden önce: "Pazarlık senaryoları (iskonto %)" alanına `4, 5`
+  yazılınca karşılaştırma tablosu çıkıyor — her oran için genel toplam ve
+  ana orandan farkı.
+- Kaydettikten sonra: her senaryo için tek tıkla PDF
+  (`TE-2026-000133-iskonto-4.pdf`).
+
+`useQuoteEditor.totalsFor(pct)` saf fonksiyona çıkarıldı; ekran, senaryo
+tablosu ve PDF üretimi aynı hesabı kullanıyor (KDV tek kaynak:
+`buildQuoteTotals`).
+
+### Kanıt — uçtan uca
+
+| Adım | Sonuç |
+|---|---|
+| Ana teklif (%3) | 393.560,04 ₺ |
+| Senaryo %4 | 389.502,72 ₺ (−4.057,32 ₺) |
+| Senaryo %5 | 385.445,40 ₺ (−8.114,64 ₺) |
+| İndirilen belge | `TE-2026-000133-iskonto-4.pdf` |
+| PDF içeriği | aynı teklif no, "Toplu alım iskontosu (%4) −13.524,40 ₺", toplam 389.502,72 ₺ |
+| Konsol | hata yok |
+| Test kaydı | temizlendi (34 gerçek teklife dönüldü) |
+
+`tests/pricing/quote-scenarios.test.ts` (11 test) davranışı kilitliyor:
+senaryo satır toplamını etkilemez, iskonto arttıkça toplam düşer, KDV her
+senaryoda %20 kalır, **nakliye iskontodan sonra eklenir** (iskonto nakliyeye
+uygulanmaz), %100 ve %0 sınır durumları.
+
+### Kanıt — tam doğrulama
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | **53 dosya / 486 test** + tsc temiz |
+| `npx eslint` | 0/0 |
+| `npm run build` | başarılı (457 sayfa) |
+| `copy-gate .next` | **457 HTML temiz** (6 proje yasağı) |
+| `scripts/verify-ofis-network.mjs` | AC-05 ✓ · AC-08 ✓ |
+
+### Hat A durumu
+
+Tamamlanan: katalog ucu (marj+iskonto sunucuda), kayıt yolu (guard'sız,
+toplam doğrulamalı), satır editörü (Excel yapıştırma dahil), Bonus bölge
+fiyatı + yaka seçimi, PDF üretimi + arşivleme, sözleşme meta-testi,
+pazarlık senaryoları.
+
+Kalan: teklif listesi sayfalaması (Faz 2.2) ve karar verdiren panel (Faz 4).
+
+---
+
+## 2026-07-27 — Faz 2.2 + Faz 4 + kullanıcı geri bildirimi + bayat E2E onarımı
+
+### Kullanıcı geri bildirimi: "Teklif alamıyorum, ne istediğini anlamadım"
+
+Ekran katalogdan ürün seçince miktarı boş bırakıyor, "Eksik: en az bir kalem"
+diyordu. Oysa satır VARDI — yalnız miktarı boştu. Operatör neyi düzelteceğini
+anlayamıyordu. Üç düzeltme:
+
+1. **Miktar otomatik dolar.** m² birimli ürün seçilince miktar = iş metrajı
+   (operatör zaten yazmıştı, ikinci kez istemek gereksizdi). Dolmadıysa imleç
+   miktar kutusuna gider.
+2. **Eksik mesajı satır satır söyler:** "1. satırda miktar girin" —
+   "en az bir kalem" yerine.
+3. **İki iskonto kutusunun farkı yazıldı.** Alt kutu "Alternatif iskonto
+   oranları (isteğe bağlı)" oldu; ana orana eşit değer yazılınca
+   "ana iskontoyla aynı — alternatif üretilmedi" uyarısı çıkıyor
+   (eskiden sessizce hiçbir şey olmuyordu).
+
+Kullanıcının senaryosu birebir tekrarlandı: miktar **6652,8** otomatik doldu,
+tutar hesaplandı, "Teklifi kaydet" açıldı.
+
+### Faz 2.2 — teklif listesi sayfalaması
+
+KPI ve huni panelleri TÜM tekliflere ihtiyaç duyduğu için veri tek seferde
+çekilmeye devam ediyor; sayfalanan yalnız RENDER edilen liste (12 seri).
+Filtre/arama değişince başa döner.
+
+**4.410px → 2.771px** (kabul kriteri < 3.000px).
+
+### Faz 4 — karar verdiren panel
+
+- **Süre biçimlendirme** (`lib/admin/formatDuration.ts`): "1674 saat" → **"2 ay"**,
+  eşik renkleriyle (≤24s iyi, ≤48s uyarı, üstü kritik).
+  Türkçe ek uyumu ayrı fonksiyonda: düz birleştirme "13 güntir" üretiyordu,
+  artık **"13 gündür"**.
+- **Bugün yapılacaklar kartı**: Genel Bakış'ın üst şeridi "Bugünkü Teklif 0 ·
+  Bekleyen 0 · PDF 0 · WhatsApp 0" gösteriyordu — gün boş geçince panel bomboş
+  hissettiriyordu, oysa 22 teklif temassız bekliyordu. Şerit artık
+  **Temassız · Bugün Takip · Açık Teklif · Bugün Gelen**; altında en uzun
+  bekleyen 5 teklif tıklanabilir liste hâlinde.
+- **Tarih aralığı filtresi**: Tüm zamanlar / 7 / 30 / 90 gün.
+- **CSV dışa aktarım** (`lib/admin/quotesCsv.ts`): Türkçe Excel uyumlu
+  (";" ayraç, "," ondalık, UTF-8 BOM). **Formül enjeksiyonuna karşı korumalı** —
+  `=`, `+`, `-`, `@` ile başlayan değerler tırnaklanır.
+  **Brüt kâr bilinçli olarak dışarıda**: dosya elden ele dolaşabilir.
+
+### Bayat E2E testleri onarıldı (benim değişikliklerimden ÖNCE kırıktı)
+
+Tam paket koşulunca 2 hata çıktı. Git ile kaynağı bulundu — ikisi de
+davranış değişip testin güncellenmemesinden:
+
+| Test | Kırılma sebebi | Commit |
+|---|---|---|
+| `wizard-bonus-flow` | "sevkiyat verisi henüz kesinleşmedi" metni koddan kaldırıldı, test güncellenmedi | `8a48608` |
+| `catalog-bonus-pdp` | Bonus PDP fiyatlı hâle geldi ama test "Teklif ile belirlenir" bekliyordu; ayrıca "Takım Fiyatını Gör" CTA'sı kaldırılmıştı | `277a876`, `7e27a73` |
+
+`catalog-bonus-pdp` kendi içinde ÇELİŞİYORDU: hem "fiyat yok" hem "fiyat
+370,03" bekliyordu. Her iki test de güncel sözleşmeye uyarlandı ve kaldırma
+kararları artık `toHaveCount(0)` ile kilitli.
+
+**Yan bulgu:** koşularda görünen `Catalog PDF quote save failed: { status: 503 }`
+bir ortam sorunu DEĞİL — `critical-quote-flows` testi API hatasını bilerek
+tetikliyor. Bu, önceki turlarda yanlış teşhise yol açmıştı.
+
+`critical-quote-flows` bir koşuda düştü, tek başına 5/5 geçti — kararsızlık,
+tam pakette tekrar geçti.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npm run verify:fast` | **55 dosya / 532 test** + tsc temiz |
+| `npx eslint` | 0/0 |
+| `npx playwright test` | **31/31 geçti** |
+| `npm run build` | başarılı |
+| `copy-gate .next` | **457 HTML temiz** |
+| Teklifler sayfa yüksekliği | 4.410px → **2.771px** |
+| `verify-ofis-network.mjs` | AC-05 ✓ · AC-08 ✓ |
+
+---
+
+## 27 Temmuz 2026 · QuoteBuilder — yarı otomatik teklif ekranı
+
+Sözleşme: `docs/verification/GOAL-quote-builder-2026-07-27.md`
+Kaynak: 27 Temmuz canlı kullanımı (Mahmut Balcı teklifi, TE-2026-000140).
+
+Ekran "manuel" kurgulanmıştı; gerçek iş yarı otomatikti. Kullanıcı kararı:
+**"manuel demeyeyim de yarı otomatik"** — sistem doldurur, operatör ince
+ayar yapar.
+
+### Bulunan ve düzeltilen kusurlar
+
+| # | Kusur | Kök neden | Kanıt |
+|---|---|---|---|
+| 1 | Toz grubu **yanlış ürün** seçiyordu (CHELFIX + 155 mm dübel) | `accessories` **sırasız** çekiliyordu; paket motoru her tipte İLK eşleşeni alır ve wizard `.order('id')` ile çeker (`WizardCalculator.tsx:521`) | `accessory-set-parity.test.ts` AC-01 |
+| 2 | Marj kadranı fiyatı **1 kuruş kaydırıyordu** (145,11 → 145,12) | Maliyet satıra kuruşa yuvarlanmış yazılıyordu; marj yuvarlanmış sayının üstüne biniyordu | aynı dosyada regresyon testi |
+| 3 | Toz grubu diyaloğunda **13 kart**, çoğu ayırt edilemez ("Dengeli Sistem" ×4) | Set içeriği yalnız aksesuar markasına bağlı; aynı markayı gösteren paket tanımları birebir aynı seti üretiyordu | marka başına tek kart → **5 kart** |
+| 4 | Kart başlığı marka yerine paket adını gösteriyordu; kalem listesi ürün yerine **tip adını** ("Yapıştırıcı") | — | marka başlıkta, kalemde ürün adı |
+| 5 | Aksesuar marjı **marka marjından** çözülüyordu | Wizard aksesuarda HER ZAMAN malzeme kademe kuralını kullanır; aynı ürün iki yoldan farklı fiyat verirdi | `catalog-items` malzeme kuralına çekildi |
+| 6 | Ticari adla arama **hiç sonuç vermiyordu** ("teknoizofix") | Katalog etiketi marka + KISA ad ("TEKNO Yapıştırıcı"); ticari ad ("TEKNOİZOFİX") etikette geçmiyor | `CatalogItem.fullName` eklendi, arama onu da tarar |
+
+### Eklenen yetenekler
+
+- **Marj kadranı** — asıl kontrol artık marj. %5→%3 ile "%2 iskonto"nun aynı
+  şey olmadığı (fiyatta %1,90) 27 Temmuz'da gerçek bir teklifte yanlış fiyat
+  üretmişti.
+- **Canlı göstergeler** — m² (KDV hariç/dahil), brüt kâr, site fiyatına göre
+  fark, paket artığı. Son ikisi o gün elle hesaplanmıştı.
+- **Toz grubu tek tık** — 7 satır elle yazmak yerine komple set.
+- **Araç ↔ metraj** — "3 TIR" → 6.652,8 m². Kapasite levhaya bağlı
+  (Bonus 4 cm 2.217,6 m², genel taşyünü 4 cm 1.872 m²).
+- **Teklif çoğaltma** — sepet gelir, metraj değişince sarfiyata bağlı
+  miktarlar yeniden hesaplanır (asıl iş buydu, o gün betikle yapıldı).
+- **Satır içi arama** — yazdıkça, Türkçe klavye ve isim farkına dayanıklı.
+- **Kayıt artık marjı saklıyor** (`package_items.manual.appliedMarginPct`) ve
+  satır maliyet dayanağını taşıyor — "bu fiyatı neden verdik" cevaplanabilir.
+
+`ManualQuoteEditor` → `QuoteBuilder` olarak yeniden adlandırıldı.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npx vitest run` | **58 dosya / 574 test** geçti |
+| `npx tsc --noEmit` | temiz |
+| `npx eslint .` | 0/0 |
+| `npm run build` | başarılı |
+| `npx playwright test` | **36/36 geçti** (5 yeni spec dahil) |
+| `copy-gate .next` | **457 HTML temiz** — marj/kâr sızıntısı yok |
+| Canlı doğrulama (gerçek veri) | %3 marjda **145,11 · 159,96 · 1466,28 · 986,33 · 1265,93 · 935,03 · 201,18** — TY7002193 ile birebir |
+| Paket artığı | canlı **2.337,85 ₺** = birim testin sayısı |
+| Konsol | temiz |
+
+Canlı doğrulama sırasında üretim veritabanına yazılan tek test teklifi
+(`TE-2026-000141`) silindi; E2E specleri kayıt YAPMAZ.
+
+### Kalan açık — KAPATILDI (aynı gün, kullanıcı onayıyla)
+
+Bkz. bir sonraki kayıt.
+
+---
+
+## 27 Temmuz 2026 · Bonus maliyeti /ofis'e açıldı — yanlış okunan bir kural düzeltildi
+
+### Ne olmuştu
+
+`/ofis` katalog ucunda Bonus levhasının net alışı `netCost: 0` yazılıyordu ve
+gerekçe olarak `tests/contracts/bonus-price-privacy.test.ts` gösteriliyordu.
+Kullanıcı bunu sorguladı: *"kural benim kuralım koyan ben isem bu kuralı nasıl
+bozamıyorum"*.
+
+**Sorgu haklıydı. O sözleşme bunu yasaklamıyor.** Testin yaptığı tek şey,
+`components/**` (müşteri tarayıcısına inen kod) altından Bonus fiyat
+modüllerinin import edilmesini engellemek. `app/api/admin/catalog-items`
+sunucu rotasıdır, `requireOfficeReadAuth` arkasındadır ve **diğer TÜM
+markaların** net alışı oradan zaten /ofis'e iniyordu. Bonus'un sıfırlanması,
+kuralın olduğundan geniş okunmasından doğan tutarsız bir fazladan kısıttı.
+
+Bedeli: teklifin en büyük kalemi brüt kârdan düşüyor, marj kadranı o satıra
+dokunamıyor, ekranda "1 satırın maliyeti bilinmiyor" uyarısı duruyordu.
+
+### Yapılan
+
+| Değişiklik | Dosya |
+|---|---|
+| `computeBonusUnitSale` net alışı da döndürüyor (`netCostPerM2`) | `lib/pricing/bonus/sale.ts` |
+| Ofis kataloğu `netCost: 0` yerine gerçek maliyeti taşıyor | `app/api/admin/catalog-items/route.ts` |
+| **Public rota açık beyaz listeye çevrildi** | `app/api/bonus-price/route.ts` |
+
+### Alan eklerken yakalanan gerçek sızıntı riski
+
+Public `/api/bonus-price` ucu `NextResponse.json(result)` ile **nesnenin
+tamamını** döndürüyordu. `netCostPerM2` eklendiği anda net alış her müşterinin
+tarayıcısına düşecekti — yani korunması gereken şey tam da buydu. Rota alan
+alan yazan açık beyaz listeye çevrildi; artık yeni bir alan bilinçli
+eklenmedikçe dışarı çıkamaz. Kilit: `bonus-price-privacy.test.ts` içinde
+üç yeni test (`NextResponse.json(result)` yasak, `...result` yasak,
+`netCostPerM2` yanıtta geçmez).
+
+### Değiştirilen test — gerekçesi
+
+`tests/contracts/catalog-items-bonus.test.ts` içindeki
+`expect(bonusBlok).toContain('netCost: 0')` **yanlış kuralı kodluyordu**.
+Gevşetilmedi; doğru sınırı kilitleyecek şekilde yeniden yazıldı:
+ham fiyat modülleri (`getBonusBasePrice` / `bonus-region-prices`) hâlâ yasak,
+fiyat yalnız `computeBonusUnitSale` üzerinden gelir, ve rota
+`requireOfficeReadAuth` taşımak zorunda.
+
+### 1 kuruşluk bulgu — cumartesiki teklifin fiyatı
+
+Bonus levhası artık kadranla hareket ediyor: %5'te 322,48 → %3'te **316,33**.
+Gönderilen TY7002193'te ise **316,34** yazıyor.
+
+Sebep: o teklif üretilirken taban fiyat veritabanından okunmak yerine
+yuvarlanmış satış fiyatından geri hesaplanmıştı
+(`322,48 ÷ 1,05 = 307,1238` → `× 1,03 = 316,3375` → 316,34).
+Sistemin kendi verisindeki taban **307,12** ve doğru sonuç **316,33**.
+Fark m²'de 1 kuruş, 6.652,8 m²'de 66,53 ₺ (KDV hariç). Ekran artık geri
+hesaplama yapmıyor, tabanı doğrudan okuyor.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npx vitest run` | **578 test** geçti |
+| `npx playwright test` | **36/36** |
+| `npx tsc --noEmit` · `npx eslint .` | temiz · 0/0 |
+| `npm run build` | başarılı |
+| `copy-gate .next` | 457 HTML temiz |
+| Public uç canlı yanıtı | `{ok,region,thicknessMm,salePricePerM2,packageM2,packagePieces,kamyonM2,tirM2}` — **net alış yok** |
+| /ofis brüt kâr | 149.181,51 ₺ (%5) → 89.471,27 ₺ (%3); "eksik ölçüm" uyarısı **kalktı** |
+| Site farkı | %3'te **−59.710,24 ₺** — 27 Tem'de elle hesaplanan 59.643,71 ₺ ile aynı büyüklük |
+
+---
+
+## 27 Temmuz 2026 · Okunabilirlik — sistemik kontrast onarımı ve kalıcı kapı
+
+### Şikâyet
+
+Kullanıcı hem `/ofis` panelinden hem ana sayfadan (dışarıda, gündüz,
+telefondan) ekran görüntüleri gönderip **"OKUNMUYOR"** dedi. Haklıydı ve
+daha önce de söylenmişti.
+
+**Neden görülmedi:** o ana kadar 578 birim testi ve 36 E2E testi vardı;
+hiçbiri bir yazının okunup okunmadığını sormuyordu. Boşluk buradaydı.
+
+### Önce ölçüm, sonra düzeltme
+
+`scripts/audit-contrast.mjs` yazıldı: WCAG kontrast oranını **ekrandaki
+gerçek piksel** üzerinden ölçer. Kaynak dosyada sınıf aramak yetmez —
+gerçek renk, devralınan renk, saydam katmanlar ve punto ancak tarayıcıda
+birleşir.
+
+Denetçinin kendisinde bulunan ve düzeltilen üç kör nokta:
+
+| Kör nokta | Sonucu |
+|---|---|
+| Renkler `rgb()` sanılıyordu; Tailwind v4 **`lab()` / `oklab()`** üretiyor | Panelin bütün soluk etiketleri denetimden GÖRÜNMEZ geçiyordu. Renk çözümlemesi canvas'a devredildi — her CSS sözdizimini çözer. |
+| Zemin `background-color` sanılıyordu; `.nx-shell` **gradient** | Açık renkli yazılar yanlışlıkla "okunmuyor" çıkıyordu |
+| Devre dışı kontroller ve `sr-only` metin sayılıyordu | Yanlış alarm |
+
+Placeholder'lar da ayrıca ölçülür (metin düğümü değiller, `::placeholder`
+sözde öğesinden okunurlar) — formun en çok okunan yazısı oldukları hâlde
+hiçbir denetimden geçmiyorlardı.
+
+### Bulunan ve düzeltilen kusurlar
+
+| Yer | Ölçülen | Kök neden | Düzeltme |
+|---|---|---|---|
+| **Footer başlıkları** (ÜRÜNLER, KURUMSAL…) | **1,03** — görünmez | `style={{ color: 'currentColor' }}` satır içi stil sınıf rengini eziyor, `currentColor` rengi ebeveyne eşitliyordu | satır içi stil kaldırıldı |
+| Ön yüz ikincil metin | 3,65–3,95 | `--fe-muted: #6f6f78` | **#94949e** (~6,3) |
+| Ön yüz saydamlık kırıntıları (`/55`, `/70`, `/80`) | 2,45–2,79 | soluk rengin üstüne ayrıca opaklık | tam güce çekildi |
+| Panel etiketleri, tablo başlıkları | 3,59–3,98 | `text-slate-500` | `--nx-text-muted` (yükseltildi) |
+| Panel ipucu metni | 2,50 | `text-slate-600` | aynı jetona çekildi |
+| Panel jetonu | 4,01 | `--nx-text-muted: #6e7582` | **#9096a2** |
+| Açık zeminli sayfalarda altın | 3,51 | `--hub-gold: #a07a2c` | **#7d5d20** (ton ailesi korundu) |
+| `btn-ghost` / `btn-secondary` | 2,49 | açık zeminde `--hub-gold-soft` | `--hub-gold` |
+| Katalog CTA | 3,95 | altın zeminde beyaz yazı | koyu yazı (7,4) |
+| `/iletisim` etiketleri | 4,44 | `text-hub-ink-2/65` | tam güç |
+
+Düzeltmeler **jeton seviyesinde** yapıldı; 159 kullanım tek tek yamanmadı.
+
+### Kalıcı kapı
+
+- `npm run verify:contrast` eklendi
+- `scripts/verify-p0-release.sh` içine **9/9 adımı** olarak bağlandı
+- Kapsam: `/`, `/urunler`, `/urunler/tasyunu-levha`, `/iletisim`,
+  `/hakkimizda`, `/ofis`, `/ofis › Yeni Teklif`
+- Her hedef kendi gerçek genişliğinde ölçülür (ön yüz 390px mobil, panel masaüstü)
+
+### Kanıt
+
+| Kontrol | Önce | Sonra |
+|---|---|---|
+| `verify:contrast` (7 sayfa) | **104 düğüm AA altı** | **0 — hepsi geçti** |
+| `npx vitest run` | 578 | **578 geçti** |
+| `npx playwright test` | 36/36 | **36/36** |
+| `tsc` · `eslint` · `build` | — | temiz · 0/0 · başarılı |
+| `copy-gate .next` | — | 457 HTML temiz |
+
+Ekran görüntüsüyle doğrulandı: panel etiketleri ve footer başlıkları artık
+okunuyor.
+
+---
+
+## 29 Temmuz 2026 · EPS/taşyünü karışması — gerçek teklifte 14.229,93 ₺ hata
+
+### Olay
+
+Operatör aynı gün iki teklif çıkardı (Muammer Erdal, 300 m², 8 cm):
+
+| Teklif | Ürün | `material_type` | Sonuç |
+|---|---|---|---|
+| TE-2026-000142 | Dalmaçyalı İdeal Carbon (EPS) | `eps` | **doğru** |
+| TE-2026-000143 | Optimix Karbonlu (EPS) | **`karma`** | **hatalı** |
+
+Operatör "Optimix'te torba miktarı Dalmaçyalı'ya göre çok fazla geldi" diye
+sordu. Haklıydı.
+
+### Kök neden
+
+`QuoteBuilder.tsx` içinde toz grubunun malzemesi şöyle çözülüyordu:
+
+```
+const tozMalzeme = materialType === "eps" ? "eps" : "tasyunu"
+```
+
+Malzeme kutusu varsayılan **"Karma"**da kalınca EPS levha **sessizce taşyünü**
+sayıldı. Sonuçları:
+
+| Kalem | Uygulanan | Doğrusu |
+|---|---|---|
+| Yapıştırıcı | 6 kg/m² → **72 PKT** | 4 kg/m² → **48 PKT** |
+| Sıva | 6 kg/m² → **72 PKT** | 4 kg/m² → **48 PKT** |
+| Dübel | **Taşyünü Çelik Çivili 11,5cm**, 9 kutu | **Plastik Dübel 9,5cm**, 3 kutu |
+
+Gönderilen: 144.680,10 ₺ (KDV hariç) · Doğrusu: **130.450,17 ₺**
+→ **14.229,93 ₺ fazla**, m² 482,27 yerine **434,83**.
+
+### Düzeltme
+
+- Toz grubunun malzemesi artık **seçilen levhadan** türetiliyor
+  (`plateMaterialSlug`); levha seçilince Malzeme kutusu da onunla hizalanıyor.
+- Malzeme çözülemeden toz grubu sorgusu **çalışmıyor** ve buton kapalı
+  (fail-closed) — "karma" bir daha sessizce taşyünü sayılamaz.
+- Buton başlığı sebebini yazıyor; yardım metni hangi sarfiyatın uygulandığını
+  söylüyor ("EPS sarfiyatı" / "taşyünü sarfiyatı").
+
+### Nakliye hariç seçeneği
+
+Operatör nakliye hariç teklif vermek istedi, veremedi: belge nakliye tutarı
+sıfırsa otomatik "DAHİL" yazıyordu. Artık açık seçim var
+(`shippingMode`: fiyata dahil / alıcıya ait / görüşmede netleşir) ve PDF'e
+doğru yansıyor. Nakliye ayrı kalem olarak eklendiyse "dahil" denemez — bu
+kural korundu.
+
+### EPS minimum sipariş
+
+`material_types.eps.min_order_m2` **370 → 250** (kullanıcı kararı).
+Panelden de düzenlenebilir: Fiyatlandırma › Marj Kuralları.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `npx vitest run` | **59 dosya / 586 test** geçti (8 yeni regresyon testi) |
+| `npx playwright test` | 36/36 |
+| `tsc` · `eslint` · `build` · `copy-gate` | temiz · 0/0 · başarılı · 457 HTML |
+| Canlı doğrulama | Optimix Karbonlu seçilince malzeme `eps`'e geçti; set **48 · 48 · 3 kutu plastik dübel** üretti |

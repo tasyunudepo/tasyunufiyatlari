@@ -1,0 +1,41 @@
+{
+  "task": "tasyunufiyatlari projesi için kanonik-konsensus-fable-sol.md adlı uygulanabilir sprint planını hakemle. Kapsam: önceki kapsamlı audit ve Fable 5 mutabakatı; P0-P3 öncelikleri; Codex ile Claude Fable 5 arasında aynı anda çalışmaya uygun, dosya çakışması yaratmayan iş paylaşımı; R3/R4 kabul kriterleri ve minimum test omurgası; ticari karar kapıları kullanıcıya sade Türkçe sorularla. Kesin ticari kural: tam kamyon veya tam TIR siparişinde nakliye zaten satış fiyatına dahildir; shippingCost=0 tek başına kayıp değildir. Düşük metrajda nakliye alıcıya aittir ve uyarı zorunludur. Geçmiş docs/fusion-runs raporlarını kanıt sayma; güncel repo dosyalarını ve AGENTS.md kurallarını esas al. Kod yazma, yalnız plan/hakemlik yap.",
+  "cwd": "/home/emrah/projeler/aktif/tasyunufiyatlari",
+  "outDir": "/home/emrah/projeler/aktif/tasyunufiyatlari/docs/fusion-runs/20260713-004255-tasyunufiyatlari-projesi-icin-kanonik-konsensus-",
+  "startedAt": "20260713-004255",
+  "models": [
+    {
+      "id": "glm",
+      "label": "GLM 5.2",
+      "skipped": false,
+      "healthOk": false,
+      "ok": true,
+      "timedOut": false,
+      "durationMs": 303812,
+      "fallbackTried": false,
+      "fallbackOk": false
+    },
+    {
+      "id": "minimax",
+      "label": "MiniMax M3",
+      "skipped": false,
+      "healthOk": false,
+      "ok": false,
+      "timedOut": false,
+      "durationMs": 213046,
+      "fallbackTried": false,
+      "fallbackOk": false
+    },
+    {
+      "id": "deepseek",
+      "label": "DeepSeek V4 Pro",
+      "skipped": false,
+      "healthOk": false,
+      "ok": true,
+      "timedOut": false,
+      "durationMs": 248744,
+      "fallbackTried": false,
+      "fallbackOk": false
+    }
+  ]
+}

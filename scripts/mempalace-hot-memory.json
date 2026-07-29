@@ -1,0 +1,208 @@
+{
+  "pilot": {
+    "wing": "tasyunufiyatlari",
+    "room": "hot-memory",
+    "baseline_drawers": 141662,
+    "valid_from": "2026-07-27",
+    "authority": "canonical-repo"
+  },
+  "source_registry": {
+    "AGENTS.md": {
+      "approved_sha256": "6b4bd294cafac2db31a0f514d8d7f13f60fabece9e7c1f1991bf962a0a1dca64",
+      "approved_on": "2026-07-27",
+      "approval_basis": "user-provided-project-policy"
+    }
+  },
+  "entries": [
+    {
+      "key": "payment-full-once",
+      "source_file": "AGENTS.md",
+      "source_contains": "Ödeme **tek seferde** alınır.",
+      "content": "KANONİK KURAL — Ödeme: Sipariş ödemesi tek seferde alınır. Müşteri tüm tutarı sipariş onayında öder. Kapora, ön ödeme, peşinat ve taksit mekanizması yoktur. Eski kısmi veya aşamalı ödeme metinleri yanlıştır ve karar kaynağı olarak kullanılamaz."
+    },
+    {
+      "key": "shipping-full-vehicle",
+      "source_file": "AGENTS.md",
+      "source_contains": "Tam dolu kamyon veya tam dolu TIR siparişinde iskonto + nakliye fiyata",
+      "content": "KANONİK KURAL — Tam araç nakliyesi: Tam dolu kamyon veya tam dolu TIR siparişinde iskonto ve nakliye fiyata dahildir. Bu, tam araç koşuluna bağlı ticari gerçektir; koşulsuz teslimat vaadi değildir. Müşteri metninde “fiyata dahildir” denir ve tam araç koşulu görünür tutulur."
+    },
+    {
+      "key": "shipping-low-metrage",
+      "source_file": "AGENTS.md",
+      "source_contains": "Low metrage → iskonto TIR seviyesinde kalır ama **nakliye alıcıya aittir**.",
+      "content": "KANONİK KURAL — Düşük metrajlı taşyünü: Metraj tam aracı doldurmuyorsa iskonto TIR seviyesinde kalır; nakliye alıcıya aittir. Wizard, sonuç kartı ve PDF üzerinde bu durum açıkça uyarılmalıdır. Tam araç koşulu oluşmadan nakliyenin fiyata dahil olduğu söylenemez."
+    },
+    {
+      "key": "stonewool-full-vehicle-snap",
+      "source_file": "AGENTS.md",
+      "source_contains": "Tam Kamyon / tam TIR / N×Kamyon + M×TIR kombinasyonları geçerli metrajlardır.",
+      "content": "KANONİK KURAL — Taşyünü metrajı: Geçerli siparişler tam kamyon, tam TIR veya N×Kamyon + M×TIR kombinasyonlarıdır. Ara metrajlar en yakın geçerli araç doluluğuna snap önerisiyle yönlendirilir. Yukarı yuvarlamanın nedeni fabrikanın tam araç sevkiyat kuralıdır."
+    },
+    {
+      "key": "eps-minimum-order",
+      "source_file": "AGENTS.md",
+      "source_contains": "EPS minimum sipariş metrajı `material_types.min_order_m2`",
+      "content": "KANONİK KURAL — EPS minimum sipariş: Değer `material_types.min_order_m2` alanından okunur; varsayılan 250 m²'dir. Sabit müşteri metni yerine veritabanındaki malzeme türü kuralı esas alınır."
+    },
+    {
+      "key": "eps-margin-privacy",
+      "source_file": "AGENTS.md",
+      "source_contains": "EPS kademeli marjı (`tier1/tier2/tier3`) hesaplamada vardır, UI'da gösterilmez.",
+      "content": "KANONİK KURAL — EPS kademeli marj: tier1, tier2 ve tier3 oranları hesaplama iç kuralıdır; kullanıcı arayüzünde gösterilmez ve kullanıcı istemeden müşteri metnine taşınmaz."
+    },
+    {
+      "key": "vat-label",
+      "source_file": "AGENTS.md",
+      "source_contains": "KDV: Türkiye'de %20. UI'da her zaman \"KDV hariç\" etiketi zorunlu.",
+      "content": "KANONİK KURAL — KDV: Türkiye KDV oranı %20'dir. Müşteriye gösterilen fiyatlarda “KDV hariç” etiketi zorunludur. Eski ekran veya belgelerdeki koşulsuz “KDV dahil” ifadeleri güncel doğruluk kaynağı değildir."
+    },
+    {
+      "key": "kvkk-consent",
+      "source_file": "AGENTS.md",
+      "source_contains": "KVKK: Müşteri form verisi işlenmeden önce onay zorunlu.",
+      "content": "KANONİK KURAL — KVKK: Müşteri form verisi işlenmeden önce açık onay alınması zorunludur. PDF ve WhatsApp modalındaki onay kutusu bu koşulu uygular; onaysız müşteri verisi işlenmez."
+    },
+    {
+      "key": "customer-promise-boundaries",
+      "source_file": "AGENTS.md",
+      "source_contains": "\"fiyatı kilitle\", \"malı ayır\", \"kapora gönder\"",
+      "content": "KANONİK KURAL — Müşteri vaat sınırı: Fiyatı kilitleme, mal ayırma, kapora gönderme, ertesi gün veya 24 saatte teslim, aynı gün kargo, sanal POS, 3D Secure, taksit, kesin iskonto, garanti fiyat ve sabit fiyat vaatleri yasaktır. Altyapısı doğrulanmamış söz müşteri metnine yazılmaz."
+    },
+    {
+      "key": "schema-authority",
+      "source_file": "AGENTS.md",
+      "source_contains": "Schema.org tek doğruluk kaynağı `lib/business/info.ts`.",
+      "content": "KANONİK KURAL — Schema.org: Organization, Product, FAQ ve HowTo aynı @graph altında üretilir. İşletme ve schema doğruluk kaynağı `lib/business/info.ts` dosyasıdır."
+    },
+    {
+      "key": "decimal-thickness-debt",
+      "source_file": "AGENTS.md",
+      "source_contains": "URL parsing `?kalinlik=7.5cm` için parseInt kullanılıyor",
+      "content": "AKTİF TEKNİK BORÇ — Ondalıklı kalınlık: ProductPricePanel URL ayrıştırmasında parseInt kullanıldığı için `?kalinlik=7.5cm` değeri 7 olarak okunur. 7,5 cm ürünlerde yanlış kalınlık seçimi riski vardır; çözüm uygulanana kadar kapalı kabul edilmez."
+    },
+    {
+      "key": "pdp-price-event-debt",
+      "source_file": "AGENTS.md",
+      "source_contains": "PDP'de `Fiyat_Gosterildi` event'i tetiklenmiyor",
+      "content": "AKTİF TEKNİK BORÇ — PDP ölçümü: Ürün detay sayfasında `Fiyat_Gosterildi` olayı tetiklenmiyor. Wizard ile PDP arasında funnel ölçüm asimetrisi vardır; component çağrısı eklenip analytics testi geçmeden çözülmüş sayılmaz."
+    },
+    {
+      "key": "pricing-model-direction",
+      "source_file": "AGENTS.md",
+      "source_contains": "`lib/package-engine/calcPricing.ts` daha temiz bir model sunuyor",
+      "content": "MİMARİ YÖN — Fiyat kesinliği: `lib/package-engine/calcPricing.ts`, shippingCost için number|null, shippingMode enum ve isPriceFinal alanlarıyla daha açık model sunar. Wizard bu motoru henüz kullanmıyor; iki hesap yolu birleştirilmeden davranış eşit kabul edilmez."
+    }
+  ],
+  "kg_facts": [
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "payment_mode",
+      "object": "full_amount_once_at_order_confirmation",
+      "entry_key": "payment-full-once"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "full_vehicle_shipping",
+      "object": "included_in_price_conditionally",
+      "entry_key": "shipping-full-vehicle"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "low_metrage_shipping",
+      "object": "buyer_pays",
+      "entry_key": "shipping-low-metrage"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "eps_min_order_source",
+      "object": "material_types.min_order_m2_default_250_m2",
+      "entry_key": "eps-minimum-order"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "vat_rate",
+      "object": "20_percent",
+      "entry_key": "vat-label"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "customer_price_label",
+      "object": "KDV_haric",
+      "entry_key": "vat-label"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "requires_kvkk_consent",
+      "object": "before_processing_customer_form_data",
+      "entry_key": "kvkk-consent"
+    },
+    {
+      "subject": "tasyunufiyatlari",
+      "predicate": "schema_authority",
+      "object": "lib/business/info.ts",
+      "entry_key": "schema-authority"
+    }
+  ],
+  "evaluation_cases": [
+    {
+      "id": "Q-001",
+      "query": "sipariş ödeme nasıl alınır",
+      "expected": ["tek seferde", "tüm tutarı sipariş onayında"],
+      "forbidden": ["kapora oranı paket büyüklüğüne göre değişir"]
+    },
+    {
+      "id": "Q-002",
+      "query": "düşük metraj taşyünü nakliye",
+      "expected": ["iskonto TIR seviyesinde", "nakliye alıcıya aittir"],
+      "forbidden": ["nakliye ücretsizdir"]
+    },
+    {
+      "id": "Q-003",
+      "query": "tam kamyon TIR nakliye koşulu",
+      "expected": ["tam dolu", "fiyata dahildir", "koşul"],
+      "forbidden": ["koşulsuz ücretsiz"]
+    },
+    {
+      "id": "Q-004",
+      "query": "EPS minimum sipariş metrajı",
+      "expected": ["min_order_m2", "250 m²"],
+      "forbidden": ["minimum yok"]
+    },
+    {
+      "id": "Q-005",
+      "query": "müşteriye gösterilen KDV etiketi",
+      "expected": ["%20", "KDV hariç"],
+      "forbidden": ["her zaman KDV dahil"]
+    },
+    {
+      "id": "Q-006",
+      "query": "müşteri form verisi KVKK",
+      "expected": ["onay", "onaysız müşteri verisi işlenmez"],
+      "forbidden": ["onay gerekmiyor"]
+    },
+    {
+      "id": "Q-007",
+      "query": "taşyünü geçerli araç metraj kombinasyonu",
+      "expected": ["N×Kamyon + M×TIR", "snap"],
+      "forbidden": ["her metraj geçerlidir"]
+    },
+    {
+      "id": "Q-008",
+      "query": "Schema.org işletme doğruluk kaynağı",
+      "expected": ["lib/business/info.ts", "@graph"],
+      "forbidden": ["ADMIN_PANEL_OZETI.md"]
+    },
+    {
+      "id": "Q-009",
+      "query": "7.5 cm URL kalınlık ayrıştırma",
+      "expected": ["parseInt", "7 olarak okunur"],
+      "forbidden": ["sorun çözüldü"]
+    },
+    {
+      "id": "Q-010",
+      "query": "PDP fiyat gösterildi analytics olayı",
+      "expected": ["Fiyat_Gosterildi", "tetiklenmiyor"],
+      "forbidden": ["ölçüm tamamlandı"]
+    }
+  ]
+}

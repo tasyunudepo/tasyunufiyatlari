@@ -55,8 +55,13 @@ test.describe('Bonus harman paket teklifi', () => {
     // Levha kalemi her kartta Bonus markasıyla listelenir.
     await expect(page.getByText(/Bonus F 150/).first()).toBeVisible()
 
-    // TEKNO tozlu pakette sevkiyat ayrı teyide bağlanır (mevcut marka kuralı).
-    await expect(page.getByText(/sevkiyat verisi henüz kesinleşmedi/).first()).toBeVisible()
+    // Nakliye artık her metrajda satış fiyatına dahildir (commit 8a48608:
+    // "Tekno dahil aksesuar markalarında nakliye her metrajda dahil").
+    // O commit "sevkiyat verisi henüz kesinleşmedi" uyarısını koddan
+    // kaldırdı ama bu testi güncellemedi; test o tarihten beri kırıktı.
+    // Yeni sözleşme: uyarı GÖRÜNMEZ, yerine nakliye dahil göstergesi çıkar.
+    await expect(page.getByText(/sevkiyat verisi henüz kesinleşmedi/)).toHaveCount(0)
+    await expect(page.getByText(/Nakliye dahil/i).first()).toBeVisible()
 
     // Çifte marj kilidi (uçtan uca): sunucu levha fiyatı ile set m² fiyatı
     // tutarlı olmalı — set fiyatı levha fiyatının altına inemez.

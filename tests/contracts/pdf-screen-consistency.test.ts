@@ -58,3 +58,27 @@ describe('PDF hero ↔ ekran paket kartı fiyat tabanı', () => {
     }
   })
 })
+
+// ── Ofis teklifi: negatif kalem satırı (27 Temmuz 2026) ──
+//
+// Elle yazılan teklifte toplu alım iskontosu, PDF şablonuna dokunmadan
+// NEGATİF bir kalem satırı olarak basılıyor (alcifiyatlari teklif
+// düzenindeki "Toplu alım iskontosu (%3)" satırının karşılığı).
+//
+// Eski kontrol `it.unitPrice < 0.01` idi ve negatifi de kapsıyordu:
+// iskonto satırı tutar yerine "📦 Paket İçeriği" gösteriyor, TUTAR
+// sütununa "-" basıyordu. Müşteriye giden belgede iskonto görünmüyordu.
+describe('PDF kalem satırı — negatif tutar ve paket sayısı', () => {
+  const pdfSource = source('lib/pdfGenerator.ts')
+
+  it('negatif birim fiyat "Paket İçeriği" sayılmaz', () => {
+    expect(pdfSource).toContain('it.unitPrice >= 0 && it.unitPrice < 0.01')
+    // Eski hatalı kontrol geri gelmemeli.
+    expect(pdfSource).not.toMatch(/it\.unitPrice === 0 \|\| it\.unitPrice < 0\.01/)
+  })
+
+  it('paket sayısı yoksa "(0 PKT)" yazılmaz', () => {
+    expect(pdfSource).toContain('(it.packageCount ?? 0) > 0')
+    expect(pdfSource).not.toContain('${it.packageCount || 0} PKT')
+  })
+})

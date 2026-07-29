@@ -92,3 +92,27 @@ kırılır, hukuki risk oluşur.
   modalında checkbox var.
 - SEO: Tek @graph altında Organization + Product + FAQ + HowTo schema'ları.
   Schema.org tek doğruluk kaynağı `lib/business/info.ts`.
+
+## Kontrollü MemPalace sıcak hafıza pilotu
+
+- Güncel proje gerçeği için global MemPalace araması kullanma.
+- Proje geçmişi veya önceki karar için arama gerçekten gerekliyse ilk sorguyu
+  `wing="tasyunufiyatlari"` ve `room="hot-memory"` filtresiyle yap.
+- `hot-memory` sonucu yalnız geri çağırma indeksidir. Cevabı sonuçtaki
+  `source_file` üzerinden güncel repo içeriğiyle doğrula.
+- Varsayılan sorgu arama öncesinde manifest, drawer içeriği/metadata'sı ve
+  kanonik dosya hash'ini doğrular. Bu teyit başarısızsa aramayı atlatma;
+  değişikliği incele, manifesti onayla ve seed'i yeniden çalıştır.
+- Ham proje arşivini yalnız kullanıcı geçmiş konuşmayı veya eski uygulamayı
+  açıkça istediğinde ara. Arşiv sonucu güncel kural kanıtı değildir.
+- Terminalden güvenli sorgu:
+  `bash scripts/mempalace-hot-search.sh "<sorgu>"`.
+- Pilotun zaman etkisini tahmin etme. Gerçek proje geçmişi/kararı sorusunda
+  aramadan önce
+  `python3 scripts/mempalace-pilot-metrics.py begin "<soru>"` çalıştır ve
+  atanan `hot-memory` veya `repo-first` koluna uy. Kanonik kaynağı teyit
+  ettikten sonra verilen `complete` komutuyla sonucu kaydet. Kol başına en az
+  5 teyitli doğru görev oluşmadan zaman kazancı beyan etme; rapor için
+  `python3 scripts/mempalace-pilot-metrics.py report` çalıştır.
+- `mempalace-weekly.timer` ve `mempalace-nightly.timer` pilot boyunca kapalı
+  kalır. Global `compress`, `sweep` veya `sync` otomatik etkinleştirilmez.

@@ -52,7 +52,7 @@ const waitForImages = (element: HTMLElement): Promise<void> => {
 
 // --- Tipler ---
 
-interface PDFQuoteItem {
+export interface PDFQuoteItem {
     description: string;
     quantity: number;
     unit: string;
@@ -63,7 +63,7 @@ interface PDFQuoteItem {
     packageCount?: number;
 }
 
-interface PDFQuoteData {
+export interface PDFQuoteData {
     packageName: string;
     packageDescription: string;
     plateBrandName: string;
@@ -285,16 +285,22 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             .map((it, idx) => {
                 const bg = idx % 2 === 0 ? '#fff' : COLORS.slate100;
 
-                // 0 TL ise "Paket İçeriği" yaz, değilse fiyatı bas
-                // DÜZELTME: Eğer ürün bir LEVHA (Ana Ürün) ise, fiyat 0 olsa bile göster ki hata olduğu anlaşılsın.
-                const isZeroPrice = (it.unitPrice === 0 || it.unitPrice < 0.01) && !it.isPlate;
+                // 0 TL ise "Paket İçeriği" yaz, değilse fiyatı bas.
+                // Eğer ürün bir LEVHA (Ana Ürün) ise, fiyat 0 olsa bile göster ki hata olduğu anlaşılsın.
+                //
+                // NEGATİF fiyat "paket içeriği" DEĞİLDİR: ofis teklifinde toplu
+                // alım iskontosu negatif kalem satırı olarak basılıyor. Eski
+                // `it.unitPrice < 0.01` kontrolü negatifi de yutuyordu ve
+                // iskonto satırı tutar yerine "📦 Paket İçeriği" gösteriyordu.
+                const isZeroPrice = it.unitPrice >= 0 && it.unitPrice < 0.01 && !it.isPlate;
                 const unitPriceDisplay = isZeroPrice
                     ? `<span style="font-size:10px;color:#64748b;font-style:italic;background:#f1f5f9;padding:2px 6px;border-radius:4px;">📦 Paket İçeriği</span>`
                     : fmtMoney(it.unitPrice);
 
-                // Levha için paket sayısı ekle
-                const description = it.isPlate
-                    ? `${it.description} (${it.packageCount || 0} PKT)`
+                // Levha için paket sayısı ekle — paket bilgisi yoksa
+                // "(0 PKT)" yazmak yanlış bilgi olur, hiç yazma.
+                const description = it.isPlate && (it.packageCount ?? 0) > 0
+                    ? `${it.description} (${it.packageCount} PKT)`
                     : it.description;
 
                 const totalDisplay = isZeroPrice
