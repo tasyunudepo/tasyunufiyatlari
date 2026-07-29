@@ -94,3 +94,17 @@ entities.json
 # Playwright artefaktları ve yerel ekran görüntüleri
 .screens/
 test-results/
+
+# ─── Üretilmiş / geçici (27 Tem 2026) ───────────────────────
+graphify-out/
+scripts/__pycache__/
+supabase/.temp/
+*.bak-before-*
+playwright-report/
+
+# ─── Ticari sır: tedarikçi fiyat ve bayi iskonto belgeleri ───
+# Repo PUBLIC. Teknik föyler (ürün datasheet'leri) girer; fiyat ve
+# iskonto listeleri GİRMEZ — taban fiyat ve bayi iskontosu bunlardan
+# okunur. Yeni belge eklerken bu ayrımı koru.
+_audit/teknik-foyler/**/*fiyat-listesi*
+_audit/teknik-foyler/**/*iskonto*
