@@ -10,6 +10,7 @@ import {
 import { formatCurrency } from "@/lib/admin/utils";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
 import { validateRules, getRulesPreview } from "@/lib/catalog/decision";
+import { resolveAccessoryDiscounts } from "@/lib/pricing/accessoryDiscounts";
 import type { Accessory, LogisticsCapacity, Plate, PlatePrice, ShippingZone } from "@/lib/types";
 import type { MinimumOrderType, PricingVisibilityMode, ProductRules, SalesMode } from "@/lib/catalog/types";
 
@@ -562,15 +563,12 @@ export function ProductsTab() {
                                                             const listPrice = acc.base_price || 0;
                                                             const selectedCity = shippingZones.find((z) => z.city_code === selectedCityCode);
                                                             const brandName: string = acc.brands?.name || "";
-                                                            let isk1 = acc.discount_1 || 0;
-                                                            let isk2 = acc.discount_2 || 0;
-                                                            if (selectedCity && (brandName === "Dalmaçyalı" || brandName === "Expert" || brandName === "Optimix")) {
-                                                                const cityIsk1 = selectedCity.eps_toz_region_discount ?? 0;
-                                                                if (cityIsk1 > 0) isk1 = cityIsk1;
-                                                            }
-                                                            if (brandName === "Optimix" && (acc.discount_2 || 0) >= 10 && selectedCity) {
-                                                                isk2 = selectedCity.optimix_toz_discount ?? isk2;
-                                                            }
+                                                            const { isk1, isk2 } = resolveAccessoryDiscounts({
+                                                                accessoryBrandName: brandName,
+                                                                discount1: acc.discount_1,
+                                                                discount2: acc.discount_2,
+                                                                city: selectedCity,
+                                                            });
                                                             return (
                                                                 <tr key={acc.id} className={!acc.is_active ? "opacity-50" : ""}>
                                                                     <td className="px-4 py-3 text-sm font-medium text-slate-200" title={acc.name || "-"}>

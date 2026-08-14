@@ -11,6 +11,7 @@ import {
 } from "@/lib/quote/quoteIndicators";
 import type { CatalogItem } from "@/app/api/admin/catalog-items/route";
 import type { AccessorySetItem } from "@/lib/quote/buildAccessorySet";
+import type { TechnicalConsumptionUnit } from "@/lib/types";
 
 // Teklif editörünün durumu ve canlı hesabı.
 //
@@ -32,6 +33,8 @@ export interface EditorLine extends ManualQuoteLine {
   netCost: number | null;
   /** m² başına sarfiyat — yalnız toz setinden gelen kalemlerde. */
   consumptionRate: number | null;
+  /** Teknik sarfiyatın fiziksel birimi. */
+  consumptionUnit: TechnicalConsumptionUnit | null;
   /** Paket içeriği — paket artığı göstergesi için. */
   unitContent: number | null;
 }
@@ -59,6 +62,7 @@ export function createEmptyLine(): EditorLine {
     suggestedUnitPrice: null,
     netCost: null,
     consumptionRate: null,
+    consumptionUnit: null,
     unitContent: null,
   };
 }
@@ -93,6 +97,7 @@ export function lineFromAccessorySet(item: AccessorySetItem): EditorLine {
     suggestedUnitPrice: item.unitPrice,
     netCost: item.netCost > 0 ? item.netCost : null,
     consumptionRate: item.consumptionRate,
+    consumptionUnit: item.consumptionUnit ?? null,
     unitContent: item.unitContent,
   };
 }

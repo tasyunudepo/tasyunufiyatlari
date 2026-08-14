@@ -164,7 +164,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
     // Toz grubu paketleri — yalnız dialog açıkken hesaplanır (ağır sorgu).
     // ── Toz grubunun malzemesi SEÇİLEN LEVHADAN gelir ──
     //
-    // 29 Temmuz 2026 hatası: burada `materialType === "eps" ? "eps" : "tasyunu"`
+    // 29 Temmuz 2026 hatası: `materialType === "eps" ? "eps" : "tasyunu"`
     // yazıyordu. Malzeme kutusu varsayılan "Karma"da kalınca EPS levhaya
     // TAŞYÜNÜ sarfiyatı (6 kg/m², 4 yerine) ve TAŞYÜNÜ dübeli uygulandı.
     // TE-2026-000143 numaralı gerçek teklif 14.229,93 ₺ fazla çıktı.
@@ -182,6 +182,14 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
     const tozMalzeme: "tasyunu" | "eps" | null =
         plateMaterialSlug ?? (materialType === "karma" ? null : materialType);
 
+    // Dübel boyu malzeme kadar levha kalınlığına da bağlıdır. Katalog satırı
+    // bu bilgiyi zaten taşır; set API'sine göndermemek 9 cm levhada ilk ürün
+    // olan 11,5 cm dübelin seçilmesine yol açıyordu (TE-2026-000170).
+    const plateThicknessCm = useMemo(() => {
+        const line = editor.lines.find((l) => l.isPlate && l.catalogKey);
+        return line?.thicknessCm ?? null;
+    }, [editor.lines]);
+
     /** Levha seçilince malzeme kutusu da onunla hizalanır. */
     useEffect(() => {
         if (plateMaterialSlug && materialType !== plateMaterialSlug) {
@@ -193,7 +201,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
     // hesaplanır. Malzeme belirsizken set kurmak, 29 Temmuz'daki yanlış
     // sarfiyat hatasının ta kendisiydi (fail-closed).
     const setQuery = useQuery({
-        queryKey: ["admin", "accessory-sets", tozMalzeme, Math.round(areaNum), cityCode],
+        queryKey: ["admin", "accessory-sets", tozMalzeme, plateThicknessCm, Math.round(areaNum), cityCode],
         enabled: setDialogAcik && areaNum > 0 && tozMalzeme != null,
         queryFn: async () => {
             const params = new URLSearchParams({
@@ -201,6 +209,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 areaM2: String(areaNum),
             });
             if (cityCode) params.set("cityCode", cityCode);
+            if (plateThicknessCm != null) params.set("plateThicknessCm", String(plateThicknessCm));
             const res = await fetch(`/api/admin/accessory-sets?${params}`, { cache: "no-store" });
             const json = await res.json();
             if (!res.ok || !json.ok) throw new Error(json.error ?? "Toz grubu paketleri alınamadı");
@@ -326,7 +335,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
             const guncel = prev.map((l) => {
                 const eslesen = yeniSatirlar.find((y) => y.catalogKey === l.catalogKey);
                 return eslesen
-                    ? { ...l, quantity: eslesen.quantity, unitPrice: eslesen.unitPrice, netCost: eslesen.netCost, consumptionRate: eslesen.consumptionRate, unitContent: eslesen.unitContent }
+                    ? { ...l, quantity: eslesen.quantity, unitPrice: eslesen.unitPrice, netCost: eslesen.netCost, consumptionRate: eslesen.consumptionRate, consumptionUnit: eslesen.consumptionUnit, unitContent: eslesen.unitContent }
                     : l;
             });
             const mevcutAnahtarlar = new Set(
@@ -387,6 +396,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 note: l.note ?? null,
                 netCost: l.netCost ?? null,
                 consumptionRate: l.consumptionRate ?? null,
+                consumptionUnit: l.consumptionUnit ?? null,
                 unitContent: l.unitContent ?? null,
             })),
             discountPct: editor.discountPct,
@@ -424,7 +434,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
             // ── PDF ──
             // Sıra: önce teklif kaydı (kodu sunucu verir), sonra PDF üretimi,
             // sonra private storage'a yükleme. Wizard'da kod istemcide
-            // üretildiği için sıra terstir; burada kod sunucudan geldiğinden
+            // üretildiği için sıra terstir; kod sunucudan geldiğinden
             // bu sıra hem zorunlu hem daha güvenli.
             // PDF üretimi/yüklemesi başarısız olsa bile TEKLİF KAYITLIDIR.
             let pdfBlobUrl: string | null = null;
@@ -589,7 +599,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                     </label>
                     <label className="block">
                         <span className={label}>Telefon *</span>
-                        <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="0532 123 45 67" className={`${control} w-full`} />
+                        <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className={`${control} w-full`} />
                     </label>
                     <label className="block">
                         <span className={label}>Firma</span>
@@ -694,7 +704,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
 
                     <label className="block lg:col-span-2">
                         <span className={label}>Teklif başlığı</span>
-                        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ör. Mantolama sistem teklifi" className={`${control} w-full`} />
+                        <input value={title} onChange={(e) => setTitle(e.target.value)} className={`${control} w-full`} />
                     </label>
                     <label className="block">
                         <span className={label}>Geçerlilik (gün)</span>
@@ -778,7 +788,6 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                     <label className="block">
                         <span className={label}>Teklif notu (PDF&apos;e girer)</span>
                         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
-                            placeholder="Teslim koşulu, ödeme, özel not…"
                             className={`${control} w-full resize-none`} />
                     </label>
                 </div>
@@ -799,7 +808,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                                 <input
                                     value={editor.discountPct === 0 ? "" : String(editor.discountPct)}
                                     onChange={(e) => editor.setDiscountPct(Math.min(100, Math.max(0, Number(e.target.value.replace(",", ".")) || 0)))}
-                                    inputMode="decimal" placeholder="0"
+                                    inputMode="decimal"
                                     aria-label="Toplu iskonto yüzdesi"
                                     className="w-14 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-right text-sm tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
                                 />
@@ -814,7 +823,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                             <input
                                 value={editor.shippingCharge === 0 ? "" : String(editor.shippingCharge)}
                                 onChange={(e) => editor.setShippingCharge(Math.max(0, Number(e.target.value.replace(",", ".")) || 0))}
-                                inputMode="decimal" placeholder="0,00"
+                                inputMode="decimal"
                                 aria-label="Nakliye tutarı"
                                 className="w-32 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-right text-sm tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
                             />
@@ -887,7 +896,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                                     <input
                                         value={overrideReason}
                                         onChange={(e) => setOverrideReason(e.target.value)}
-                                        placeholder="Gerekçe yazın (kayda geçer)"
+                                        aria-label="Kural aşımı gerekçesi"
                                         className="w-full rounded-lg border border-amber-400/30 bg-[rgba(18,20,24,0.8)] px-2 py-1.5 text-xs text-white outline-none"
                                     />
                                     <button type="button" disabled={overrideReason.trim().length < 3 || saving}

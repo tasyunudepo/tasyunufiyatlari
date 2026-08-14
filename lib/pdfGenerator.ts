@@ -5,6 +5,8 @@ import {
     getShippingPresentation,
     type ShippingMode,
 } from '@/lib/pricing/commercialRules';
+import { formatTechnicalConsumption } from '@/lib/quote/technicalConsumption';
+import type { TechnicalConsumptionUnit } from '@/lib/types';
 
 export interface QuotePDFResult {
     blobUrl: string;
@@ -57,6 +59,7 @@ export interface PDFQuoteItem {
     quantity: number;
     unit: string;
     consumptionRate: number;
+    consumptionUnit?: TechnicalConsumptionUnit;
     unitPrice: number;
     totalPrice: number;
     isPlate?: boolean;
@@ -174,7 +177,7 @@ function generateFallbackQuotePDF(data: PDFQuoteData): QuotePDFResult {
         }
         y = addWrappedText(
             doc,
-            `${index + 1}. ${item.description} | Miktar: ${item.quantity} ${item.unit} | Birim: ${fmtMoney(item.unitPrice)} | Tutar: ${fmtMoney(item.totalPrice)}`,
+            `${index + 1}. ${item.description} | Miktar: ${item.quantity} ${item.unit} | Sarfiyat: ${formatTechnicalConsumption(item.consumptionRate, item.consumptionUnit)} | Birim: ${fmtMoney(item.unitPrice)} | Tutar: ${fmtMoney(item.totalPrice)}`,
             14,
             y,
             182,
@@ -259,7 +262,6 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
 
         const fmtMoney = (v: number) => `${v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
         const fmtQty = (v: number) => v.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        const fmtRate = (v: number) => v.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
         const qrDataUrl = await QRCode.toDataURL(data.whatsappOrderLink, { margin: 1, width: 256, color: { dark: COLORS.slate900, light: '#ffffff' } });
 
@@ -313,7 +315,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             <td style="padding:8px;font-size:11px;font-weight:600;color:${COLORS.slate900};">${escapeHtml(description)}</td>
             <td style="padding:8px;font-size:11px;text-align:center;font-feature-settings:'tnum';">${escapeHtml(fmtQty(it.quantity))}</td>
             <td style="padding:8px;font-size:11px;text-align:center;color:${COLORS.slate700};">${escapeHtml(it.unit)}</td>
-            <td style="padding:8px;font-size:11px;text-align:center;color:${COLORS.slate700};font-feature-settings:'tnum';">${escapeHtml(fmtRate(it.consumptionRate))}</td>
+            <td style="padding:8px;font-size:10px;text-align:center;color:${COLORS.slate700};font-feature-settings:'tnum';white-space:nowrap;">${escapeHtml(formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit))}</td>
             <td style="padding:8px;font-size:11px;text-align:right;font-feature-settings:'tnum';">${unitPriceDisplay}</td>
             <td style="padding:8px;font-size:11px;text-align:right;font-feature-settings:'tnum';">${totalDisplay}</td>
           </tr>
@@ -432,7 +434,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:left;">ÜRÜN / HİZMET DETAYI</th>
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:center;width:50px;">MİKTAR</th>
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:center;width:40px;">BİRİM</th>
-            <th style="padding:10px;font-size:10px;font-weight:600;text-align:center;width:50px;">SARF.</th>
+            <th style="padding:10px 6px;font-size:9px;font-weight:600;text-align:center;width:68px;">M² SARFİYATI</th>
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:right;width:80px;">BİRİM FİYAT<br />(KDV HARİÇ)</th>
             <th style="padding:10px;font-size:10px;font-weight:600;text-align:right;width:110px;">TUTAR<br />(KDV HARİÇ)</th>
           </tr>

@@ -29,19 +29,25 @@ export const manualQuoteLineSchema = z.object({
   packageCount: z.number().int().min(0).nullable().optional(),
   note: z.string().trim().max(200).nullable().optional(),
 
-  // ── Maliyet dayanağı (yalnız kayda girer, belgeye ASLA yazılmaz) ──
+  // ── Hesap ve izlenebilirlik dayanağı ──
   //
   // NEDEN SAKLANIYOR: 27 Temmuz 2026'da bir teklifin hangi marjla
   // üretildiği kayıttan okunamadı, tersine mühendislikle bulundu. Ayrıca
   // asıl iş "teklifi çoğalt, metrajı değiştir"di; sarfiyat saklanmadan
   // miktarlar yeniden hesaplanamıyor.
   //
-  // GİZLİLİK: bu alanlar `package_items` JSONB'sinde kalır; PDF, WhatsApp
-  // ve müşteriye açık hiçbir yüzeye çıkmaz (copy-gate kapsamında).
+  // GİZLİLİK: netCost ve unitContent yalnız `package_items` JSONB'sinde kalır.
+  // Teknik sarfiyat ve fiziksel birimi ise müşterinin malzeme hesabını
+  // denetleyebilmesi için PDF'de gösterilir.
   /** İskontolar uygulanmış birim alış, KDV hariç. */
   netCost: z.number().min(0).max(10_000_000).nullable().optional(),
   /** m² başına sarfiyat — toz grubu kalemlerinde. */
   consumptionRate: z.number().min(0).max(1000).nullable().optional(),
+  /** Sarfiyatın fiziksel birimi; PKT/KOVA gibi satış birimi değildir. */
+  consumptionUnit: z
+    .enum(['kg/m²', 'adet/m²', 'm²/m²', 'mt/m²'])
+    .nullable()
+    .optional(),
   /** Paket içeriği (adet/kg) — çoğaltmada miktar yeniden hesabı için. */
   unitContent: z.number().min(0).max(100_000).nullable().optional(),
 })

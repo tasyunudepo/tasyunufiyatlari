@@ -145,7 +145,7 @@ Hesap:
   kdvHaric = base_price / 1.20
   iskontolu = kdvHaric × (1 - isk1/100) × (1 - isk2/100)
   kdvDahilSatis = iskontolu × 1.10 × 1.20
-  [isk1 = accessories.discount_1, isk2 = eps_toz_region_discount (şehre göre)]
+  [isk1 = eps_toz_region_discount (şehre göre), isk2 = accessories.discount_2]
 ```
 
 #### 4. Optimix Toz Aksesuarlar
@@ -156,7 +156,7 @@ Hesap:
   kdvHaric = base_price / 1.20
   iskontolu = kdvHaric × (1 - isk1/100) × (1 - isk2/100)
   kdvDahilSatis = iskontolu × 1.10 × 1.20
-  [isk1 = accessories.discount_1, isk2 = optimix_toz_discount (şehre göre)]
+  [isk1 = optimix_toz_discount (şehre göre), isk2 = accessories.discount_2]
 ```
 
 ### base_shipping_cost — Ne Zaman Devreye Girer?
@@ -502,6 +502,16 @@ const kdvDahilSatis = karliKdvHaric * 1.20;
 6. **Fileli Köşe**
 7. **Astar**
 8. **Mineral Kaplama**
+
+**Otomatik dübel boyu kuralı (14 Ağustos 2026 teyidi):**
+- Taşyünü 3–6 cm levha: en az 11,5 cm çelik çivili dübel
+- Taşyünü 7–10 cm levha: en az 15,5 cm çelik çivili dübel
+- EPS 3–6 cm levha: en az 9,5 cm plastik dübel (TEKNO karşılığı 10 cm)
+- EPS 7–10 cm levha: en az 11,5 cm plastik dübel (TEKNO karşılığı 12 cm)
+- 10 cm üstü levhada doğrulanmış otomatik eşleştirme yoktur; sistem yanlış
+  kısa dübel seçmek yerine seti eksik işaretler.
+- `accessories.dowel_length` eski TEKNO kayıtlarında mm (`115`, `155`), diğer
+  kayıtlarda cm (`11.5`, `15.5`) tutulduğu için seçim öncesi cm'ye normalize edilir.
 
 ### Toz Grubu Markaları
 

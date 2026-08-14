@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
       // "teklifi çoğalt, metrajı değiştir" bu alanlarla cevaplanır.
       netCost: l.netCost ?? null,
       consumptionRate: l.consumptionRate ?? null,
+      consumptionUnit: l.consumptionUnit ?? null,
       unitContent: l.unitContent ?? null,
     })),
     manual: {

@@ -2,6 +2,7 @@ import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import { discountedUnitPrice, effectiveLineTotal } from '@/lib/schemas/manualQuote.schema'
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
+import type { TechnicalConsumptionUnit } from '@/lib/types'
 
 // Elle yazılan teklifi PDF sözleşmesine çevirir.
 //
@@ -37,6 +38,8 @@ export interface ManualPdfInput {
     isPlate?: boolean
     thicknessCm?: number | null
     packageCount?: number | null
+    consumptionRate?: number | null
+    consumptionUnit?: TechnicalConsumptionUnit | null
   }>
   discountPct: number
   shippingCharge: number
@@ -67,9 +70,10 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
     description: l.description,
     quantity: l.quantity,
     unit: l.unit,
-    // Sarfiyat oranı yalnız wizard'ın otomatik paketlerinde anlamlı;
-    // elle yazılan satırda 0 geçilir ve şablonda boş görünür.
-    consumptionRate: 0,
+    // Toz grubu setinden gelen teknik oran korunur. Serbest kalemde oran
+    // yoksa uydurulmaz; levha kendi alanının tamamını kapladığı için 1'dir.
+    consumptionRate: l.consumptionRate ?? (l.isPlate ? 1 : 0),
+    consumptionUnit: l.consumptionUnit ?? (l.isPlate ? 'm²/m²' : undefined),
     unitPrice: discountedUnitPrice(l.unitPrice, input.discountPct),
     totalPrice: effectiveLineTotal(l, input.discountPct),
     isPlate: l.isPlate ?? false,

@@ -12,6 +12,7 @@ import {
 import { joinBrandAndModel } from '@/lib/catalog/productLabel'
 import { computeBonusUnitSale } from '@/lib/pricing/bonus/sale'
 import { citySubRegionQuestion, type BonusSubRegionChoice } from '@/lib/pricing/bonus/subRegions'
+import { resolveAccessoryDiscounts } from '@/lib/pricing/accessoryDiscounts'
 
 export const dynamic = 'force-dynamic'
 
@@ -297,15 +298,12 @@ export async function GET(req: NextRequest) {
 
     const listExVat = acc.is_kdv_included ? basePrice / 1.2 : basePrice
 
-    let isk1 = Number(acc.discount_1 ?? 0)
-    if (city && ['Dalmaçyalı', 'Expert', 'Optimix'].includes(brandName)) {
-      const bolge = Number(city.eps_toz_region_discount ?? 0)
-      if (bolge > 0) isk1 = bolge
-    }
-    let isk2 = Number(acc.discount_2 ?? 0)
-    if (brandName === 'Optimix' && city && isk2 >= 10) {
-      isk2 = Number(city.optimix_toz_discount ?? isk2)
-    }
+    const { isk1, isk2 } = resolveAccessoryDiscounts({
+      accessoryBrandName: brandName,
+      discount1: acc.discount_1,
+      discount2: acc.discount_2,
+      city,
+    })
 
     const netCost = listExVat * (1 - isk1 / 100) * (1 - isk2 / 100)
     // Fail-closed: marj kuralı çözülemiyorsa fiyat üretilmez.

@@ -161,6 +161,7 @@ export default function SingleProductQuoteButton({
             quantity:        areaM2,
             unit:            'm²',
             consumptionRate: 1,
+            consumptionUnit: 'm²/m²',
             unitPrice:       pricePerM2,
             totalPrice:      totalKdvHaric,
             isPlate:         true,

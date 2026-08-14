@@ -10,6 +10,7 @@ import {
   createEmptyLine,
   type EditorLine,
 } from "@/components/admin/quote-editor/useQuoteEditor";
+import type { TechnicalConsumptionUnit } from "@/lib/types";
 
 // Teklif çoğaltma.
 //
@@ -43,6 +44,7 @@ interface KayitliKalem {
   kind?: string;
   netCost?: number | null;
   consumptionRate?: number | null;
+  consumptionUnit?: TechnicalConsumptionUnit | null;
   unitContent?: number | null;
 }
 
@@ -76,6 +78,7 @@ function kalemdenSatir(k: KayitliKalem): EditorLine | null {
     suggestedUnitPrice: Number(k.listUnitPrice ?? k.unitPrice ?? 0) || null,
     netCost: k.netCost != null && k.netCost > 0 ? Number(k.netCost) : null,
     consumptionRate: k.consumptionRate != null ? Number(k.consumptionRate) : null,
+    consumptionUnit: k.consumptionUnit ?? null,
     unitContent: k.unitContent != null ? Number(k.unitContent) : null,
   };
 }
@@ -173,7 +176,6 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
             <input
               value={arama}
               onChange={(e) => setArama(e.target.value)}
-              placeholder="Teklif no, müşteri, şehir…"
               aria-label="Teklif ara"
               autoFocus
               className="w-full rounded-xl border border-[rgba(92,98,108,0.28)] bg-[rgba(18,20,24,0.8)] py-2 pl-9 pr-3 text-sm text-white outline-none focus:border-[rgba(201,168,76,0.5)]"

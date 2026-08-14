@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic'
 
 const querySchema = z.object({
   plateBrandId: z.coerce.number().int().positive().optional(),
+  plateThicknessCm: z.coerce.number().positive().max(100).optional(),
   materialType: z.enum(['tasyunu', 'eps']).default('tasyunu'),
   areaM2: z.coerce.number().positive().max(100000),
   cityCode: z.coerce.number().int().positive().optional(),
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       { status: 400 },
     )
   }
-  const { plateBrandId, materialType, areaM2, cityCode } = parsed.data
+  const { plateBrandId, plateThicknessCm, materialType, areaM2, cityCode } = parsed.data
 
   const supabase = createServerSupabaseClient()
 
@@ -131,6 +132,7 @@ export async function GET(req: NextRequest) {
       accessoryBrandId: accBrandId,
       accessoryBrandName: accBrandName,
       materialType,
+      plateThicknessCm,
       areaM2,
       marginPct,
       city,
@@ -174,6 +176,7 @@ export async function GET(req: NextRequest) {
       accessoryBrandId: brandId,
       accessoryBrandName: accBrandName,
       materialType,
+      plateThicknessCm,
       areaM2,
       marginPct,
       city,
@@ -203,7 +206,7 @@ export async function GET(req: NextRequest) {
   })
 
   return NextResponse.json(
-    { ok: true, sets: options, marginPct, materialType, areaM2 },
+    { ok: true, sets: options, marginPct, materialType, plateThicknessCm, areaM2 },
     { headers: { 'Cache-Control': 'no-store' } },
   )
 }

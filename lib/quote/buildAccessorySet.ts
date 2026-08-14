@@ -1,5 +1,12 @@
 import { applyMargin } from '@/lib/pricing/margin'
+import {
+  resolveAccessoryDiscounts,
+  type AccessoryCityDiscounts,
+} from '@/lib/pricing/accessoryDiscounts'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
+import { technicalConsumptionUnitForAccessoryType } from '@/lib/quote/technicalConsumption'
+import { selectAccessoryForSet } from '@/lib/quote/selectAccessoryForSet'
+import type { TechnicalConsumptionUnit } from '@/lib/types'
 
 // Toz grubu setini kurar — wizard'ın `buildAccessoryItemsForDefinition`
 // mantığının saf ve sunucuda çalışan karşılığı.
@@ -17,6 +24,7 @@ import { roundToKurus } from '@/lib/pricing/quoteTotals'
 export interface AccessoryTypeRow {
   id: number
   name: string
+  slug?: string | null
   sort_order: number | null
   consumption_rate_eps: number | null
   consumption_rate_tasyunu: number | null
@@ -34,15 +42,14 @@ export interface AccessoryRow {
   is_kdv_included: boolean | null
   unit: string | null
   unit_content: number | null
+  /** Veritabanında bazı eski satırlar mm (115), yeniler cm (11.5) tutuyor. */
+  dowel_length?: number | null
   is_for_eps: boolean | null
   is_for_tasyunu: boolean | null
   is_active: boolean | null
 }
 
-export interface CityDiscounts {
-  eps_toz_region_discount: number | null
-  optimix_toz_discount: number | null
-}
+export type CityDiscounts = AccessoryCityDiscounts
 
 export interface AccessorySetItem {
   accessoryId: number
@@ -52,6 +59,8 @@ export interface AccessorySetItem {
   unit: string
   /** m² başına sarfiyat — PDF'te ve kontrolde görünür. */
   consumptionRate: number
+  /** Teknik sarfiyatın fiziksel birimi — paket birimiyle karıştırılmaz. */
+  consumptionUnit?: TechnicalConsumptionUnit
   /** Paket içeriği (adet/kg) — paket artığı göstergesi bunu kullanır. */
   unitContent: number
   /** İskontolar uygulanmış birim alış, KDV hariç. Marj kadranının dayanağı. */
@@ -96,6 +105,8 @@ export function buildAccessorySet(input: {
   accessoryBrandId: number
   accessoryBrandName: string
   materialType: 'tasyunu' | 'eps'
+  /** Seçilecek dübel boyunu belirleyen levha kalınlığı. */
+  plateThicknessCm?: number | null
   areaM2: number
   marginPct: number
   city: CityDiscounts | null
@@ -106,6 +117,7 @@ export function buildAccessorySet(input: {
     accessoryBrandId,
     accessoryBrandName,
     materialType,
+    plateThicknessCm,
     areaM2,
     marginPct,
     city,
@@ -132,11 +144,12 @@ export function buildAccessorySet(input: {
     // Sarfiyatı olmayan tip bu malzemede kullanılmaz — eksik sayılmaz.
     if (!Number.isFinite(consumption) || consumption <= 0) continue
 
-    const acc = brandAccessories.find(
-      (a) =>
-        a.accessory_type_id === type.id &&
-        (isEps ? a.is_for_eps : a.is_for_tasyunu),
-    )
+    const acc = selectAccessoryForSet({
+      accessories: brandAccessories,
+      type,
+      materialType,
+      plateThicknessCm,
+    })
     if (!acc) {
       missingTypes.push(type.name)
       continue
@@ -152,18 +165,12 @@ export function buildAccessorySet(input: {
     // Paket/kutu bazlı satılır: ihtiyaç yukarı yuvarlanır.
     const quantity = Math.ceil((areaM2 * consumption) / unitContent)
 
-    let isk1 = Number(acc.discount_1 ?? 0)
-    let isk2 = Number(acc.discount_2 ?? 0)
-
-    // EPS'te bölge iskontosu levha markasından bağımsız, AKSESUAR markasına
-    // göre uygulanır (wizard ile aynı kural).
-    if (isEps && city && ['Dalmaçyalı', 'Expert', 'Optimix'].includes(accessoryBrandName)) {
-      const bolge = Number(city.eps_toz_region_discount ?? 0)
-      if (bolge > 0) isk1 = bolge
-      if (accessoryBrandName === 'Optimix' && isk2 >= 10) {
-        isk2 = Number(city.optimix_toz_discount ?? isk2)
-      }
-    }
+    const { isk1, isk2 } = resolveAccessoryDiscounts({
+      accessoryBrandName,
+      discount1: acc.discount_1,
+      discount2: acc.discount_2,
+      city,
+    })
 
     const netCost = accessoryNetCost(basePrice, isk1, isk2, acc.is_kdv_included === true)
     const unitPrice = applyMargin(netCost, marginPct)
@@ -177,6 +184,7 @@ export function buildAccessorySet(input: {
       quantity,
       unit: acc.unit ?? 'PKT',
       consumptionRate: consumption,
+      consumptionUnit: technicalConsumptionUnitForAccessoryType(type.slug, type.name),
       unitContent,
       // YUVARLANMADAN taşınır. Marj kadranı bu sayının üstüne marj bindirir;
       // kuruşa yuvarlanmış maliyetten hesaplanırsa fiyat 1 kuruş kayar

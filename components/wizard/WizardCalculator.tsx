@@ -40,7 +40,10 @@ import {
     getTruckMeterColor,
 } from "@/lib/utils/packageHelpers";
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from "@/lib/utils/whatsapp";
+import { technicalConsumptionUnitForSlug } from "@/lib/quote/technicalConsumption";
 import { resolveMarginPctStrict } from "@/lib/pricing/margin";
+import { resolveAccessoryDiscounts } from "@/lib/pricing/accessoryDiscounts";
+import { selectAccessoryForSet } from "@/lib/quote/selectAccessoryForSet";
 import {
     buildQuoteSurfacePricing,
 } from "@/lib/pricing/quoteTotals";
@@ -683,13 +686,12 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const materialLongName = materialTypes.find(m => m.slug === selectedMalzeme)?.name || materialLabel;
 
         const itemsForPdf = (pkg.items || []).map((it) => {
-            const consumptionRate = metrajNumber > 0 ? it.quantity / metrajNumber : 0;
-
             return {
                 description: it.name, // Orijinal uzun ismi kullan
                 quantity: it.quantity,
                 unit: it.unit,
-                consumptionRate,
+                consumptionRate: it.consumptionRate ?? (it.isPlate ? 1 : 0),
+                consumptionUnit: it.consumptionUnit ?? (it.isPlate ? 'm²/m²' : undefined),
                 unitPrice: it.unitPrice,
                 totalPrice: it.totalPrice,
                 isPlate: it.isPlate,
@@ -1065,8 +1067,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         null;
 
     // Paket tanımındaki toz/aksesuar kalemlerini hesaplar. Bonus dahil TÜM
-    // markalar bu TEK kod yolunu kullanır: marj (marginPct) yalnız burada,
-    // bir kez uygulanır. Levha fiyatı bu fonksiyona girmez — Bonus levhası
+    // markalar bu ortak kod yolunu kullanır: marj (marginPct) bu fonksiyonda
+    // yalnız bir kez uygulanır. Levha fiyatı bu fonksiyona girmez — Bonus levhası
     // sunucudan marjlı gelir ve değiştirilmeden kaleme yazılır.
     const buildAccessoryItemsForDefinition = (
         pkgDef: PackageDefinition,
@@ -1087,10 +1089,12 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 : accType.consumption_rate_tasyunu;
             if (consumption <= 0) continue;
 
-            const acc = pkgAccessories.find(a =>
-                a.accessory_type_id === accType.id &&
-                (selectedMalzeme === 'eps' ? a.is_for_eps : a.is_for_tasyunu)
-            );
+            const acc = selectAccessoryForSet({
+                accessories: pkgAccessories,
+                type: accType,
+                materialType: selectedMalzeme,
+                plateThicknessCm: Number(selectedKalinlik),
+            });
             if (!acc) {
                 requiredAccessoriesComplete = false;
                 continue;
@@ -1099,18 +1103,12 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
             const totalNeed = totalM2 * consumption;
             const itemQuantity = Math.ceil(totalNeed / acc.unit_content);
 
-            let accIsk1 = acc.discount_1;
-            let accIsk2 = acc.discount_2;
-
-            // EPS için özel iskonto: levha markasından bağımsız, aksesuar markasına göre kontrol
-            if (selectedMalzeme === "eps" && selectedCity && (accBrandName === "Dalmaçyalı" || accBrandName === "Expert" || accBrandName === "Optimix")) {
-                const cityIsk1 = selectedCity.eps_toz_region_discount ?? 0;
-                if (cityIsk1 > 0) accIsk1 = cityIsk1;
-
-                if (accBrandName === "Optimix" && acc.discount_2 >= 10) {
-                    accIsk2 = selectedCity.optimix_toz_discount ?? accIsk2;
-                }
-            }
+            const { isk1: accIsk1, isk2: accIsk2 } = resolveAccessoryDiscounts({
+                accessoryBrandName: accBrandName,
+                discount1: acc.discount_1,
+                discount2: acc.discount_2,
+                city: selectedCity,
+            });
 
             const accUnitPrice = calculateSalePrice(
                 acc.base_price,
@@ -1133,7 +1131,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 unit: acc.unit,
                 unitPrice: accUnitPrice,
                 totalPrice: accTotal,
-                isPlate: false
+                isPlate: false,
+                consumptionRate: consumption,
+                consumptionUnit: technicalConsumptionUnitForSlug(accType.slug),
             });
         }
 
@@ -1243,6 +1243,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     totalPrice: order.totalExVat,
                     isPlate: true,
                     packageCount: order.packageCount,
+                    consumptionRate: 1,
+                    consumptionUnit: 'm²/m²',
                 }];
                 let totalProductCost = order.totalExVat;
 
@@ -1659,7 +1661,9 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     unitPrice: plateM2Price,
                     totalPrice: plateTotal,
                     isPlate: true,
-                    packageCount: packageCount
+                    packageCount: packageCount,
+                    consumptionRate: 1,
+                    consumptionUnit: 'm²/m²',
                 });
             }
 

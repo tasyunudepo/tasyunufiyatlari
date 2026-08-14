@@ -204,6 +204,8 @@ export interface PackageDefinition {
     warranty_years: number;
 }
 
+export type TechnicalConsumptionUnit = 'kg/m²' | 'adet/m²' | 'm²/m²' | 'mt/m²';
+
 export interface CalculatedPackageItem {
     name: string;
     shortName: string;
@@ -215,6 +217,9 @@ export interface CalculatedPackageItem {
     // Wizard specific fields added to global type
     isPlate?: boolean;
     packageCount?: number;
+    /** Müşteriye gösterilecek gerçek teknik sarfiyat; ambalaj/m² oranı değildir. */
+    consumptionRate?: number;
+    consumptionUnit?: TechnicalConsumptionUnit;
 }
 
 export interface CalculatedPackage {
