@@ -211,14 +211,9 @@ export function WizardStep1({
                 )}
             </div>
 
-            <div className="mt-6 flex items-center justify-center">
-                <a
-                    href="/iletisim"
-                    className="text-xs text-fe-muted underline underline-offset-4 hover:text-fe-text transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded"
-                >
-                    Emin değilim, benimle iletişime geçin
-                </a>
-            </div>
+            <p className="mt-6 text-center text-xs text-fe-muted">
+                Ürünü biliyorsanız seçerek devam edin; teknik bilgileri katalogdan inceleyebilirsiniz.
+            </p>
         </motion.div>
     );
 }

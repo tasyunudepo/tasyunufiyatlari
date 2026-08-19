@@ -191,7 +191,7 @@ export default function BonusRegionPrice({
       )}
 
       {state.status === "idle" && subInfo && !subChoice && (
-        <p className="text-sm text-fe-muted">Seçim yapınca üreticinin bölge listesine göre m² fiyatı burada görünür.</p>
+        <p className="text-sm text-fe-muted">Seçiminizden sonra üreticinin bölge listesindeki m² fiyatı gösterilir.</p>
       )}
 
       {state.status === "ok" && (
@@ -272,8 +272,7 @@ export default function BonusRegionPrice({
                         setMetraj(e.target.value);
                         setPlanIdx(0);
                       }}
-                      placeholder="örn. 14500 — tam araca çevrilir"
-                      className="w-full rounded-md border border-fe-border bg-fe-bg/60 px-2.5 py-1.5 text-sm text-fe-text placeholder:text-fe-muted focus:border-brand-400 focus:outline-none"
+                      className="w-full rounded-md border border-fe-border bg-fe-bg/60 px-2.5 py-1.5 text-sm text-fe-text focus:border-brand-400 focus:outline-none"
                     />
                     {metraj && (
                       <button
@@ -390,7 +389,7 @@ export default function BonusRegionPrice({
         <p className="text-sm text-fe-muted">
           {state.reason === "thickness_unavailable"
             ? "Bu kalınlık üreticinin fiyat listesinde yer almıyor; farklı bir kalınlık seçin."
-            : "Bölge fiyatı şu anda hesaplanamıyor; hesaplayıcıyı kullanın veya bizimle iletişime geçin."}
+            : "Bölge fiyatı şu anda hesaplanamıyor; seçimlerinizi kontrol edip hesaplayıcıyı yeniden deneyin."}
         </p>
       )}
     </div>

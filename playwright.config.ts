@@ -7,6 +7,17 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: 'http://127.0.0.1:3100',
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://127.0.0.1:3100',
+          localStorage: [
+            { name: 'tasyunu_sales_intent_v1', value: 'project_scale' },
+          ],
+        },
+      ],
+    },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

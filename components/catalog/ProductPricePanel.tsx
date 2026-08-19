@@ -7,18 +7,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ChevronDown, Layers, MessageCircle, Package, Phone } from "lucide-react";
-import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
-import { notifyPhoneCall } from "@/lib/notifyPhoneCall";
+import { ChevronDown, Layers, Package } from "lucide-react";
 import {
   notifyProductDetailCtaClick,
   notifyProductDetailFormOpen,
   notifyProductDetailPriceView,
   type ProductDetailCtaLocation,
 } from "@/lib/notifyWizardEvent";
-import { BUSINESS_INFO } from "@/lib/business/info";
-import { buildWhatsAppLink, generateQuoteWhatsAppMessage } from "@/lib/utils/whatsapp";
-import { formatBrandProductName } from "@/lib/brandFormat";
 import {
   applyMargin,
   resolveMarginPctStrict,
@@ -441,7 +436,7 @@ export default function ProductPricePanel({
         {(() => {
           // Bonus levhası: fiyatı BonusRegionPrice kartı (aşağıda) sunucudan
           // bölgeye göre gösterir. Genel plate_prices yok → getPriceDisplay
-          // burada "görünmez" der ve yanıltıcı "Teklif ile belirlenir" basardı.
+          // fiyatı gizler ve yanıltıcı "Teklif ile belirlenir" metnini basardı.
           // Bu statik başlığı Bonus'ta hiç göstermeyip tek fiyat otoritesini
           // BonusRegionPrice'a bırakıyoruz. İstisna: fiyat listesinde
           // olmayan modeller (Desibel, Marin vb.) — onlarda canlı kart
@@ -722,8 +717,8 @@ export default function ProductPricePanel({
         {showTierPrice && logistics === null && activeThickness && (
           <div className="mb-3 mt-3 rounded-lg border border-fe-border/50 bg-fe-raised/30 px-3 py-2.5">
             <p className="text-xs text-fe-muted">
-              Bu kalınlık için nakliye verisi henüz girilmemiştir. Teklif formu veya WhatsApp
-              üzerinden fiyat alabilirsiniz.
+              Bu kalınlık için lojistik verisi henüz tanımlı değil. Veri tamamlanmadan
+              teklif oluşturulamaz.
             </p>
           </div>
         )}
@@ -820,55 +815,8 @@ export default function ProductPricePanel({
                 onOpen={() => trackProductDetailPdfOpen('product_detail_summary')}
               />
             )}
-            <div className="hidden grid-cols-2 gap-2 lg:grid">
-              <a
-                href={buildWhatsAppLink(generateQuoteWhatsAppMessage({
-                  productName: formatBrandProductName(product.brand.name, product.name),
-                  thicknessCm: activeThickness,
-                  metrajM2: quoteM2,
-                  vehicleLabel: (sepetState.kamyon > 0 || sepetState.tir > 0)
-                    ? quoteVehicleSummary
-                    : `${formatM2(quoteM2)} m²`,
-                  cityName: zone?.city_name ?? '',
-                  pricePerM2: quotePricePerM2KdvHaric ?? 0,
-                  totalKdvHaric: quoteTotalKdvHaric ?? 0,
-                  shippingMessage: quoteShippingIncluded ? 'fiyata dahil' : 'satış görüşmesinde netleşir',
-                }))}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  trackProductDetailCta('whatsapp');
-                  notifyWhatsappIntent({
-                    source: 'product_detail_summary',
-                    productName: product.name,
-                    resultSessionId,
-                    ctaLocation: 'product_detail_summary',
-                  });
-                }}
-                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-green-600/50 bg-green-600/12 px-3 py-2.5 text-center text-xs font-bold text-green-300 transition-colors hover:border-green-500 hover:bg-green-600/18 hover:text-green-200"
-              >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                WhatsApp&apos;tan teyit iste
-              </a>
-              <a
-                href={`tel:${BUSINESS_INFO.phone.tel}`}
-                onClick={() => {
-                  trackProductDetailCta('phone');
-                  notifyPhoneCall({
-                    source: 'product_detail_phone',
-                    productName: product.name,
-                    resultSessionId,
-                    ctaLocation: 'product_detail_summary',
-                  });
-                }}
-                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-fe-border bg-fe-raised px-3 py-2.5 text-center text-xs font-bold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-200"
-              >
-                <Phone className="h-4 w-4" aria-hidden="true" />
-                Telefonla konuş
-              </a>
-            </div>
             <p className="hidden px-1 text-center text-[11px] leading-relaxed text-fe-muted-strong lg:block">
-              PDF teklif ürün, şehir ve metraj bilginizle hazırlanır. Teyit için WhatsApp veya telefonla görüşebilirsiniz.
+              PDF teklif ürün, şehir ve tam araç metrajınızla hazırlanır. İletişim, teklif referansı oluştuktan sonra açılır.
             </p>
           </div>
         )}
@@ -911,51 +859,6 @@ export default function ProductPricePanel({
                 buttonClassName="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-500/70 bg-brand-500 px-3 text-[13px] font-black text-fe-bg transition-colors hover:bg-brand-400"
               />
             </div>
-            <a
-              href={buildWhatsAppLink(generateQuoteWhatsAppMessage({
-                productName: formatBrandProductName(product.brand.name, product.name),
-                thicknessCm: activeThickness,
-                metrajM2: quoteM2,
-                vehicleLabel: (sepetState.kamyon > 0 || sepetState.tir > 0)
-                  ? quoteVehicleSummary
-                  : `${formatM2(quoteM2)} m²`,
-                cityName: zone?.city_name ?? '',
-                pricePerM2: quotePricePerM2KdvHaric ?? 0,
-                totalKdvHaric: quoteTotalKdvHaric ?? 0,
-                shippingMessage: quoteShippingIncluded ? 'fiyata dahil' : 'satış görüşmesinde netleşir',
-              }))}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="WhatsApp'tan teyit iste"
-              onClick={() => {
-                trackProductDetailCta('whatsapp', 'sticky_mobile');
-                notifyWhatsappIntent({
-                  source: 'product_detail_cta',
-                  productName: product.name,
-                  resultSessionId,
-                  ctaLocation: 'sticky_mobile',
-                });
-              }}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-green-600/50 bg-green-600/15 text-green-300"
-            >
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            </a>
-            <a
-              href={`tel:${BUSINESS_INFO.phone.tel}`}
-              aria-label="Telefonla konuş"
-              onClick={() => {
-                trackProductDetailCta('phone', 'sticky_mobile');
-                notifyPhoneCall({
-                  source: 'product_detail_phone',
-                  productName: product.name,
-                  resultSessionId,
-                  ctaLocation: 'sticky_mobile',
-                });
-              }}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-fe-border bg-fe-raised text-fe-text"
-            >
-              <Phone className="h-5 w-5" aria-hidden="true" />
-            </a>
           </div>
         </div>
       )}

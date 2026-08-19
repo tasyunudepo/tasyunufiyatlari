@@ -46,7 +46,7 @@ const bonusPayload = {
   modelId: null,
   modelName: 'F 150',
   thicknessCm: 5,
-  areaM2: 967.7,
+  areaM2: 1774.1,
   cityCode: '34',
   cityName: 'İstanbul',
   districtCode: null,
@@ -61,10 +61,10 @@ const bonusPayload = {
   discountPercentage: 0,
   priceWithoutVat: 545_438,
   vatAmount: 109_087,
-  packageCount: 336,
+  packageCount: 616,
   packageSizeM2: 2.88,
   itemsPerPackage: 4,
-  vehicleType: 'lorry' as const,
+  vehicleType: 'truck' as const,
   lorryCapacityPackages: 336,
   truckCapacityPackages: 616,
   lorryFillPercentage: 100,
@@ -119,13 +119,17 @@ describe('/api/quotes Bonus tam araç doğrulaması', () => {
       error: null,
     })
 
-    const response = await POST(request(bonusPayload))
+    const response = await POST(request({
+      ...bonusPayload,
+      areaM2: 967.7,
+      packageCount: 336,
+      vehicleType: 'lorry' as const,
+    }))
     const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
     expect(mocks.rpc).toHaveBeenCalledTimes(1)
-    // from().single() yalnız material_types için çağrıldı (1 kez):
     expect(mocks.single).toHaveBeenCalledTimes(1)
   })
 
@@ -143,8 +147,6 @@ describe('/api/quotes Bonus tam araç doğrulaması', () => {
 
     const response = await POST(request({
       ...bonusPayload,
-      areaM2: 1774.1,
-      vehicleType: 'truck' as const,
     }))
 
     expect(response.status).toBe(200)
@@ -156,7 +158,7 @@ describe('/api/quotes Bonus tam araç doğrulaması', () => {
     const body = await response.json()
 
     expect(response.status).toBe(400)
-    expect(body.error).toMatch(/tam Kamyon/u)
+    expect(body.error).toMatch(/tam kamyon veya TIR/u)
     expect(mocks.rpc).not.toHaveBeenCalled()
     expect(mocks.sendNotification).not.toHaveBeenCalled()
   })

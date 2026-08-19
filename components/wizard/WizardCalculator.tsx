@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateQuotePDF } from "@/lib/pdfGenerator";
-import { TEL_URL } from "@/lib/business/info";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
+import { notifyLeadRejected } from "@/lib/analytics/leadQualification";
 import {
   notifyWizardShowPrices,
   notifyPdfQuoteRequested,
@@ -21,7 +21,6 @@ import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
 import { PackageCard } from "@/components/package/PackageCard";
 import { PdfOfferModal } from "@/components/modal/PdfOfferModal";
 import { PdfDeliveryCard } from "@/components/quote/PdfDeliveryCard";
-import PhoneCallLink from "@/components/shared/PhoneCallLink";
 import { WizardStep1 } from "@/components/wizard/WizardStep1";
 import { WizardStep2 } from "@/components/wizard/WizardStep2";
 import { WizardStep3 } from "@/components/wizard/WizardStep3";
@@ -172,6 +171,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [resultSessionId, setResultSessionId] = useState("");
+    const lastLeadRejectionRef = useRef("");
 
     // Wizard step
     const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
@@ -277,10 +277,13 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 if (!metraj || Number(metraj) <= 0) return false;
                 const m2 = Number(metraj);
                 const matType = materialTypes.find(m => m.slug === selectedMalzeme);
-                const minOrder = matType?.min_order_m2 ?? 0;
-                if (minOrder > 0 && m2 < minOrder) return false;
                 const fullVehicleLogistics = isBonusSelected ? bonusLogistics : currentLogistics;
-                if (matType?.full_vehicle_only && fullVehicleLogistics
+                const minOrder = Math.max(
+                    matType?.min_order_m2 ?? 0,
+                    fullVehicleLogistics?.lorry_capacity_m2 ?? 0,
+                );
+                if (minOrder > 0 && m2 < minOrder) return false;
+                if (fullVehicleLogistics
                     && !isValidFullVehicleMetraj(m2, fullVehicleLogistics)) return false;
                 return true;
             }
@@ -1028,8 +1031,8 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
     };
 
     // Metraj input validasyonu — Step4 input UI'ı bu nesneyi okur.
-    // EPS için: m² < min_order_m2 → kind:'min_order'.
-    // Taşyünü için: full_vehicle_only && !isValid → kind:'full_vehicle' + öneri listesi.
+    // Tüm ürünlerde tam kamyon altı → kind:'min_order'.
+    // Ara metraj → kind:'full_vehicle' + tam araç öneri listesi.
     type MetrajValidation =
         | { isValid: true }
         | { isValid: false; kind: 'min_order'; minOrder: number }
@@ -1041,14 +1044,17 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const matType = materialTypes.find(m => m.slug === selectedMalzeme);
         if (!matType) return { isValid: true };
 
-        const minOrder = matType.min_order_m2 ?? 0;
+        const fullVehicleLogistics = isBonusSelected ? bonusLogistics : currentLogistics;
+        const minOrder = Math.max(
+            matType.min_order_m2 ?? 0,
+            fullVehicleLogistics?.lorry_capacity_m2 ?? 0,
+        );
         if (minOrder > 0 && m2 < minOrder) {
             return { isValid: false, kind: 'min_order', minOrder };
         }
         // Bonus'ta tam araç kuralı kendi kapasite verisiyle doğrulanır;
         // kapasite henüz yüklenmediyse fiyat anındaki sunucu kapısı korur.
-        const fullVehicleLogistics = isBonusSelected ? bonusLogistics : currentLogistics;
-        if (matType.full_vehicle_only && fullVehicleLogistics
+        if (fullVehicleLogistics
             && !isValidFullVehicleMetraj(m2, fullVehicleLogistics)) {
             return {
                 isValid: false,
@@ -1058,6 +1064,21 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         }
         return { isValid: true };
     }, [metraj, selectedMalzeme, materialTypes, currentLogistics, isBonusSelected, bonusLogistics]);
+
+    useEffect(() => {
+        if (metrajValidation.isValid) {
+            lastLeadRejectionRef.current = '';
+            return;
+        }
+
+        const reason = metrajValidation.kind === 'min_order'
+            ? 'below_full_vehicle'
+            : 'invalid_vehicle_combination';
+        const rejectionKey = `${reason}:${selectedMalzeme}:${metraj}`;
+        if (lastLeadRejectionRef.current === rejectionKey) return;
+        lastLeadRejectionRef.current = rejectionKey;
+        notifyLeadRejected(reason, { material_type: selectedMalzeme });
+    }, [metraj, metrajValidation, selectedMalzeme]);
 
     const selectRecommendedPackage = (packages: CalculatedPackage[]) =>
         packages.find(pkg => pkg.definition.name.toLocaleLowerCase('tr-TR').includes('dengeli')) ??
@@ -1177,7 +1198,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                     alert('Bu il için teslimat bölgesi seçimi gerekli. Lütfen Konum adımından seçim yapın.');
                     setActiveStep(3);
                 } else {
-                    alert('Bonus fiyatı şu anda hesaplanamıyor. Lütfen bizimle iletişime geçin.');
+                    alert('Bonus fiyatı şu anda hesaplanamıyor. Lütfen seçimlerinizi kontrol edip yeniden deneyin.');
                 }
                 return;
             }
@@ -1203,7 +1224,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 m2UserInput,
             );
             if (!order) {
-                alert('Bonus fiyatı şu anda hesaplanamıyor. Lütfen bizimle iletişime geçin.');
+                alert('Bonus fiyatı şu anda hesaplanamıyor. Lütfen seçimlerinizi kontrol edip yeniden deneyin.');
                 return;
             }
 
@@ -1211,14 +1232,14 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                 .filter(pd => pd.plate_brand_id === selectedBrandId)
                 .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
             if (bonusDefs.length === 0) {
-                alert('Bonus paket seçenekleri henüz tanımlı değil. Lütfen bizimle iletişime geçin.');
+                alert('Bonus paket seçenekleri henüz tanımlı değil. Bu ürün için şu anda teklif oluşturulamıyor.');
                 return;
             }
 
             const matType = materialTypes.find(m => m.slug === selectedMalzeme);
             const marginPct = selectMarginPct(matType, order.orderM2);
             if (marginPct === null) {
-                alert('Fiyat marjı tanımlı olmadığı için teklif oluşturulamıyor. Lütfen satış ekibiyle görüşün.');
+                alert('Fiyat marjı tanımlı olmadığı için teklif oluşturulamıyor. Bu ürünü daha sonra yeniden deneyin.');
                 return;
             }
 
@@ -1524,15 +1545,18 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         // Defensive validation: Step4 zaten input'u bloklar; bu, gözden kaçan
         // bir akış için son kapı. Hatalı durumda alert + iptal.
         const matTypeForValidation = materialTypes.find(m => m.slug === selectedMalzeme);
-        const minOrder = matTypeForValidation?.min_order_m2 ?? 0;
+        const minOrder = Math.max(
+            matTypeForValidation?.min_order_m2 ?? 0,
+            logistics.lorry_capacity_m2 ?? 0,
+        );
         if (minOrder > 0 && m2UserInput < minOrder) {
             setIsLoading(false);
-            alert(`${matTypeForValidation?.name ?? 'Bu ürün'} için minimum sipariş ${minOrder} m².`);
+            alert(`Satışlarımız tam kamyon veya TIR bazındadır. Minimum ${minOrder.toLocaleString('tr-TR')} m² gereklidir.`);
             return;
         }
-        if (matTypeForValidation?.full_vehicle_only && !isValidFullVehicleMetraj(m2UserInput, logistics)) {
+        if (!isValidFullVehicleMetraj(m2UserInput, logistics)) {
             setIsLoading(false);
-            alert(`Taşyünü parsiyel taşınamaz. Tam Kamyon (${Math.round(logistics.lorry_capacity_m2)} m²) veya tam TIR (${Math.round(logistics.truck_capacity_m2)} m²) ya da bunların kombinasyonu olmalıdır.`);
+            alert(`Metraj tam Kamyon (${Math.round(logistics.lorry_capacity_m2)} m²), tam TIR (${Math.round(logistics.truck_capacity_m2)} m²) veya bunların tam araç kombinasyonu olmalıdır.`);
             return;
         }
 
@@ -1577,7 +1601,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
         const marginPct = selectMarginPct(matType, totalM2);
         if (marginPct === null) {
             setIsLoading(false);
-            alert('Fiyat marjı tanımlı olmadığı için teklif oluşturulamıyor. Lütfen satış ekibiyle görüşün.');
+            alert('Fiyat marjı tanımlı olmadığı için teklif oluşturulamıyor. Bu ürünü daha sonra yeniden deneyin.');
             return;
         }
 
@@ -1745,7 +1769,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
 
         if (selectedMalzeme === 'eps' && calculated.length === 0) {
             setIsLoading(false);
-            alert('Komple EPS setinin zorunlu ürünleri tamamlanmadan teklif oluşturulamıyor. Lütfen satış ekibiyle görüşün.');
+            alert('Komple EPS setinin zorunlu ürünleri tamamlanmadan teklif oluşturulamıyor. Lütfen farklı bir ürün seçin.');
             return;
         }
 
@@ -2346,7 +2370,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                             </div>
                                         </div>
 
-                                        <div className="grid gap-2 sm:grid-cols-3">
+                                        <div className="grid gap-2 sm:grid-cols-2">
                                             <button
                                                 type="button"
                                                 onClick={() => handleOpenPdfOffer(recommendedPackage, 'result_summary')}
@@ -2361,15 +2385,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                             >
                                                 WhatsApp&apos;tan teyit iste
                                             </button>
-                                            <PhoneCallLink
-                                                href={TEL_URL}
-                                                source="wizard_result_phone"
-                                                productName={recommendedPackage.definition.name}
-                                                onClickCapture={() => trackResultCtaClick(recommendedPackage, 'phone', 'result_summary')}
-                                                className="inline-flex items-center justify-center rounded-xl border border-fe-border bg-fe-bg/70 px-4 py-3 text-sm font-bold text-fe-text transition-colors hover:border-fe-muted hover:text-white"
-                                            >
-                                                Telefonla konuş
-                                            </PhoneCallLink>
                                         </div>
                                     </div>
                                 </div>
@@ -2492,7 +2507,7 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                                 <div>{recommendedShippingStatus}</div>
                             </div>
                         </div>
-                        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             <button
                                 type="button"
                                 onClick={() => handleOpenPdfOffer(recommendedPackage, 'sticky_mobile')}
@@ -2507,16 +2522,6 @@ export default function WizardCalculator({ preSelectedCityName }: WizardCalculat
                             >
                                 WhatsApp
                             </button>
-                            <PhoneCallLink
-                                href={TEL_URL}
-                                source="wizard_result_phone"
-                                productName={recommendedPackage.definition.name}
-                                onClickCapture={() => trackResultCtaClick(recommendedPackage, 'phone', 'sticky_mobile')}
-                                aria-label="Telefonla konuş"
-                                className="inline-flex h-[44px] min-w-[48px] items-center justify-center rounded-xl border border-fe-border bg-fe-surface px-3 text-sm font-bold text-white"
-                            >
-                                Ara
-                            </PhoneCallLink>
                         </div>
                     </div>
                 </div>

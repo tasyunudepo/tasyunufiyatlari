@@ -53,14 +53,14 @@ const SITUATIONS: Situation[] = [
   {
     key: 'emin_degilim',
     Icon: Question as IconType,
-    label: 'Kararsızım, birlikte seçelim',
-    helper: 'Sahanızı paylaşın, doğru paketi sizin için biz belirleyelim.',
-    scrollTarget: '/iletisim',
+    label: 'Ürünümü biliyorum, katalogdan seçeceğim',
+    helper: 'Marka, model ve kalınlık belliyse ürün sayfasından ilerleyin.',
+    scrollTarget: '/urunler',
   },
 ];
 
 // Niyet → wizard preset eşleşmesi olan kartlar.
-// cati_yalitimi ve emin_degilim wizard'a girmez — doğrudan başka URL'lere gider.
+// cati_yalitimi ve emin_degilim wizard'a girmez — doğrudan ürün sayfalarına gider.
 const PRESET_KEYS = new Set<SituationKey>(['isi_yalitimi', 'ses_yalitimi']);
 
 export function SituationSelector() {
@@ -70,7 +70,7 @@ export function SituationSelector() {
   const onSelect = (s: Situation) => {
     notifySituationSelected({ situationKey: s.key, situationLabel: s.label });
 
-    // Wizard preset (4. kart "emin_degilim" iletişime gider, preset yok)
+    // Wizard preset olmayan kartlar doğrudan kataloğa gider.
     if (PRESET_KEYS.has(s.key)) {
       setSituationPreset(s.key as SituationPresetKey);
     }

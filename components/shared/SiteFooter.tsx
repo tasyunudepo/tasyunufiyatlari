@@ -1,7 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import WhatsappLink from './WhatsappLink';
-import { WHATSAPP_URL } from '@/lib/business/info';
 
 type Tone = 'dark' | 'warm';
 
@@ -30,8 +28,8 @@ const GROUPS = [
   {
     eyebrow: 'İletişim',
     links: [
-      { href: '/iletisim',  label: 'Telefon · WhatsApp' },
-      { href: WHATSAPP_URL, label: 'WhatsApp Destek', external: true },
+      { href: '/#mantolama-hesaplayici', label: '1 TIR istiyorum' },
+      { href: '/iletisim', label: 'Teklif referansıyla iletişim' },
     ],
   },
   {
@@ -91,34 +89,13 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
               <ul className="space-y-2.5">
                 {group.links.map((link) => (
                   <li key={`${group.eyebrow}-${link.label}`}>
-                    {('external' in link && link.external) ? (
-                      link.href.startsWith('https://wa.me/') ? (
-                        <WhatsappLink
-                          href={link.href}
-                          source="footer_link"
-                          className={`${linkText} text-sm transition-colors`}
-                        >
-                          {link.label}
-                        </WhatsappLink>
-                      ) : (
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${linkText} text-sm transition-colors`}
-                        >
-                          {link.label}
-                        </a>
-                      )
-                    ) : (
-                      <Link
-                        href={link.href}
-                        prefetch={false}
-                        className={`${linkText} text-sm transition-colors`}
-                      >
-                        {link.label}
-                      </Link>
-                    )}
+                    <Link
+                      href={link.href}
+                      prefetch={false}
+                      className={`${linkText} text-sm transition-colors`}
+                    >
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

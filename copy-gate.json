@@ -8,5 +8,9 @@
     "bayi iskonto",
     "taban fiyat"
   ],
-  "izinli": []
+  "izinli": [],
+  "exclude": [
+    "^(tests|docs)/",
+    "^\\.goal-verify/"
+  ]
 }

@@ -207,17 +207,13 @@ test.describe('kritik teklif akışları', () => {
     })
   })
 
-  test('PDP WhatsApp: KDV hariç fiyatı ve tam araç nakliye kararını taşır', async ({ page }) => {
+  test('PDP iletişim kapısı: teklif öncesi WhatsApp ve telefon yayınlamaz', async ({ page }) => {
     await page.goto(PRODUCT_PATH)
 
-    const link = page.getByRole('link', { name: "WhatsApp'tan teyit iste" }).first()
-    await expect(link).toBeVisible()
-    const href = await link.getAttribute('href')
-    expect(href).toContain('https://wa.me/')
-
-    const message = new URL(href!).searchParams.get('text') ?? ''
-    expect(message).toMatch(/\d+[.,]\d{2} ₺\/m² \(KDV hariç\)/)
-    expect(message).toContain('toplam (KDV hariç)')
-    expect(message).toContain('Nakliye: fiyata dahil')
+    await expect(page.getByRole('button', { name: 'PDF teklifimi hazırla' })).toBeVisible()
+    await expect(page.getByRole('link', { name: /WhatsApp'tan teyit iste/i })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /Telefonla konuş/i })).toHaveCount(0)
+    expect(await page.locator('a[href^="https://wa.me/"]').count()).toBe(0)
+    expect(await page.locator('a[href^="tel:"]').count()).toBe(0)
   })
 })

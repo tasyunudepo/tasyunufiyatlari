@@ -151,93 +151,131 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Tam araç kuralı ve katalog araç baremi server tarafında doğrulanır.
-    if (
-      materialRule.full_vehicle_only
-      || (
-        payload.sourceChannel === 'catalog'
-        && (payload.vehicleType === 'lorry' || payload.vehicleType === 'truck')
-      )
-    ) {
-      // Bonus'un kamyon/TIR kapasiteleri üreticinin kendi bölge listesinden
-      // gelir; genel logistics_capacity kaydı Bonus metrajını yanlış reddeder
-      // (örn. F 150 / 5 cm kamyonu 967,7 m²'dir). Bonus'ta kendi kapasitesi,
-      // diğer markalarda genel kayıt kullanılır.
-      let lorryCapacityM2: number
-      let truckCapacityM2: number
-      let packageSizeM2: number
+    // Public satış, malzeme türünden bağımsız olarak proje ölçeğindedir.
+    // İstemci tarafındaki CTA veya form atlatılsa bile kamyon altı sipariş
+    // kayda ve bildirime ulaşamaz. Bonus kapasitesi üreticinin kendi bölge
+    // listesinden, diğer markalar genel lojistik tablosundan okunur.
+    let lorryCapacityM2: number
+    let truckCapacityM2: number
+    let packageSizeM2: number
 
-      if (payload.brandName === 'Bonus') {
-        const capacity = payload.modelName
-          ? computeBonusCapacity({
-              modelShortName: payload.modelName,
-              thicknessCm: payload.thicknessCm,
-            })
-          : null
-        if (!capacity || !capacity.ok) {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: 'Bonus araç kapasitesi doğrulanamadı. Lütfen model ve kalınlık seçiminizi kontrol edin.',
-            },
-            { status: 400 },
-          )
-        }
-        lorryCapacityM2 = capacity.kamyonM2
-        truckCapacityM2 = capacity.tirM2
-        packageSizeM2 = capacity.packageM2
+    if (payload.brandName === 'Bonus') {
+      const capacity = payload.modelName
+        ? computeBonusCapacity({
+            modelShortName: payload.modelName,
+            thicknessCm: payload.thicknessCm,
+          })
+        : null
+      if (!capacity || !capacity.ok) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'Bonus araç kapasitesi doğrulanamadı. Lütfen model ve kalınlık seçiminizi kontrol edin.',
+          },
+          { status: 400 },
+        )
+      }
+      lorryCapacityM2 = capacity.kamyonM2
+      truckCapacityM2 = capacity.tirM2
+      packageSizeM2 = capacity.packageM2
+    } else {
+      const thicknessMm = payload.thicknessCm * 10
+      const { data: logRow, error: logisticsError } = await supabase
+        .from('logistics_capacity')
+        .select('lorry_capacity_m2, truck_capacity_m2, package_size_m2, lorry_capacity_packages, truck_capacity_packages')
+        .eq('thickness', thicknessMm)
+        .single()
+
+      if (logisticsError || !logRow) {
+        console.error(
+          '[quotes] Lojistik kuralı okunamadı:',
+          logisticsError?.message || 'boş yanıt',
+        )
+        return configurationErrorResponse()
+      }
+
+      const submittedPackageSizeM2 = Number(payload.packageSizeM2)
+      const submittedPackageCount = Number(payload.packageCount)
+      const submittedPackageAreaM2 = submittedPackageSizeM2 * submittedPackageCount
+      const packageAreaMatches = Number.isFinite(submittedPackageAreaM2)
+        && Math.abs(submittedPackageAreaM2 - payload.areaM2) <= Math.max(1e-6, submittedPackageSizeM2 * 1e-9)
+      const submittedPackageSizeIsUsable = Number.isFinite(submittedPackageSizeM2)
+        && submittedPackageSizeM2 > 0
+        && packageAreaMatches
+      const lorryCapacityPackages = Number(logRow.lorry_capacity_packages)
+      const truckCapacityPackages = Number(logRow.truck_capacity_packages)
+
+      // Aynı kalınlıktaki EPS ve taşyünü levhaların paket m²'si farklı
+      // olabilir. Sunucunun genel lojistik kapasitesini kullanması geçerli bir
+      // tam aracı yanlış reddeder. Paket adedi × paket m², gönderilen alanla
+      // birebir uyuşuyorsa araç paket adetlerini bu ürün paketine uygula.
+      if (
+        submittedPackageSizeIsUsable
+        && Number.isFinite(lorryCapacityPackages)
+        && Number.isFinite(truckCapacityPackages)
+        && lorryCapacityPackages > 0
+        && truckCapacityPackages > 0
+      ) {
+        packageSizeM2 = submittedPackageSizeM2
+        lorryCapacityM2 = lorryCapacityPackages * packageSizeM2
+        truckCapacityM2 = truckCapacityPackages * packageSizeM2
       } else {
-        const thicknessMm = payload.thicknessCm * 10
-        const { data: logRow, error: logisticsError } = await supabase
-          .from('logistics_capacity')
-          .select('lorry_capacity_m2, truck_capacity_m2, package_size_m2')
-          .eq('thickness', thicknessMm)
-          .single()
-
-        if (logisticsError) {
-          console.error('[quotes] Lojistik kuralı okunamadı:', logisticsError.message)
-          return configurationErrorResponse()
-        }
-
         lorryCapacityM2 = Number(logRow.lorry_capacity_m2)
         truckCapacityM2 = Number(logRow.truck_capacity_m2)
         packageSizeM2 = Number(logRow.package_size_m2)
       }
+    }
 
-      if (materialRule.full_vehicle_only) {
-        const isValidVehicleArea = isValidFullVehicleArea({
-          areaM2: payload.areaM2,
-          lorryCapacityM2,
-          truckCapacityM2,
-          packageSizeM2,
-        })
-        if (!isValidVehicleArea) {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: 'Taşyünü teklifi yalnız tam Kamyon, tam TIR veya bunların kombinasyonu için oluşturulabilir.',
-            },
-            { status: 400 },
-          )
-        }
-      }
+    if (
+      !Number.isFinite(lorryCapacityM2)
+      || !Number.isFinite(truckCapacityM2)
+      || !Number.isFinite(packageSizeM2)
+      || lorryCapacityM2 <= 0
+      || truckCapacityM2 <= 0
+      || packageSizeM2 <= 0
+    ) {
+      return configurationErrorResponse()
+    }
 
-      const minM2 = payload.vehicleType === 'lorry'
-        ? lorryCapacityM2
-        : payload.vehicleType === 'truck'
-          ? truckCapacityM2
-          : null
-      if (minM2 !== null && (!Number.isFinite(minM2) || payload.areaM2 < minM2)) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: Number.isFinite(minM2)
-              ? `Bu metraj için ${payload.vehicleType === 'lorry' ? 'Kamyon' : 'TIR'} fiyatı uygulanamaz. Minimum ${minM2} m² gereklidir.`
-              : 'Araç kapasitesi doğrulanamadı.',
-          },
-          { status: Number.isFinite(minM2) ? 400 : 503 },
-        )
-      }
+    if (payload.areaM2 < lorryCapacityM2) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Satışlarımız tam kamyon veya TIR bazındadır. Minimum ${lorryCapacityM2.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} m² gereklidir.`,
+        },
+        { status: 400 },
+      )
+    }
+
+    const isValidVehicleArea = isValidFullVehicleArea({
+      areaM2: payload.areaM2,
+      lorryCapacityM2,
+      truckCapacityM2,
+      packageSizeM2,
+    })
+    if (!isValidVehicleArea) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Teklif yalnız tam kamyon, tam TIR veya bunların tam araç kombinasyonu için oluşturulabilir.',
+        },
+        { status: 400 },
+      )
+    }
+
+    const minM2 = payload.vehicleType === 'lorry'
+      ? lorryCapacityM2
+      : payload.vehicleType === 'truck'
+        ? truckCapacityM2
+        : null
+    if (minM2 !== null && payload.areaM2 < minM2) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Bu metraj için ${payload.vehicleType === 'lorry' ? 'kamyon' : 'TIR'} fiyatı uygulanamaz. Minimum ${minM2.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} m² gereklidir.`,
+        },
+        { status: 400 },
+      )
     }
 
     const insertPayload = mapQuotePayload(payload)

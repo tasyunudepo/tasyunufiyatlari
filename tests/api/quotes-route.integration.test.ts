@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   materialSingle: vi.fn(),
+  logisticsSingle: vi.fn(),
   sendNotification: vi.fn(),
 }))
 
@@ -11,9 +12,13 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/supabase-server', () => ({
   createServerSupabaseClient: () => ({
     rpc: mocks.rpc,
-    from: () => ({
+    from: (table: string) => ({
       select: () => ({
-        eq: () => ({ single: mocks.materialSingle }),
+        eq: () => ({
+          single: table === 'material_types'
+            ? mocks.materialSingle
+            : mocks.logisticsSingle,
+        }),
       }),
     }),
   }),
@@ -40,7 +45,7 @@ const validPayload = {
   modelId: 1,
   modelName: 'EPS Levha',
   thicknessCm: 5,
-  areaM2: 400,
+  areaM2: 1200,
   cityCode: '34',
   cityName: 'İstanbul',
   districtCode: null,
@@ -55,10 +60,10 @@ const validPayload = {
   discountPercentage: 0,
   priceWithoutVat: 100_000,
   vatAmount: 20_000,
-  packageCount: 80,
+  packageCount: 240,
   packageSizeM2: 5,
   itemsPerPackage: 1,
-  vehicleType: 'none' as const,
+  vehicleType: 'truck' as const,
   lorryCapacityPackages: null,
   truckCapacityPackages: null,
   lorryFillPercentage: null,
@@ -91,6 +96,16 @@ describe('/api/quotes atomik route entegrasyonu', () => {
       data: { min_order_m2: 400, full_vehicle_only: false },
       error: null,
     })
+    mocks.logisticsSingle.mockReset().mockResolvedValue({
+      data: {
+        lorry_capacity_m2: 806.4,
+        truck_capacity_m2: 1200,
+        package_size_m2: 5,
+        lorry_capacity_packages: 161.28,
+        truck_capacity_packages: 240,
+      },
+      error: null,
+    })
     mocks.sendNotification.mockReset().mockResolvedValue(undefined)
   })
 
@@ -110,6 +125,34 @@ describe('/api/quotes atomik route entegrasyonu', () => {
     const response = await POST(request({ ...validPayload, areaM2: 399.9 }))
 
     expect(response.status).toBe(400)
+    expect(mocks.rpc).not.toHaveBeenCalled()
+    expect(mocks.sendNotification).not.toHaveBeenCalled()
+  })
+
+  it('EPS minimum seti geçse bile tam araç olmayan düşük metrajı RPC öncesinde reddeder', async () => {
+    const response = await POST(request({
+      ...validPayload,
+      areaM2: 500,
+      vehicleType: 'none',
+    }))
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toMatch(/tam kamyon veya TIR/u)
+    expect(mocks.rpc).not.toHaveBeenCalled()
+    expect(mocks.sendNotification).not.toHaveBeenCalled()
+  })
+
+  it('kamyon kapasitesini geçse bile tam araç kombinasyonu olmayan EPS metrajını reddeder', async () => {
+    const response = await POST(request({
+      ...validPayload,
+      areaM2: 1000,
+      vehicleType: 'none',
+    }))
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toMatch(/tam kamyon, tam TIR/u)
     expect(mocks.rpc).not.toHaveBeenCalled()
     expect(mocks.sendNotification).not.toHaveBeenCalled()
   })

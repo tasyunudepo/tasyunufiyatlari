@@ -63,13 +63,13 @@ export function WizardStep4({
     // Lojistik verisi gelmeden öneri/prefill üretme: fallback sabitleri
     // (480/1200) yalnız görsel hesap içindir, markaya ait sayı değildir.
     const hasLogistics = currentLogistics != null;
-    const suggestedStartM2 = selectedMalzeme === 'tasyunu' && hasLogistics && lorryM2 > 0
-        ? normalizeM2(lorryM2)
+    const suggestedStartM2 = hasLogistics && truckM2 > 0
+        ? normalizeM2(truckM2)
         : null;
 
     useEffect(() => {
         if (didPrefillMetraj.current) return;
-        if (selectedMalzeme !== 'tasyunu' || suggestedStartM2 == null) return;
+        if (suggestedStartM2 == null) return;
         if (metraj.trim() !== '') return;
 
         didPrefillMetraj.current = true;
@@ -160,7 +160,7 @@ export function WizardStep4({
             ? `%${discKamyon} kamyon iskontosu · nakliye fiyata dahil`
             : 'Kamyon dolusu · nakliye fiyata dahil';
     };
-    const vehiclePresets = selectedMalzeme === 'tasyunu' && hasLogistics
+    const vehiclePresets = hasLogistics
         ? [
             {
                 key: 'kamyon',
@@ -229,9 +229,9 @@ export function WizardStep4({
                     Sipariş metrajı
                 </label>
                 <p className="mt-2 text-sm text-fe-muted leading-relaxed">
-                    {selectedMalzeme === 'tasyunu' && suggestedStartM2 != null
-                        ? `${selectedKalinlik} cm levhada ${suggestedStartM2.toLocaleString('tr-TR')} m² kamyon dolusu seçili gelir. TIR dolusuna geçebilir veya kendi metrajınızı yazabilirsiniz.`
-                        : 'Cephe alanınızı yazın; sistem paket metrajına göre sipariş miktarını hesaplar.'}
+                    {suggestedStartM2 != null
+                        ? `${selectedKalinlik} cm levhada ${suggestedStartM2.toLocaleString('tr-TR')} m² TIR dolusu seçili gelir. Tam kamyonu seçebilir veya proje metrajınızı yazabilirsiniz.`
+                        : 'Proje metrajınızı yazın; teklifler tam kamyon veya TIR bazında hazırlanır.'}
                 </p>
                 {vehiclePresets.length > 0 && (
                     <div className="mt-3 grid grid-cols-2 gap-2">
@@ -291,7 +291,7 @@ export function WizardStep4({
                             <WarningCircle size={16} weight="fill" /> Minimum sipariş {validation.minOrder} m²
                         </p>
                         <p className="text-xs text-red-200/80">
-                            Fabrika çıkışlı EPS sistem teklifi bu taban metrajdan başlar.
+                            Satışlarımız proje ölçeğinde, tam kamyon veya TIR bazında yapılır.
                             Lütfen <span className="font-bold">{validation.minOrder} m²</span> veya üzerinde bir değer girin.
                         </p>
                         <button

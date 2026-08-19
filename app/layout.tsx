@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { ErrorBoundaryWrapper } from "@/components/shared/ErrorBoundaryWrapper";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import GAPageviewTracker from "@/components/analytics/GAPageviewTracker";
+import SalesIntentGate from "@/components/qualification/SalesIntentGate";
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-VCHRKVJCEN";
 
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     template: "%s | Taşyünü Fiyatları",
   },
   description:
-    "Fabrika çıkışlı taşyünü ve EPS mantolama. Tam araç ve set koşullarına göre KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
+    "Proje ölçeğinde taşyünü ve EPS satışı. Tam kamyon veya TIR için KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
   alternates: {
     canonical: "/",
   },
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
     url: "https://www.tasyunufiyatlari.com",
     title: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
     description:
-      "Fabrika çıkışlı taşyünü ve EPS mantolama. Tam araç ve set koşullarına göre KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
+      "Proje ölçeğinde taşyünü ve EPS satışı. Tam kamyon veya TIR için KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
     images: [
       {
         url: "/og-image.png",
@@ -57,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Taşyünü Fiyatları — Mantolama Maliyeti Hesaplama",
     description:
-      "Fabrika çıkışlı taşyünü ve EPS mantolama. Tam araç ve set koşullarına göre KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
+      "Proje ölçeğinde taşyünü ve EPS satışı. Tam kamyon veya TIR için KDV hariç fiyatınızı hesaplayın, PDF teklifinizi oluşturun.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -91,6 +92,7 @@ export default function RootLayout({
         <ErrorBoundaryWrapper>
           <Providers>{children}</Providers>
         </ErrorBoundaryWrapper>
+        <SalesIntentGate />
         {process.env.NODE_ENV === "production" && (
           <>
             <GAPageviewTracker measurementId={GA_MEASUREMENT_ID} />

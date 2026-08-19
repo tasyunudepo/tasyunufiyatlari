@@ -1,5 +1,7 @@
 'use client'
 
+import { notifyContactUnlocked } from '@/lib/analytics/leadQualification'
+
 interface PdfDeliveryCardProps {
   refCode: string
   pdfUrl: string
@@ -44,6 +46,7 @@ export function PdfDeliveryCard({
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => notifyContactUnlocked({ source: 'pdf_delivery' })}
             className="rounded-lg bg-green-700 px-3 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-green-600"
           >
             WhatsApp’ta aç

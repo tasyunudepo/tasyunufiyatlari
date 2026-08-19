@@ -7,12 +7,16 @@
       "size": 46328
     },
     "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
-      "sha256": "ec32497451428af8c29cb5de47fd82fcc3a6e9e64cb04fa875bdf1a699c2a067",
-      "size": 8568
+      "sha256": "e1fea8070bb09bcca5fb5274d9651198a42723e3ea18d6eafa4332c194c789ec",
+      "size": 8896,
+      "locked_at": "2026-08-19",
+      "reason": "Emrah'ın yeni ticari kararı: teklif öncesi PDP WhatsApp/telefon kaldırıldı; teklif sonrası referanslı WhatsApp kabulü ayrı testte korunuyor"
     },
     "tests/api/quotes-route.integration.test.ts": {
-      "sha256": "6d436ef4b016b2fa206ea2afdf4c7029830c5036032bb3436663a91d291586ce",
-      "size": 7011
+      "sha256": "f7126e3d5cae2cf93fa1c9bdded830b288cfd7ba5a3c53b323e71a6caf620317",
+      "size": 8376,
+      "locked_at": "2026-08-19",
+      "reason": "Emrah'ın yeni ticari kararı: EPS dahil public teklif yalnız tam kamyon, tam TIR veya tam araç kombinasyonuyla kabul edilir"
     },
     "tests/api/upload-pdf-route.integration.test.ts": {
       "sha256": "f23a847663e99852d01d0c966849b2446b4f44287a37c408ae695c0b69090f8b",

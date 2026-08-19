@@ -4,11 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { List, X, Phone, WhatsappLogo, ArrowRight } from '@phosphor-icons/react';
+import { List, X, ArrowRight } from '@phosphor-icons/react';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
-import { notifyWhatsappIntent } from '@/lib/notifyWhatsappIntent';
-import { notifyPhoneCall } from '@/lib/notifyPhoneCall';
-import { BUSINESS_INFO, WHATSAPP_URL } from '@/lib/business/info';
 
 type Tone = 'dark' | 'warm';
 
@@ -30,8 +27,6 @@ const NAV_MOBILE = [
   { href: '/', label: 'Anasayfa' },
   ...NAV,
 ];
-
-const PHONE_TEL = BUSINESS_INFO.phone.tel;
 
 function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;
@@ -158,25 +153,13 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
                 );
               })}
 
-              {/* Desktop iletişim CTA'ları — WhatsApp + Hemen Ara (sürekli görünür) */}
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => notifyWhatsappIntent({ source: 'header_desktop' })}
-                className="hidden sm:inline-flex items-center gap-1.5 ml-2 px-3 py-2 rounded-lg bg-[#25D366]/15 border border-[#25D366]/35 text-[#25D366] hover:bg-[#25D366]/25 text-sm font-semibold transition-colors"
-                aria-label="WhatsApp ile yazın"
-              >
-                <WhatsappLogo weight="fill" size={16} />
-                <span>WhatsApp</span>
-              </a>
               {/* Desktop CTA */}
               <Link
-                href="/"
+                href="/#mantolama-hesaplayici"
                 prefetch={false}
                 className="btn-primary !py-2 !px-4 !text-sm ml-1 sm:ml-2 hidden sm:inline-flex"
               >
-                Hesap Makinesi
+                1 TIR istiyorum
               </Link>
 
               {/* Mobile hamburger */}
@@ -262,30 +245,12 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
 
         {/* Footer shortcuts */}
         <div className="border-t border-fe-border/40 px-4 py-5 space-y-3 shrink-0">
-          <div className="grid grid-cols-2 gap-3">
-            <a
-              href={`tel:${PHONE_TEL}`}
-              onClick={() => notifyPhoneCall({ source: 'header_mobile' })}
-              className="inline-flex items-center justify-center gap-2 px-3 py-3 rounded-lg border border-fe-border text-fe-text/90 hover:text-hub-gold-soft hover:border-hub-gold-soft/50 text-sm font-medium transition-colors min-h-[44px]"
-            >
-              <Phone weight={ICON_WEIGHT} size={16} /> Ara
-            </a>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => notifyWhatsappIntent({ source: 'header_mobile' })}
-              className="inline-flex items-center justify-center gap-2 px-3 py-3 rounded-lg bg-[#25D366]/15 border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/25 text-sm font-medium transition-colors min-h-[44px]"
-            >
-              <WhatsappLogo weight="fill" size={16} /> WhatsApp
-            </a>
-          </div>
           <Link
-            href="/"
+            href="/#mantolama-hesaplayici"
             onClick={() => setMobileOpen(false)}
             className="btn-primary w-full"
           >
-            Hesap Makinesi
+            1 TIR istiyorum
             <ArrowRight weight={ICON_WEIGHT} size={18} className="btn-arrow" />
           </Link>
         </div>

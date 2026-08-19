@@ -7,7 +7,6 @@ import Eyebrow from "@/components/shared/Eyebrow";
 import SectionHeader from "@/components/shared/SectionHeader";
 import NumberMarker from "@/components/shared/NumberMarker";
 import RevealOnScroll from "@/components/shared/RevealOnScroll";
-import WhatsappLink from "@/components/shared/WhatsappLink";
 import BrandTrustLogos from "@/components/shared/BrandTrustLogos";
 import HeroSystemVisual from "@/components/cro/HeroSystemVisual";
 import WizardCalculator from "@/components/wizard/WizardCalculator";
@@ -19,15 +18,15 @@ import { BrandStrip } from '@/components/cro/BrandStrip';
 import BonusChallengeBanner from '@/components/cro/BonusChallengeBanner';
 import { Truck, Package, Check, ArrowRight, Star } from "@phosphor-icons/react";
 import { ICON_WEIGHT } from "@/lib/design/tokens";
-import { BUSINESS_INFO, WHATSAPP_URL } from "@/lib/business/info";
+import { BUSINESS_INFO } from "@/lib/business/info";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 import { buildHowToNode } from "@/lib/seo/buildHowTo";
 import { buildCalculationServiceNode, buildShippingServiceNode } from "@/lib/seo/buildService";
 
 const faqItems = [
     {
-        q: "Hangi kalınlığı ve hangi malzemeyi seçmeliyim?",
-        a: "Bina tipi (apartman/villa/iş yeri), iklim bölgesi ve enerji kimlik belgesi hedefine göre değişir. Soğuk illerde (Erzurum, Kars, Sivas) 8–10 cm taşyünü; ılıman bölgelerde 5–6 cm EPS yeterli olabilir. Hesaplayıcı, seçimlerinize göre hangi sistemi önerdiğini her adımda gösterir.",
+        q: "Hangi ürün ve kalınlıkla teklif alabilirim?",
+        a: "Teklif akışı, kullanacağı ürünü ve kalınlığı bilen proje alıcıları içindir. Ürün teknik bilgilerini katalogdan inceleyebilir; kararınız netleştiğinde hesaplayıcıdan devam edebilirsiniz.",
     },
     {
         q: "Hesabı yanlış yaparsam ne kaybederim?",
@@ -46,8 +45,8 @@ const faqItems = [
         a: "PDF teklifteki referans numarasını WhatsApp üzerinden bize iletin. Satış ekibi fabrika üretim uygunluğunu, sevkiyat tarihini ve araç planını görüşmede netleştirir. Ödeme sipariş onayında tek seferde alınır.",
     },
     {
-        q: "Kararsızım, hangi paketi seçeceğimi bilmiyorum.",
-        a: "Hesaplayıcı 3 paket seçeneği (Ekonomik, Dengeli, Orijinal) sunar; aralarındaki fark malzeme markası ve yardımcı kalemlerin sınıfıdır. Emin değilseniz \"Bize ulaşın\" üzerinden sahanızı paylaşın, doğru paket için teknik öneri yapalım.",
+        q: "Paket, adet veya düşük metraj için teklif alabilir miyim?",
+        a: "Hayır. Satışlarımız proje ölçeğinde, tam kamyon veya TIR bazında yapılır. Paket, adet ve düşük metrajlı taleplere satış desteği veremiyoruz.",
     },
 ];
 
@@ -160,10 +159,10 @@ export default function Home() {
                         <div>
                             <Eyebrow className="mb-2.5 sm:mb-4">Fabrika Çıkışlı Mantolama</Eyebrow>
                             <h1 className="max-w-[980px] font-heading font-extrabold text-[40px] sm:text-[52px] lg:text-[64px] leading-[1.05] tracking-tight text-fe-text">
-                                Taşyününde <span className="text-brand">tam araç</span>, uygun EPS setinde nakliye fiyata dahil.
+                                Proje ölçeğinde <span className="text-brand">tam kamyon veya TIR</span> satışı.
                             </h1>
                             <p className="mt-3 sm:mt-5 max-w-[650px] text-base sm:text-lg text-fe-text/85 leading-relaxed">
-                                Şehir, metraj ve kalınlığı seçin; üç paket seçeneğini karşılaştırıp PDF teklifinizi ekranda oluşturun.
+                                Satışlarımız proje ölçeğinde, tam kamyon veya TIR bazında yapılır. Paket, adet ve düşük metrajlı taleplere destek veremiyoruz.
                             </p>
                             <div className="mt-5 sm:mt-7 lg:hidden">
                                 <HeroSystemVisual />
@@ -173,7 +172,7 @@ export default function Home() {
                                     href="#mantolama-hesaplayici"
                                     className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-fe-bg shadow-lg shadow-brand/20 transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-fe-bg"
                                 >
-                                    PDF Teklif Oluştur
+                                    1 TIR istiyorum
                                     <ArrowRight size={18} weight={ICON_WEIGHT} />
                                 </Link>
                                 <Link
@@ -417,12 +416,12 @@ export default function Home() {
                                             color: 'text-green-300 border-green-800/40 bg-green-950/25',
                                         },
                                         {
-                                            label: 'Uygun EPS Seti',
-                                            badge: '400 m² taban',
+                                            label: 'Tam Araç EPS Seti',
+                                            badge: 'Proje ölçeği',
                                             Icon: Package,
                                             iskonto: 'Levha + toz grubu birlikte',
                                             nakliye: 'Nakliye fiyata dahil',
-                                            scope: 'EPS marj ve set kuralı sağlandığında',
+                                            scope: 'Tam kamyon veya TIR dolumu',
                                             color: 'text-fe-text border-fe-border bg-fe-surface',
                                         },
                                     ].map((item) => (
@@ -463,27 +462,19 @@ export default function Home() {
                 <RevealOnScroll className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
                     <Eyebrow className="mb-5 justify-center">Karar Verin</Eyebrow>
                     <h2 className="mt-3 font-heading font-extrabold text-[32px] sm:text-[40px] leading-[1.1] tracking-tight text-fe-text">
-                        Tam araç veya uygun EPS seti teklifinizi <span className="text-brand">şimdi oluşturun</span>.
+                        Tam kamyon veya TIR teklifinizi <span className="text-brand">şimdi oluşturun</span>.
                     </h2>
                     <p className="mt-4 max-w-[560px] text-base text-fe-muted leading-relaxed">
                         Paketi seçip iletişim bilgilerinizi onaylayın; PDF ekranda oluşsun. İndirme veya paylaşma kanalını siz seçin.
                     </p>
-                    <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
+                    <div className="mt-7 flex justify-center">
                         <Link
                             href="#mantolama-hesaplayici"
                             className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-fe-bg shadow-lg shadow-brand/20 transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-fe-bg"
                         >
-                            Teklifi şimdi oluştur
+                            1 TIR istiyorum
                             <ArrowRight size={18} weight={ICON_WEIGHT} />
                         </Link>
-                        <WhatsappLink
-                            href={WHATSAPP_URL}
-                            source="site_general"
-                            className="inline-flex items-center gap-2 text-base font-medium text-fe-muted transition hover:text-fe-text"
-                        >
-                            WhatsApp&#39;tan danış
-                            <ArrowRight size={16} weight={ICON_WEIGHT} />
-                        </WhatsappLink>
                     </div>
                 </RevealOnScroll>
             </section>
