@@ -20,6 +20,7 @@ interface Props {
   loading: boolean;
   error: string | null;
   areaM2: number;
+  plateThicknessCm: number | null;
   onClose: () => void;
   onApply: (set: AccessorySetOption) => void;
 }
@@ -30,6 +31,7 @@ export function AccessorySetDialog({
   loading,
   error,
   areaM2,
+  plateThicknessCm,
   onClose,
   onApply,
 }: Props) {
@@ -63,6 +65,12 @@ export function AccessorySetDialog({
               {areaM2.toLocaleString("tr-TR")} m² için miktarlar hesaplandı — seçtiğiniz
               markanın tüm kalemleri tek seferde eklenir.
             </p>
+            {plateThicknessCm != null && (
+              <p className="mt-1 text-xs font-medium text-amber-200">
+                {String(plateThicknessCm).replace(".", ",")} cm levhada 4–5 cm duvar
+                tutunma payı gözetilir; uygun dübel boyu yukarı yuvarlanır.
+              </p>
+            )}
           </div>
           <button type="button" onClick={onClose} aria-label="Kapat"
             className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white">
@@ -142,11 +150,12 @@ export function AccessorySetDialog({
                 <button
                   type="button"
                   onClick={() => onApply(set)}
+                  disabled={!set.complete}
                   data-testid={`apply-set-${set.key}`}
-                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--nx-gold)] px-3 py-2 text-xs font-bold text-black transition-opacity hover:opacity-90"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--nx-gold)] px-3 py-2 text-xs font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <Check className="h-3.5 w-3.5" />
-                  Bu paketi ekle
+                  {set.complete ? "Bu paketi ekle" : "Eksik set — eklenemez"}
                 </button>
               </div>
             ))}

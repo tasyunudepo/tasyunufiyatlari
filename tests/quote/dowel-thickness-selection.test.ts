@@ -5,6 +5,7 @@ import {
   type AccessoryRow,
   type AccessoryTypeRow,
 } from '@/lib/quote/buildAccessorySet'
+import { requiredDowelLengthCm } from '@/lib/quote/selectAccessoryForSet'
 
 const DUBEL_TIPI: AccessoryTypeRow[] = [
   {
@@ -17,10 +18,15 @@ const DUBEL_TIPI: AccessoryTypeRow[] = [
   },
 ]
 
-function dubel(id: number, boyCm: number): AccessoryRow {
+function dubel(
+  id: number,
+  boyCm: number,
+  options: { material?: 'eps' | 'tasyunu'; name?: string; unitContent?: number } = {},
+): AccessoryRow {
+  const material = options.material ?? 'tasyunu'
   return {
     id,
-    name: `Fawori Optimix Taşyünü Dübeli Çelik Çivili ${String(boyCm).replace('.', ',')}cm 200 adet`,
+    name: options.name ?? `Fawori Optimix Taşyünü Dübeli Çelik Çivili ${String(boyCm).replace('.', ',')}cm 200 adet`,
     short_name: null,
     brand_id: 4,
     accessory_type_id: 3,
@@ -29,16 +35,16 @@ function dubel(id: number, boyCm: number): AccessoryRow {
     discount_2: 8,
     is_kdv_included: false,
     unit: 'KUTU',
-    unit_content: 200,
+    unit_content: options.unitContent ?? 200,
     dowel_length: boyCm,
-    is_for_eps: false,
-    is_for_tasyunu: true,
+    is_for_eps: material === 'eps',
+    is_for_tasyunu: material === 'tasyunu',
     is_active: true,
   }
 }
 
-describe('taşyünü dübeli levha kalınlığına göre seçilir', () => {
-  it('9 cm levhada ilk kayıt olan 11,5 cm yerine 15,5 cm dübel seçer', () => {
+describe('dübelde 4–5 cm duvar tutunma payı gözetilir', () => {
+  it('9 cm levhada 13 cm alt sınırını karşılayan 13,5 cm dübeli seçer', () => {
     const set = buildAccessorySet({
       accessoryTypes: DUBEL_TIPI,
       accessories: [dubel(35, 11.5), dubel(36, 13.5), dubel(37, 15.5)],
@@ -52,8 +58,8 @@ describe('taşyünü dübeli levha kalınlığına göre seçilir', () => {
     })
 
     expect(set.complete).toBe(true)
-    expect(set.items[0]?.accessoryId).toBe(37)
-    expect(set.items[0]?.description).toContain('15,5cm')
+    expect(set.items[0]?.accessoryId).toBe(36)
+    expect(set.items[0]?.description).toContain('13,5cm')
   })
 
   it('4 cm levhada 11,5 cm dübel seçimini korur', () => {
@@ -70,6 +76,58 @@ describe('taşyünü dübeli levha kalınlığına göre seçilir', () => {
     })
 
     expect(set.items[0]?.accessoryId).toBe(35)
+  })
+
+  it('10 cm EPS levhada 14 cm alt sınırını karşılayan 15,5 cm plastik dübeli seçer', () => {
+    const set = buildAccessorySet({
+      accessoryTypes: DUBEL_TIPI,
+      accessories: [
+        dubel(6, 11.5, {
+          material: 'eps',
+          name: 'Dalmaçyalı Plastik Dübel 11,5cm 600 adet',
+          unitContent: 600,
+        }),
+        // Tuğla dübeli önce gelse bile standart paket tercih edilmeli.
+        dubel(117, 15.5, {
+          material: 'eps',
+          name: 'Dalmaçyalı Tuğla Dübeli Plastik çivili 15,5 cm',
+          unitContent: 200,
+        }),
+        dubel(8, 15.5, {
+          material: 'eps',
+          name: 'Dalmaçyalı Plastik Dübel 15,5cm 600 adet',
+          unitContent: 600,
+        }),
+      ],
+      accessoryBrandId: 4,
+      accessoryBrandName: 'Dalmaçyalı',
+      materialType: 'eps',
+      plateThicknessCm: 10,
+      areaM2: 600,
+      marginPct: 3,
+      city: null,
+    })
+
+    expect(set.complete).toBe(true)
+    expect(requiredDowelLengthCm('eps', 10)).toBe(14)
+    expect(set.items[0]?.accessoryId).toBe(8)
+    expect(set.items[0]?.description).toBe('Dalmaçyalı Plastik Dübel 15,5cm 600 adet')
+  })
+
+  it('10 cm taşyününde 15,5 cm çelik çivili dübel seçer', () => {
+    const set = buildAccessorySet({
+      accessoryTypes: DUBEL_TIPI,
+      accessories: [dubel(35, 11.5), dubel(36, 13.5), dubel(37, 15.5)],
+      accessoryBrandId: 4,
+      accessoryBrandName: 'Fawori Optimix',
+      materialType: 'tasyunu',
+      plateThicknessCm: 10,
+      areaM2: 600,
+      marginPct: 3,
+      city: null,
+    })
+
+    expect(set.items[0]?.accessoryId).toBe(37)
   })
 
   it('TEKNO verisindeki 155 mm değerini 15,5 cm olarak yorumlar', () => {
@@ -92,7 +150,7 @@ describe('taşyünü dübeli levha kalınlığına göre seçilir', () => {
     expect(set.items[0]?.accessoryId).toBe(86)
   })
 
-  it('10 cm üstünde doğrulanmış dübel kuralı olmadığı için yanlış ürün üretmez', () => {
+  it('levha + 4 cm alt sınırını karşılayan ürün yoksa yanlış dübel üretmez', () => {
     const set = buildAccessorySet({
       accessoryTypes: DUBEL_TIPI,
       accessories: [dubel(35, 11.5), dubel(37, 15.5)],

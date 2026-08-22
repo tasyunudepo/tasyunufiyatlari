@@ -72,7 +72,10 @@ export function lineFromCatalog(item: CatalogItem, quantity: number): EditorLine
     ...createEmptyLine(),
     kind: item.kind === "levha" ? "levha" : "aksesuar",
     catalogKey: item.key,
-    description: item.label,
+    // Aksesuar kısa adı, standart 600'lük ürün ile 200'lük tuğla ürününü
+    // aynı gösterebiliyor. Teklif ve PDF daima veritabanındaki tam ticari adı
+    // taşır; levhada ise kalınlığı içeren katalog etiketi korunur.
+    description: item.kind === "aksesuar" ? item.fullName : item.label,
     quantity,
     unit: item.unit,
     unitPrice: item.suggestedUnitPrice,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     AlertTriangle,
     CheckCircle2,
@@ -20,6 +20,7 @@ import { describeVehicles, fitVehicles } from "@/lib/quote/vehicleArea";
 import { formatCurrency } from "@/lib/admin/utils";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
 import { useAdminQuotes } from "@/lib/hooks/useAdminQuotes";
+import { ADMIN_DASHBOARD_METRICS_KEY } from "@/lib/hooks/useAdminMetrics";
 import type { CatalogItem } from "@/app/api/admin/catalog-items/route";
 import type { AccessorySetOption } from "@/app/api/admin/accessory-sets/route";
 import { QuoteLineTable } from "@/components/admin/quote-editor/QuoteLineTable";
@@ -83,6 +84,7 @@ type Sonuc =
 export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
     const { canMutate } = useAdminRole();
     const { refresh } = useAdminQuotes();
+    const queryClient = useQueryClient();
 
     // ── Müşteri ──
     const [customerName, setCustomerName] = useState("");
@@ -431,6 +433,11 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 return;
             }
 
+            // Kayıt veritabanına geçtiği anda iki görünümü de tazele. PDF
+            // üretimi birkaç saniye sürse bile Genel Bakış eski kalmamalı.
+            void refresh();
+            void queryClient.invalidateQueries({ queryKey: ADMIN_DASHBOARD_METRICS_KEY });
+
             // ── PDF ──
             // Sıra: önce teklif kaydı (kodu sunucu verir), sonra PDF üretimi,
             // sonra private storage'a yükleme. Wizard'da kod istemcide
@@ -490,7 +497,6 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 pdfFilename,
                 pdfUyarisi,
             });
-            void refresh();
             onSaved?.();
         } catch {
             setSonuc({ tip: "hata", mesaj: "Bağlantı hatası — teklif kaydedilemedi." });
@@ -933,9 +939,10 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 open={setDialogAcik}
                 sets={setQuery.data?.sets ?? []}
                 loading={setQuery.isLoading}
-                error={setQuery.error ? (setQuery.error as Error).message : null}
-                areaM2={areaNum}
-                onClose={() => setSetDialogAcik(false)}
+                 error={setQuery.error ? (setQuery.error as Error).message : null}
+                 areaM2={areaNum}
+                 plateThicknessCm={plateThicknessCm}
+                 onClose={() => setSetDialogAcik(false)}
                 onApply={handleApplySet}
             />
 

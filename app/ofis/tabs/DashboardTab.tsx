@@ -13,6 +13,11 @@ import { formatCurrency, formatAmount, formatM2 } from "@/lib/admin/utils";
 import { useAdminQuotes } from "@/lib/hooks/useAdminQuotes";
 import { useDashboardMetrics } from "@/lib/hooks/useAdminMetrics";
 import { SIDDET_RENGI, bekleyisSuresi, saatFarki, sureGosterimi } from "@/lib/admin/formatDuration";
+import {
+    dashboardQuoteChannelLabel,
+    isOpenDashboardQuote,
+    selectRecentUncontactedQuotes,
+} from "@/lib/admin/dashboardQuotes";
 
 type LucideIcon = typeof FileText;
 
@@ -201,21 +206,20 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
     // Eski üst şerit "Bugünkü Teklif 0 · Bekleyen 0 · PDF 0 · WhatsApp 0"
     // gösteriyordu: gün içinde teklif gelmediyse panel bomboş hissettiriyordu,
     // oysa 22 teklif temassız bekliyordu. Şerit artık EYLEME dönük.
-    const isOpen = (q: DashboardQuote) => !["completed", "rejected"].includes(q.status ?? "");
     // react-query'nin veri damgası; render içinde Date.now() çağrılmaz.
     const olcumAni = quotesLoadedAt || 0;
     const todayStr = new Date(olcumAni).toISOString().slice(0, 10);
 
-    const openQuotes = dashboardQuotes.filter(isOpen);
+    const openQuotes = dashboardQuotes.filter(isOpenDashboardQuote);
     const uncontacted = openQuotes.filter((q) => !q.contact_attempted_at);
     const dueFollowUps = openQuotes.filter(
         (q) => q.follow_up_date && q.follow_up_date.slice(0, 10) <= todayStr,
     );
 
-    /** En uzun bekleyen temassız teklifler — önce onlar aranmalı. */
-    const worklist = [...uncontacted]
-        .sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at))
-        .slice(0, 5);
+    // Yeni manuel teklifler 5 haftalık kayıtların arkasında kalmamalı. Eski
+    // kayıtlar toplam sayıda ve Teklifler sekmesinde durur; üst liste son
+    // eklenen temassız teklifleri gösterir.
+    const worklist = selectRecentUncontactedQuotes(dashboardQuotes, 5);
 
     return (
         <div className="space-y-6">
@@ -262,18 +266,17 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                 />
             </div>
 
-            {/* Bugünün iş listesi — audit E6: bu veri zaten hesaplanıyordu ama
-                Teklifler sekmesinin ortasına gömülüydü; panelin açılış ekranında
-                yoktu. Artık ilk görülen şey yapılacak iş. */}
-            {(worklist.length > 0 || dueFollowUps.length > 0) && (
+            {/* Yeni temassızlar üstte görünür; eski kayıtların tamamı Teklifler
+                sekmesinde ve KPI toplamında korunur. */}
+            {worklist.length > 0 && (
                 <div className="nx-hero-card" data-testid="dashboard-worklist">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--nx-text-soft)]">Bugün Yapılacaklar</p>
-                            <h3 className="mt-1 text-base font-semibold text-[var(--nx-text)]">
-                                {uncontacted.length} temassız
-                                {dueFollowUps.length > 0 && ` · ${dueFollowUps.length} takip`}
-                            </h3>
+                            <h3 className="text-base font-semibold text-[var(--nx-text)]">En Yeni Temassız Teklifler</h3>
+                            <p className="mt-1 text-[11px] text-[var(--nx-text-soft)]">
+                                {uncontacted.length} toplam temassız
+                                {dueFollowUps.length > 0 && ` · bugün ${dueFollowUps.length} takip`}
+                            </p>
                         </div>
                         <button
                             onClick={() => onNavigate("quotes")}
@@ -432,7 +435,7 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <p className="text-[10px] uppercase tracking-wider text-[var(--nx-gold)]">
-                                            {q.request_type === "pdf_quote" ? "PDF" : "WhatsApp"}
+                                            {dashboardQuoteChannelLabel(q.request_type)}
                                         </p>
                                         <p className="text-[11px] text-[var(--nx-text-soft)]">{formatCurrency(q.total_price ?? 0)}</p>
                                     </div>

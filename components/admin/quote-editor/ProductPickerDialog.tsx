@@ -35,7 +35,11 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
     const q = query.trim().toLocaleLowerCase("tr-TR");
     return items
       .filter((i) => (kind === "hepsi" ? true : i.kind === kind))
-      .filter((i) => (q ? i.label.toLocaleLowerCase("tr-TR").includes(q) : true))
+      .filter((i) => {
+        if (!q) return true;
+        const text = `${i.label} ${i.fullName} ${i.brandName}`.toLocaleLowerCase("tr-TR");
+        return text.includes(q);
+      })
       .slice(0, 200);
   }, [items, query, kind]);
 
@@ -108,9 +112,14 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
                     className="flex w-full items-center justify-between gap-4 px-3 py-2.5 text-left transition-colors hover:bg-[rgba(201,168,76,0.08)]"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm text-white">{item.label}</p>
+                      <p className="truncate text-sm text-white" title={item.kind === "aksesuar" ? item.fullName : item.label}>
+                        {item.kind === "aksesuar" ? item.fullName : item.label}
+                      </p>
                       <p className="mt-0.5 text-[11px] text-[var(--nx-text-muted)]">
                         {item.kind === "levha" ? "Levha" : "Aksesuar"} · {item.unit}
+                        {item.kind === "aksesuar" && item.unitContent && item.unitContent > 1
+                          ? ` · paket içeriği ${item.unitContent}`
+                          : ""}
                         {" · marj %"}{item.marginPct}
                         <span className="text-[var(--nx-text-muted)]"> ({item.marginSource})</span>
                       </p>

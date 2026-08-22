@@ -25,24 +25,23 @@ export function normalizeDowelLengthCm(value: number | null | undefined): number
 }
 
 /**
- * Tedarikçi set kuralı:
- * - taşyünü 3–6 cm → en az 11,5 cm; 7–10 cm → en az 15,5 cm çelik dübel
- * - EPS 3–6 cm → en az 9,5 cm; 7–10 cm → en az 11,5 cm plastik dübel
+ * Teknik seçim kuralı: duvarda yaklaşık 4–5 cm tutunma payı hedeflenir.
+ * Alt sınır levha + 4 cm'dir; katalogdaki bu sınırı karşılayan en kısa boy
+ * seçilir. Örneğin 10 cm levhada alt sınır 14 cm, mevcut uygun ürün 15,5 cm'dir.
  *
- * Kalınlık yoksa geriye dönük çağrılar için `undefined`, tanımlı aralığın
- * dışındaysa yanlış/eksik dübel üretmemek için `null` döner.
+ * Kalınlık yoksa geriye dönük çağrılar için `undefined`, geçersiz bir değer
+ * geldiyse yanlış/eksik dübel üretmemek için `null` döner.
  */
 export function requiredDowelLengthCm(
-  materialType: MaterialType,
+  _materialType: MaterialType,
   plateThicknessCm: number | null | undefined,
 ): number | null | undefined {
   if (plateThicknessCm == null) return undefined
 
   const thickness = Number(plateThicknessCm)
-  if (!Number.isFinite(thickness) || thickness < 3 || thickness > 10) return null
+  if (!Number.isFinite(thickness) || thickness <= 0) return null
 
-  if (materialType === 'tasyunu') return thickness <= 6 ? 11.5 : 15.5
-  return thickness <= 6 ? 9.5 : 11.5
+  return Number((thickness + 4).toFixed(2))
 }
 
 function isDowelType(type: SelectableAccessoryType): boolean {
@@ -76,18 +75,31 @@ export function selectAccessoryForSet<T extends SelectableAccessory>(input: {
   const requiredLength = requiredDowelLengthCm(materialType, plateThicknessCm)
   // Kalınlık taşımayan eski/bağımsız çağrılarda mevcut sıra davranışı korunur.
   if (requiredLength === undefined) return candidates[0] ?? null
-  // Tanımlı kalınlık aralığı dışındaysa yanlış dübel seçmek yerine set eksik kalır.
+  // Kalınlık geçersizse yanlış dübel seçmek yerine set eksik kalır.
   if (requiredLength === null) return null
 
   let selected: T | null = null
   let selectedLength = Number.POSITIVE_INFINITY
+  let selectedUnitContent = 0
 
   for (const candidate of candidates) {
-    if (Number(candidate.unit_content ?? 0) <= 0) continue
+    const unitContent = Number(candidate.unit_content ?? 0)
+    if (unitContent <= 0) continue
     const length = normalizeDowelLengthCm(candidate.dowel_length)
-    if (length == null || length < requiredLength || length >= selectedLength) continue
+    if (length == null || length < requiredLength) continue
+
+    // Aynı boyda standart 600'lük plastik dübel ile 200'lük tuğla ürünü
+    // birlikte bulunabiliyor. Toz grubu setinde daha büyük standart paket
+    // tercih edilir; sorgu sırası değişse bile özel amaçlı küçük kutu sete
+    // sessizce giremez.
+    const dahaIyi =
+      length < selectedLength ||
+      (length === selectedLength && unitContent > selectedUnitContent)
+    if (!dahaIyi) continue
+
     selected = candidate
     selectedLength = length
+    selectedUnitContent = unitContent
   }
 
   return selected

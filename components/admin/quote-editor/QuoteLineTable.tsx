@@ -195,9 +195,14 @@ export function QuoteLineTable({
                               }`}
                             >
                               <span className="min-w-0">
-                                <span className="block truncate text-xs text-white">{item.label}</span>
+                                <span className="block truncate text-xs text-white" title={item.kind === "aksesuar" ? item.fullName : item.label}>
+                                  {item.kind === "aksesuar" ? item.fullName : item.label}
+                                </span>
                                 <span className="block text-[10px] text-[var(--nx-text-muted)]">
                                   {item.brandName} · {item.unit}
+                                  {item.kind === "aksesuar" && item.unitContent && item.unitContent > 1
+                                    ? ` · paket içeriği ${item.unitContent}`
+                                    : ""}
                                 </span>
                               </span>
                               <span className="shrink-0 tabular-nums text-xs font-semibold text-[var(--nx-gold)]">

@@ -244,7 +244,7 @@ test.describe('yarı otomatik teklif ekranı', () => {
     await page.context().close()
   })
 
-  test('AC-06: Diyarbakır Optimix %9 + %8 ve 9 cm levhaya 15,5 cm dübel', async ({
+  test('AC-06: Diyarbakır Optimix %9 + %8 ve dübelde 4–5 cm tutunma payı', async ({
     browser,
   }) => {
     const page = await acEkran(browser)
@@ -261,17 +261,16 @@ test.describe('yarı otomatik teklif ekranı', () => {
     await expect(optimixKart).toHaveCount(1, { timeout: 30_000 })
     await optimixKart.locator('[data-testid^="apply-set-"]').click()
 
-    // 14 Ağustos 2026 düzeltmesi: önceki kabul 9 cm levhada ilk kayıt olan
-    // 11,5 cm dübeli kilitliyordu. Tedarikçi kuralı 7–10 cm taşyününde
-    // 15,5 cm olduğundan ürün ve buna bağlı teklif toplamı birlikte değişti.
+    // 21 Ağustos 2026 kuralı: duvarda yaklaşık 4–5 cm tutunma payı hedeflenir.
+    // 9 cm levhada alt sınır 13 cm; en kısa yeterli katalog ürünü 13,5 cm'dir.
     const urunler = await sutun(page, 2)
-    expect(urunler).toContain('Fawori Optimix Taşyünü Dübeli Çelik Çivili 15,5cm 200 adet')
+    expect(urunler).toContain('Fawori Optimix Taşyünü Dübeli Çelik Çivili 13,5cm 200 adet')
     expect(urunler).not.toContain('Fawori Optimix Taşyünü Dübeli Çelik Çivili 11,5cm 200 adet')
 
     expect((await sutun(page, 5)).slice(1)).toEqual([
-      '180.65', '199.99', '1274.64', '1350.24', '2329.51', '1213.1', '284.82',
+      '180.65', '199.99', '1186.73', '1350.24', '2329.51', '1213.1', '284.82',
     ])
-    await expect(page.getByText('2.884.103,48 ₺')).toBeVisible()
+    await expect(page.getByText('2.875.031,17 ₺')).toBeVisible()
 
     await page.context().close()
   })
