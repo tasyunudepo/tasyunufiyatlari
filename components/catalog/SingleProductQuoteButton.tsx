@@ -13,6 +13,7 @@ import type { CatalogProductView } from '@/lib/catalog/types';
 import { formatBrandProductName, formatBrandName } from '@/lib/brandFormat';
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp';
 import { buildQuoteSurfacePricing } from '@/lib/pricing/quoteTotals';
+import { createClientIdempotencyKey } from '@/lib/utils/clientIdempotencyKey';
 
 interface Props {
   product: CatalogProductView;
@@ -176,7 +177,7 @@ export default function SingleProductQuoteButton({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Idempotency-Key': crypto.randomUUID(),
+            'Idempotency-Key': createClientIdempotencyKey(),
           },
           body: JSON.stringify({
             customerName:    formData.relatedPerson,
@@ -227,7 +228,6 @@ export default function SingleProductQuoteButton({
         pdfUploadCapability?: string;
       } | null;
       if (!quoteRes.ok || !quoteResult?.ok) {
-        console.error('Catalog PDF quote save failed:', { status: quoteRes.status });
         throw new Error(quoteResult?.error || 'Teklif kaydı oluşturulamadı.');
       }
       if (!quoteResult.quoteId || !quoteResult.pdfUploadCapability) {
@@ -269,8 +269,11 @@ export default function SingleProductQuoteButton({
         whatsappUrl: buildWhatsAppLink(message),
         emailUrl: `mailto:${encodeURIComponent(formData.email || '')}?subject=${encodeURIComponent(`Fiyat teklifi ${refCode}`)}&body=${encodeURIComponent(`${message}\n\nPDF teklifini bu ekrandan indirebilirsiniz.`)}`,
       });
-    } catch {
-      console.error('Katalog PDF teklif akışı tamamlanamadı.');
+    } catch (error) {
+      console.warn(
+        '[catalog-pdf] Teklif akışı tamamlanamadı:',
+        error instanceof Error ? error.message : 'bilinmeyen hata',
+      );
       setSubmitError(
         'Teklif kaydı oluşturulamadı. Bilgilerinizi kontrol edip tekrar deneyin.',
       );

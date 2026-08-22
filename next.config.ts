@@ -11,6 +11,12 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const projectNodeModules = path.join(projectRoot, "node_modules");
 
 const nextConfig: NextConfig = {
+  // Telefon/tablet üzerinden aynı yerel ağdaki development sunucusuna
+  // bağlanırken Next 16 HMR kaynağını varsayılan olarak cross-origin sayıyor.
+  // Bu izin yalnız geliştirmede geçerlidir; production yapılandırmasına taşınmaz.
+  allowedDevOrigins: process.env.NODE_ENV === "development"
+    ? ["192.168.1.2"]
+    : undefined,
   webpack(config) {
     config.resolve = config.resolve ?? {};
     const existingModules = Array.isArray(config.resolve.modules)

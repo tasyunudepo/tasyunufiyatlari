@@ -21,7 +21,10 @@ export default function SalesIntentGate() {
   const primaryRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
-  const isExcluded = EXCLUDED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  // Ana sayfa artık kendi içinde tek dönüşüm yolunu kuruyor. Girişteki iki
+  // seçenekli modal bu yolu bölmemeli; diğer yüzeylerde mevcut davranış sürer.
+  const isExcluded = pathname === '/'
+    || EXCLUDED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 
   useEffect(() => {
     if (isExcluded || readSalesIntent()) return

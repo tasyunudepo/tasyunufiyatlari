@@ -19,23 +19,41 @@ export interface QuoteContext {
   totalKdvHaric: number;      // 335704
   shippingMessage: string;    // "fiyata dahil" | "satış görüşmesinde netleşir"
   refCode?: string;           // "TY123456" — opsiyonel
+  subRegionName?: string;
+  setContext?: {
+    itemCount: number;
+    plateName: string;
+    tierName: string;
+  };
 }
 
 export function generateQuoteWhatsAppMessage(ctx: QuoteContext): string {
   // WhatsApp'ta profil adı ve telefon otomatik görünür; tekrar
   // istemek gereksiz sürtünme yaratır. Emoji de kalabalık yaptığı
   // için kaldırıldı — müşteri kendi satırında sadece niyet + bağlam.
-  const lines: string[] = [
-    "Merhaba,",
-    "",
-    `${ctx.productName}${ctx.thicknessCm ? ` (${ctx.thicknessCm} cm)` : ""} için teklif almak istiyorum.`,
+  const lines: string[] = ["Merhaba,", ""];
+
+  if (ctx.setContext) {
+    lines.push(
+      `${ctx.setContext.itemCount} kalem komple mantolama seti siparişi başlatmak istiyorum.`,
+      "",
+      `Levha: ${ctx.setContext.plateName}`,
+      `Sistem: ${ctx.setContext.tierName}`,
+    );
+  } else {
+    lines.push(
+      `${ctx.productName}${ctx.thicknessCm ? ` (${ctx.thicknessCm} cm)` : ""} için teklif almak istiyorum.`,
+    );
+  }
+
+  lines.push(
     "",
     `${ctx.metrajM2.toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m² · ${ctx.vehicleLabel}`,
-    `${ctx.cityName || "Teslimat şehri belirsiz"}`,
+    [ctx.cityName || "Teslimat şehri belirsiz", ctx.subRegionName].filter(Boolean).join(" / "),
     `${ctx.pricePerM2.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺/m² (KDV hariç)`,
     `~${ctx.totalKdvHaric.toLocaleString("tr-TR")} ₺ toplam (KDV hariç)`,
     `Nakliye: ${ctx.shippingMessage}`,
-  ];
+  );
   if (ctx.refCode) {
     lines.push("", `Ref: ${ctx.refCode}`);
   }

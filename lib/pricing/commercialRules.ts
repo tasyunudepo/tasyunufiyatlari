@@ -46,6 +46,80 @@ export function validateMinimumOrder(areaM2: number, minimumM2: number) {
     : { ok: true as const }
 }
 
+const VEHICLE_AREA_DECIMALS = 2
+const DISPLAY_ROUNDING_TOLERANCE_M2 = 0.05
+
+const roundVehicleArea = (value: number): number =>
+  Math.round((value + Number.EPSILON) * 10 ** VEHICLE_AREA_DECIMALS)
+  / 10 ** VEHICLE_AREA_DECIMALS
+
+/** HTML number inputuna kapasiteyi kayan nokta artığı olmadan yazar. */
+export function formatVehicleAreaInput(value: number): string {
+  return Number.isFinite(value) ? String(roundVehicleArea(value)) : ''
+}
+
+/**
+ * İhtiyacı karşılayan en yakın tam araç seçeneklerini üretir.
+ * Birden fazla kamyon teknik olarak geçerli olsa da ticari öneride TIR ve
+ * en fazla bir kamyonlu kombinasyon önceliklendirilir.
+ */
+export function buildFullVehicleSuggestions(input: {
+  requestedAreaM2: number
+  lorryCapacityM2: number
+  truckCapacityM2: number
+}): { m2: number; label: string }[] {
+  const { requestedAreaM2, lorryCapacityM2, truckCapacityM2 } = input
+  if (
+    !Number.isFinite(requestedAreaM2)
+    || !Number.isFinite(lorryCapacityM2)
+    || !Number.isFinite(truckCapacityM2)
+    || requestedAreaM2 <= 0
+    || lorryCapacityM2 <= 0
+    || truckCapacityM2 <= 0
+  ) return []
+
+  const candidates: { m2: number; label: string }[] = []
+  const fullTruckCount = Math.max(
+    1,
+    Math.ceil((requestedAreaM2 - DISPLAY_ROUNDING_TOLERANCE_M2) / truckCapacityM2),
+  )
+  candidates.push({
+    m2: roundVehicleArea(fullTruckCount * truckCapacityM2),
+    label: `${fullTruckCount} TIR`,
+  })
+
+  const baseTruckCount = Math.floor(
+    (requestedAreaM2 + DISPLAY_ROUNDING_TOLERANCE_M2) / truckCapacityM2,
+  )
+  if (baseTruckCount > 0) {
+    const mixedAreaM2 = roundVehicleArea(
+      baseTruckCount * truckCapacityM2 + lorryCapacityM2,
+    )
+    if (mixedAreaM2 + DISPLAY_ROUNDING_TOLERANCE_M2 >= requestedAreaM2) {
+      candidates.push({
+        m2: mixedAreaM2,
+        label: `${baseTruckCount} TIR + 1 Kamyon`,
+      })
+    }
+  }
+
+  const roundedLorryM2 = roundVehicleArea(lorryCapacityM2)
+  if (roundedLorryM2 + DISPLAY_ROUNDING_TOLERANCE_M2 >= requestedAreaM2) {
+    candidates.push({ m2: roundedLorryM2, label: '1 Kamyon' })
+  }
+
+  const unique = new Map<string, { m2: number; label: string }>()
+  for (const candidate of candidates) {
+    const key = formatVehicleAreaInput(candidate.m2)
+    if (!unique.has(key)) unique.set(key, candidate)
+  }
+
+  return [...unique.values()]
+    .filter(option => option.m2 + DISPLAY_ROUNDING_TOLERANCE_M2 >= requestedAreaM2)
+    .sort((a, b) => a.m2 - b.m2)
+    .slice(0, 3)
+}
+
 export function isValidFullVehicleArea(input: {
   areaM2: number
   lorryCapacityM2: number

@@ -20,9 +20,9 @@ describe('atomik teklif koruması sözleşmesi', () => {
   })
 
   it("istemci kimliklerini ham değil HMAC özetiyle RPC'ye taşır", () => {
-    expect(route).toContain("hashGuardValue('ip', clientIp)")
-    expect(route).toContain("hashGuardValue('phone', normalizedPhone)")
-    expect(route).toContain("hashGuardValue('idempotency', idempotencyKey)")
+    expect(route).toMatch(/hashGuardValue\('ip', clientIp(?:, explicitSecret)?\)/)
+    expect(route).toMatch(/hashGuardValue\('phone', normalizedPhone(?:, explicitSecret)?\)/)
+    expect(route).toMatch(/hashGuardValue\('idempotency', idempotencyKey(?:, explicitSecret)?\)/)
     expect(migration).not.toMatch(/\bclient_ip\s+(TEXT|INET)/i)
   })
 

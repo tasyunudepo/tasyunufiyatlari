@@ -15,6 +15,8 @@ interface SiteHeaderProps {
   tone?: Tone;
   /** Geriye dönük uyumluluk: önceki adı `theme`, kademeli geçiş için */
   theme?: Tone;
+  /** Ana sayfadaki tek dönüşüm yolunu korur; satış CTA ve üst bilgi şeridini gizler. */
+  minimal?: boolean;
 }
 
 const NAV = [
@@ -34,7 +36,7 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname === href || pathname.startsWith(href + '/');
 }
 
-export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
+export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderProps) {
   const resolvedTone: Tone = tone ?? theme ?? 'dark';
   const isWarm = resolvedTone === 'warm';
   const pathname = usePathname();
@@ -90,7 +92,7 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
       : 'bg-fe-surface border-b border-fe-border/40';
 
   // ─── Top bar — sadece dark theme'da render edilir ───────────────
-  const showTopBar = !isWarm;
+  const showTopBar = !isWarm && !minimal;
 
   return (
     <>
@@ -154,13 +156,15 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
               })}
 
               {/* Desktop CTA */}
-              <Link
-                href="/#mantolama-hesaplayici"
-                prefetch={false}
-                className="btn-primary !py-2 !px-4 !text-sm ml-1 sm:ml-2 hidden sm:inline-flex"
-              >
-                1 TIR istiyorum
-              </Link>
+              {!minimal && (
+                <Link
+                  href="/#mantolama-hesaplayici"
+                  prefetch={false}
+                  className="btn-primary !py-2 !px-4 !text-sm ml-1 sm:ml-2 hidden sm:inline-flex"
+                >
+                  1 TIR istiyorum
+                </Link>
+              )}
 
               {/* Mobile hamburger */}
               <button
@@ -244,16 +248,18 @@ export default function SiteHeader({ tone, theme }: SiteHeaderProps) {
         </nav>
 
         {/* Footer shortcuts */}
-        <div className="border-t border-fe-border/40 px-4 py-5 space-y-3 shrink-0">
-          <Link
-            href="/#mantolama-hesaplayici"
-            onClick={() => setMobileOpen(false)}
-            className="btn-primary w-full"
-          >
-            1 TIR istiyorum
-            <ArrowRight weight={ICON_WEIGHT} size={18} className="btn-arrow" />
-          </Link>
-        </div>
+        {!minimal && (
+          <div className="border-t border-fe-border/40 px-4 py-5 space-y-3 shrink-0">
+            <Link
+              href="/#mantolama-hesaplayici"
+              onClick={() => setMobileOpen(false)}
+              className="btn-primary w-full"
+            >
+              1 TIR istiyorum
+              <ArrowRight weight={ICON_WEIGHT} size={18} className="btn-arrow" />
+            </Link>
+          </div>
+        )}
       </aside>
     </>
   );

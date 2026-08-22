@@ -214,6 +214,8 @@ export interface CalculatedPackageItem {
     unit: string;
     unitPrice: number;
     totalPrice: number;
+    /** Sonuç ekranında ürünün sistemdeki işlevi; reçete sırasından türetilir. */
+    categoryLabel?: string;
     // Wizard specific fields added to global type
     isPlate?: boolean;
     packageCount?: number;
@@ -249,6 +251,8 @@ export interface CalculatedPackage {
         isShippingIncluded?: boolean;
         shippingMode?: 'included_in_sale_price' | 'buyer_pays' | 'separate_quote_required';
         shippingWarning?: string;
+        /** Nakliyenin hangi doğrulanmış ticari koşulla dahil olduğunu açıklar. */
+        shippingQualification?: 'full_vehicle' | 'eps_complete_set';
     };
 }
 

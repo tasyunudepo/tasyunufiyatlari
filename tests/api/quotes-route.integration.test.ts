@@ -85,6 +85,17 @@ function request(payload: Record<string, unknown>) {
   })
 }
 
+function localDevelopmentRequest(payload: Record<string, unknown>) {
+  return new NextRequest('http://127.0.0.1:3000/api/quotes', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'idempotency-key': '3f43a9b2-d620-4f16-b173-8fc4d59eedbe',
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 describe('/api/quotes atomik route entegrasyonu', () => {
   beforeEach(() => {
     process.env.QUOTE_ABUSE_HASH_SECRET =
@@ -187,6 +198,60 @@ describe('/api/quotes atomik route entegrasyonu', () => {
       consent_channel: 'wizard',
     })
     expect(mocks.sendNotification).toHaveBeenCalledTimes(1)
+  })
+
+  it('yerel development isteğini proxy IP başlığı ve production secret olmadan çalıştırır', async () => {
+    delete process.env.QUOTE_ABUSE_HASH_SECRET
+    vi.stubEnv('NODE_ENV', 'development')
+    mocks.rpc.mockResolvedValue({
+      data: [{
+        outcome: 'created',
+        quote_id: 43,
+        created_at: '2026-08-22T00:00:00.000Z',
+        retry_after_seconds: null,
+        limited_by: null,
+      }],
+      error: null,
+    })
+
+    try {
+      const response = await POST(localDevelopmentRequest(validPayload))
+      expect(response.status).toBe(200)
+      expect(mocks.rpc).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
+  it('yerel development PDF teklifini production secret olmadan kaydedip upload capability döner', async () => {
+    delete process.env.QUOTE_ABUSE_HASH_SECRET
+    delete process.env.PDF_CAPABILITY_SECRET
+    vi.stubEnv('NODE_ENV', 'development')
+    mocks.rpc.mockResolvedValue({
+      data: [{
+        outcome: 'created',
+        quote_id: 44,
+        created_at: '2026-08-22T00:00:00.000Z',
+        retry_after_seconds: null,
+        limited_by: null,
+      }],
+      error: null,
+    })
+
+    try {
+      const response = await POST(localDevelopmentRequest({
+        ...validPayload,
+        submissionType: 'pdf_quote',
+      }))
+      const body = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(body).toMatchObject({ ok: true, quoteId: 44 })
+      expect(body.pdfUploadCapability).toMatch(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/)
+      expect(mocks.rpc).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it('10 eşzamanlı tekrarın yalnız created sonucunda tek bildirim üretmesine izin verir', async () => {

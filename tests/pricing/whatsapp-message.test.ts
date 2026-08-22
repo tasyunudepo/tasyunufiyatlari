@@ -32,4 +32,22 @@ describe('WhatsApp teklif nakliye metni', () => {
     expect(message).toContain('Nakliye: satış görüşmesinde netleşir')
     expect(message).not.toContain('KDV hariç, nakliye dahil')
   })
+
+  it('komple set siparişinde levha, tier ve alt bölge bağlamını taşır', () => {
+    const message = generateQuoteWhatsAppMessage({
+      ...baseContext,
+      shippingMessage: 'fiyata dahil',
+      subRegionName: 'Avrupa Yakası',
+      setContext: {
+        itemCount: 8,
+        plateName: 'Bonus F 150 8 cm Taşyünü',
+        tierName: 'Dengeli Sistem',
+      },
+    })
+
+    expect(message).toContain('8 kalem komple mantolama seti')
+    expect(message).toContain('Levha: Bonus F 150 8 cm Taşyünü')
+    expect(message).toContain('Sistem: Dengeli Sistem')
+    expect(message).toContain('İstanbul / Avrupa Yakası')
+  })
 })

@@ -232,6 +232,7 @@ describe('PDF_CAPABILITY_SECRET', () => {
   const originalSecret = process.env.PDF_CAPABILITY_SECRET
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     if (originalSecret === undefined) {
       delete process.env.PDF_CAPABILITY_SECRET
     } else {
@@ -284,6 +285,30 @@ describe('PDF_CAPABILITY_SECRET', () => {
       ).toThrow(PdfCapabilityError)
     },
   )
+
+  it('yalnız development ortamında ortak yerel secret ile token üretip doğrular', () => {
+    delete process.env.PDF_CAPABILITY_SECRET
+    vi.stubEnv('NODE_ENV', 'development')
+
+    const token = createPdfCapabilityToken(
+      {
+        quoteId: 42,
+        action: 'upload',
+        expiresAt: NOW_SECONDS + 60,
+      },
+      undefined,
+      NOW_SECONDS,
+    )
+
+    expect(
+      verifyPdfCapabilityToken(
+        token,
+        { expectedQuoteId: 42, expectedAction: 'upload' },
+        undefined,
+        NOW_SECONDS,
+      ),
+    ).toMatchObject({ quoteId: '42', action: 'upload' })
+  })
 
   it('yapılandırma ön kontrolü güçlü secret ile geçer', () => {
     expect(() => assertPdfCapabilityConfigured(TEST_SECRET)).not.toThrow()

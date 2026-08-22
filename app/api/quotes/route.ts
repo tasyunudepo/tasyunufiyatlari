@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'node:crypto'
 import { ZodError } from 'zod'
 
 import { sendNotification, type LeadEventType } from '@/lib/notifications'
@@ -28,6 +29,10 @@ export const runtime = 'nodejs'
 const CONSENT_VERSION = 'kvkk-teklif-v1'
 const CONSENT_PURPOSE = 'fiyat_teklifi_ve_iletisim'
 const DEFAULT_PDF_CAPABILITY_TTL_SECONDS = 600
+// Yerel Next sunucusunda reverse proxy başlıkları ve üretim secret'ı yoktur.
+// Bu anahtar yalnız development sürecinde, process ömrü boyunca kullanılır;
+// production/test ortamları mevcut fail-closed davranışını korur.
+const LOCAL_DEVELOPMENT_GUARD_SECRET = randomBytes(32).toString('hex')
 
 type GuardedRpcRow = {
   outcome: 'created' | 'replayed' | 'deduplicated' | 'conflict' | 'rate_limited'
@@ -41,6 +46,30 @@ function getPdfCapabilityTtlSeconds(): number {
   const configured = Number(process.env.PDF_UPLOAD_CAPABILITY_TTL_SECONDS)
   if (!Number.isSafeInteger(configured)) return DEFAULT_PDF_CAPABILITY_TTL_SECONDS
   return Math.min(1800, Math.max(60, configured))
+}
+
+function resolveQuoteGuardContext(headers: Headers) {
+  const isLocalDevelopment = process.env.NODE_ENV === 'development'
+  let clientIp: string
+
+  try {
+    clientIp = getTrustedClientIp(headers)
+  } catch (error) {
+    if (
+      !isLocalDevelopment
+      || !(error instanceof QuoteGuardInputError)
+      || error.code !== 'missing_client_ip'
+    ) {
+      throw error
+    }
+    clientIp = '127.0.0.1'
+  }
+
+  const explicitSecret = isLocalDevelopment && !process.env.QUOTE_ABUSE_HASH_SECRET
+    ? LOCAL_DEVELOPMENT_GUARD_SECRET
+    : undefined
+
+  return { clientIp, explicitSecret }
 }
 
 function mapQuotePayload(payload: ReturnType<typeof apiQuoteSchema.parse>) {
@@ -115,12 +144,12 @@ export async function POST(req: NextRequest) {
     }
 
     const idempotencyKey = readIdempotencyKey(req.headers)
-    const clientIp = getTrustedClientIp(req.headers)
+    const { clientIp, explicitSecret } = resolveQuoteGuardContext(req.headers)
     const normalizedPhone = normalizePhoneForGuard(payload.customerPhone)
-    const idempotencyHash = hashGuardValue('idempotency', idempotencyKey)
-    const requestFingerprint = buildQuoteFingerprint(payload)
-    const phoneHash = hashGuardValue('phone', normalizedPhone)
-    const ipHash = hashGuardValue('ip', clientIp)
+    const idempotencyHash = hashGuardValue('idempotency', idempotencyKey, explicitSecret)
+    const requestFingerprint = buildQuoteFingerprint(payload, explicitSecret)
+    const phoneHash = hashGuardValue('phone', normalizedPhone, explicitSecret)
+    const ipHash = hashGuardValue('ip', clientIp, explicitSecret)
     const supabase = createServerSupabaseClient()
 
     const { data: materialRule, error: materialRuleError } = await supabase

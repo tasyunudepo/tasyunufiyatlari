@@ -28,7 +28,7 @@ const GROUPS = [
   {
     eyebrow: 'İletişim',
     links: [
-      { href: '/#mantolama-hesaplayici', label: '1 TIR istiyorum' },
+      { href: '/#mantolama-hesaplayici', label: 'Fiyatımı Hesapla' },
       { href: '/iletisim', label: 'Teklif referansıyla iletişim' },
     ],
   },

@@ -3,12 +3,61 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import {
+  buildFullVehicleSuggestions,
+  formatVehicleAreaInput,
   isValidFullVehicleArea,
   getShippingPresentation,
   resolveVehicleTypeFromPackages,
   validateMinimumOrder,
   resolveEpsShippingDecision,
 } from '@/lib/pricing/commercialRules'
+
+describe('Tam araç metraj önerileri', () => {
+  const capacities = {
+    lorryCapacityM2: 967.68,
+    truckCapacityM2: 1774.08,
+  }
+
+  it('kamyon altı ihtiyaçta gerçek hassasiyetle kamyon ve TIR seçeneği üretir', () => {
+    expect(buildFullVehicleSuggestions({ requestedAreaM2: 500, ...capacities })).toEqual([
+      { m2: 967.68, label: '1 Kamyon' },
+      { m2: 1774.08, label: '1 TIR' },
+    ])
+  })
+
+  it('ihtiyacın belirgin biçimde altında kalan aracı önermez', () => {
+    expect(buildFullVehicleSuggestions({ requestedAreaM2: 1000, ...capacities })).toEqual([
+      { m2: 1774.08, label: '1 TIR' },
+    ])
+  })
+
+  it('yüksek ara metraj için geçerli TIR ve kamyon kombinasyonlarını üretir', () => {
+    expect(buildFullVehicleSuggestions({ requestedAreaM2: 2000, ...capacities })).toEqual([
+      { m2: 2741.76, label: '1 TIR + 1 Kamyon' },
+      { m2: 3548.16, label: '2 TIR' },
+    ])
+  })
+
+  it('input değerini kayan nokta artığı olmadan kapasite hassasiyetinde yazar', () => {
+    expect(formatVehicleAreaInput(967.6800000001)).toBe('967.68')
+    expect(formatVehicleAreaInput(1774.1)).toBe('1774.1')
+  })
+
+  it.each([
+    { lorryCapacityM2: 967.68, truckCapacityM2: 1774.08, packageSizeM2: 2.88 },
+    { lorryCapacityM2: 1120, truckCapacityM2: 2080, packageSizeM2: 5 },
+    { lorryCapacityM2: 806.4, truckCapacityM2: 1497.6, packageSizeM2: 5.04 },
+  ])('üretilen her öneri doğrulayıcının kabul ettiği tam araç kombinasyonudur: $lorryCapacityM2/$truckCapacityM2', capacities => {
+    for (const requestedAreaM2 of [1, 500, 1000, 2000, 5000]) {
+      const suggestions = buildFullVehicleSuggestions({ requestedAreaM2, ...capacities })
+      expect(suggestions.length).toBeGreaterThan(0)
+      for (const suggestion of suggestions) {
+        expect(suggestion.m2).toBeGreaterThanOrEqual(requestedAreaM2 - 0.05)
+        expect(isValidFullVehicleArea({ areaM2: suggestion.m2, ...capacities })).toBe(true)
+      }
+    }
+  })
+})
 
 describe('EPS ticari kuralları', () => {
   it('399,9 m² set teklifini reddeder, 400 m² teklifi kabul eder', () => {
@@ -80,6 +129,18 @@ describe('EPS ticari kuralları', () => {
     expect(isValidFullVehicleArea({ areaM2: 900, ...capacities })).toBe(false)
   })
 
+  it('iki ondalıklı üretici kapasitesini aynen kabul eder, yuvarlanmış komşuları reddeder', () => {
+    const capacities = {
+      lorryCapacityM2: 967.68,
+      truckCapacityM2: 1774.08,
+      packageSizeM2: 2.88,
+    }
+
+    expect(isValidFullVehicleArea({ areaM2: 967.68, ...capacities })).toBe(true)
+    expect(isValidFullVehicleArea({ areaM2: 967.6, ...capacities })).toBe(false)
+    expect(isValidFullVehicleArea({ areaM2: 967.7, ...capacities })).toBe(false)
+  })
+
   it('tam kamyonu TIR olarak etiketlemez', () => {
     const capacities = {
       lorryCapacityPackages: 224,
@@ -101,7 +162,7 @@ describe('EPS ticari kuralları', () => {
 
     expect(wizardSource).toContain('resolveEpsShippingDecision({')
     expect(wizardSource).toContain('requiredAccessoriesComplete')
-    expect(wizardSource).toContain("selectedMalzeme === 'eps' && !requiredAccessoriesComplete")
+    expect(wizardSource).toContain('!requiredAccessoriesComplete || items.length !== 8')
   })
 
   it('Wizard nakliyeyi aksesuar sevkiyat flag\'ine bağlamaz — Tekno her metrajda dahil', () => {

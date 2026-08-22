@@ -15,5 +15,7 @@ describe('Wizard PDF hata mesajı sözleşmesi', () => {
     expect(source).toContain("pdfOfferFailureStage === 'pdf'")
     expect(source).toContain('error instanceof Error && error.message')
     expect(source).not.toContain('alert("PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyiniz.")')
+    expect(source).not.toContain("console.error('PDF quote save")
+    expect(source).not.toContain("console.error('PDF teklif akışı")
   })
 })

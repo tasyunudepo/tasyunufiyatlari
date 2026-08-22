@@ -47,7 +47,9 @@ describe('private PDF istemci ve route sözleşmesi', () => {
     '$path: public akış Idempotency-Key gönderir',
     ({ path }) => {
       // Guard'lı RPC bu başlığı zorunlu tutuyor (migration-v17).
-      expect(read(path)).toContain("'Idempotency-Key': crypto.randomUUID()")
+      const source = read(path)
+      expect(source).toContain("'Idempotency-Key': createClientIdempotencyKey()")
+      expect(source).not.toContain('crypto.randomUUID()')
     },
   )
 
@@ -108,7 +110,9 @@ describe('PDF istemci kapsamı', () => {
     const kullananlar = hepsi.filter((path) => {
       if (path === 'lib/pdfGenerator.ts') return false // tanımın kendisi
       const src = read(path)
-      return /\bgenerateQuotePDF\b/.test(src) && /from ['"]@\/lib\/pdfGenerator['"]/.test(src)
+      const importsPdfGenerator = /from ['"]@\/lib\/pdfGenerator['"]/.test(src)
+        || /import\(['"]@\/lib\/pdfGenerator['"]\)/.test(src)
+      return /\bgenerateQuotePDF\b/.test(src) && importsPdfGenerator
     })
 
     const listelenen = new Set<string>(PDF_CLIENTS.map((c) => c.path))

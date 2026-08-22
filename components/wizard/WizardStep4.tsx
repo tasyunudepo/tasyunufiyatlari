@@ -7,10 +7,11 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useRef, type ComponentType } from "react";
 import type { LogisticsCapacity, ShippingZone } from "@/lib/types";
+import { formatVehicleAreaInput } from "@/lib/pricing/commercialRules";
 
 export type MetrajValidation =
     | { isValid: true }
-    | { isValid: false; kind: 'min_order'; minOrder: number }
+    | { isValid: false; kind: 'min_order'; minOrder: number; suggestions: { m2: number; label: string }[] }
     | { isValid: false; kind: 'full_vehicle'; suggestions: { m2: number; label: string }[] };
 
 type IconCmp = ComponentType<{ size?: number; weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'; className?: string }>;
@@ -37,7 +38,7 @@ function getTier(m2: number, _lorryM2: number, truckM2: number): Tier {
 }
 
 const normalizeM2 = (value: number): number => Number(value.toFixed(2));
-const toM2Input = (value: number): string => String(normalizeM2(value));
+const toM2Input = formatVehicleAreaInput;
 
 const TIER_CONFIG: Record<Tier, { label: string; Icon: IconCmp; iconWeight: 'regular' | 'fill' | 'bold'; ring: string; bg: string; text: string }> = {
     kamyon:   { label: 'Kamyon Dolusu', Icon: Truck,   iconWeight: 'regular', ring: 'ring-brand-500',  bg: 'bg-brand-900/40', text: 'text-brand-300' },
@@ -176,7 +177,7 @@ export function WizardStep4({
             },
         ]
         : [];
-    const fullVehicleOptions = isFullVehicleInvalid
+    const fullVehicleOptions = !validation.isValid
         ? validation.suggestions
             .map(opt => ({ ...opt, roundedM2: normalizeM2(opt.m2) }))
             .sort((a, b) => a.m2 - b.m2)
@@ -271,7 +272,9 @@ export function WizardStep4({
                 <div className="relative mt-3">
                     <input
                         type="number"
+                        inputMode="decimal"
                         min="1"
+                        step="any"
                         value={metraj}
                         onChange={e => setMetraj(e.target.value)}
                         className={`w-full px-4 py-4 border rounded-xl bg-fe-bg text-white text-xl font-bold focus:ring-1 outline-none transition-all tabular-nums pr-16 ${
@@ -288,19 +291,23 @@ export function WizardStep4({
                 {!validation.isValid && validation.kind === 'min_order' && (
                     <div className="mt-2 p-3 rounded-xl border bg-red-900/15 border-red-700/40">
                         <p className="text-sm font-semibold text-red-300 mb-1 flex items-center gap-1.5">
-                            <WarningCircle size={16} weight="fill" /> Minimum sipariş {validation.minOrder} m²
+                            <WarningCircle size={16} weight="fill" /> Tam araç metrajı gerekli
                         </p>
                         <p className="text-xs text-red-200/80">
-                            Satışlarımız proje ölçeğinde, tam kamyon veya TIR bazında yapılır.
-                            Lütfen <span className="font-bold">{validation.minOrder} m²</span> veya üzerinde bir değer girin.
+                            Her yüksek metraj geçerli değildir. Aşağıdaki tam araç seçeneklerinden birini kullanın.
                         </p>
-                        <button
-                            type="button"
-                            onClick={() => setMetraj(String(validation.minOrder))}
-                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-red-200 underline decoration-dotted underline-offset-2 hover:decoration-solid"
-                        >
-                            <ArrowBendDownRight size={14} weight="bold" /> {validation.minOrder} m²&apos;ye yuvarla
-                        </button>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                            {validation.suggestions.map(option => (
+                                <button
+                                    key={`${option.label}-${option.m2}`}
+                                    type="button"
+                                    onClick={() => setMetraj(toM2Input(option.m2))}
+                                    className="rounded-full border border-red-600/40 bg-red-950/25 px-3 py-1.5 text-xs font-semibold text-red-100 transition-colors hover:border-red-500/70 hover:bg-red-900/35"
+                                >
+                                    {option.label} · {formatM2(option.m2)} m²
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
 

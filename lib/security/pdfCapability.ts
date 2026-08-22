@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 
 const CAPABILITY_VERSION = 1 as const
 const CAPABILITY_DOMAIN = 'pdf-capability-v1'
@@ -10,6 +10,14 @@ const MAX_PAYLOAD_PART_LENGTH = 1_024
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/
 const SHA256_BASE64URL_LENGTH = 43
 const QUOTE_ID_PATTERN = /^[1-9]\d{0,18}$/
+
+// Yerel Next geliştirme sunucusunda üretim secret'ı bulunmayabilir. Quotes ve
+// upload route'ları ayrı bundle'larda çalışsa da aynı değeri türetmeleri için
+// random bir süreç anahtarı yerine yalnız development'ta geçerli deterministik
+// bir anahtar kullanılır. Production/test ortamları fail-closed kalır.
+const LOCAL_DEVELOPMENT_SECRET = createHash('sha256')
+  .update(`${CAPABILITY_DOMAIN}\0${process.cwd()}\0local-development`, 'utf8')
+  .digest('hex')
 
 export type PdfCapabilityAction = 'upload'
 
@@ -71,7 +79,10 @@ export class PdfCapabilityError extends Error {
 }
 
 function getSecret(explicitSecret?: string): string {
-  const secret = explicitSecret ?? process.env.PDF_CAPABILITY_SECRET
+  const configuredSecret = explicitSecret ?? process.env.PDF_CAPABILITY_SECRET
+  const secret = configuredSecret === undefined && process.env.NODE_ENV === 'development'
+    ? LOCAL_DEVELOPMENT_SECRET
+    : configuredSecret
 
   if (secret === undefined) {
     throw new PdfCapabilityError('missing_secret')
