@@ -44,14 +44,51 @@ test.describe('Ana sayfa tek dönüşüm yolu', () => {
     await expect(result).toContainText('KDV hariç')
     await expect(result).toContainText('KDV dahil')
     const tierSelector = result.getByTestId('homepage-tier-selector')
-    await expect(tierSelector.getByRole('button', { name: /Ekonomik/ })).toBeVisible()
-    await expect(tierSelector.getByRole('button', { name: /Dengeli/ })).toHaveAttribute('aria-pressed', 'true')
-    await expect(tierSelector.getByRole('button', { name: /Orijinal/ })).toBeVisible()
+    await expect(tierSelector).toHaveAttribute('data-tier-count', '3')
+    const tierGroup = tierSelector.getByRole('radiogroup', { name: 'Sisteminizi seçin' })
+    await expect(tierSelector.getByText('Sisteminizi seçin')).toBeVisible()
+    await expect(tierSelector.getByText('Seçiminiz ürün reçetesini ve toplam fiyatı anında günceller.')).toBeVisible()
+    await expect(tierGroup.getByRole('radio')).toHaveCount(3)
+    const economicRadio = tierGroup.getByRole('radio', { name: /Ekonomik/ })
+    const balancedRadio = tierGroup.getByRole('radio', { name: /Dengeli/ })
+    const originalRadio = tierGroup.getByRole('radio', { name: /Orijinal/ })
+    await expect(economicRadio).not.toBeChecked()
+    await expect(balancedRadio).toBeChecked()
+    await expect(originalRadio).not.toBeChecked()
+    await expect(tierSelector.getByText('SEÇİLİ', { exact: true })).toHaveCount(1)
+    await expect(tierSelector.getByText('ÖNERİLEN', { exact: true })).toHaveCount(1)
+    await expect(tierSelector.getByText('KDV dahil')).toHaveCount(3)
+    await expect(tierSelector.getByText('Fiyat / performans kombinasyonu')).toBeVisible()
+    await expect(tierSelector.getByText('Aynı marka sistem bütünlüğü')).toBeVisible()
+    await expect(tierSelector.getByText('En düşük toplam maliyet')).toBeVisible()
 
+    const selectedTierPrice = await tierSelector
+      .getByRole('radio', { name: /Dengeli/ })
+      .locator('..')
+      .locator('[data-tier-price]')
+      .textContent()
+    await expect(result.getByTestId('homepage-result-total')).toHaveText(selectedTierPrice?.trim() || '')
+
+    const desktopColumns = await tierSelector.locator('[data-tier-grid]').evaluate((element) => (
+      getComputedStyle(element).gridTemplateColumns.split(' ').length
+    ))
+    expect(desktopColumns).toBe(3)
+
+    const balancedSubtotal = await result.getByTestId('homepage-result-subtotal').textContent()
+    const balancedVat = await result.getByTestId('homepage-result-vat').textContent()
     const balancedTotal = await result.getByTestId('homepage-result-total').textContent()
-    await tierSelector.getByRole('button', { name: /Ekonomik/ }).click()
-    await expect(tierSelector.getByRole('button', { name: /Ekonomik/ })).toHaveAttribute('aria-pressed', 'true')
+
+    await balancedRadio.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(originalRadio).toBeChecked()
+    await expect(result).toContainText('Orijinal Sistem')
+
+    await tierSelector.locator('[data-tier-card]').filter({ hasText: 'Ekonomik' }).click()
+    await expect(economicRadio).toBeChecked()
+    await expect(balancedRadio).not.toBeChecked()
     await expect(result).toContainText('Ekonomik Sistem')
+    await expect(result.getByTestId('homepage-result-subtotal')).not.toHaveText(balancedSubtotal || '')
+    await expect(result.getByTestId('homepage-result-vat')).not.toHaveText(balancedVat || '')
     await expect(result.getByTestId('homepage-result-total')).not.toHaveText(balancedTotal || '')
 
     const detailsToggle = result.getByRole('button', { name: /Set içeriğini ve miktarları gör/ })
@@ -63,6 +100,24 @@ test.describe('Ana sayfa tek dönüşüm yolu', () => {
     await expect(calculator).toHaveAttribute('data-state', 'calculated')
     await expect(calculator.getByRole('button', { name: 'Hesabı Güncelle' })).toBeVisible()
     await expect(result.getByRole('button', { name: "WhatsApp'ta Siparişi Başlat" })).toBeVisible()
+  })
+
+  test('iki mevcut sistem alternatifi masaüstünde iki dengeli kolona yayılır', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1100 })
+    await page.goto('/')
+    const calculator = page.locator('[data-homepage-calculator]')
+    await calculator.getByRole('combobox', { name: 'Malzeme' }).selectOption({ label: 'Optimix TR7.5' })
+    await calculator.getByRole('combobox', { name: 'Kalınlık' }).selectOption('5')
+    await calculator.getByRole('spinbutton', { name: 'Miktar' }).fill(VALID_AREA_M2)
+    await calculator.getByRole('button', { name: 'Fiyatımı Hesapla' }).click()
+
+    const tierSelector = page.getByTestId('homepage-tier-selector')
+    await expect(tierSelector).toHaveAttribute('data-tier-count', '2')
+    await expect(tierSelector.getByRole('radio')).toHaveCount(2)
+    const columns = await tierSelector.locator('[data-tier-grid]').evaluate((element) => (
+      getComputedStyle(element).gridTemplateColumns.split(' ').length
+    ))
+    expect(columns).toBe(2)
   })
 
   test('mobil sıra H1, video ve hesaplayıcı olarak korunur', async ({ page }) => {

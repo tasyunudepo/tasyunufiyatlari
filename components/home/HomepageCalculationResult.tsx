@@ -1,9 +1,10 @@
 'use client';
 
-import { CaretDown, CheckCircle, DownloadSimple, WhatsappLogo } from '@phosphor-icons/react';
-import { useMemo, useState } from 'react';
+import { CaretDown, CheckCircle, Circle, DownloadSimple, WhatsappLogo } from '@phosphor-icons/react';
+import { useId, useMemo, useState } from 'react';
 
 import { buildQuoteSurfacePricing } from '@/lib/pricing/quoteTotals';
+import { getPackageTierDescriptor, getTierGridClass } from '@/lib/pricing/packagePresentation';
 import type { CalculatedPackage, CalculatedPackageItem } from '@/lib/types';
 
 type MaterialType = 'tasyunu' | 'eps';
@@ -65,6 +66,9 @@ export default function HomepageCalculationResult({
   const recommended = useMemo(() => selectRecommended(packages), [packages]);
   const [selectedPackageId, setSelectedPackageId] = useState<number | null>(recommended?.definition.id ?? null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const tierGroupLabelId = useId();
+  const tierGroupHelpId = useId();
+  const tierGroupName = useId();
 
   const selectedPackage = packages.find(pkg => pkg.definition.id === selectedPackageId)
     ?? recommended;
@@ -117,12 +121,26 @@ export default function HomepageCalculationResult({
         </div>
       </div>
 
-      <div className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5" data-testid="homepage-tier-selector">
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <p className="text-xs font-semibold text-white/72">Sistem alternatifleri</p>
-          <p className="hidden text-[11px] text-white/45 sm:block">Seçiminiz reçete ve toplamı anında günceller</p>
+      <div
+        className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5"
+        data-testid="homepage-tier-selector"
+        data-tier-count={orderedPackages.length}
+      >
+        <div className="mb-3">
+          <p id={tierGroupLabelId} className="text-sm font-bold text-white">
+            Sisteminizi seçin
+          </p>
+          <p id={tierGroupHelpId} className="mt-1 text-xs leading-5 text-white/58">
+            Seçiminiz ürün reçetesini ve toplam fiyatı anında günceller.
+          </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div
+          className={`grid gap-2 sm:gap-3 ${getTierGridClass(orderedPackages.length)}`}
+          data-tier-grid
+          role="radiogroup"
+          aria-labelledby={tierGroupLabelId}
+          aria-describedby={tierGroupHelpId}
+        >
           {orderedPackages.map(pkg => {
             const pkgAreaM2 = pkg.logistics?.packageCount && pkg.logistics.packageSizeM2
               ? pkg.logistics.packageCount * pkg.logistics.packageSizeM2
@@ -133,33 +151,71 @@ export default function HomepageCalculationResult({
               pkgAreaM2 || 1,
             );
             const selected = pkg.definition.id === selectedPackage.definition.id;
+            const descriptor = getPackageTierDescriptor(pkg, orderedPackages);
             return (
-              <button
+              <label
                 key={pkg.definition.id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => {
-                  setSelectedPackageId(pkg.definition.id);
-                  setDetailsOpen(false);
-                }}
-                className={`min-w-0 rounded-xl px-2.5 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e0b736] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d1c18] sm:px-4 sm:py-4 ${
-                  selected
-                    ? 'bg-[#f2dfaa] text-[#211b0e] shadow-[0_8px_22px_rgba(0,0,0,0.2)]'
-                    : 'bg-white/[0.055] text-white hover:bg-white/[0.09]'
-                }`}
+                className="group relative block min-w-0 cursor-pointer"
+                data-tier-card
+                data-tier-card-state={selected ? 'selected' : 'available'}
               >
-                <span className="block truncate text-[11px] font-bold uppercase tracking-[0.08em] sm:text-xs">
-                  {tierShortName(pkg)}
-                </span>
-                <span className={`mt-1.5 block truncate text-sm font-bold tabular-nums sm:text-base ${selected ? 'text-[#211b0e]' : 'text-white'}`}>
-                  {formatCurrency(pkgPricing.totalPrice)} ₺
-                </span>
-                {isRecommended(pkg) && (
-                  <span className={`mt-1 block text-[10px] font-bold uppercase tracking-wide ${selected ? 'text-[#6b531a]' : 'text-[#e7c76f]'}`}>
-                    Önerilen
+                <input
+                  type="radio"
+                  name={tierGroupName}
+                  value={pkg.definition.id}
+                  checked={selected}
+                  onChange={() => {
+                    setSelectedPackageId(pkg.definition.id);
+                    setDetailsOpen(false);
+                  }}
+                  className="peer absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none opacity-0"
+                />
+                <span
+                  className={`block min-h-[132px] rounded-xl px-3 py-3.5 text-left transition-[background-color,border-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#e0b736] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#1d1c18] sm:px-4 sm:py-4 ${
+                    selected
+                      ? 'border border-transparent bg-[#f2dfaa] text-[#211b0e] shadow-[0_8px_22px_rgba(0,0,0,0.2)]'
+                      : 'border border-white/20 bg-[#2b2a26] text-white group-hover:border-[#d7bb76]/65 group-hover:bg-[#32302a]'
+                  }`}
+                >
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="truncate text-[11px] font-bold uppercase tracking-[0.08em] sm:text-xs">
+                        {tierShortName(pkg)}
+                      </span>
+                      {isRecommended(pkg) && (
+                        <span className={`rounded-full border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide sm:text-[9px] ${selected ? 'border-[#765b1d]/35 text-[#6b531a]' : 'border-[#d7bb76]/45 text-[#e7c76f]'}`}>
+                          ÖNERİLEN
+                        </span>
+                      )}
+                    </span>
+                    <span className={`flex shrink-0 items-center gap-1 text-[9px] font-bold uppercase tracking-wide sm:text-[10px] ${selected ? 'text-[#5f4815]' : 'text-white/70'}`}>
+                      {selected ? (
+                        <>
+                          <CheckCircle size={15} weight="fill" aria-hidden="true" />
+                          SEÇİLİ
+                        </>
+                      ) : (
+                        <>
+                          <Circle size={16} weight="regular" aria-hidden="true" />
+                          <span className="sr-only">Seçilebilir</span>
+                        </>
+                      )}
+                    </span>
                   </span>
-                )}
-              </button>
+                  <span
+                    className={`mt-2 block truncate text-base font-bold tabular-nums sm:text-lg ${selected ? 'text-[#211b0e]' : 'text-white'}`}
+                    data-tier-price
+                  >
+                    {formatCurrency(pkgPricing.totalPrice)} ₺
+                  </span>
+                  <span className={`mt-0.5 block text-[10px] font-semibold ${selected ? 'text-[#6b531a]' : 'text-white/62'}`}>
+                    KDV dahil
+                  </span>
+                  <span className={`mt-2 block text-[11px] leading-4 sm:text-xs ${selected ? 'text-[#4e4227]' : 'text-white/74'}`}>
+                    {descriptor}
+                  </span>
+                </span>
+              </label>
             );
           })}
         </div>
