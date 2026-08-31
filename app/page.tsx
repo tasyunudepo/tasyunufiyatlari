@@ -1,5 +1,6 @@
 "use client";
 
+import DealerBrandStrip from "@/components/home/DealerBrandStrip";
 import OperationVideo from "@/components/home/OperationVideo";
 import SiteFooter from "@/components/shared/SiteFooter";
 import SiteHeader from "@/components/shared/SiteHeader";
@@ -101,9 +102,12 @@ export default function Home() {
                 <p className="mt-5 max-w-[540px] text-base leading-7 text-[#59564d] sm:text-lg sm:leading-8">
                   Teslim ili, ürün, kalınlık ve miktarı seçin; fiyatınızı anında görün.
                 </p>
-                <div className="mt-6 flex items-center gap-3 border-t border-[#d2ccbe] pt-4 text-sm text-[#514d43]">
-                  <span className="h-2 w-2 rounded-full bg-[#9a7528]" aria-hidden />
-                  <span><strong className="font-semibold text-[#25241f]">Satış ve sevkiyat:</strong> ÖzerGrup</span>
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-t border-[#d2ccbe] pt-4 text-sm text-[#514d43]">
+                  <span className="flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-full bg-[#9a7528]" aria-hidden />
+                    <span><strong className="font-semibold text-[#25241f]">Satış ve sevkiyat:</strong> ÖzerGrup</span>
+                  </span>
+                  <DealerBrandStrip />
                 </div>
               </div>
 
