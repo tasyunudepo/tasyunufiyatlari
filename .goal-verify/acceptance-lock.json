@@ -13,10 +13,10 @@
       "reason": "Emrah'ın yeni ticari kararı: teklif öncesi PDP WhatsApp/telefon kaldırıldı; teklif sonrası referanslı WhatsApp kabulü ayrı testte korunuyor"
     },
     "tests/api/quotes-route.integration.test.ts": {
-      "sha256": "f7126e3d5cae2cf93fa1c9bdded830b288cfd7ba5a3c53b323e71a6caf620317",
-      "size": 8376,
-      "locked_at": "2026-08-19",
-      "reason": "Emrah'ın yeni ticari kararı: EPS dahil public teklif yalnız tam kamyon, tam TIR veya tam araç kombinasyonuyla kabul edilir"
+      "sha256": "14dec81c02ec778ac4505e15d326c1ba41d29d7b4a898db17b753c30f6df8e84",
+      "size": 11478,
+      "locked_at": "2026-08-31",
+      "reason": "Tam araç kabulü aynen korunur; local-development secret senaryoları ve doğrulanmış comparison kaynak/oturum/consent/RPC atfı eklenmiştir"
     },
     "tests/api/upload-pdf-route.integration.test.ts": {
       "sha256": "f23a847663e99852d01d0c966849b2446b4f44287a37c408ae695c0b69090f8b",
@@ -44,19 +44,22 @@
       "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
     },
     "tests/contracts/pdf-screen-consistency.test.ts": {
-      "sha256": "7f2db883265b190df980338fd1ee8efaa54389f3b7712c861f2ffc77e4ff2e95",
-      "locked_at": "2026-07-25",
-      "reason": "24 Temmuz kutu düzeni kararı (Emrah): Toplam Metraj üstte, KDV satırları eşit boy — KDV taban sözleşmesi korunarak test güncellendi"
+      "sha256": "fe150b4a00467fa42e9dc723beb8af42578533cf6ba9a3a2317bd03d76897598",
+      "size": 4052,
+      "locked_at": "2026-08-31",
+      "reason": "Toplam Metraj ve KDV taban sözleşmesi korunur; negatif iskonto satırının paket kalemi veya (0 PKT) olarak basılmaması regresyonları eklenmiştir"
     },
     "scripts/verify-p0-live-readonly.mjs": {
-      "sha256": "651cd2af27c9190bc77fbe04444ae522e750536d6ed6792a483aa17ccf453e1b",
-      "locked_at": "2026-07-23",
-      "reason": "hesap/fiyat doğruluk güvencesi — Tekno KDV regresyonu + PDF/ekran tutarlılığı"
+      "sha256": "aa2be9d57a7001f21b15a1a9f5327017341a38e72054c602d0c6f8876f589538",
+      "size": 7414,
+      "locked_at": "2026-08-31",
+      "reason": "Tekno KDV ve PDF güvenlik kontrolleri korunur; v24 müşteri tablolarının anonim kapısı ile v26 comparison şema erişimi eklenmiştir"
     },
     "tests/e2e/quote-flows/pricing-consistency.spec.ts": {
-      "sha256": "095d079d65494d0e10ce9d2dd0b4f2222850798e8359b745aa34f6e5e0c1d53f",
-      "locked_at": "2026-07-23",
-      "reason": "hesap/fiyat doğruluk güvencesi — KDV taban tutarlılığı E2E"
+      "sha256": "6f49a346f4e91a6d0ea7ee625141880fe231871d3f45ad7689a16c17611866d9",
+      "size": 2142,
+      "locked_at": "2026-08-31",
+      "reason": "Güncel üç sistem seçicisinde her kart toplamı sonuç toplamıyla; KDV ara toplamın yüzde 20'siyle ve toplam ara toplam + KDV ile uçtan uca tutarlıdır"
     }
   },
   "note": "Bu kilit test değişikliğini yasaklamaz; sessiz değişikliği görünür kılar."
