@@ -2,89 +2,78 @@
 
 BEGIN;
 
--- v24'ün v26 tarafından kullanılan en küçük davranışsal yüzeyi.
-CREATE OR REPLACE FUNCTION public.normalize_phone_tr(p_raw TEXT)
-RETURNS TEXT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $fn$
-DECLARE
-  v_raw    TEXT;
-  v_digits TEXT;
-  v_intl   BOOLEAN;
-BEGIN
-  IF p_raw IS NULL THEN RETURN NULL; END IF;
-
-  v_raw := btrim(p_raw);
-  v_intl := (left(v_raw, 1) = '+' OR left(v_raw, 2) = '00');
-  v_digits := regexp_replace(v_raw, '\D', '', 'g');
-
-  IF left(v_digits, 2) = '00' THEN
-    v_digits := substr(v_digits, 3);
-  END IF;
-
-  IF NOT v_intl AND length(v_digits) = 11 AND left(v_digits, 1) = '0' THEN
-    v_digits := '90' || substr(v_digits, 2);
-  ELSIF NOT v_intl AND length(v_digits) = 10 THEN
-    v_digits := '90' || v_digits;
-  END IF;
-
-  IF length(v_digits) < 10 OR length(v_digits) > 15 THEN
-    RETURN NULL;
-  END IF;
-
-  RETURN v_digits;
-END;
-$fn$;
-
-CREATE TABLE public.customers (
-  id                  BIGSERIAL PRIMARY KEY,
-  business_unit       TEXT NOT NULL DEFAULT 'tasyunu',
-  phone_normalized    TEXT NOT NULL,
-  phone_display       TEXT NOT NULL,
-  display_name        TEXT NOT NULL,
-  company_name        TEXT NULL,
-  email               TEXT NULL,
-  city_code           TEXT NULL,
-  city_name           TEXT NULL,
-  address             TEXT NULL,
-  customer_type       TEXT NOT NULL DEFAULT 'bireysel'
-                      CHECK (customer_type IN ('bireysel', 'kurumsal')),
-  origin              TEXT NOT NULL DEFAULT 'wizard'
-                      CHECK (origin IN ('wizard', 'catalog', 'telefon', 'ofis', 'ithal')),
-  kvkk_consent        BOOLEAN NOT NULL DEFAULT false,
-  consent_basis       TEXT NULL
-                      CHECK (consent_basis IS NULL OR consent_basis IN
-                        ('acik_riza', 'sozlesme_hazirligi', 'mesru_menfaat')),
-  consent_version     TEXT NULL,
-  consent_timestamp   TIMESTAMPTZ NULL,
-  first_seen_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_contact_at     TIMESTAMPTZ NULL,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT customers_phone_benzersiz UNIQUE (business_unit, phone_normalized)
-);
-
+-- quote-guard bootstrap yalnız v17'nin gerekli gördüğü kolonları kurar.
+-- Gerçek v24'ün canlı şemada kullandığı eski ofis alanlarını temsil et.
 ALTER TABLE public.quotes
-  ADD COLUMN customer_id BIGINT NULL REFERENCES public.customers(id) ON DELETE SET NULL,
-  ADD COLUMN customer_link_status TEXT NULL;
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS admin_notes TEXT,
+  ADD COLUMN IF NOT EXISTS contact_attempted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS contact_successful BOOLEAN DEFAULT false;
 
--- v26'nın bağımlılık ve replacement davranışını ölçmek için v24 imzalı eski
--- fonksiyon/trigger yüzeyi. Gövdeyi v26 gerçek CRM eşlemesiyle değiştirecek.
-CREATE OR REPLACE FUNCTION public.quotes_link_customer()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, public
-AS $fn$
+DO $seed$
+DECLARE
+  v_outcome  TEXT;
+  v_quote_id BIGINT;
 BEGIN
-  RETURN NEW;
-END;
-$fn$;
+  SELECT outcome, quote_id
+    INTO v_outcome, v_quote_id
+  FROM public.submit_quote_guarded(
+    '{
+      "customer_name":"V24 Backfill Test",
+      "customer_email":"",
+      "customer_phone":"05321234567",
+      "customer_company":"",
+      "customer_address":"",
+      "material_type":"eps",
+      "brand_id":1,
+      "brand_name":"Dalmaçyalı",
+      "model_name":"EPS Levha",
+      "thickness_cm":5,
+      "area_m2":400,
+      "city_code":"34",
+      "city_name":"İstanbul",
+      "package_name":"EPS Sistem Paketi",
+      "package_description":"",
+      "plate_brand_name":"Dalmaçyalı",
+      "accessory_brand_name":"Dalmaçyalı",
+      "total_price":120000,
+      "price_per_m2":250,
+      "shipping_cost":0,
+      "discount_percentage":0,
+      "price_without_vat":100000,
+      "vat_amount":20000,
+      "package_count":80,
+      "package_size_m2":5,
+      "items_per_package":1,
+      "vehicle_type":"none",
+      "lorry_capacity_packages":null,
+      "truck_capacity_packages":null,
+      "lorry_fill_percentage":null,
+      "truck_fill_percentage":null,
+      "package_items":{},
+      "request_type":"whatsapp_order",
+      "source_channel":"wizard",
+      "kvkk_consent":true,
+      "consent_version":"kvkk-teklif-v1",
+      "consent_purpose":"fiyat_teklifi_ve_iletisim",
+      "consent_channel":"wizard"
+    }'::jsonb,
+    repeat('1', 64),
+    repeat('2', 64),
+    repeat('3', 64),
+    repeat('4', 64)
+  );
 
-CREATE TRIGGER trg_quotes_link_customer
-  BEFORE INSERT ON public.quotes
-  FOR EACH ROW
-  EXECUTE FUNCTION public.quotes_link_customer();
+  IF v_outcome <> 'created' OR v_quote_id IS NULL THEN
+    RAISE EXCEPTION 'v24 backfill seed quote oluşturulamadı: %, %', v_outcome, v_quote_id;
+  END IF;
+
+  UPDATE public.quotes
+  SET admin_notes = 'Geçmiş müşteri notu',
+      contact_attempted_at = now(),
+      contact_successful = true
+  WHERE id = v_quote_id;
+END;
+$seed$;
 
 COMMIT;

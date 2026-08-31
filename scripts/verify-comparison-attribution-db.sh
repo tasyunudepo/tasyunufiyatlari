@@ -43,6 +43,15 @@ docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
 docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
   < "$repo_root/tests/db/comparison-attribution-bootstrap.sql" >/dev/null
 
+# Gerçek v24'ü iki kez çalıştır: backfill, RLS, açık service_role yetkileri ve
+# yeniden uygulanabilirlik sentetik özetle değil gerçek migration ile ölçülür.
+docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
+  < "$repo_root/scripts/migration-v24-musteri-varligi.sql" >/dev/null
+docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
+  < "$repo_root/scripts/migration-v24-musteri-varligi.sql" >/dev/null
+docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
+  < "$repo_root/tests/db/customer-attribution-call.sql" >/dev/null
+
 # İkinci uygulama, migration'ın yeniden çalıştırılabilirliğini de kanıtlar.
 docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
   < "$repo_root/scripts/migration-v26-comparison-attribution.sql" >/dev/null
@@ -51,4 +60,4 @@ docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
 docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 \
   < "$repo_root/tests/db/comparison-attribution-call.sql" >/dev/null
 
-echo 'Comparison attribution DB smoke geçti: v26 idempotent; RPC → quote → event → CRM origin zinciri doğrulandı.'
+echo 'Comparison attribution DB smoke geçti: gerçek v24 ve v26 idempotent; backfill + RLS + RPC → quote → event → CRM origin zinciri doğrulandı.'

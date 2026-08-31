@@ -16,6 +16,9 @@
 
 BEGIN;
 
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '120s';
+
 -- v26, v17 + v24 üstüne kurulur. Eksik zincirde sessizce yarım kurulum yapma.
 DO $dependencies$
 BEGIN

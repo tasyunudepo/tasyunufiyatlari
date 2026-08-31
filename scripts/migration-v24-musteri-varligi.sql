@@ -23,6 +23,9 @@
 
 BEGIN;
 
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '120s';
+
 -- ─────────────────────────────────────────────────────────────
 -- 1) Telefon normalizasyonu — lib/security/quoteSubmissionGuard.ts
 --    normalizePhoneForGuard() ile BİREBİR aynı davranış.
@@ -382,6 +385,13 @@ REVOKE ALL ON public.customers FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON public.customer_interactions FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON SEQUENCE public.customers_id_seq FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON SEQUENCE public.customer_interactions_id_seq FROM PUBLIC, anon, authenticated;
+
+-- Supabase varsayılan yetkilerine güvenme; admin API'nin kullandığı
+-- service_role erişimini açık ve taşınabilir biçimde sabitle.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.customers TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.customer_interactions TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.customers_id_seq TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.customer_interactions_id_seq TO service_role;
 
 -- ─────────────────────────────────────────────────────────────
 -- 8) Doğrulama kapıları
