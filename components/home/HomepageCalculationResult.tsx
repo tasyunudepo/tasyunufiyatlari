@@ -1,8 +1,10 @@
 'use client';
 
 import { CaretDown, CheckCircle, Circle, DownloadSimple, WhatsappLogo } from '@phosphor-icons/react';
+import Image from 'next/image';
 import { useId, useMemo, useState } from 'react';
 
+import { resolveBrandMark, type BrandMarkPresentation } from '@/lib/brandLogo';
 import { buildQuoteSurfacePricing } from '@/lib/pricing/quoteTotals';
 import { getPackageTierDescriptor, getTierGridClass } from '@/lib/pricing/packagePresentation';
 import type { CalculatedPackage, CalculatedPackageItem } from '@/lib/types';
@@ -53,6 +55,67 @@ const itemCategory = (item: CalculatedPackageItem, index: number): string =>
 
 const tierShortName = (pkg: CalculatedPackage): string =>
   pkg.definition.name.replace(/\s+Sistem$/u, '');
+
+interface TierBrandMarkProps {
+  label: 'Levha' | 'Toz grubu';
+  mark: BrandMarkPresentation;
+  selected: boolean;
+}
+
+function TierBrandMark({ label, mark, selected }: TierBrandMarkProps) {
+  const isFaworiFamilyLogo = mark.logo?.src.includes('/fawori-taşyünü-') ?? false;
+
+  return (
+    <span className="min-w-0">
+      <span className={`block text-[9px] font-bold uppercase tracking-[0.08em] ${selected ? 'text-[#6b531a]' : 'text-white/68'}`}>
+        {label}
+      </span>
+      <span className="mt-1 flex h-10 min-w-0 flex-col items-center justify-center rounded-lg bg-[#fffdf8] px-1.5 py-1 ring-1 ring-black/10">
+        {mark.logo ? (
+          <Image
+            src={mark.logo.src}
+            alt=""
+            width={mark.logo.width}
+            height={mark.logo.height}
+            className={`h-5 w-auto max-w-full object-contain ${isFaworiFamilyLogo ? 'scale-[1.4]' : ''}`}
+          />
+        ) : (
+          <span className="text-xs font-extrabold text-[#403724]" aria-hidden="true">
+            {mark.displayName.slice(0, 2).toLocaleUpperCase('tr-TR')}
+          </span>
+        )}
+        <span className="block max-w-full truncate text-[9px] font-bold leading-3 text-[#403724] sm:text-[10px]">
+          {mark.displayName}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function TierBrandPair({ pkg, selected }: { pkg: CalculatedPackage; selected: boolean }) {
+  const plateBrandName = pkg.items.find(item => item.isPlate)?.brandName || pkg.plateBrandName;
+  const accessoryBrandName = pkg.accessoryBrandName
+    || pkg.items.find(item => !item.isPlate)?.brandName;
+  const plateMark = resolveBrandMark(plateBrandName);
+  const accessoryMark = resolveBrandMark(accessoryBrandName);
+
+  return (
+    <span
+      className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1.5"
+      role="img"
+      aria-label={`${plateMark.accessibleName} levha + ${accessoryMark.accessibleName} toz grubu`}
+      data-tier-brand-pair
+      data-plate-brand={plateMark.displayName}
+      data-accessory-brand={accessoryMark.displayName}
+    >
+      <TierBrandMark label="Levha" mark={plateMark} selected={selected} />
+      <span className={`flex items-center pt-4 text-sm font-bold ${selected ? 'text-[#765b1d]' : 'text-white/54'}`} aria-hidden="true">
+        +
+      </span>
+      <TierBrandMark label="Toz grubu" mark={accessoryMark} selected={selected} />
+    </span>
+  );
+}
 
 export default function HomepageCalculationResult({
   packages,
@@ -171,7 +234,7 @@ export default function HomepageCalculationResult({
                   className="peer absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none opacity-0"
                 />
                 <span
-                  className={`block min-h-[132px] rounded-xl px-3 py-3.5 text-left transition-[background-color,border-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#e0b736] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#1d1c18] sm:px-4 sm:py-4 ${
+                  className={`block h-full min-h-[184px] rounded-xl px-3 py-3.5 text-left transition-[background-color,border-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#e0b736] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#1d1c18] sm:px-4 sm:py-4 ${
                     selected
                       ? 'border border-transparent bg-[#f2dfaa] text-[#211b0e] shadow-[0_8px_22px_rgba(0,0,0,0.2)]'
                       : 'border border-white/20 bg-[#2b2a26] text-white group-hover:border-[#d7bb76]/65 group-hover:bg-[#32302a]'
@@ -211,6 +274,7 @@ export default function HomepageCalculationResult({
                   <span className={`mt-0.5 block text-[10px] font-semibold ${selected ? 'text-[#6b531a]' : 'text-white/62'}`}>
                     KDV dahil
                   </span>
+                  <TierBrandPair pkg={pkg} selected={selected} />
                   <span className={`mt-2 block text-[11px] leading-4 sm:text-xs ${selected ? 'text-[#4e4227]' : 'text-white/74'}`}>
                     {descriptor}
                   </span>

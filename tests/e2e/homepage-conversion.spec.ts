@@ -308,7 +308,17 @@ test.describe('Ana sayfa tek dönüşüm yolu', () => {
     const calculateButton = calculator.getByRole('button', { name: 'Fiyatımı Hesapla' })
     await expect(calculateButton).toBeEnabled()
     await calculateButton.click()
-    await expect(page.getByTestId('homepage-calculation-result')).toBeVisible({ timeout: 20_000 })
+    const result = page.getByTestId('homepage-calculation-result')
+    await expect(result).toBeVisible({ timeout: 20_000 })
+
+    const tierSelector = result.getByTestId('homepage-tier-selector')
+    const brandPairs = tierSelector.locator('[data-tier-brand-pair]')
+    await expect(brandPairs).toHaveCount(3)
+    await expect(brandPairs.locator('img')).toHaveCount(6)
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Ekonomik' })).toContainText('Bonus')
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Ekonomik' })).toContainText('TEKNO')
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Dengeli' })).toContainText('Optimix')
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Premium' })).toContainText('Expert')
   })
 
   test('EPS sonucu toz grubu koşulunu ve gerçek sekiz kalemi açıklar', async ({ page }) => {
