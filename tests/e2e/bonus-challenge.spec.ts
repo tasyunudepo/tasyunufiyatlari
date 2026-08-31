@@ -1,73 +1,49 @@
 import { expect, test } from '@playwright/test'
 
-// Sprint 1 — Bonus Meydan Okuma yüzeyleri.
-// Hakem kuralları: fark yalnız aynı koşulda ve gerçek hesaptan; sabit
-// "daha ucuz" iddiası hiçbir yüzeyde yok.
+// Ana sayfa 5c7eed0 ile çok adımlı wizard yerine kompakt ürün seçicisine
+// geçti. Bu sözleşme Bonus alternatifini, PDP aktarımını ve karşılaştırma
+// keşfini güncel kullanıcı yüzeyinden doğrular.
 
-test.describe('Bonus meydan okuma yüzeyleri', () => {
-  test('wizard: Filli sonucunun altında kart çıkar, Bonus ile hesaplar', async ({ page }) => {
+test.describe('Bonus ve karşılaştırma yüzeyleri', () => {
+  test('ana sayfa ürün seçicisi Bonus ve Filli grubu alternatiflerini sunar', async ({ page }) => {
     await page.goto('/')
-    const wizard = page.locator('#mantolama-hesaplayici')
-    await expect(
-      wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first(),
-    ).toBeVisible({ timeout: 20_000 })
-    if ((await wizard.locator('button').filter({ hasText: 'Bonus' }).count()) === 0) {
-      test.skip(true, 'Bonus aktif değil.')
-      return
-    }
+    const calculator = page.locator('[data-homepage-calculator]')
+    const productSelect = calculator.getByRole('combobox', { name: 'Malzeme' })
 
-    await wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first().click()
-    await wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' }).click()
-    await wizard.getByRole('button', { name: '5cm' }).click()
-    await wizard.getByRole('button', { name: 'Konum Seçimine Geç' }).click()
-    await wizard.locator('select').selectOption({ label: 'Ankara' })
-    await wizard.getByRole('button', { name: 'Metraj Gir' }).click()
-    await page.waitForTimeout(1200)
-    await wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' }).click()
-    await expect(page.getByText('Dengeli Sistem').first()).toBeVisible({ timeout: 20_000 })
-
-    const card = page.getByTestId('bonus-challenge-card')
-    await expect(card).toBeVisible({ timeout: 15_000 })
-    await expect(card.getByText(/daha düşük/)).toBeVisible()
-    await expect(card.getByText(/Aynı şehir: Ankara/)).toBeVisible()
-    await expect(card.getByText(/fark gerçek hesap sonucudur/)).toBeVisible()
-
-    await card.getByRole('button', { name: /ile hesapla/ }).click()
-    // Bonus harman sonuçları yüklenir (Premium Sistem yalnız Bonus akışında).
-    await expect(page.getByText('Premium Sistem').first()).toBeVisible({ timeout: 20_000 })
+    await expect(productSelect).toBeEnabled({ timeout: 20_000 })
+    const options = await productSelect.locator('option').allTextContents()
+    expect(options).toContain('Bonus F 150')
+    expect(options).toContain('Bonus F 150 Pro')
+    expect(options).toContain('Expert HD150')
+    await expect(page.getByText(/daha ucuz/i)).toHaveCount(0)
   })
 
-  test('wizard İstanbul: kart önce yaka sorar, seçim sonrası fark gösterir', async ({ page }) => {
+  test('Bonus hesabı İstanbul için yaka seçimi ve üç sistem sonucu ister', async ({ page }) => {
     await page.goto('/')
-    const wizard = page.locator('#mantolama-hesaplayici')
-    await expect(
-      wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first(),
-    ).toBeVisible({ timeout: 20_000 })
-    if ((await wizard.locator('button').filter({ hasText: 'Bonus' }).count()) === 0) {
-      test.skip(true, 'Bonus aktif değil.')
-      return
-    }
+    const calculator = page.locator('[data-homepage-calculator]')
 
-    await wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first().click()
-    await wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' }).click()
-    await wizard.getByRole('button', { name: '5cm' }).click()
-    await wizard.getByRole('button', { name: 'Konum Seçimine Geç' }).click()
-    await wizard.locator('select').selectOption({ label: 'İstanbul' })
-    await wizard.getByRole('button', { name: 'Metraj Gir' }).click()
-    await page.waitForTimeout(1200)
-    await wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' }).click()
-    await expect(page.getByText('Dengeli Sistem').first()).toBeVisible({ timeout: 20_000 })
+    await calculator.getByRole('combobox', { name: 'Malzeme' }).selectOption({ label: 'Bonus F 150' })
+    await calculator.getByRole('combobox', { name: 'Kalınlık' }).selectOption('5')
+    const amountInput = calculator.getByRole('spinbutton', { name: 'Miktar' })
+    await amountInput.fill('500')
 
-    const card = page.getByTestId('bonus-challenge-card')
-    await expect(card).toBeVisible({ timeout: 15_000 })
-    // Fail-closed: yaka seçilmeden fark gösterilmez.
-    await expect(card.getByText(/yakanızı seçin/)).toBeVisible()
-    await expect(card.getByText(/daha düşük/)).toHaveCount(0)
-    await card.getByRole('button', { name: 'Avrupa Yakası' }).click()
-    await expect(card.getByText(/daha düşük/)).toBeVisible({ timeout: 15_000 })
+    const calculateButton = calculator.getByRole('button', { name: 'Fiyatımı Hesapla' })
+    await expect(calculateButton).toBeDisabled()
+    await calculator.getByRole('button', { name: 'Avrupa Yakası' }).click()
+    await calculator.getByRole('button', { name: /1 Kamyon ·/ }).click()
+    await expect(calculateButton).toBeEnabled()
+    await calculateButton.click()
+
+    const result = page.getByTestId('homepage-calculation-result')
+    await expect(result).toBeVisible({ timeout: 20_000 })
+    const tierSelector = result.getByTestId('homepage-tier-selector')
+    await expect(tierSelector.getByRole('radio')).toHaveCount(3)
+    await expect(tierSelector).toContainText('Ekonomik')
+    await expect(tierSelector).toContainText('Dengeli')
+    await expect(tierSelector).toContainText('Premium')
   })
 
-  test('Filli PDP: Bonus alternatif kartı iki fiyatı aynı koşulda gösterir', async ({ page }) => {
+  test('Filli PDP Bonus alternatifini aynı koşulda gösterir ve hesaba taşır', async ({ page }) => {
     const response = await page.goto('/urunler/tasyunu-levha/expert-hd150-tasyunu')
     if (response?.status() === 404) {
       test.skip(true, 'Expert HD150 PDP yok.')
@@ -81,16 +57,22 @@ test.describe('Bonus meydan okuma yüzeyleri', () => {
 
     await card.getByRole('button', { name: /komple set hesapla/ }).click()
     await page.waitForURL(/#mantolama-hesaplayici/)
-    const wizard = page.locator('#mantolama-hesaplayici')
-    await expect(wizard.getByRole('button', { name: 'F 150', exact: true })).toBeVisible({ timeout: 20_000 })
+    const selectedProduct = page
+      .locator('[data-homepage-calculator]')
+      .getByRole('combobox', { name: 'Malzeme' })
+      .locator('option:checked')
+    await expect(selectedProduct).toHaveText('Bonus F 150', { timeout: 20_000 })
   })
 
-  test('ana sayfa bandı hesaplayıcıyı Bonus seçili açar', async ({ page }) => {
+  test('hesaplayıcı karşılaştırma merkezine wizard kaynağıyla geçer', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('Filli grubu fiyatına mı bakıyorsunuz?')).toBeVisible({ timeout: 15_000 })
-    await page.getByRole('button', { name: /Bonus fiyatını gör/ }).click()
-    const wizard = page.locator('#mantolama-hesaplayici')
-    await expect(wizard.getByRole('button', { name: 'F 150', exact: true })).toBeVisible({ timeout: 20_000 })
-    await expect(wizard.getByRole('button', { name: 'F 120' })).toBeVisible()
+    const calculator = page.locator('[data-homepage-calculator]')
+    await calculator.getByRole('link', { name: /Levhaları karşılaştır/ }).click()
+
+    await expect(page).toHaveURL(/\/tasyunu-karsilastir\?entry=wizard/)
+    await expect(page.getByRole('heading', {
+      level: 1,
+      name: 'Taşyünü levhaları aynı koşulda karşılaştırın',
+    })).toBeVisible()
   })
 })

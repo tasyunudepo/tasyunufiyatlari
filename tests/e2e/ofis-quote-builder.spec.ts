@@ -213,7 +213,7 @@ test.describe('yarı otomatik teklif ekranı', () => {
     await expect(page.getByTestId('urun-onerileri')).toBeVisible({ timeout: 15_000 })
     await expect(
       page.locator('[data-testid="urun-onerileri"] [role="option"]').first(),
-    ).toContainText(/Yapıştırıcı/i)
+    ).toContainText('TEKNOİZOFİX')
 
     // Escape öneriyi kapatır, yazılan metin kalır.
     await alan.press('Escape')

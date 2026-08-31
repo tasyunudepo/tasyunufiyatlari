@@ -14,57 +14,53 @@ const TASYUNU_BEKLENEN: Record<string, string> = {
 }
 
 function wizardLocator(page: Page): Locator {
-  return page.locator('#mantolama-hesaplayici')
+  return page.locator('[data-homepage-calculator]')
 }
 
-async function selectBrand(page: Page, brand: string) {
-  const wizard = wizardLocator(page)
-  await wizard
-    .locator('button')
-    .filter({ has: page.locator(`img[alt="${brand}"]`) })
-    .first()
-    .click()
+async function productSelect(page: Page): Promise<Locator> {
+  const product = wizardLocator(page).getByRole('combobox', { name: 'Malzeme' })
+  await expect(product).toBeEnabled({ timeout: 20_000 })
+  return product
 }
 
 test.describe('wizard-katalog ayrımı', () => {
   test('taşyünü markalarında yalnız mantolama modelleri listelenir', async ({ page }) => {
     await page.goto('/')
-    const wizard = wizardLocator(page)
-    await expect(wizard.getByText('Levha Markası')).toBeVisible()
+    const product = await productSelect(page)
+    const options = product.locator('optgroup[label="Taşyünü"] option')
 
     for (const [brand, beklenenModel] of Object.entries(TASYUNU_BEKLENEN)) {
-      await selectBrand(page, brand)
-      await expect(wizard.getByRole('button', { name: new RegExp(beklenenModel) })).toBeVisible()
+      await expect(options.filter({ hasText: `${brand} ${beklenenModel}` })).toHaveCount(1)
 
       for (const yasakli of YASAKLI_MODELLER) {
-        await expect(wizard.getByText(yasakli, { exact: true })).toHaveCount(0)
+        await expect(options.filter({ hasText: yasakli })).toHaveCount(0)
       }
     }
   })
 
   test('EPS seçiminde taşyünü modelleri sızmaz, EPS mantolama modelleri gelir', async ({ page }) => {
     await page.goto('/')
-    const wizard = wizardLocator(page)
+    const product = await productSelect(page)
+    const options = product.locator('optgroup[label="EPS"] option')
 
-    await wizard.getByRole('button', { name: /EPS/ }).first().click()
-    await selectBrand(page, 'Dalmaçyalı')
-
-    await expect(wizard.getByRole('button', { name: /Carbon/ }).first()).toBeVisible()
-    await expect(wizard.getByText('SW035', { exact: true })).toHaveCount(0)
+    await expect(options.filter({ hasText: 'Carbon' }).first()).toBeAttached()
+    await expect(options.filter({ hasText: 'SW035' })).toHaveCount(0)
 
     for (const yasakli of YASAKLI_MODELLER) {
-      await expect(wizard.getByText(yasakli, { exact: true })).toHaveCount(0)
+      await expect(options.filter({ hasText: yasakli })).toHaveCount(0)
     }
   })
 
   test('taşyünü akışı kalınlık adımına ilerleyebiliyor', async ({ page }) => {
     // Filtre regresyonu wizard'ı boş bırakırsa bu akış kırılır.
     await page.goto('/')
-    const wizard = wizardLocator(page)
+    const calculator = wizardLocator(page)
+    const product = await productSelect(page)
+    const thickness = calculator.getByRole('combobox', { name: 'Kalınlık' })
 
-    await selectBrand(page, 'Expert')
-    await expect(wizard.getByRole('button', { name: /HD150|LD125|Premium/ }).first()).toBeVisible()
-    await wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' }).click()
-    await expect(wizard.getByText('Yalıtım Kalınlığını Seçin')).toBeVisible()
+    await product.selectOption({ label: 'Expert HD150' })
+    await expect(thickness).toBeEnabled()
+    await thickness.selectOption('5')
+    await expect(thickness).toHaveValue('5')
   })
 })

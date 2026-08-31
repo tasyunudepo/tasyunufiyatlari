@@ -7,10 +7,10 @@
       "size": 46328
     },
     "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
-      "sha256": "e1fea8070bb09bcca5fb5274d9651198a42723e3ea18d6eafa4332c194c789ec",
-      "size": 8896,
-      "locked_at": "2026-08-19",
-      "reason": "Emrah'ın yeni ticari kararı: teklif öncesi PDP WhatsApp/telefon kaldırıldı; teklif sonrası referanslı WhatsApp kabulü ayrı testte korunuyor"
+      "sha256": "a45afdab71b8dc18855e1ed8b6fdaae3c611ade6d285f284ef7571bca222e0b0",
+      "size": 8927,
+      "locked_at": "2026-08-31",
+      "reason": "PDF idempotency/capability, WhatsApp fail-closed ve PDP iletişim kapısı kabulleri korunur; kaldırılmış çok adımlı wizard yerine güncel kompakt ana sayfa formu kullanılır"
     },
     "tests/api/quotes-route.integration.test.ts": {
       "sha256": "14dec81c02ec778ac4505e15d326c1ba41d29d7b4a898db17b753c30f6df8e84",

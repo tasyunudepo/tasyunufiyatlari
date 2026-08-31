@@ -1,103 +1,70 @@
 import { expect, test } from '@playwright/test'
 
 // Bonus harman paket akışı (karar 13 revizyonu, 13 Temmuz 2026):
-// Bonus levha + Expert/Optimix/TEKNO toz grubu üç paket kartı üretir.
-// Bonus markası canlı DB'de aktif değilse testler atlanır.
+// Bonus levha + Expert/Optimix/TEKNO toz grubu üç sistem alternatifi üretir.
 
 test.describe('Bonus harman paket teklifi', () => {
-  test('Bonus akışı: kapasiteli metraj adımı + 3 harman paketi', async ({ page }) => {
+  test('Bonus akışı: kendi araç kapasitesi + 3 harman sistemi', async ({ page }) => {
     await page.goto('/')
-    const wizard = page.locator('#mantolama-hesaplayici')
+    const calculator = page.locator('[data-homepage-calculator]')
+    const productSelect = calculator.getByRole('combobox', { name: 'Malzeme' })
+    await expect(productSelect).toBeEnabled({ timeout: 20_000 })
 
-    // Marka listesi Supabase'ten asenkron gelir; önce hidrasyonu bekle.
-    await expect(
-      wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first(),
-    ).toBeVisible({ timeout: 20_000 })
+    await productSelect.selectOption({ label: 'Bonus F 150' })
+    await calculator.getByRole('combobox', { name: 'Kalınlık' }).selectOption('5')
+    await calculator.getByRole('button', { name: 'Avrupa Yakası' }).click()
 
-    const bonusButton = wizard.locator('button').filter({ hasText: 'Bonus' }).first()
-    if ((await bonusButton.count()) === 0) {
-      test.skip(true, 'Bonus markası canlıda aktif değil (migration/aktivasyon bekliyor).')
-      return
-    }
+    const amountInput = calculator.getByRole('spinbutton', { name: 'Miktar' })
+    await amountInput.fill('500')
+    await expect(calculator.getByText(/tam araçla sevk edilir/)).toBeVisible()
 
-    await bonusButton.click()
-    await expect(wizard.getByRole('button', { name: /F 150/ }).first()).toBeVisible()
-    await wizard.getByRole('button', { name: 'F 150', exact: true }).click()
+    // F 150 / 5 cm kendi kapasitesini kullanır; genel 480/1200 kaydı değil.
+    const lorrySuggestion = calculator.getByRole('button', { name: /1 Kamyon · 967,7/ })
+    const tirSuggestion = calculator.getByRole('button', { name: /1 TIR · 1\.774,1/ })
+    await expect(lorrySuggestion).toBeVisible({ timeout: 15_000 })
+    await expect(tirSuggestion).toBeVisible()
 
-    await wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' }).click()
-    await wizard.getByRole('button', { name: '5cm' }).click()
-    await wizard.getByRole('button', { name: 'Konum Seçimine Geç' }).click()
-    await wizard.locator('select').selectOption({ label: 'İstanbul' })
-    await wizard.getByRole('button', { name: 'Avrupa Yakası' }).click()
-    await wizard.getByRole('button', { name: 'Metraj Gir' }).click()
+    const calculateButton = calculator.getByRole('button', { name: 'Fiyatımı Hesapla' })
+    await expect(calculateButton).toBeDisabled()
+    await tirSuggestion.click()
+    await expect(calculateButton).toBeEnabled()
+    await calculateButton.click()
 
-    // A2 kabulü: metraj adımı Bonus'un KENDİ kapasiteleriyle pozisyon alır
-    // (F 150 / 5 cm: kamyon 967,7 m² — genel 480/1200 kaydı değil).
-    await expect(wizard.getByText(/967,7/).first()).toBeVisible({ timeout: 15_000 })
+    const result = page.getByTestId('homepage-calculation-result')
+    await expect(result).toBeVisible({ timeout: 20_000 })
+    const tierSelector = result.getByTestId('homepage-tier-selector')
+    await expect(tierSelector.getByRole('radio')).toHaveCount(3)
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Ekonomik' })).toContainText('TEKNO')
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Dengeli' })).toContainText('Optimix')
+    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Premium' })).toContainText('Expert')
+    await expect(result).toContainText('Bonus F 150 5 cm Taşyünü')
+    await expect(result).toContainText('Nakliye fiyata dahil')
+    await expect(result).not.toContainText(/sevkiyat verisi henüz kesinleşmedi/)
 
-    // Ara metraj tam araç düzenine uymaz: inline uyarı + CTA kilidi.
-    const metrajInput = wizard.locator('input[type="number"]')
-    await metrajInput.fill('500')
-    await expect(wizard.getByText('Bu metraj tam araç düzenine uymuyor')).toBeVisible()
-    await expect(wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' })).toBeDisabled()
-
-    // Üretici listesindeki birebir tam TIR değeri geçerlidir.
-    await metrajInput.fill('1774.1')
-    const compareButton = wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' })
-    await expect(compareButton).toBeEnabled()
-    await compareButton.click()
-
-    // B kabulü: üç harman paketi kartı (Expert/Optimix/TEKNO toz grubu).
-    await expect(page.getByText('Premium Sistem').first()).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText('Dengeli Sistem').first()).toBeVisible()
-    await expect(page.getByText('Ekonomik Sistem').first()).toBeVisible()
-
-    // Levha kalemi her kartta Bonus markasıyla listelenir.
-    await expect(page.getByText(/Bonus F 150/).first()).toBeVisible()
-
-    // Nakliye artık her metrajda satış fiyatına dahildir (commit 8a48608:
-    // "Tekno dahil aksesuar markalarında nakliye her metrajda dahil").
-    // O commit "sevkiyat verisi henüz kesinleşmedi" uyarısını koddan
-    // kaldırdı ama bu testi güncellemedi; test o tarihten beri kırıktı.
-    // Yeni sözleşme: uyarı GÖRÜNMEZ, yerine nakliye dahil göstergesi çıkar.
-    await expect(page.getByText(/sevkiyat verisi henüz kesinleşmedi/)).toHaveCount(0)
-    await expect(page.getByText(/Nakliye dahil/i).first()).toBeVisible()
-
-    // Çifte marj kilidi (uçtan uca): sunucu levha fiyatı ile set m² fiyatı
-    // tutarlı olmalı — set fiyatı levha fiyatının altına inemez.
-    const res = await page.request.get(
+    // Çifte marj kilidi: sunucu levha fiyatı, set hesabının kanonik girdisidir.
+    const response = await page.request.get(
       '/api/bonus-price?model=F%20150&thicknessCm=5&cityCode=34&sub=avrupa',
     )
-    const json = await res.json()
+    const json = await response.json()
     expect(json.ok).toBe(true)
     expect(json.salePricePerM2).toBe(370.03)
   })
 
-  test('EPS seçiminde Bonus listelenmez; Bonus seçiliyken EPS\'e geçiş akışı tıkamaz', async ({ page }) => {
+  test('EPS seçeneklerine Bonus sızmaz ve ürün değişimi akışı tıkamaz', async ({ page }) => {
     await page.goto('/')
-    const wizard = page.locator('#mantolama-hesaplayici')
+    const calculator = page.locator('[data-homepage-calculator]')
+    const productSelect = calculator.getByRole('combobox', { name: 'Malzeme' })
+    await expect(productSelect).toBeEnabled({ timeout: 20_000 })
 
-    await expect(
-      wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first(),
-    ).toBeVisible({ timeout: 20_000 })
+    const epsOptions = await productSelect.locator('optgroup[label="EPS"] option').allTextContents()
+    expect(epsOptions.length).toBeGreaterThan(0)
+    expect(epsOptions.some(option => option.includes('Bonus'))).toBe(false)
+    expect(epsOptions).toContain('Dalmaçyalı İdeal Carbon')
 
-    const bonusButton = wizard.locator('button').filter({ hasText: 'Bonus' }).first()
-    if ((await bonusButton.count()) === 0) {
-      test.skip(true, 'Bonus markası canlıda aktif değil.')
-      return
-    }
-
-    // Bonus seçiliyken EPS'e geç: Bonus'un EPS ürünü yok.
-    await bonusButton.click()
-    await wizard.locator('button').filter({ hasText: 'EPS' }).first().click()
-
-    // Bonus butonu marka listesinden kalkar, seçim geçerli markaya döner
-    // ve akış ilerleyebilir (modelsiz tıkanma regresyonu).
-    await expect(wizard.locator('button').filter({ hasText: 'Bonus' })).toHaveCount(0)
-    await expect(wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' })).toBeEnabled()
-
-    // Taşyününe dönünce Bonus tekrar görünür.
-    await wizard.locator('button').filter({ hasText: 'Taşyünü' }).first().click()
-    await expect(wizard.locator('button').filter({ hasText: 'Bonus' }).first()).toBeVisible()
+    await productSelect.selectOption({ label: 'Bonus F 150' })
+    await expect(productSelect.locator('option:checked')).toHaveText('Bonus F 150')
+    await productSelect.selectOption({ label: 'Dalmaçyalı İdeal Carbon' })
+    await expect(productSelect.locator('option:checked')).toHaveText('Dalmaçyalı İdeal Carbon')
+    await expect(calculator.getByRole('combobox', { name: 'Kalınlık' })).toBeEnabled()
   })
 })

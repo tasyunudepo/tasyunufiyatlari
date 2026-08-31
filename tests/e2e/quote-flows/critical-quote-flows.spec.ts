@@ -1,28 +1,27 @@
 import { expect, test, type Page, type Request } from '@playwright/test'
 
 const PRODUCT_PATH = '/urunler/tasyunu-levha/dalmacyali-sw035-tasyunu'
+const HOMEPAGE_PRODUCT_VALUE = 'tasyunu|1|SW035'
+const HOMEPAGE_AREA_M2 = '1497.6'
 
 async function completeWizard(page: Page) {
   await page.goto('/')
-  const wizard = page.locator('#mantolama-hesaplayici')
+  const calculator = page.locator('[data-homepage-calculator]')
+  const materialSelect = calculator.getByRole('combobox', { name: 'Malzeme' })
 
-  // Bu akış Dalmaçyalı SW035 sayılarıyla kurgulandı; varsayılan marka
-  // değişimlerinden (14 Temmuz 2026: Bonus varsayılan oldu) bağımsız
-  // kalmak için marka açıkça seçilir. Test niyeti değişmedi: atomik
-  // teklif kaydı + idempotency + capability akışı.
-  await wizard.locator('button').filter({ hasText: 'Dalmaçyalı' }).first().click()
+  // Güncel ana sayfa tek formdur. Dalmaçyalı SW035 ve tam TIR metrajı
+  // açıkça seçilerek atomik teklif/idempotency/capability niyeti korunur.
+  await expect(materialSelect).toBeEnabled({ timeout: 30_000 })
+  await calculator.getByRole('combobox', { name: 'Teslim ili' }).selectOption({ label: 'İstanbul' })
+  await materialSelect.selectOption(HOMEPAGE_PRODUCT_VALUE)
+  await calculator.getByRole('combobox', { name: 'Kalınlık' }).selectOption('5')
+  await calculator.getByRole('spinbutton', { name: 'Miktar' }).fill(HOMEPAGE_AREA_M2)
+  await calculator.getByRole('button', { name: 'Fiyatımı Hesapla' }).click()
 
-  await wizard.getByRole('button', { name: 'Kalınlık Seçimine Geç' }).click()
-  await expect(wizard.getByText('Yalıtım Kalınlığını Seçin')).toBeVisible()
-  await wizard.getByRole('button', { name: 'Konum Seçimine Geç' }).click()
-  await expect(wizard.getByText('Teslimat İli')).toBeVisible()
-  await wizard.locator('select').selectOption({ label: 'İstanbul' })
-  await wizard.getByRole('button', { name: 'Metraj Gir' }).click()
-  await expect(wizard.getByText('Sipariş metrajı')).toBeVisible()
-  await wizard.getByRole('button', { name: '3 Teklifi Karşılaştır' }).click()
-  await expect(
-    page.getByRole('button', { name: 'PDF Teklif Kaydı Oluştur' }).first(),
-  ).toBeVisible({ timeout: 15_000 })
+  const result = page.getByTestId('homepage-calculation-result')
+  await expect(result).toBeVisible({ timeout: 20_000 })
+  await expect(result.getByRole('heading', { name: '8 Kalem Komple Mantolama Seti' })).toBeVisible()
+  return result
 }
 
 async function fillPdfModal(page: Page) {
@@ -71,8 +70,8 @@ test.describe('kritik teklif akışları', () => {
       })
     })
 
-    await completeWizard(page)
-    await page.getByRole('button', { name: 'PDF Teklif Kaydı Oluştur' }).first().click()
+    const result = await completeWizard(page)
+    await result.getByRole('button', { name: 'Teklif detayını indir' }).click()
     const modal = await fillPdfModal(page)
     await modal.getByRole('button', { name: 'PDF Teklif Kaydı Oluştur' }).click()
 
@@ -110,15 +109,16 @@ test.describe('kritik teklif akışları', () => {
       })
     })
 
-    await completeWizard(page)
-    await page.getByRole('button', { name: /WhatsApp'tan Teyit İste/i }).first().click()
-    const form = page.locator('form:visible').filter({ hasText: "Mesajı WhatsApp'ta Aç" })
-    await form.locator('input[type="text"]').fill('Emrah Test')
-    await form.locator('input[type="tel"]').fill('05321234567')
-    await form.locator('#quoteWaKvkkConsent').check()
-    await form.getByRole('button', { name: "Mesajı WhatsApp'ta Aç" }).click()
+    const result = await completeWizard(page)
+    await result.getByRole('button', { name: "WhatsApp'ta Siparişi Başlat" }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('heading', { name: "Siparişi WhatsApp'ta Başlatın" })).toBeVisible()
+    await dialog.locator('input[type="text"]').fill('Emrah Test')
+    await dialog.locator('input[type="tel"]').fill('05321234567')
+    await dialog.locator('#quoteWaKvkkConsent').check()
+    await dialog.getByRole('button', { name: "WhatsApp'ta Siparişi Başlat" }).click()
 
-    await expect(form).toBeHidden()
+    await expect(dialog).toBeHidden()
     expect(quoteRequest).not.toBeNull()
     expect(quoteRequest!.headers()['idempotency-key']).toMatch(/^[0-9a-f-]{36}$/)
     expect(await quoteRequest!.postDataJSON()).toMatchObject({

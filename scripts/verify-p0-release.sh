@@ -36,7 +36,7 @@ echo '7/8 Production build'
 npm run build
 
 echo '8/9 Kritik tarayıcı akışları'
-npm run test:e2e
+CI=1 npm run test:e2e -- --workers=1 --retries=0
 
 # 27 Temmuz 2026: kullanıcı hem panelde hem ana sayfada "OKUNMUYOR" dedi ve
 # haklıydı — 578 birim testinin ve 36 E2E testinin hiçbiri bir yazının
@@ -46,4 +46,3 @@ echo '9/9 Okunabilirlik (WCAG AA kontrast, gerçek ekran ölçümü)'
 npm run verify:contrast
 
 echo 'P0 yerel release kapısı geçti. Canlı RLS/storage/env smoke ayrıca zorunludur.'
-
