@@ -58,6 +58,36 @@ async function checkSensitiveTable(table) {
   }
 }
 
+async function checkRevokedSensitiveTable(table) {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/${table}?select=id&limit=1`,
+    { headers: supabaseHeaders(anonKey, { Prefer: 'count=exact' }) },
+  )
+  const rows = await jsonOrNull(response)
+  const isClosed = response.status === 401
+    || response.status === 403
+    || (response.ok && Array.isArray(rows) && rows.length === 0)
+
+  if (isClosed) {
+    pass(`Anon ${table} erişimi kapalı: HTTP ${response.status}`)
+  } else {
+    fail(`Anon ${table} hassas satır görünürlüğü kapalı değil`)
+  }
+}
+
+async function checkServiceColumn(table, column) {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/${table}?select=${column}&limit=1`,
+    { headers: supabaseHeaders(serviceKey) },
+  )
+  const rows = await jsonOrNull(response)
+  if (response.ok && Array.isArray(rows)) {
+    pass(`Service-role ${table}.${column} şema erişimi açık`)
+  } else {
+    fail(`Service-role ${table}.${column} şema erişimi çalışmıyor`)
+  }
+}
+
 async function findFirstStorageObject(prefix = '', depth = 0) {
   if (depth > 5) return null
   const response = await fetch(`${supabaseUrl}/storage/v1/object/list/quote-pdfs`, {
@@ -109,6 +139,9 @@ await expectStatus(
 
 await checkSensitiveTable('quotes')
 await checkSensitiveTable('quote_funnel_events')
+await checkRevokedSensitiveTable('customers')
+await checkRevokedSensitiveTable('customer_interactions')
+await checkServiceColumn('quotes', 'comparison_session_id')
 
 const brandsResponse = await fetch(
   `${supabaseUrl}/rest/v1/brands?select=id&limit=1`,
@@ -191,4 +224,3 @@ if (rpcResponse.status === 404 || rpcBody?.code === 'PGRST202') {
 
 console.log(`\nSonuç: ${passes.length} geçti, ${failures.length} başarısız.`)
 if (failures.length > 0) process.exit(1)
-
