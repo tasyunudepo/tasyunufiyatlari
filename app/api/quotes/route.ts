@@ -73,6 +73,24 @@ function resolveQuoteGuardContext(headers: Headers) {
 }
 
 function mapQuotePayload(payload: ReturnType<typeof apiQuoteSchema.parse>) {
+  const rawAttribution = payload.packageItems.attribution
+  const attribution = rawAttribution
+    && typeof rawAttribution === 'object'
+    && !Array.isArray(rawAttribution)
+    ? rawAttribution as Record<string, unknown>
+    : {}
+  const packageItems = {
+    ...payload.packageItems,
+    attribution: {
+      ...attribution,
+      // DB generated kolonunun tek güvenilir girdisi API'de doğrulanan bu
+      // alandır. İstemcinin nested değeri burada kesin olarak ezilir.
+      comparison_session_id: payload.sourceChannel === 'comparison'
+        ? payload.comparisonSessionId
+        : null,
+    },
+  }
+
   return {
     customer_name: payload.customerName,
     customer_email: payload.customerEmail || '',
@@ -105,7 +123,7 @@ function mapQuotePayload(payload: ReturnType<typeof apiQuoteSchema.parse>) {
     truck_capacity_packages: payload.truckCapacityPackages ?? null,
     lorry_fill_percentage: payload.lorryFillPercentage ?? null,
     truck_fill_percentage: payload.truckFillPercentage ?? null,
-    package_items: payload.packageItems,
+    package_items: packageItems,
     request_type: payload.submissionType,
     source_channel: payload.sourceChannel,
     status: payload.submissionType === 'pdf_quote' ? 'quoted' : 'pending',

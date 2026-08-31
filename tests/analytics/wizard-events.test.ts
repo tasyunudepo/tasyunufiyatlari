@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  notifyComparisonCtaClick,
+  notifyComparisonOpened,
   notifyPdfQuoteRequested,
   notifyWhatsappOrderRequested,
 } from '@/lib/notifyWizardEvent'
@@ -47,5 +49,41 @@ describe('Wizard GA4 event allowlist', () => {
     expect(payload).not.toHaveProperty('customer_email')
     expect(payload).not.toHaveProperty('customer_address')
     expect(JSON.stringify(payload)).not.toContain('05321234567')
+  })
+
+  it('karşılaştırma açılış ve CTA eventlerini aynı anonim oturuma bağlar', () => {
+    const gtag = vi.fn()
+    vi.stubGlobal('window', {
+      gtag,
+      location: { pathname: '/tasyunu-karsilastir' },
+    })
+
+    notifyComparisonOpened({
+      surface: 'genel',
+      urun_sayisi: 8,
+      entry_placement: 'category',
+      comparison_session_id: 'cmp_test_1',
+    })
+    notifyComparisonCtaClick({
+      surface: 'genel',
+      entry_placement: 'category',
+      comparison_session_id: 'cmp_test_1',
+      brand_name: 'Bonus',
+      model_name: 'F 150',
+      city_code: 6,
+      thickness_cm: 8,
+    })
+
+    expect(gtag).toHaveBeenCalledTimes(2)
+    expect(gtag.mock.calls[0][1]).toBe('Karsilastirma_Acildi')
+    expect(gtag.mock.calls[1][1]).toBe('Karsilastirma_CTA_Click')
+    expect(gtag.mock.calls[0][2]).toMatchObject({
+      comparison_session_id: 'cmp_test_1',
+      entry_placement: 'category',
+    })
+    expect(gtag.mock.calls[1][2]).toMatchObject({
+      comparison_session_id: 'cmp_test_1',
+      model_name: 'F 150',
+    })
   })
 })

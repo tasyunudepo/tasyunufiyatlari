@@ -51,7 +51,15 @@ export const apiQuoteSchema = z.object({
   customerCompany: z.string().max(255).optional().or(z.literal('')),
   customerAddress: z.string().max(500).optional().or(z.literal('')),
   submissionType: z.enum(['whatsapp_order', 'pdf_quote']),
-  sourceChannel: z.enum(['wizard', 'catalog']).default('wizard'),
+  sourceChannel: z.enum(['wizard', 'catalog', 'comparison']).default('wizard'),
+  comparisonSessionId: z
+    .string()
+    .trim()
+    .min(12)
+    .max(80)
+    .regex(/^cmp_[A-Za-z0-9]+_[A-Za-z0-9]+$/, 'Geçerli karşılaştırma oturumu gerekli')
+    .optional()
+    .nullable(),
 
   materialType: z.enum(['tasyunu', 'eps'], {
     message: 'Geçerli bir levha tipi seçin',
@@ -102,6 +110,22 @@ export const apiQuoteSchema = z.object({
   kvkkConsent: z.boolean().refine(val => val === true, {
     message: 'KVKK rızası alınmadan teklif kaydedilemez',
   }),
+}).superRefine((payload, ctx) => {
+  if (payload.sourceChannel === 'comparison' && !payload.comparisonSessionId) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['comparisonSessionId'],
+      message: 'Karşılaştırma kanalında oturum kimliği gereklidir',
+    })
+  }
+
+  if (payload.sourceChannel !== 'comparison' && payload.comparisonSessionId) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['comparisonSessionId'],
+      message: 'Karşılaştırma oturumu yalnız karşılaştırma kanalında kullanılabilir',
+    })
+  }
 })
 
 export type ApiQuoteData = z.infer<typeof apiQuoteSchema>

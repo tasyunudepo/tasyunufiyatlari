@@ -41,6 +41,8 @@ export interface WizardBasePayload {
   total_m2?: number;
   package_count?: number;
   result_session_id?: string;
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  comparison_session_id?: string | null;
 }
 
 // 1) Fiyat_Gosterildi
@@ -80,6 +82,8 @@ export interface WizardResultCtaPayload {
   package_name: string;
   package_tier: string;
   result_session_id?: string;
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  comparison_session_id?: string | null;
 }
 
 export interface WizardResultFormOpenPayload {
@@ -88,6 +92,8 @@ export interface WizardResultFormOpenPayload {
   package_name: string;
   package_tier: string;
   result_session_id?: string;
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  comparison_session_id?: string | null;
 }
 
 export interface WizardResultFormErrorPayload {
@@ -97,6 +103,8 @@ export interface WizardResultFormErrorPayload {
   package_name?: string;
   package_tier?: string;
   result_session_id?: string;
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  comparison_session_id?: string | null;
 }
 
 export interface ProductDetailBasePayload {
@@ -200,6 +208,8 @@ export function notifyWizardShowPrices(p: WizardShowPricesPayload): void {
     total_m2:                p.total_m2 ?? null,
     package_count:           p.package_count ?? null,
     result_session_id:       p.result_session_id ?? null,
+    entry_surface:           p.entry_surface ?? 'wizard',
+    comparison_session_id:   p.comparison_session_id ?? null,
     results_count:           p.results_count ?? null,
     cheapest_total:          p.cheapest_total ?? null,
     cheapest_per_m2:         p.cheapest_per_m2 ?? null,
@@ -228,6 +238,8 @@ export function notifyPdfQuoteRequested(p: PdfQuoteRequestedPayload): void {
     selected_per_m2:         p.selected_per_m2,
     customer_type:           p.customer_type ?? 'individual',
     source_channel:          p.source_channel ?? 'wizard',
+    entry_surface:           p.entry_surface ?? 'wizard',
+    comparison_session_id:   p.comparison_session_id ?? null,
   });
 }
 
@@ -248,6 +260,8 @@ export function notifyWhatsappOrderRequested(p: WhatsappOrderRequestedPayload): 
     selected_package_total:  p.selected_package_total,
     selected_per_m2:         p.selected_per_m2,
     source_channel:          p.source_channel ?? 'wizard',
+    entry_surface:           p.entry_surface ?? 'wizard',
+    comparison_session_id:   p.comparison_session_id ?? null,
   });
 }
 
@@ -259,6 +273,8 @@ export function notifyWizardResultCtaClick(p: WizardResultCtaPayload): void {
     package_name:      p.package_name,
     package_tier:      p.package_tier,
     result_session_id: p.result_session_id ?? null,
+    entry_surface: p.entry_surface ?? 'wizard',
+    comparison_session_id: p.comparison_session_id ?? null,
   });
 }
 
@@ -269,6 +285,8 @@ export function notifyWizardResultFormOpen(p: WizardResultFormOpenPayload): void
     package_name:      p.package_name,
     package_tier:      p.package_tier,
     result_session_id: p.result_session_id ?? null,
+    entry_surface: p.entry_surface ?? 'wizard',
+    comparison_session_id: p.comparison_session_id ?? null,
   });
 }
 
@@ -280,6 +298,8 @@ export function notifyWizardResultFormError(p: WizardResultFormErrorPayload): vo
     package_name:      p.package_name ?? null,
     package_tier:      p.package_tier ?? null,
     result_session_id: p.result_session_id ?? null,
+    entry_surface: p.entry_surface ?? 'wizard',
+    comparison_session_id: p.comparison_session_id ?? null,
   });
 }
 
@@ -354,7 +374,7 @@ export function notifySituationSelected(p: SituationSelectedPayload): void {
 const GA_EVENT_BONUS_CHALLENGE_SHOWN  = 'Bonus_Meydan_Okuma_Gosterildi';
 const GA_EVENT_BONUS_CHALLENGE_PICKED = 'Bonus_Karsilastirmadan_Secildi';
 
-export type BonusChallengeSurface = 'wizard_result' | 'pdp' | 'anasayfa';
+export type BonusChallengeSurface = 'wizard_result' | 'pdp' | 'anasayfa' | 'comparison';
 
 export interface BonusChallengePayload {
   surface: BonusChallengeSurface;
@@ -366,6 +386,7 @@ export interface BonusChallengePayload {
   city_code?: number | null;
   thickness_cm?: number | null;
   result_session_id?: string | null;
+  comparison_session_id?: string | null;
 }
 
 export function notifyBonusChallengeShown(p: BonusChallengePayload): void {
@@ -378,10 +399,33 @@ export function notifyBonusChallengePicked(p: BonusChallengePayload): void {
 
 // ─── 6. Karşılaştırma Merkezi (Sprint 2) ─────────────────────────────
 const GA_EVENT_COMPARISON_OPENED = 'Karsilastirma_Acildi';
+const GA_EVENT_COMPARISON_CTA_CLICK = 'Karsilastirma_CTA_Click';
 
-export function notifyComparisonOpened(p: {
+export type ComparisonEntryPlacement =
+  | 'direct'
+  | 'category'
+  | 'pdp'
+  | 'wizard'
+  | 'density_150'
+  | 'unknown';
+
+interface ComparisonJourneyPayload {
   surface: 'genel' | 'yogunluk_150';
+  entry_placement: ComparisonEntryPlacement;
+  comparison_session_id: string;
+}
+
+export function notifyComparisonOpened(p: ComparisonJourneyPayload & {
   urun_sayisi: number;
 }): void {
   emit(GA_EVENT_COMPARISON_OPENED, { ...p });
+}
+
+export function notifyComparisonCtaClick(p: ComparisonJourneyPayload & {
+  brand_name: string;
+  model_name: string;
+  city_code: number;
+  thickness_cm: number;
+}): void {
+  emit(GA_EVENT_COMPARISON_CTA_CLICK, { ...p });
 }

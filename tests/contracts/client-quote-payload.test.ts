@@ -21,6 +21,16 @@ describe('teklif istemcisi KVKK sözleşmesi', () => {
     )
   })
 
+  it('Wizard teklif metadata’sına karşılaştırma yolculuk bağını taşır', () => {
+    const source = readRepoFile('components/wizard/WizardCalculator.tsx')
+
+    expect(source).toContain('entry_surface: entryAttribution.entrySurface')
+    expect(source).toContain('comparison_session_id: entryAttribution.comparisonSessionId')
+    expect(source).toContain('result_session_id: resultSessionId || null')
+    expect(source).toContain("sourceChannel: entryAttribution.entrySurface === 'comparison'")
+    expect(source).toContain('comparisonSessionId: entryAttribution.comparisonSessionId')
+  })
+
   it('PDP PDF payloadına gerçek form onayını taşır', () => {
     const source = readRepoFile(
       'components/catalog/SingleProductQuoteButton.tsx',

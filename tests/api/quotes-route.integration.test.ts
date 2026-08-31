@@ -200,6 +200,43 @@ describe('/api/quotes atomik route entegrasyonu', () => {
     expect(mocks.sendNotification).toHaveBeenCalledTimes(1)
   })
 
+  it('karşılaştırma kaynağını oturum bağıyla RPC ve paket bildirimi zincirine taşır', async () => {
+    mocks.rpc.mockResolvedValue({
+      data: [{
+        outcome: 'created',
+        quote_id: 45,
+        created_at: '2026-08-31T00:00:00.000Z',
+        retry_after_seconds: null,
+        limited_by: null,
+      }],
+      error: null,
+    })
+
+    const response = await POST(request({
+      ...validPayload,
+      sourceChannel: 'comparison',
+      comparisonSessionId: 'cmp_m123abc_def456',
+      packageItems: {
+        attribution: { comparison_session_id: 'evil_nested_value' },
+      },
+    }))
+
+    expect(response.status).toBe(200)
+    const [, rpcArgs] = mocks.rpc.mock.calls[0]
+    expect(rpcArgs.p_quote_payload).toMatchObject({
+      source_channel: 'comparison',
+      consent_channel: 'comparison',
+      package_items: {
+        attribution: { comparison_session_id: 'cmp_m123abc_def456' },
+      },
+    })
+    expect(rpcArgs.p_quote_payload).not.toHaveProperty('comparison_session_id')
+    expect(mocks.sendNotification).toHaveBeenCalledWith(
+      'package_whatsapp_order',
+      expect.any(Object),
+    )
+  })
+
   it('yerel development isteğini proxy IP başlığı ve production secret olmadan çalıştırır', async () => {
     delete process.env.QUOTE_ABUSE_HASH_SECRET
     vi.stubEnv('NODE_ENV', 'development')

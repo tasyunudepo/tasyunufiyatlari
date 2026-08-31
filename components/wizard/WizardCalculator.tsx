@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import { notifyLeadRejected } from "@/lib/analytics/leadQualification";
@@ -47,7 +48,7 @@ import {
     resolveEpsShippingDecision,
     resolveVehicleTypeFromPackages,
 } from "@/lib/pricing/commercialRules";
-import { useWizardStore } from "@/lib/store/wizardStore";
+import { useWizardStore, type WizardEntrySurface } from "@/lib/store/wizardStore";
 import { filterMantolamaWizardModels, isMantolamaWizardModel } from "@/lib/wizard/eligibility";
 import type { PdfOfferFormData } from "@/lib/schemas/pdfOffer.schema";
 import type {
@@ -185,6 +186,13 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [resultSessionId, setResultSessionId] = useState("");
+    const [entryAttribution, setEntryAttribution] = useState<{
+        entrySurface: WizardEntrySurface;
+        comparisonSessionId: string | null;
+    }>({
+        entrySurface: 'wizard',
+        comparisonSessionId: null,
+    });
     const lastLeadRejectionRef = useRef("");
 
     // Wizard step
@@ -423,6 +431,18 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         if (!situationPresetFromStore) return;
         setSelectedMalzeme(situationPresetFromStore.material);
         setSelectedKalinlik(String(situationPresetFromStore.thicknessCm));
+        if (typeof situationPresetFromStore.cityCode === 'number') {
+            setSelectedCityCode(situationPresetFromStore.cityCode);
+        }
+        if ('citySubRegion' in situationPresetFromStore) {
+            setCitySubRegion(situationPresetFromStore.citySubRegion ?? null);
+        }
+        if (situationPresetFromStore.entrySurface) {
+            setEntryAttribution({
+                entrySurface: situationPresetFromStore.entrySurface,
+                comparisonSessionId: situationPresetFromStore.comparisonSessionId ?? null,
+            });
+        }
 
         if (situationPresetFromStore.brandName || situationPresetFromStore.modelShortName) {
             setPendingBrandModel({
@@ -565,8 +585,12 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 // Preset model bu brand'de yok — null'a çek, child auto-select
                 // (filtered[0]) uygun modeli yerleştirsin
                 setSelectedModel(null);
+            } else if (selectedModel !== pendingBrandModel.modelShortName) {
+                // Fetch varsayılan Bonus modelini preset çözülmeden önce
+                // atayabilir. Geçerli hedefi yalnız doğrulamak yetmez; tam
+                // modeli yeniden yazarak F 150 → F 150 Pro kaymasını önle.
+                setSelectedModel(pendingBrandModel.modelShortName);
             }
-            // Listede varsa zaten 1. dalda set edildi, dokunma
         }
 
         // Tüm faz işlendi — pending'i temizle
@@ -574,7 +598,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
     // Bilinçli kısmi bağımlılık: efekt pendingBrandModel fazı işlerken dizi
     // referansları yerine length imzaları yeterli; tam diziler döngü tetikler.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pendingBrandModel, brands.length, selectedBrandId, availableModels.length]);
+    }, [pendingBrandModel, brands.length, selectedBrandId, selectedModel, availableModels.length]);
 
     // Sayfa yüklendiğinde verileri çek
     useEffect(() => {
@@ -847,6 +871,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         package_name: pkg.definition.name,
         package_tier: pkg.definition.tier,
         result_session_id: resultSessionId,
+        entry_surface: entryAttribution.entrySurface,
+        comparison_session_id: entryAttribution.comparisonSessionId,
     });
 
     const trackResultCtaClick = (
@@ -975,6 +1001,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     selected_per_m2:        selectedPackageForPdf.pricePerM2,
                     customer_type:          data.customerCompany ? 'company' : 'individual',
                     result_session_id:      resultSessionId,
+                    entry_surface:          entryAttribution.entrySurface,
+                    comparison_session_id:  entryAttribution.comparisonSessionId,
                 });
             }
 
@@ -1869,6 +1897,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             special_order_required: requiresSpecialOrder,
             recommended_package_name: recommended?.definition.name ?? null,
             result_session_id:      nextResultSessionId,
+            entry_surface:          entryAttribution.entrySurface,
+            comparison_session_id:  entryAttribution.comparisonSessionId,
         });
 
         // Bonus meydan okuma kartı (Sprint 1.2) — sonuçlar ekrana düştükten
@@ -1938,7 +1968,10 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             customerCompany: overrides?.customerCompany ?? quoteForm.customerCompany.trim(),
             customerAddress: overrides?.customerAddress ?? quoteForm.customerAddress.trim(),
             submissionType,
-            sourceChannel: 'wizard',
+            sourceChannel: entryAttribution.entrySurface === 'comparison'
+                ? 'comparison'
+                : 'wizard',
+            comparisonSessionId: entryAttribution.comparisonSessionId,
             materialType: selectedMalzeme,
             brandId: selectedBrandId!,
             brandName: selectedBrand?.name || pkg.plateBrandName,
@@ -1974,6 +2007,11 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             packageItems: {
                 items: pkg.items,
                 logistics: pkg.logistics || null,
+                attribution: {
+                    entry_surface: entryAttribution.entrySurface,
+                    comparison_session_id: entryAttribution.comparisonSessionId,
+                    result_session_id: resultSessionId || null,
+                },
             },
             quoteCode: overrides?.quoteCode || null,
             kvkkConsent: overrides?.kvkkConsent ?? quoteForm.kvkkConsent,
@@ -2041,6 +2079,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     selected_package_total: selectedPackageForQuote.grandTotal,
                     selected_per_m2:        selectedPackageForQuote.pricePerM2,
                     result_session_id:      resultSessionId,
+                    entry_surface:          entryAttribution.entrySurface,
+                    comparison_session_id:  entryAttribution.comparisonSessionId,
                 });
             }
 
@@ -2193,9 +2233,25 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                 </select>
                             </label>
 
-                            <label className="block">
-                                <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-[#6b675d]">Malzeme</span>
+                            <div className="block">
+                                <span className="mb-2 flex items-center justify-between gap-3">
+                                    <label
+                                        htmlFor="homepage-product"
+                                        className="text-xs font-bold uppercase tracking-[0.12em] text-[#6b675d]"
+                                    >
+                                        Malzeme
+                                    </label>
+                                    {selectedMalzeme === 'tasyunu' && (
+                                        <Link
+                                            href="/tasyunu-karsilastir?entry=wizard"
+                                            className="inline-flex items-center py-1 text-xs font-semibold text-[#70591f] underline-offset-4 hover:text-[#4d3912] hover:underline"
+                                        >
+                                            Levhaları karşılaştır →
+                                        </Link>
+                                    )}
+                                </span>
                                 <select
+                                    id="homepage-product"
                                     value={homepageProductValue}
                                     onChange={(event) => handleHomepageProductChange(event.target.value)}
                                     className="h-14 w-full rounded-xl border border-[#cfc8ba] bg-[#fbfaf7] px-3 text-sm font-semibold text-[#25231e] outline-none transition focus:border-[#8b6c27] focus:ring-2 focus:ring-[#c69e54]/25"
@@ -2215,7 +2271,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                         );
                                     })}
                                 </select>
-                            </label>
+                            </div>
 
                             <label className="block">
                                 <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-[#6b675d]">Kalınlık</span>

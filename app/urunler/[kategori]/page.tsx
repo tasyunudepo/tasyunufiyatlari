@@ -79,8 +79,21 @@ export default async function KategoriPage({ params }: Props) {
             <span className="text-fe-text">{info.title}</span>
           </nav>
 
-          <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">{info.title}</h1>
-          <p className="text-fe-muted text-sm">{info.desc}</p>
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="min-w-0">
+              <h1 className="mb-2 text-xl font-bold text-white sm:text-2xl">{info.title}</h1>
+              <p className="text-sm text-fe-muted">{info.desc}</p>
+            </div>
+            {kategori === 'tasyunu-levha' && (
+              <Link
+                href="/tasyunu-karsilastir?entry=category"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-brand-500/40 bg-brand-950/20 px-4 py-2.5 text-sm font-semibold text-brand-300 transition-colors hover:bg-brand-900/30"
+              >
+                8 mantolama levhasını karşılaştır
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

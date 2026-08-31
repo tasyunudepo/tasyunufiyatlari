@@ -6,8 +6,9 @@
 // Bu dosya kapsamında değil; ayrı bir PR'da ele alınacak.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ChevronDown, Layers, Package } from "lucide-react";
+import { ArrowRight, ChevronDown, Layers, Package } from "lucide-react";
 import {
   notifyProductDetailCtaClick,
   notifyProductDetailFormOpen,
@@ -688,15 +689,16 @@ export default function ProductPricePanel({
         )}
 
         {/* ─── Karşılaştırma merkezi çapraz linki (Sprint 2) ─── */}
-        {product.product_type === "plate" && product.material_type === "tasyunu" && (
-          <p className="mb-4 text-center text-xs">
-            <a
-              href="/tasyunu-karsilastir"
-              className="text-fe-muted underline-offset-2 transition-colors hover:text-brand-300 hover:underline"
-            >
-              Tüm taşyünü levhalarını aynı koşulda karşılaştır →
-            </a>
-          </p>
+        {product.product_type === "plate" &&
+          product.material_type === "tasyunu" &&
+          modelScope === "sivali_dis_cephe_mantolama" && (
+          <Link
+            href="/tasyunu-karsilastir?entry=pdp"
+            className="mb-4 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-fe-border bg-fe-surface/60 px-3 py-2.5 text-left text-xs font-semibold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-300"
+          >
+            <span>Bu ürünün mantolama alternatiflerini karşılaştır</span>
+            <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </Link>
         )}
 
         {/* ─── SepetUI ─── */}

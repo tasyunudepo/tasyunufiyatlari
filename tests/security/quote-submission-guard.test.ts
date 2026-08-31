@@ -170,6 +170,26 @@ describe('buildQuoteFingerprint', () => {
       ),
     )
   })
+
+  it('karşılaştırma atfını ticari talebi değiştirip dedupe atlatmak için kullanmaz', () => {
+    const comparisonPayload = {
+      ...basePayload,
+      sourceChannel: 'comparison',
+      comparisonSessionId: 'cmp_m123abc_def456',
+      packageItems: {
+        ...basePayload.packageItems,
+        attribution: {
+          entry_surface: 'comparison',
+          comparison_session_id: 'cmp_m123abc_def456',
+          result_session_id: 'result_123',
+        },
+      },
+    }
+
+    expect(buildQuoteFingerprint(comparisonPayload, TEST_SECRET)).toBe(
+      buildQuoteFingerprint(basePayload, TEST_SECRET),
+    )
+  })
 })
 
 describe('QUOTE_ABUSE_HASH_SECRET', () => {

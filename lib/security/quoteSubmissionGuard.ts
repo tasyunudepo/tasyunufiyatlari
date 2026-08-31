@@ -211,10 +211,22 @@ export function buildQuoteFingerprint(
   payload: Readonly<Record<string, unknown>>,
   explicitSecret?: string,
 ): string {
+  const packageItems = payload.packageItems
+  const commercialPackageItems = packageItems
+    && typeof packageItems === 'object'
+    && !Array.isArray(packageItems)
+    ? Object.fromEntries(
+        Object.entries(packageItems).filter(([key]) => key !== 'attribution'),
+      )
+    : packageItems
   const commercialPayload = {
     version: 1,
     submissionType: payload.submissionType,
-    sourceChannel: payload.sourceChannel,
+    // Karşılaştırma, hesaplayıcı paket akışının edinim kaynağıdır; ticari
+    // teklif anlamını değiştirmez ve dedupe anahtarı olarak kullanılamaz.
+    sourceChannel: payload.sourceChannel === 'comparison'
+      ? 'wizard'
+      : payload.sourceChannel,
     materialType: payload.materialType,
     brandId: payload.brandId,
     brandName: payload.brandName,
@@ -242,7 +254,7 @@ export function buildQuoteFingerprint(
     truckCapacityPackages: payload.truckCapacityPackages ?? null,
     lorryFillPercentage: payload.lorryFillPercentage ?? null,
     truckFillPercentage: payload.truckFillPercentage ?? null,
-    packageItems: payload.packageItems,
+    packageItems: commercialPackageItems,
   }
 
   const canonicalPayload = JSON.stringify(canonicalize(commercialPayload))

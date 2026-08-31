@@ -76,6 +76,7 @@ const DURUM: Record<string, string> = {
 const KANAL: Record<string, string> = {
   wizard: 'Hesaplayıcı',
   catalog: 'Katalog',
+  comparison: 'Karşılaştırma',
   ofis: 'Ofis',
 }
 

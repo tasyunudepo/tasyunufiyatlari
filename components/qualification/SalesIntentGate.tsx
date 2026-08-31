@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, BookOpen, Truck } from '@phosphor-icons/react'
 
 import {
@@ -13,10 +13,18 @@ import {
 } from '@/lib/analytics/leadQualification'
 import { ICON_WEIGHT } from '@/lib/design/tokens'
 
-const EXCLUDED_PREFIXES = ['/ofis', '/kvkk', '/cerez-politikasi', '/kullanim-kosullari']
+const EXCLUDED_PREFIXES = [
+  '/ofis',
+  '/kvkk',
+  '/cerez-politikasi',
+  '/kullanim-kosullari',
+  '/tasyunu-karsilastir',
+  '/tasyunu-yogunluk',
+]
 
 export default function SalesIntentGate() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const primaryRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
@@ -54,12 +62,9 @@ export default function SalesIntentGate() {
     setIsOpen(false)
 
     if (intent === 'project_scale') {
-      window.requestAnimationFrame(() => {
-        document.querySelector('#mantolama-hesaplayici')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      })
+      // Gate ana sayfa dışında gösterilir; bulunduğu sayfada olmayan bir
+      // çapaya scroll denemek kullanıcıyı olduğu yerde bırakıyordu.
+      router.push('/#mantolama-hesaplayici')
     }
   }
 

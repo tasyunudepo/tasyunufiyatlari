@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import {
@@ -16,7 +16,12 @@ import { defaultSubChoice } from "@/components/catalog/BonusRegionPrice";
 import { computeFullTruckPlateUnitPrice } from "@/lib/pricing/plateUnitPrice";
 import { resolveMarginPctStrict } from "@/lib/pricing/margin";
 import { useWizardStore } from "@/lib/store/wizardStore";
-import { notifyComparisonOpened, notifyBonusChallengePicked } from "@/lib/notifyWizardEvent";
+import {
+  notifyBonusChallengePicked,
+  notifyComparisonCtaClick,
+  notifyComparisonOpened,
+  type ComparisonEntryPlacement,
+} from "@/lib/notifyWizardEvent";
 import type { Plate, PlatePrice, ShippingZone, MaterialType } from "@/lib/types";
 
 // ============================================================
@@ -38,6 +43,33 @@ const SUB_LABELS: Record<BonusSubRegionChoice, string> = {
 };
 
 const THICKNESS_OPTIONS = [3, 4, 5, 6, 7, 8, 10, 12, 15];
+const COMPARISON_ENTRY_PLACEMENTS = new Set<ComparisonEntryPlacement>([
+  "direct",
+  "category",
+  "pdp",
+  "wizard",
+  "density_150",
+  "unknown",
+]);
+
+const createComparisonSessionId = () =>
+  `cmp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+const formatSourceDate = (isoDate: string) =>
+  new Intl.DateTimeFormat("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${isoDate}T00:00:00Z`));
+
+function readEntryPlacement(): ComparisonEntryPlacement {
+  if (typeof window === "undefined") return "direct";
+  const value = new URLSearchParams(window.location.search).get("entry") ?? "direct";
+  return COMPARISON_ENTRY_PLACEMENTS.has(value as ComparisonEntryPlacement)
+    ? (value as ComparisonEntryPlacement)
+    : "unknown";
+}
 
 interface ComparisonCenterProps {
   variant: "genel" | "yogunluk_150";
@@ -46,7 +78,8 @@ interface ComparisonCenterProps {
 type PriceCell =
   | { status: "loading" }
   | { status: "ok"; unit: number }
-  | { status: "unavailable" };
+  | { status: "unavailable" }
+  | { status: "error" };
 
 export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const profiles = useMemo(() => {
@@ -66,15 +99,26 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const [subChoice, setSubChoice] = useState<BonusSubRegionChoice | null>(() => defaultSubChoice(34));
   const [thicknessCm, setThicknessCm] = useState<number>(5);
   const [bonusPrices, setBonusPrices] = useState<Record<string, PriceCell>>({});
+  const [comparisonDataError, setComparisonDataError] = useState(false);
+  const [requestVersion, setRequestVersion] = useState(0);
+  const [comparisonSessionId] = useState(createComparisonSessionId);
+  const entryPlacementRef = useRef<ComparisonEntryPlacement>("direct");
 
   useEffect(() => {
-    notifyComparisonOpened({ surface: variant, urun_sayisi: profiles.length });
+    entryPlacementRef.current = readEntryPlacement();
+    notifyComparisonOpened({
+      surface: variant,
+      urun_sayisi: profiles.length,
+      entry_placement: entryPlacementRef.current,
+      comparison_session_id: comparisonSessionId,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      setComparisonDataError(false);
       const [platesRes, ppRes, zonesRes, mtRes] = await Promise.all([
         supabase.from("plates").select("*").eq("is_active", true),
         supabase.from("plate_prices").select("*"),
@@ -82,6 +126,9 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
         supabase.from("material_types").select("*"),
       ]);
       if (cancelled) return;
+      if (platesRes.error || ppRes.error || zonesRes.error || mtRes.error) {
+        setComparisonDataError(true);
+      }
       if (platesRes.data) setPlates(platesRes.data);
       if (ppRes.data) setPlatePrices(ppRes.data);
       if (zonesRes.data) setZones(zonesRes.data);
@@ -89,7 +136,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     }
     void load();
     return () => { cancelled = true; };
-  }, []);
+  }, [requestVersion]);
 
   useEffect(() => {
     setSubChoice(defaultSubChoice(cityCode));
@@ -110,25 +157,31 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       });
       if (subChoice) params.set("sub", subChoice);
       fetch(`/api/bonus-price?${params.toString()}`)
-        .then((res) => res.json().then((json) => ({ okHttp: res.ok, json })))
-        .then(({ okHttp, json }) => {
+        .then(async (res) => ({
+          okHttp: res.ok,
+          status: res.status,
+          json: await res.json().catch(() => null),
+        }))
+        .then(({ okHttp, status, json }) => {
           if (cancelled) return;
           setBonusPrices((prev) => ({
             ...prev,
             [p.modelShortName]:
               okHttp && json?.ok && typeof json.salePricePerM2 === "number"
                 ? { status: "ok", unit: json.salePricePerM2 }
-                : { status: "unavailable" },
+                : !okHttp && status >= 500
+                  ? { status: "error" }
+                  : { status: "unavailable" },
           }));
         })
         .catch(() => {
           if (!cancelled) {
-            setBonusPrices((prev) => ({ ...prev, [p.modelShortName]: { status: "unavailable" } }));
+            setBonusPrices((prev) => ({ ...prev, [p.modelShortName]: { status: "error" } }));
           }
         });
     }
     return () => { cancelled = true; };
-  }, [profiles, cityCode, subChoice, thicknessCm]);
+  }, [profiles, cityCode, subChoice, thicknessCm, requestVersion]);
 
   const zone = zones.find((z) => z.city_code === cityCode) ?? null;
   const tasyunuRule = materialTypes.find((m) => m.slug === "tasyunu") ?? null;
@@ -140,6 +193,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       if (subInfo && !subChoice) return { status: "unavailable" };
       return bonusPrices[profile.modelShortName] ?? { status: "loading" };
     }
+    if (comparisonDataError) return { status: "error" };
     if (!dataReady || !zone || !tasyunuRule) return { status: "loading" };
     const plate = plates.find(
       (pl) => pl.short_name === profile.modelShortName && pl.brand_id != null,
@@ -170,12 +224,22 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   }
 
   function handleCalculate(profile: TechnicalProfile) {
+    notifyComparisonCtaClick({
+      surface: variant,
+      entry_placement: entryPlacementRef.current,
+      comparison_session_id: comparisonSessionId,
+      brand_name: profile.brandName,
+      model_name: profile.modelShortName,
+      city_code: cityCode,
+      thickness_cm: thicknessCm,
+    });
     if (profile.brandName === "Bonus") {
       notifyBonusChallengePicked({
-        surface: "anasayfa",
+        surface: "comparison",
         bonus_model: profile.modelShortName,
         city_code: cityCode,
         thickness_cm: thicknessCm,
+        comparison_session_id: comparisonSessionId,
       });
     }
     const store = useWizardStore.getState();
@@ -185,6 +249,10 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       thicknessCm,
       brandName: profile.brandName,
       modelShortName: profile.modelShortName,
+      cityCode,
+      citySubRegion: subChoice,
+      entrySurface: "comparison",
+      comparisonSessionId,
     });
   }
 
@@ -192,8 +260,10 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const conditionLine = zone
-    ? `Aynı şehir: ${zone.city_name}${subChoice && subInfo ? ` (${SUB_LABELS[subChoice]})` : ""} · aynı kalınlık: ${thicknessCm} cm · tam araç levha fiyatı · KDV hariç · nakliye dahil`
+    ? `${zone.city_name}${subChoice && subInfo ? ` · ${SUB_LABELS[subChoice]}` : ""} · ${thicknessCm} cm · Tam araç levha fiyatı`
     : "";
+  const hasPriceError = comparisonDataError
+    || Object.values(bonusPrices).some((cell) => cell.status === "error");
 
   return (
     <div className="space-y-10">
@@ -208,7 +278,130 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
           yoğunluk tek başına daha iyi ısı yalıtımı anlamına gelmez; mekanik
           değerlerin bağlamıdır.
         </p>
-        <div className="overflow-x-auto rounded-xl border border-fe-border">
+        <ul
+          className="space-y-3 md:hidden"
+          data-testid="comparison-technical-cards"
+          role="list"
+        >
+          {profiles.map((p) => {
+            const slug = slugFor(p);
+            const highlight =
+              variant === "yogunluk_150" &&
+              p.density.sourceType === "datasheet" &&
+              p.density.minKgM3 >= 150;
+            const sourceLabel = densityWithSourceLabel(p).includes("sözlü")
+              ? "Üretici sözlü beyanı — değişken"
+              : "Föy beyanı";
+
+            return (
+              <li key={p.productKey}>
+                <article
+                  aria-labelledby={`mobile-tech-${p.productKey}`}
+                  className={`min-w-0 rounded-xl border p-4 ${
+                    highlight
+                      ? "border-brand-500/50 bg-brand-950/20"
+                      : "border-fe-border bg-fe-raised/30"
+                  }`}
+                  data-product-key={p.productKey}
+                  data-testid={`comparison-technical-card-${p.productKey}`}
+                >
+                  <h3
+                    id={`mobile-tech-${p.productKey}`}
+                    className="font-heading text-base font-bold leading-snug text-white"
+                  >
+                    {slug ? (
+                      <Link
+                        href={`/urunler/tasyunu-levha/${slug}`}
+                        className="rounded-sm hover:text-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+                      >
+                        {p.displayName}
+                      </Link>
+                    ) : (
+                      p.displayName
+                    )}
+                  </h3>
+
+                  <dl className="mt-4 grid min-w-0 grid-cols-2 gap-x-3 gap-y-3">
+                    <div className="min-w-0 border-t border-fe-border/60 pt-2.5">
+                      <dt className="text-xs font-medium text-fe-muted-strong">Yoğunluk</dt>
+                      <dd className="mt-1 break-words text-sm font-semibold leading-snug text-fe-text">
+                        {p.density.display}
+                        <span className="mt-1 block text-xs font-normal leading-snug text-fe-muted">
+                          {sourceLabel}
+                        </span>
+                      </dd>
+                    </div>
+                    <div className="min-w-0 border-t border-fe-border/60 pt-2.5">
+                      <dt className="text-xs font-medium text-fe-muted-strong">Isı iletkenliği</dt>
+                      <dd className="mt-1 break-words text-sm font-semibold leading-snug text-fe-text">
+                        {p.lambdaDisplay}
+                      </dd>
+                    </div>
+                    <div className="min-w-0 border-t border-fe-border/60 pt-2.5">
+                      <dt className="text-xs font-medium text-fe-muted-strong">Yüzeye dik çekme</dt>
+                      <dd className="mt-1 break-words text-sm font-semibold leading-snug text-fe-text">
+                        {p.tensileDisplay}
+                      </dd>
+                    </div>
+                    <div className="min-w-0 border-t border-fe-border/60 pt-2.5">
+                      <dt className="text-xs font-medium text-fe-muted-strong">Kalınlık aralığı</dt>
+                      <dd className="mt-1 break-words text-sm font-semibold leading-snug text-fe-text">
+                        {p.thicknessMmMin / 10}–{p.thicknessMmMax / 10} cm
+                      </dd>
+                    </div>
+                    <div className="col-span-2 min-w-0 border-t border-fe-border/60 pt-2.5">
+                      <dt className="text-xs font-medium text-fe-muted-strong">Basma dayanımı</dt>
+                      <dd className="mt-1 break-words text-sm font-semibold leading-snug text-fe-text">
+                        {p.compressiveDisplay}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <details className="group mt-4 border-t border-fe-border/60">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-sm text-sm font-semibold text-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 [&::-webkit-details-marker]:hidden">
+                      Yangın ve beyan ayrıntıları
+                      <svg
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="m6 9 6 6 6-6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                      </svg>
+                    </summary>
+                    <dl className="grid gap-2 pb-2 pt-1 text-sm">
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="text-fe-muted-strong">Yangın sınıfı</dt>
+                        <dd className="break-words text-right font-semibold text-fe-text">{p.fireClass}</dd>
+                      </div>
+                      {p.tensileClass && (
+                        <div className="flex min-w-0 justify-between gap-3">
+                          <dt className="text-fe-muted-strong">Çekme sınıfı</dt>
+                          <dd className="break-words text-right font-semibold text-fe-text">{p.tensileClass}</dd>
+                        </div>
+                      )}
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="text-fe-muted-strong">Beyan türü</dt>
+                        <dd className="break-words text-right font-semibold text-fe-text">{sourceLabel}</dd>
+                      </div>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="text-fe-muted-strong">Kaynak tarihi</dt>
+                        <dd className="break-words text-right font-semibold text-fe-text">
+                          <time dateTime={p.density.sourceDate}>{formatSourceDate(p.density.sourceDate)}</time>
+                        </dd>
+                      </div>
+                    </dl>
+                  </details>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div
+          className="hidden overflow-x-auto rounded-xl border border-fe-border md:block"
+          data-testid="comparison-technical-table"
+        >
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b border-fe-border bg-fe-raised/50 text-left text-[11px] uppercase tracking-wide text-fe-muted">
@@ -280,11 +473,18 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
 
         <div className="mb-4 flex flex-wrap items-end gap-4">
           <div>
-            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-fe-muted">Teslimat Şehri</p>
+            <label
+              htmlFor="comparison-city"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-fe-muted-strong"
+            >
+              Teslimat şehri
+            </label>
             <select
+              id="comparison-city"
+              aria-label="Teslimat şehri"
               value={cityCode}
               onChange={(e) => setCityCode(Number(e.target.value))}
-              className="rounded-lg border border-fe-border bg-fe-surface px-3 py-2 text-sm text-fe-text [color-scheme:dark]"
+              className="min-h-11 rounded-lg border border-fe-border bg-fe-surface px-3 py-2 text-base text-fe-text [color-scheme:dark] sm:text-sm"
             >
               {zones.map((z) => (
                 <option key={z.city_code} value={z.city_code}>{z.city_name}</option>
@@ -298,7 +498,8 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
                   key={choice}
                   type="button"
                   onClick={() => setSubChoice(choice)}
-                  className={`cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  aria-pressed={subChoice === choice}
+                  className={`min-h-11 cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                     subChoice === choice
                       ? "border-brand-500 bg-brand-900/30 text-brand-300"
                       : "border-fe-border bg-fe-raised/60 text-fe-text hover:border-brand-500/40"
@@ -310,14 +511,15 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
             </div>
           )}
           <div>
-            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-fe-muted">Kalınlık</p>
+            <p className="mb-1.5 text-xs font-medium uppercase tracking-[0.14em] text-fe-muted-strong">Kalınlık</p>
             <div className="flex flex-wrap gap-1.5">
               {THICKNESS_OPTIONS.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setThicknessCm(t)}
-                  className={`cursor-pointer rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                  aria-pressed={thicknessCm === t}
+                  className={`min-h-11 cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                     thicknessCm === t
                       ? "border-brand-500 bg-brand-900/30 text-brand-300"
                       : "border-fe-border bg-fe-raised/60 text-fe-text hover:border-brand-500/40"
@@ -330,23 +532,52 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
           </div>
         </div>
 
+        {conditionLine && (
+          <p className="mb-3 rounded-lg border border-fe-border bg-fe-surface/60 px-3 py-2.5 text-sm text-fe-text">
+            {conditionLine}
+          </p>
+        )}
+
+        {hasPriceError && (
+          <div
+            role="alert"
+            className="mb-3 flex flex-col items-start justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-950/20 px-3 py-3 text-sm text-amber-100 sm:flex-row sm:items-center"
+          >
+            <p>Fiyat verilerinin bir bölümü alınamadı. Bağlantınızı kontrol edip yeniden deneyin.</p>
+            <button
+              type="button"
+              onClick={() => setRequestVersion((value) => value + 1)}
+              className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-amber-400/50 px-3 py-2 text-xs font-semibold text-amber-100 transition-colors hover:bg-amber-900/30"
+            >
+              Fiyatları yeniden dene
+            </button>
+          </div>
+        )}
+
         <div className="space-y-2">
           {profiles.map((p) => {
             const cell = priceCellFor(p);
             return (
               <div
                 key={p.productKey}
+                data-testid={`comparison-price-${p.productKey}`}
+                data-product-key={p.productKey}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fe-border bg-fe-raised/30 px-4 py-3"
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-white">{p.displayName}</p>
                   <p className="text-[11px] text-fe-muted">{p.density.display}</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
                   {cell.status === "ok" && (
-                    <p className="font-bold tabular-nums text-white">
-                      {fmt(cell.unit)} <span className="text-brand-300">₺/m²</span>
-                    </p>
+                    <div className="min-w-0 sm:text-right">
+                      <p data-testid="comparison-unit-price" className="font-bold tabular-nums text-white">
+                        {fmt(cell.unit)} <span className="text-brand-300">₺/m²</span>
+                      </p>
+                      <p className="mt-0.5 text-xs leading-snug text-fe-muted-strong">
+                        KDV hariç · Tam araçta nakliye fiyata dahildir
+                      </p>
+                    </div>
                   )}
                   {cell.status === "loading" && (
                     <p className="text-sm text-fe-muted">hesaplanıyor…</p>
@@ -354,22 +585,34 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
                   {cell.status === "unavailable" && (
                     <p className="text-sm text-fe-muted">bu koşulda fiyat yok</p>
                   )}
-                  <Link
-                    href="/#mantolama-hesaplayici"
-                    onClick={() => handleCalculate(p)}
-                    className="rounded-lg border border-brand-500/50 px-3 py-1.5 text-xs font-semibold text-brand-300 transition-colors hover:bg-brand-900/30"
-                  >
-                    Komple set hesapla →
-                  </Link>
+                  {cell.status === "error" && (
+                    <p className="text-sm text-amber-200">fiyat alınamadı</p>
+                  )}
+                  {cell.status === "ok" ? (
+                    <Link
+                      href="/#mantolama-hesaplayici"
+                      onClick={() => handleCalculate(p)}
+                      className="inline-flex min-h-11 items-center rounded-lg border border-brand-500/50 px-3 py-2 text-xs font-semibold text-brand-300 transition-colors hover:bg-brand-900/30"
+                    >
+                      Komple set hesapla →
+                    </Link>
+                  ) : (
+                    <span
+                      aria-disabled="true"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-fe-border px-3 py-2 text-xs font-semibold text-fe-muted"
+                    >
+                      {cell.status === "loading"
+                        ? "Fiyat bekleniyor"
+                        : cell.status === "error"
+                          ? "Fiyatı yeniden deneyin"
+                          : "Bu koşulda hesaplanamaz"}
+                    </span>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
-
-        {conditionLine && (
-          <p className="mt-3 text-[11px] text-fe-muted">{conditionLine}</p>
-        )}
       </section>
     </div>
   );

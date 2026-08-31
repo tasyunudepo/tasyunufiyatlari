@@ -11,7 +11,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "playwright test",
-    "test:db:quote-guard": "bash scripts/verify-quote-guard-db.sh",
+    "test:db:quote-guard": "bash scripts/verify-quote-guard-db.sh && bash scripts/verify-comparison-attribution-db.sh",
     "verify:acceptance": "node scripts/verify-acceptance-lock.mjs",
     "verify:live:readonly": "node --env-file=.env.local scripts/verify-p0-live-readonly.mjs",
     "verify:visitor-copy": "bash scripts/verify-visitor-copy.sh",

@@ -7,7 +7,7 @@ import { z } from 'zod'
 // `kvkk_consent = true` yazılmaz; dayanak `sozlesme_hazirligi`dir (m.5/2-c).
 
 export const CUSTOMER_TYPES = ['bireysel', 'kurumsal'] as const
-export const CUSTOMER_ORIGINS = ['wizard', 'catalog', 'telefon', 'ofis', 'ithal'] as const
+export const CUSTOMER_ORIGINS = ['wizard', 'catalog', 'comparison', 'telefon', 'ofis', 'ithal'] as const
 export const CUSTOMER_STATUSES = ['aktif', 'pasif', 'kara_liste'] as const
 export const CONSENT_BASES = ['acik_riza', 'sozlesme_hazirligi', 'mesru_menfaat'] as const
 

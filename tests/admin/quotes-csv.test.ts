@@ -56,6 +56,12 @@ describe('CSV dışa aktarım', () => {
     expect(csv).toContain('Ofis')
   })
 
+  it('karşılaştırma kaynağını raporda ayrı kanal olarak gösterir', () => {
+    const csv = buildQuotesCsv([{ ...ORNEK, source_channel: 'comparison' }])
+
+    expect(csv).toContain('Karşılaştırma')
+  })
+
   it('BRÜT KÂR dışa aktarılmaz — dosya elden ele dolaşabilir', () => {
     const csv = buildQuotesCsv([ORNEK])
     expect(csv).not.toContain('50000')

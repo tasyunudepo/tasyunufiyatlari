@@ -60,6 +60,42 @@ describe('quote API KVKK şeması', () => {
       apiQuoteSchema.safeParse({ ...basePayload, kvkkConsent: true }).success,
     ).toBe(true)
   })
+
+  it('karşılaştırma kanalını kendi oturum kimliğiyle kabul eder', () => {
+    expect(
+      apiQuoteSchema.safeParse({
+        ...basePayload,
+        sourceChannel: 'comparison',
+        comparisonSessionId: 'cmp_m123abc_def456',
+        kvkkConsent: true,
+      }).success,
+    ).toBe(true)
+  })
+
+  it('karşılaştırma kanalında oturum kimliğini zorunlu tutar', () => {
+    const result = apiQuoteSchema.safeParse({
+      ...basePayload,
+      sourceChannel: 'comparison',
+      kvkkConsent: true,
+    })
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(
+        result.error.issues.some((issue) => issue.path[0] === 'comparisonSessionId'),
+      ).toBe(true)
+    }
+  })
+
+  it('hesaplayıcı kanalına karşılaştırma oturumu iliştirilmesini reddeder', () => {
+    expect(
+      apiQuoteSchema.safeParse({
+        ...basePayload,
+        comparisonSessionId: 'cmp_m123abc_def456',
+        kvkkConsent: true,
+      }).success,
+    ).toBe(false)
+  })
 })
 
 describe('quote API telefon şeması', () => {
