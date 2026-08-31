@@ -43,6 +43,47 @@ CI=1 npm run test:e2e -- --workers=1 --retries=0
 # okunup okunmadığını sormuyordu. Bu kapı o boşluğu kapatır: kontrast
 # EKRANDAKİ GERÇEK PİKSEL üzerinden ölçülür, kaynak taraması yetmez.
 echo '9/9 Okunabilirlik (WCAG AA kontrast, gerçek ekran ölçümü)'
-npm run verify:contrast
+contrast_port="$(node -e "const net=require('node:net');const server=net.createServer();server.listen(0,'127.0.0.1',()=>{console.log(server.address().port);server.close()})")"
+contrast_base_url="http://127.0.0.1:${contrast_port}"
+contrast_log="$(mktemp "${TMPDIR:-/tmp}/tasyunu-contrast.XXXXXX.log")"
+contrast_server_pid=""
+
+cleanup_contrast_server() {
+  if [[ -n "$contrast_server_pid" ]] && kill -0 "$contrast_server_pid" 2>/dev/null; then
+    kill "$contrast_server_pid" 2>/dev/null || true
+    wait "$contrast_server_pid" 2>/dev/null || true
+  fi
+  rm -f "$contrast_log"
+}
+trap cleanup_contrast_server EXIT INT TERM
+
+node node_modules/next/dist/bin/next start \
+  --hostname 127.0.0.1 \
+  --port "$contrast_port" \
+  >"$contrast_log" 2>&1 &
+contrast_server_pid="$!"
+
+contrast_ready=false
+for _ in {1..30}; do
+  if curl --fail --silent --show-error "$contrast_base_url/" >/dev/null 2>&1; then
+    contrast_ready=true
+    break
+  fi
+  if ! kill -0 "$contrast_server_pid" 2>/dev/null; then
+    cat "$contrast_log" >&2
+    exit 1
+  fi
+  sleep 1
+done
+
+if [[ "$contrast_ready" != true ]]; then
+  cat "$contrast_log" >&2
+  echo 'Kontrast denetimi için production sunucusu hazır olmadı.' >&2
+  exit 1
+fi
+
+AUDIT_BASE_URL="$contrast_base_url" npm run verify:contrast
+cleanup_contrast_server
+trap - EXIT INT TERM
 
 echo 'P0 yerel release kapısı geçti. Canlı RLS/storage/env smoke ayrıca zorunludur.'

@@ -296,6 +296,7 @@ const ctx = await tarayici.newContext({
 
 const rapor = []
 let toplamHata = 0
+let toplamOkumaHatasi = 0
 
 for (const yol of hedefler) {
   const senaryo = SENARYOLAR[yol]
@@ -328,6 +329,7 @@ for (const yol of hedefler) {
     toplamHata += bulgular.length
     rapor.push({ url: etiket, adet: bulgular.length, gruplar: sirali })
   } catch (e) {
+    toplamOkumaHatasi += 1
     rapor.push({ url: etiket, hata: String(e.message ?? e) })
   } finally {
     await page.close()
@@ -337,7 +339,7 @@ for (const yol of hedefler) {
 await tarayici.close()
 
 if (JSON_CIKTI) {
-  console.log(JSON.stringify({ toplamHata, rapor }, null, 2))
+  console.log(JSON.stringify({ toplamHata, toplamOkumaHatasi, rapor }, null, 2))
 } else {
   for (const r of rapor) {
     console.log(`\n━━ ${r.url}`)
@@ -361,10 +363,10 @@ if (JSON_CIKTI) {
     }
   }
   console.log(
-    toplamHata === 0
+    toplamHata === 0 && toplamOkumaHatasi === 0
       ? '\n✓ Tüm sayfalar AA geçti'
-      : `\n✗ Toplam ${toplamHata} düğüm okunabilirlik eşiğinin altında`,
+      : `\n✗ ${toplamHata} düğüm okunabilirlik eşiğinin altında; ${toplamOkumaHatasi} sayfa okunamadı`,
   )
 }
 
-process.exit(toplamHata === 0 ? 0 : 1)
+process.exit(toplamHata === 0 && toplamOkumaHatasi === 0 ? 0 : 1)
