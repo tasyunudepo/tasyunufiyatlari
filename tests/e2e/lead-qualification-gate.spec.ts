@@ -42,3 +42,11 @@ test('ana sayfa kendi tek dönüşüm yolunu korur ve gate açmaz', async ({ pag
   await expect(page.getByRole('dialog', { name: /Proje ölçekli satış/i })).toHaveCount(0)
   await expect(page.locator('[data-homepage-calculator]')).toBeVisible()
 })
+
+test('taşyünü levha karar akışında gate açılmaz', async ({ page }) => {
+  await page.goto('/urunler/tasyunu-levha')
+  await page.waitForTimeout(250)
+
+  await expect(page.getByRole('dialog', { name: /Proje ölçekli satış/i })).toHaveCount(0)
+  await expect(page.getByRole('heading', { level: 1, name: /Doğru levhayı bulun/i })).toBeVisible()
+})

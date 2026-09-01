@@ -9,7 +9,7 @@ import { devtools, persist } from 'zustand/middleware';
 // SituationSelector seçildiğinde set edilir, WizardCalculator mount edildiğinde
 // consumeSituationPreset() ile bir kez okunup temizlenir.
 export type SituationPresetKey = 'isi_yalitimi' | 'ses_yalitimi' | 'cati_yalitimi' | 'urun_sayfasi';
-export type WizardEntrySurface = 'wizard' | 'product_detail' | 'comparison';
+export type WizardEntrySurface = 'wizard' | 'product_detail' | 'comparison' | 'category';
 export type WizardCitySubRegion = 'avrupa' | 'anadolu' | 'gebze' | 'diger';
 
 export interface SituationPreset {
@@ -26,8 +26,11 @@ export interface SituationPreset {
   // yolculuk bağını önlemek için yalnız oturum içinde tüketilir.
   cityCode?: number;
   citySubRegion?: WizardCitySubRegion | null;
+  areaM2?: number;
   entrySurface?: WizardEntrySurface;
   comparisonSessionId?: string;
+  catalogJourneyId?: string;
+  sectionKey?: string;
 }
 
 interface WizardState {

@@ -3,6 +3,8 @@
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWizardStore } from '@/lib/store/wizardStore';
+import { readCatalogJourneyId } from '@/lib/analytics/catalogJourney';
+import { getCategoryEntryContext } from '@/lib/catalog/category-entry-context';
 import type { WizardPrefill } from '@/lib/catalog/types';
 
 interface WizardLinkButtonProps {
@@ -33,12 +35,17 @@ export default function WizardLinkButton({
     // WizardCalculator yalnız situationPreset köprüsünü tüketir;
     // markaId/modelAdi alanlarına yazmak prefill'i sessizce kaybettirir.
     if (prefill && prefill.levhaTipi) {
+      const categoryContext = getCategoryEntryContext();
+      const fromCategory = Boolean(categoryContext);
       store.reset();
       store.setProductPreset({
         material: prefill.levhaTipi,
         thicknessCm: prefill.kalinlik ?? 5,
         brandName: prefill.markaAdi ?? undefined,
         modelShortName: prefill.modelAdi ?? undefined,
+        entrySurface: fromCategory ? 'category' : 'product_detail',
+        catalogJourneyId: fromCategory ? readCatalogJourneyId() ?? undefined : undefined,
+        sectionKey: categoryContext?.sectionKey,
       });
       if (targetStep === 2 && prefill.markaId !== null) store.goToStep(2);
     }

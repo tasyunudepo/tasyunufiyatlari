@@ -32,6 +32,8 @@ import BonusAlternativeCard from "./BonusAlternativeCard";
 import { getBonusFamily, isUnpricedBonusModel } from "@/lib/pricing/bonus/families";
 import { getProfileByModel } from "@/lib/technical-profiles";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
+import { getCategoryEntryContext } from "@/lib/catalog/category-entry-context";
+import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 
 interface ShippingZone {
   city_code: number;
@@ -360,23 +362,29 @@ export default function ProductPricePanel({
       ? 'mixed' as const
       : quoteVehicleType;
 
-  const buildProductDetailPayload = () => ({
-    product_name: product.name,
-    brand_name: product.brand.name,
-    category_name: product.category.name,
-    material_type: product.material_type === 'eps' ? 'eps' as const : 'tasyunu' as const,
-    thickness_cm: activeThickness ?? null,
-    city_code: selectedCode,
-    city_name: zone?.city_name ?? null,
-    area_m2: neededM2Num || null,
-    total_m2: quoteM2 || null,
-    package_count: quotePackageCount,
-    price_per_m2: heroPrice,
-    total_price: quoteTotalKdvHaric,
-    vehicle_type: productDetailVehicleType,
-    product_slug: product.slug,
-    result_session_id: resultSessionId,
-  });
+  const buildProductDetailPayload = () => {
+    const categoryContext = getCategoryEntryContext();
+    return {
+      product_name: product.name,
+      brand_name: product.brand.name,
+      category_name: product.category.name,
+      material_type: product.material_type === 'eps' ? 'eps' as const : 'tasyunu' as const,
+      thickness_cm: activeThickness ?? null,
+      city_code: selectedCode,
+      city_name: zone?.city_name ?? null,
+      area_m2: neededM2Num || null,
+      total_m2: quoteM2 || null,
+      package_count: quotePackageCount,
+      price_per_m2: heroPrice,
+      total_price: quoteTotalKdvHaric,
+      vehicle_type: productDetailVehicleType,
+      product_slug: product.slug,
+      result_session_id: resultSessionId,
+      entry_surface: categoryContext?.entrySurface ?? 'product_detail' as const,
+      catalog_journey_id: categoryContext ? readCatalogJourneyId() : null,
+      section_key: categoryContext?.sectionKey ?? null,
+    };
+  };
 
   const trackProductDetailCta = (
     ctaType: 'pdf' | 'whatsapp' | 'phone',

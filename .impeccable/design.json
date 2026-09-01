@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-01T00:15:07Z",
+  "title": "Design System: Taşyünü Fiyatları",
+  "extensions": {
+    "colorMeta": {
+      "warm-paper": { "role": "neutral", "displayName": "Sıcak Kâğıt", "tonalRamp": ["oklch(20% 0.018 82)", "oklch(31% 0.018 82)", "oklch(42% 0.018 82)", "oklch(53% 0.018 82)", "oklch(64% 0.018 82)", "oklch(75% 0.018 82)", "oklch(86% 0.018 82)", "oklch(95% 0.018 82)"] },
+      "warm-card": { "role": "neutral", "displayName": "Numune Beyazı", "tonalRamp": ["oklch(20% 0.004 82)", "oklch(31% 0.004 82)", "oklch(42% 0.004 82)", "oklch(53% 0.004 82)", "oklch(64% 0.004 82)", "oklch(75% 0.004 82)", "oklch(86% 0.004 82)", "oklch(98% 0.004 82)"] },
+      "warm-card-soft": { "role": "neutral", "displayName": "Yumuşak Kart", "tonalRamp": ["oklch(20% 0.012 80)", "oklch(31% 0.012 80)", "oklch(42% 0.012 80)", "oklch(53% 0.012 80)", "oklch(64% 0.012 80)", "oklch(75% 0.012 80)", "oklch(86% 0.012 80)", "oklch(97% 0.012 80)"] },
+      "warm-night": { "role": "neutral", "displayName": "Sıcak Gece", "tonalRamp": ["oklch(15% 0.012 78)", "oklch(26% 0.012 78)", "oklch(37% 0.012 78)", "oklch(48% 0.012 78)", "oklch(59% 0.012 78)", "oklch(70% 0.012 78)", "oklch(82% 0.012 78)", "oklch(94% 0.012 78)"] },
+      "warm-ink": { "role": "neutral", "displayName": "Mürekkep", "tonalRamp": ["oklch(15% 0.01 75)", "oklch(26% 0.01 75)", "oklch(37% 0.01 75)", "oklch(48% 0.01 75)", "oklch(59% 0.01 75)", "oklch(70% 0.01 75)", "oklch(82% 0.01 75)", "oklch(94% 0.01 75)"] },
+      "warm-ink-soft": { "role": "neutral", "displayName": "Yumuşak Mürekkep", "tonalRamp": ["oklch(18% 0.018 76)", "oklch(29% 0.018 76)", "oklch(40% 0.018 76)", "oklch(51% 0.018 76)", "oklch(62% 0.018 76)", "oklch(73% 0.018 76)", "oklch(84% 0.018 76)", "oklch(95% 0.018 76)"] },
+      "warm-muted": { "role": "neutral", "displayName": "Sessiz Mineral", "tonalRamp": ["oklch(18% 0.024 80)", "oklch(29% 0.024 80)", "oklch(40% 0.024 80)", "oklch(51% 0.024 80)", "oklch(62% 0.024 80)", "oklch(73% 0.024 80)", "oklch(84% 0.024 80)", "oklch(95% 0.024 80)"] },
+      "warm-rule": { "role": "neutral", "displayName": "Sıcak Cetvel", "tonalRamp": ["oklch(18% 0.02 82)", "oklch(29% 0.02 82)", "oklch(40% 0.02 82)", "oklch(51% 0.02 82)", "oklch(62% 0.02 82)", "oklch(73% 0.02 82)", "oklch(84% 0.02 82)", "oklch(94% 0.02 82)"] },
+      "gold": { "role": "primary", "displayName": "Derin Altın", "tonalRamp": ["oklch(18% 0.075 80)", "oklch(29% 0.075 80)", "oklch(40% 0.075 80)", "oklch(51% 0.075 80)", "oklch(62% 0.075 80)", "oklch(73% 0.075 80)", "oklch(84% 0.075 80)", "oklch(95% 0.075 80)"] },
+      "gold-soft": { "role": "primary", "displayName": "Yumuşak Altın", "tonalRamp": ["oklch(18% 0.07 82)", "oklch(29% 0.07 82)", "oklch(40% 0.07 82)", "oklch(51% 0.07 82)", "oklch(62% 0.07 82)", "oklch(73% 0.07 82)", "oklch(84% 0.07 82)", "oklch(95% 0.07 82)"] },
+      "graphite-bg": { "role": "neutral", "displayName": "Grafit Zemin", "tonalRamp": ["oklch(15% 0.004 285)", "oklch(26% 0.004 285)", "oklch(37% 0.004 285)", "oklch(48% 0.004 285)", "oklch(59% 0.004 285)", "oklch(70% 0.004 285)", "oklch(82% 0.004 285)", "oklch(94% 0.004 285)"] },
+      "graphite-surface": { "role": "neutral", "displayName": "Grafit Yüzey", "tonalRamp": ["oklch(16% 0.006 285)", "oklch(27% 0.006 285)", "oklch(38% 0.006 285)", "oklch(49% 0.006 285)", "oklch(60% 0.006 285)", "oklch(71% 0.006 285)", "oklch(83% 0.006 285)", "oklch(95% 0.006 285)"] },
+      "graphite-raised": { "role": "neutral", "displayName": "Yükseltilmiş Grafit", "tonalRamp": ["oklch(18% 0.01 285)", "oklch(29% 0.01 285)", "oklch(40% 0.01 285)", "oklch(51% 0.01 285)", "oklch(62% 0.01 285)", "oklch(73% 0.01 285)", "oklch(84% 0.01 285)", "oklch(95% 0.01 285)"] },
+      "graphite-text": { "role": "neutral", "displayName": "Grafit Metin", "tonalRamp": ["oklch(18% 0.006 285)", "oklch(29% 0.006 285)", "oklch(40% 0.006 285)", "oklch(51% 0.006 285)", "oklch(62% 0.006 285)", "oklch(73% 0.006 285)", "oklch(84% 0.006 285)", "oklch(95% 0.006 285)"] },
+      "graphite-muted": { "role": "neutral", "displayName": "Sessiz Grafit", "tonalRamp": ["oklch(18% 0.012 285)", "oklch(29% 0.012 285)", "oklch(40% 0.012 285)", "oklch(51% 0.012 285)", "oklch(62% 0.012 285)", "oklch(73% 0.012 285)", "oklch(84% 0.012 285)", "oklch(95% 0.012 285)"] },
+      "graphite-border": { "role": "neutral", "displayName": "Grafit Sınır", "tonalRamp": ["oklch(18% 0.008 285)", "oklch(29% 0.008 285)", "oklch(40% 0.008 285)", "oklch(51% 0.008 285)", "oklch(62% 0.008 285)", "oklch(73% 0.008 285)", "oklch(84% 0.008 285)", "oklch(95% 0.008 285)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Karar Başlığı", "purpose": "İlk görünümdeki tek büyük değer önermesi." },
+      "headline": { "displayName": "Sayfa Başlığı", "purpose": "Sayfa ve ana bölüm başlıkları." },
+      "title": { "displayName": "Panel Başlığı", "purpose": "Kart, panel ve alt bölüm başlıkları." },
+      "body": { "displayName": "İşlem Metni", "purpose": "Açıklama, koşul ve yönlendirme metni." },
+      "label": { "displayName": "Teknik Etiket", "purpose": "Kaynak, kategori ve küçük meta bilgisi." }
+    },
+    "shadows": [
+      { "name": "sample-card", "value": "0 10px 28px rgba(39,31,17,0.09)", "purpose": "Sıcak kâğıt üzerindeki ürün ve seçim kartları." },
+      { "name": "sample-card-hover", "value": "0 18px 40px rgba(39,31,17,0.13)", "purpose": "Etkileşimde hafif kart yükselmesi." },
+      { "name": "decision-panel", "value": "0 20px 46px rgba(39,31,17,0.16)", "purpose": "Yüksek öncelikli koyu karar paneli." },
+      { "name": "mobile-drawer", "value": "-8px 0 32px rgba(0,0,0,0.5)", "purpose": "Açık mobil navigasyon katmanı." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "150ms ease", "purpose": "Koyu kart ve küçük durum geçişleri." },
+      { "name": "action-standard", "value": "180ms ease", "purpose": "Birincil eylem renk ve 1 px yükselme geçişi." },
+      { "name": "workbench-enter", "value": "240ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Filtrelenen ürün çalışma yüzeyinin kısa giriş hareketi." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Birincil Eylem",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Fiyat hesabı ve yüzeydeki tek baskın sonraki adım.",
+      "html": "<button class=\"ds-btn-primary\">Fiyatımı Hesapla <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:14px 28px;border:1px solid #c69e54;border-radius:8px;background:#c69e54;color:#0b0b0c;font:700 15px/1 Barlow,Arial,sans-serif;letter-spacing:.02em;cursor:pointer;transition:transform 180ms ease,background 180ms ease,border-color 180ms ease}.ds-btn-primary:hover{background:#7d5d20;border-color:#d4b966;transform:translateY(-1px)}.ds-btn-primary:focus-visible{outline:2px solid #7d5d20;outline-offset:2px}.ds-btn-primary:active{transform:translateY(0)}"
+    },
+    {
+      "name": "İkincil Eylem",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Karşılaştırma ve ana akışa rakip olmayan alternatif işlem.",
+      "html": "<button class=\"ds-btn-secondary\">Teknik karşılaştırmayı aç</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:14px 28px;border:1px solid #7d5d20;border-radius:8px;background:transparent;color:#7d5d20;font:600 15px/1 Barlow,Arial,sans-serif;letter-spacing:.02em;cursor:pointer;transition:transform 200ms ease,background 200ms ease}.ds-btn-secondary:hover{background:rgba(198,158,84,.08);transform:translateY(-1px)}.ds-btn-secondary:focus-visible{outline:2px solid #7d5d20;outline-offset:2px}.ds-btn-secondary:active{transform:translateY(0)}"
+    },
+    {
+      "name": "Koyu Karar Alanı",
+      "kind": "input",
+      "refersTo": "field-dark",
+      "description": "Koyu karar panelindeki şehir, uygulama ve metraj girdisi.",
+      "html": "<label class=\"ds-field-label\">Yaklaşık metraj<input class=\"ds-field-dark\" inputmode=\"decimal\" placeholder=\"Örn. 1200\"></label>",
+      "css": ".ds-field-label{display:flex;flex-direction:column;gap:8px;color:#d1c8b9;font:700 12px/1.4 Geist Sans,Arial,sans-serif}.ds-field-dark{min-height:48px;padding:0 12px;border:1px solid #4a453c;border-radius:10px;background:#24211c;color:#fff;font:500 16px/1.4 Geist Sans,Arial,sans-serif}.ds-field-dark::placeholder{color:#9e9689}.ds-field-dark:hover{border-color:#6d6048}.ds-field-dark:focus-visible{border-color:#e7c77d;outline:2px solid rgba(231,199,125,.25);outline-offset:1px}"
+    },
+    {
+      "name": "Kullanım Alanı Seçimi",
+      "kind": "chip",
+      "description": "Uygulama rail’indeki taranabilir seçim; seçili durum koyu bir numune olur.",
+      "html": "<button class=\"ds-use-choice\" aria-pressed=\"true\"><strong>Mantolama</strong><span>8 ürün</span></button>",
+      "css": ".ds-use-choice{display:flex;min-height:76px;min-width:132px;flex-direction:column;justify-content:space-between;gap:8px;padding:12px;border:1px solid #171612;border-radius:11px;background:#171612;color:#fff;text-align:left;cursor:pointer}.ds-use-choice strong{font:700 14px/1.25 Barlow,Arial,sans-serif}.ds-use-choice span{color:#d7c9ad;font:400 12px/1.2 Geist Sans,Arial,sans-serif}.ds-use-choice:hover{border-color:#c69e54}.ds-use-choice:focus-visible{outline:2px solid #7d5d20;outline-offset:2px}.ds-use-choice:active{background:#24211c}"
+    },
+    {
+      "name": "Sıcak Ürün Kartı",
+      "kind": "card",
+      "refersTo": "card-warm",
+      "description": "Gerçek kapak, kaynak, teknik özet ve eylemi aynı karar yüzeyinde birleştirir.",
+      "html": "<article class=\"ds-product-card\"><div class=\"ds-product-media\"><span>Föy beyanı</span><div aria-label=\"Ürün görseli alanı\"></div></div><div class=\"ds-product-body\"><small>Bonus</small><h3>Premium F 150 Pro</h3><p><b>150 kg/m³</b> · 4–15 cm</p><a href=\"#\">Ürünü incele →</a></div></article>",
+      "css": ".ds-product-card{display:grid;grid-template-columns:42% 58%;min-height:230px;overflow:hidden;border-radius:14px;background:#fff;color:#0f0d0a;box-shadow:0 10px 28px rgba(39,31,17,.09);font-family:Geist Sans,Arial,sans-serif;transition:transform 200ms ease,box-shadow 200ms ease}.ds-product-card:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(39,31,17,.13)}.ds-product-card:focus-within{outline:2px solid #7d5d20;outline-offset:4px}.ds-product-media{position:relative;display:grid;place-items:center;background:#f5f2eb}.ds-product-media>span{position:absolute;left:12px;top:12px;padding:4px 10px;border:1px solid #d8d3c4;border-radius:999px;background:#fff;color:#6b6557;font-size:10px}.ds-product-media>div{width:72%;height:108px;border-radius:4px;background:linear-gradient(145deg,#eee6d7,#d8d3c4)}.ds-product-body{display:flex;flex-direction:column;padding:16px}.ds-product-body small{color:#6b6557;font-weight:600}.ds-product-body h3{margin:5px 0 12px;font:700 15px/1.35 Barlow,Arial,sans-serif}.ds-product-body p{padding-top:12px;border-top:1px solid #d8d3c4;color:#2e2a23;font-size:12px}.ds-product-body a{display:flex;min-height:44px;align-items:center;margin-top:auto;color:#7d5d20;font-weight:700;text-decoration:none}.ds-product-body a:hover{text-decoration:underline}.ds-product-body a:focus-visible{outline:2px solid #7d5d20;outline-offset:2px}@media(max-width:430px){.ds-product-card{grid-template-columns:1fr}.ds-product-media{min-height:160px}}"
+    },
+    {
+      "name": "Grafit Ürün Kartı",
+      "kind": "card",
+      "refersTo": "card-dark",
+      "description": "Genel ürün kategorilerindeki kompakt koyu kart.",
+      "html": "<a class=\"ds-dark-card\" href=\"#\"><div class=\"ds-dark-media\"></div><small>Filli Boya</small><h3>Taşyünü Levha</h3><p>Şehrini seç, m² fiyatını anında gör</p></a>",
+      "css": ".ds-dark-card{display:block;overflow:hidden;padding:0 16px 16px;border:1px solid rgba(46,46,52,.65);border-radius:12px;background:rgba(28,28,33,.4);color:#d6d6de;font-family:Geist Sans,Arial,sans-serif;text-decoration:none;transition:background 150ms ease,border-color 150ms ease}.ds-dark-card:hover{border-color:rgba(198,158,84,.5);background:rgba(28,28,33,.7)}.ds-dark-card:focus-visible{outline:2px solid #c69e54;outline-offset:3px}.ds-dark-media{height:144px;margin:0 -16px 16px;background:linear-gradient(145deg,#2a2a30,#1c1c21)}.ds-dark-card small{color:#9a9aa3}.ds-dark-card h3{margin:5px 0 10px;color:#fff;font:600 16px/1.35 Barlow,Arial,sans-serif}.ds-dark-card p{margin:0;padding-top:10px;border-top:1px solid rgba(46,46,52,.65);color:#94949e;font-size:12px}"
+    },
+    {
+      "name": "Koyu Site Navigasyonu",
+      "kind": "nav",
+      "description": "Sıcak ve grafit sayfaları aynı marka çatısı altında birleştiren koyu başlık.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Ana menü\"><a class=\"ds-brand\" href=\"#\">TAŞYÜNÜ FİYATLARI</a><div><a class=\"ds-nav-active\" href=\"#\">Ürün Kataloğu</a><a href=\"#\">Hakkımızda</a><a href=\"#\">İletişim</a></div></nav>",
+      "css": ".ds-nav{display:flex;min-height:64px;align-items:center;justify-content:space-between;gap:24px;padding:0 24px;border-bottom:1px solid rgba(245,241,232,.15);background:#161410;color:#d6d6de;font-family:Geist Sans,Arial,sans-serif}.ds-brand{color:#f5f1e8;font:800 16px/1 Barlow,Arial,sans-serif;letter-spacing:.03em;text-decoration:none}.ds-nav>div{display:flex;align-items:center;gap:8px}.ds-nav>div a{position:relative;display:flex;min-height:44px;align-items:center;padding:0 12px;color:rgba(214,214,222,.85);font-size:14px;text-decoration:none}.ds-nav>div a:hover{color:#c69e54}.ds-nav>div a:focus-visible{outline:2px solid #c69e54;outline-offset:2px}.ds-nav>div .ds-nav-active{color:#c69e54}.ds-nav-active:after{content:'';position:absolute;right:12px;bottom:0;left:12px;height:2px;background:#c69e54}@media(max-width:640px){.ds-nav>div a{display:none}.ds-nav>div .ds-nav-active{display:flex}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Mimari Numune Masası",
+    "overview": "Taşyünü Fiyatları, profesyonel alıcının teknik ürün ve teslim koşullarını hızlıca taradığı sakin, maddi ve güvenilir bir çalışma yüzeyidir. Sistem iki bağlamsal dünya kullanır: katalog ve karar yüzeylerinde sıcak kâğıt, koyu mürekkep ve beyaz numune kartları; teknik ve genel ürün yüzeylerinde grafit zemin, yükseltilmiş koyu kartlar ve kırık beyaz metin. Her iki dünya aynı Barlow başlık karakteri, Geist gövde yazısı, yumuşatılmış altın eylem rengi ve sıkı kontrol geometrisiyle aynı markaya aittir.\n\nGüven dekoratif lüksle değil, gerçek ürün görselleri, kaynak etiketleri, açık fiyat koşulları ve okunabilir teknik hiyerarşiyle kurulur. Sıcak ve koyu dünyalar bir ekran içinde rastgele karıştırılmaz; bağlam için biri ana zemin olur, diğeri karar veya kanıt paneli olarak sınırlı kullanılır.",
+    "keyCharacteristics": [
+      "Sıcak kâğıt ve grafit arasında bağlama göre seçilen çift yüzey dünyası",
+      "Barlow ile yoğun, doğrudan başlıklar; Geist ile okunaklı işlem metni",
+      "Altını yalnız eylem, seçili durum ve küçük vurgu için kullanan ölçülü renk hiyerarşisi",
+      "Gerçek ürün kapakları, ince kurallar ve doğrulanabilir mikro-metinlerle kurulan güven",
+      "Mobilde en az 44 px hedefler ve tek sütuna doğal çöken karar akışı"
+    ],
+    "rules": [
+      { "name": "The Two Worlds Rule", "body": "Bir yüzey sıcak ya da grafit dünyayı temel alır; karşıt dünya yalnız karar, kanıt veya navigasyon paneli olarak devreye girer.", "section": "colors" },
+      { "name": "The Measured Gold Rule", "body": "Altın geniş dekoratif alanları boyamaz; eylemi, seçimi, bağlantıyı ve küçük vurgu anlarını işaretler.", "section": "colors" },
+      { "name": "The Scan First Rule", "body": "Başlıklar kısa ve yoğun, yardımcı metinler doğrudan ve sakindir; uzun açıklama ilk tarama hattına girmez.", "section": "typography" },
+      { "name": "The Flat by Default Rule", "body": "Gölge dekor değildir; yüzey ayrımı veya etkileşim durumu yoksa sınır ve ton yeterlidir.", "section": "elevation" },
+      { "name": "The Working Geometry Rule", "body": "Köşeler dostça ama işlevseldir; büyük baloncuk kartlar, organik kapsüller ve süs amaçlı aşırı yuvarlaklık kullanılmaz.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do yüzey bağlamına göre sıcak kâğıt veya grafit dünyadan birini ana zemin seç.",
+      "Do fiyatın yanında KDV ve nakliye koşulunu görünür, kısa ve doğru tut.",
+      "Do ürün kimliğini gerçek kapak görseli, marka/model ve doğrulanabilir kaynak etiketiyle koru.",
+      "Do mobilde 44 px asgari hedefi ve başlıktan eyleme doğal okuma sırasını sürdür.",
+      "Do hareketi 150–240 ms aralığında, durum değişimini açıklayan kısa geçişlerle sınırla ve azaltılmış hareket tercihini koru."
+    ],
+    "donts": [
+      "Don't altını büyük dekoratif yüzeylere, her sınıra veya eşit ağırlıktaki çok sayıda eyleme yayma.",
+      "Don't sıcak ve grafit token setlerini aynı yüzeyde amaçsızca karıştırma.",
+      "Don't yatay katalog şeridi, kritik bilgiyi saklayan kaydırma veya aşırı kart yığını kurma.",
+      "Don't doğrulanmamış teslim, ödeme, fiyat garantisi veya koşulsuz nakliye vaadi üretme.",
+      "Don't kategoriye özgü Karar Masası kompozisyonunu bütün site için zorunlu bir şablona dönüştürme."
+    ]
+  }
+}

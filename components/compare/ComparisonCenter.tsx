@@ -16,6 +16,7 @@ import { defaultSubChoice } from "@/components/catalog/BonusRegionPrice";
 import { computeFullTruckPlateUnitPrice } from "@/lib/pricing/plateUnitPrice";
 import { resolveMarginPctStrict } from "@/lib/pricing/margin";
 import { useWizardStore } from "@/lib/store/wizardStore";
+import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import {
   notifyBonusChallengePicked,
   notifyComparisonCtaClick,
@@ -71,6 +72,12 @@ function readEntryPlacement(): ComparisonEntryPlacement {
     : "unknown";
 }
 
+function readFocusedModel(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("focus")?.trim();
+  return value && value.length <= 80 ? value : null;
+}
+
 interface ComparisonCenterProps {
   variant: "genel" | "yogunluk_150";
 }
@@ -101,17 +108,25 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const [bonusPrices, setBonusPrices] = useState<Record<string, PriceCell>>({});
   const [comparisonDataError, setComparisonDataError] = useState(false);
   const [requestVersion, setRequestVersion] = useState(0);
+  const [focusedModel, setFocusedModel] = useState<string | null>(null);
   const [comparisonSessionId] = useState(createComparisonSessionId);
   const entryPlacementRef = useRef<ComparisonEntryPlacement>("direct");
+  const catalogJourneyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     entryPlacementRef.current = readEntryPlacement();
+    catalogJourneyIdRef.current = entryPlacementRef.current === "category"
+      ? readCatalogJourneyId()
+      : null;
+    const focusTimer = window.setTimeout(() => setFocusedModel(readFocusedModel()), 0);
     notifyComparisonOpened({
       surface: variant,
       urun_sayisi: profiles.length,
       entry_placement: entryPlacementRef.current,
       comparison_session_id: comparisonSessionId,
+      catalog_journey_id: catalogJourneyIdRef.current,
     });
+    return () => window.clearTimeout(focusTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -228,6 +243,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       surface: variant,
       entry_placement: entryPlacementRef.current,
       comparison_session_id: comparisonSessionId,
+      catalog_journey_id: catalogJourneyIdRef.current,
       brand_name: profile.brandName,
       model_name: profile.modelShortName,
       city_code: cityCode,
@@ -253,6 +269,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       citySubRegion: subChoice,
       entrySurface: "comparison",
       comparisonSessionId,
+      catalogJourneyId: catalogJourneyIdRef.current ?? undefined,
     });
   }
 
@@ -264,9 +281,21 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     : "";
   const hasPriceError = comparisonDataError
     || Object.values(bonusPrices).some((cell) => cell.status === "error");
+  const focusedProfile = focusedModel
+    ? profiles.find((profile) => profile.modelShortName === focusedModel) ?? null
+    : null;
 
   return (
     <div className="space-y-10">
+      {focusedProfile && (
+        <p
+          role="status"
+          className="rounded-xl border border-brand-500/50 bg-brand-950/25 px-4 py-3 text-sm leading-6 text-fe-text"
+        >
+          <strong className="text-white">{focusedProfile.displayName}</strong>{' '}
+          karşılaştırmada işaretlendi; teknik değerleri ve aynı koşuldaki fiyatı diğer levhalarla birlikte görün.
+        </p>
+      )}
       {/* ─── Teknik karşılaştırma (föy etiketli) ─── */}
       <section aria-labelledby="teknik-tablo-baslik">
         <h2 id="teknik-tablo-baslik" className="mb-1 font-heading text-xl font-bold text-white">
@@ -285,6 +314,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
         >
           {profiles.map((p) => {
             const slug = slugFor(p);
+            const isFocused = focusedProfile?.productKey === p.productKey;
             const highlight =
               variant === "yogunluk_150" &&
               p.density.sourceType === "datasheet" &&
@@ -298,10 +328,13 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
                 <article
                   aria-labelledby={`mobile-tech-${p.productKey}`}
                   className={`min-w-0 rounded-xl border p-4 ${
-                    highlight
+                    isFocused
+                      ? "border-brand-400 bg-brand-950/30 ring-1 ring-brand-400/40"
+                      : highlight
                       ? "border-brand-500/50 bg-brand-950/20"
                       : "border-fe-border bg-fe-raised/30"
                   }`}
+                  data-focused={isFocused || undefined}
                   data-product-key={p.productKey}
                   data-testid={`comparison-technical-card-${p.productKey}`}
                 >
@@ -417,6 +450,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
             <tbody>
               {profiles.map((p) => {
                 const slug = slugFor(p);
+                const isFocused = focusedProfile?.productKey === p.productKey;
                 const highlight =
                   variant === "yogunluk_150" &&
                   p.density.sourceType === "datasheet" &&
@@ -425,8 +459,9 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
                   <tr
                     key={p.productKey}
                     className={`border-b border-fe-border/60 last:border-0 ${
-                      highlight ? "bg-brand-950/20" : ""
+                      isFocused ? "bg-brand-900/30 ring-1 ring-inset ring-brand-400/40" : highlight ? "bg-brand-950/20" : ""
                     }`}
+                    data-focused={isFocused || undefined}
                   >
                     <td className="px-3 py-2.5 font-semibold text-white">
                       {slug ? (
@@ -557,12 +592,18 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
         <div className="space-y-2">
           {profiles.map((p) => {
             const cell = priceCellFor(p);
+            const isFocused = focusedProfile?.productKey === p.productKey;
             return (
               <div
                 key={p.productKey}
                 data-testid={`comparison-price-${p.productKey}`}
                 data-product-key={p.productKey}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fe-border bg-fe-raised/30 px-4 py-3"
+                data-focused={isFocused || undefined}
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
+                  isFocused
+                    ? "border-brand-400 bg-brand-950/30 ring-1 ring-brand-400/40"
+                    : "border-fe-border bg-fe-raised/30"
+                }`}
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-white">{p.displayName}</p>

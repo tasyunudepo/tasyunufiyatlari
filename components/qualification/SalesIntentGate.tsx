@@ -20,6 +20,7 @@ const EXCLUDED_PREFIXES = [
   '/kullanim-kosullari',
   '/tasyunu-karsilastir',
   '/tasyunu-yogunluk',
+  '/urunler/tasyunu-levha',
 ]
 
 export default function SalesIntentGate() {

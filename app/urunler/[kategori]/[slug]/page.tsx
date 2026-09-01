@@ -7,6 +7,7 @@ import ProductImage     from '@/components/catalog/ProductImage';
 import ThicknessSelector from '@/components/catalog/ThicknessSelector';
 import ProductPricePanel from '@/components/catalog/ProductPricePanel';
 import MobileProductHero from '@/components/catalog/MobileProductHero';
+import ProductCategoryContext from '@/components/catalog/ProductCategoryContext';
 import { ProductInteractiveProvider } from '@/components/catalog/ProductInteractiveContext';
 import { getCatalogProduct } from '@/lib/catalog/server';
 import { getCatalogProducts } from '@/lib/catalog/server';
@@ -412,6 +413,10 @@ export async function ProductDetailPage({
           </nav>
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <ProductCategoryContext />
+      </Suspense>
 
       {/* Ana İçerik */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4 lg:py-12">

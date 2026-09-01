@@ -8,6 +8,7 @@ import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import { notifyLeadRejected } from "@/lib/analytics/leadQualification";
 import {
   notifyWizardShowPrices,
+  notifyWizardCalculationStarted,
   notifyPdfQuoteRequested,
   notifyWhatsappOrderRequested,
   notifyWizardResultCtaClick,
@@ -189,9 +190,13 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
     const [entryAttribution, setEntryAttribution] = useState<{
         entrySurface: WizardEntrySurface;
         comparisonSessionId: string | null;
+        catalogJourneyId: string | null;
+        sectionKey: string | null;
     }>({
         entrySurface: 'wizard',
         comparisonSessionId: null,
+        catalogJourneyId: null,
+        sectionKey: null,
     });
     const lastLeadRejectionRef = useRef("");
 
@@ -437,10 +442,17 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         if ('citySubRegion' in situationPresetFromStore) {
             setCitySubRegion(situationPresetFromStore.citySubRegion ?? null);
         }
+        if (typeof situationPresetFromStore.areaM2 === 'number'
+            && Number.isFinite(situationPresetFromStore.areaM2)
+            && situationPresetFromStore.areaM2 > 0) {
+            setMetraj(String(situationPresetFromStore.areaM2));
+        }
         if (situationPresetFromStore.entrySurface) {
             setEntryAttribution({
                 entrySurface: situationPresetFromStore.entrySurface,
                 comparisonSessionId: situationPresetFromStore.comparisonSessionId ?? null,
+                catalogJourneyId: situationPresetFromStore.catalogJourneyId ?? null,
+                sectionKey: situationPresetFromStore.sectionKey ?? null,
             });
         }
 
@@ -873,6 +885,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         result_session_id: resultSessionId,
         entry_surface: entryAttribution.entrySurface,
         comparison_session_id: entryAttribution.comparisonSessionId,
+        catalog_journey_id: entryAttribution.catalogJourneyId,
+        section_key: entryAttribution.sectionKey,
     });
 
     const trackResultCtaClick = (
@@ -1003,6 +1017,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     result_session_id:      resultSessionId,
                     entry_surface:          entryAttribution.entrySurface,
                     comparison_session_id:  entryAttribution.comparisonSessionId,
+                    catalog_journey_id:     entryAttribution.catalogJourneyId,
+                    section_key:            entryAttribution.sectionKey,
                 });
             }
 
@@ -1426,6 +1442,10 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 special_order_required: requiresSpecialOrder,
                 recommended_package_name: recommended?.definition.name ?? null,
                 result_session_id: nextResultSessionId,
+                entry_surface: entryAttribution.entrySurface,
+                comparison_session_id: entryAttribution.comparisonSessionId,
+                catalog_journey_id: entryAttribution.catalogJourneyId,
+                section_key: entryAttribution.sectionKey,
             });
 
             setTimeout(() => {
@@ -1612,6 +1632,22 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         setBonusChallenge({ status: 'hidden' });
         challengeRunRef.current++;
         const brandForFlow = brands.find(b => b.id === selectedBrandId);
+        const cityForFlow = shippingZones.find(z => z.city_code === selectedCityCode);
+        if (brandForFlow && cityForFlow) {
+            notifyWizardCalculationStarted({
+                material_type: selectedMalzeme,
+                brand_name: brandForFlow.name,
+                model_name: selectedModel,
+                thickness_cm: parseInt(selectedKalinlik) || 0,
+                city_code: cityForFlow.city_code,
+                city_name: cityForFlow.city_name,
+                area_m2: parseFloat(metraj) || 0,
+                entry_surface: entryAttribution.entrySurface,
+                comparison_session_id: entryAttribution.comparisonSessionId,
+                catalog_journey_id: entryAttribution.catalogJourneyId,
+                section_key: entryAttribution.sectionKey,
+            });
+        }
         if (brandForFlow?.name === 'Bonus') {
             await handleShowBonusPrices();
             return;
@@ -1899,6 +1935,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             result_session_id:      nextResultSessionId,
             entry_surface:          entryAttribution.entrySurface,
             comparison_session_id:  entryAttribution.comparisonSessionId,
+            catalog_journey_id:     entryAttribution.catalogJourneyId,
+            section_key:            entryAttribution.sectionKey,
         });
 
         // Bonus meydan okuma kartı (Sprint 1.2) — sonuçlar ekrana düştükten
@@ -1970,7 +2008,9 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             submissionType,
             sourceChannel: entryAttribution.entrySurface === 'comparison'
                 ? 'comparison'
-                : 'wizard',
+                : entryAttribution.entrySurface === 'category'
+                    ? 'catalog'
+                    : 'wizard',
             comparisonSessionId: entryAttribution.comparisonSessionId,
             materialType: selectedMalzeme,
             brandId: selectedBrandId!,
@@ -2010,6 +2050,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 attribution: {
                     entry_surface: entryAttribution.entrySurface,
                     comparison_session_id: entryAttribution.comparisonSessionId,
+                    catalog_journey_id: entryAttribution.catalogJourneyId,
+                    section_key: entryAttribution.sectionKey,
                     result_session_id: resultSessionId || null,
                 },
             },
@@ -2081,6 +2123,8 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     result_session_id:      resultSessionId,
                     entry_surface:          entryAttribution.entrySurface,
                     comparison_session_id:  entryAttribution.comparisonSessionId,
+                    catalog_journey_id:     entryAttribution.catalogJourneyId,
+                    section_key:            entryAttribution.sectionKey,
                 });
             }
 

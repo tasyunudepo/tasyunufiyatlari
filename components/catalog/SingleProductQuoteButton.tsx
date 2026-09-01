@@ -14,6 +14,8 @@ import { formatBrandProductName, formatBrandName } from '@/lib/brandFormat';
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp';
 import { buildQuoteSurfacePricing } from '@/lib/pricing/quoteTotals';
 import { createClientIdempotencyKey } from '@/lib/utils/clientIdempotencyKey';
+import { readCatalogJourneyId } from '@/lib/analytics/catalogJourney';
+import { getCategoryEntryContext } from '@/lib/catalog/category-entry-context';
 
 interface Props {
   product: CatalogProductView;
@@ -86,6 +88,9 @@ export default function SingleProductQuoteButton({
       const thickness     = String(activeThickness ?? 0);
       const matType: 'tasyunu' | 'eps' = product.material_type === 'eps' ? 'eps' : 'tasyunu';
       const refCode       = `TY${String(Date.now()).slice(-7)}`;
+      const categoryContext = getCategoryEntryContext();
+      const fromCategory = Boolean(categoryContext);
+      const catalogJourneyId = fromCategory ? readCatalogJourneyId() : null;
 
       // Marka+ürün adını duplikasyonsuz, Fawori parent ekleyerek formatla
       const brandProductName = formatBrandProductName(product.brand.name, product.name);
@@ -216,7 +221,17 @@ export default function SingleProductQuoteButton({
             truckCapacityPackages: null,
             lorryFillPercentage:  null,
             truckFillPercentage:  null,
-            packageItems:    { product: product.name, thickness: activeThickness, pricePerM2 },
+            packageItems:    {
+              product: product.name,
+              thickness: activeThickness,
+              pricePerM2,
+              attribution: {
+                entry_surface: fromCategory ? 'category' : 'product_detail',
+                catalog_journey_id: catalogJourneyId,
+                section_key: categoryContext?.sectionKey ?? null,
+                result_session_id: resultSessionId ?? null,
+              },
+            },
             quoteCode:       refCode,
             kvkkConsent:   formData.kvkkConsent,
           }),
@@ -258,6 +273,9 @@ export default function SingleProductQuoteButton({
             selected_per_m2:       pricePerM2,
             customer_type:         formData.customerCompany ? 'company' : 'individual',
             source_channel:        'catalog',
+            entry_surface:         fromCategory ? 'category' : 'product_detail',
+            catalog_journey_id:    catalogJourneyId,
+            section_key:           categoryContext?.sectionKey ?? null,
             result_session_id:     resultSessionId ?? undefined,
       });
 

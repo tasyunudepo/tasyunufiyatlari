@@ -115,7 +115,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
             <Link
               href="/"
               prefetch={false}
-              className="flex items-center shrink-0"
+              className="flex min-h-11 items-center shrink-0"
               aria-label="Taşyünü Fiyatları — Anasayfa"
             >
               <Image
@@ -129,7 +129,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
             </Link>
 
             {/* Nav */}
-            <nav className="flex items-center gap-1 sm:gap-2">
+            <nav aria-label="Ana menü" className="flex items-center gap-1 sm:gap-2">
               {NAV.map((item) => {
                 const active = isActive(pathname, item.href);
                 const linkBase   = 'text-fe-text/85 hover:text-hub-gold-soft';
@@ -140,7 +140,8 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
                     key={item.href}
                     href={item.href}
                     prefetch={false}
-                    className={`relative hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium transition-colors ${
+                    aria-current={active ? (pathname === item.href ? 'page' : 'location') : undefined}
+                    className={`relative hidden min-h-11 sm:inline-flex items-center px-3 py-2 text-sm font-medium transition-colors ${
                       active ? activeText : linkBase
                     }`}
                   >
@@ -170,7 +171,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-fe-text/90 hover:text-hub-gold-soft hover:bg-fe-surface-raised/50 transition-colors"
+                className="sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg text-fe-text/90 hover:text-hub-gold-soft hover:bg-fe-surface-raised/50 transition-colors"
                 aria-label="Menüyü aç"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-drawer"
@@ -221,7 +222,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
         </div>
 
         {/* Links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-1">
+        <nav aria-label="Mobil menü bağlantıları" className="flex-1 overflow-y-auto px-4 py-5 space-y-1">
           {NAV_MOBILE.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -229,6 +230,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
                 key={item.href}
                 href={item.href}
                 prefetch={false}
+                aria-current={active ? (pathname === item.href ? 'page' : 'location') : undefined}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center justify-between px-3 py-3.5 rounded-lg text-base font-medium transition-colors ${
                   active

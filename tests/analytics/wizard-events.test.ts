@@ -4,7 +4,10 @@ import {
   notifyComparisonCtaClick,
   notifyComparisonOpened,
   notifyPdfQuoteRequested,
+  notifyProductDetailCtaClick,
   notifyWhatsappOrderRequested,
+  notifyWizardCalculationStarted,
+  notifyWizardShowPrices,
 } from '@/lib/notifyWizardEvent'
 
 afterEach(() => {
@@ -84,6 +87,60 @@ describe('Wizard GA4 event allowlist', () => {
     expect(gtag.mock.calls[1][2]).toMatchObject({
       comparison_session_id: 'cmp_test_1',
       model_name: 'F 150',
+    })
+  })
+
+  it('kategori kaynaklı hesap başlangıcı ve sonucu aynı journey kimliğini taşır', () => {
+    const gtag = vi.fn()
+    vi.stubGlobal('window', {
+      gtag,
+      location: { pathname: '/' },
+    })
+    const attribution = {
+      entry_surface: 'category' as const,
+      catalog_journey_id: 'cat_test_1',
+      section_key: 'cati',
+    }
+
+    notifyWizardCalculationStarted({ ...base, ...attribution })
+    notifyWizardShowPrices({ ...base, ...attribution, results_count: 3 })
+
+    expect(gtag).toHaveBeenCalledTimes(2)
+    expect(gtag.mock.calls.map((call) => call[1])).toEqual([
+      'Fiyat_Hesaplama_Basladi',
+      'Fiyat_Gosterildi',
+    ])
+    for (const call of gtag.mock.calls) {
+      expect(call[2]).toMatchObject({
+        entry_surface: 'category',
+        catalog_journey_id: 'cat_test_1',
+        section_key: 'cati',
+      })
+    }
+  })
+
+  it('kategori kaynaklı ürün detay eventinde uygulama bağlamını taşır', () => {
+    const gtag = vi.fn()
+    vi.stubGlobal('window', {
+      gtag,
+      location: { pathname: '/urunler/tasyunu-levha/ornek-urun' },
+    })
+
+    notifyProductDetailCtaClick({
+      product_name: 'Örnek Ürün',
+      brand_name: 'Bonus',
+      product_slug: 'ornek-urun',
+      cta_type: 'pdf',
+      cta_location: 'product_detail_summary',
+      entry_surface: 'category',
+      catalog_journey_id: 'cat_test_1',
+      section_key: 'cati',
+    })
+
+    expect(gtag.mock.calls[0][2]).toMatchObject({
+      entry_surface: 'category',
+      catalog_journey_id: 'cat_test_1',
+      section_key: 'cati',
     })
   })
 })

@@ -12,13 +12,23 @@
 // ============================================================
 
 import {
+  DENSITY_SOURCE_LABELS,
   getProfileByModel,
   type ApplicationScope,
 } from '@/lib/technical-profiles'
 import { getBonusFamily } from '@/lib/pricing/bonus/families'
 
+export type TasyunuSectionKey =
+  | 'mantolama'
+  | 'giydirme-cephe'
+  | 'cati'
+  | 'kat-arasi-tesisat'
+  | 'endustriyel'
+  | 'gemi-marin'
+  | 'bolme-panel'
+
 export interface TasyunuSection {
-  key: string
+  key: TasyunuSectionKey
   title: string
   /** Bölüm başlığı altındaki 1-2 cümlelik açıklama (SEO metni) */
   desc: string
@@ -71,14 +81,14 @@ export const TASYUNU_SECTIONS: readonly TasyunuSection[] = [
 
 // Profili olmayan teklif-üzerine modeller (fiyat listesinde fiyatı yok,
 // teknik profil havuzuna alınmadılar) — elle eşleme.
-const MODEL_SECTION_OVERRIDES: Record<string, string> = {
+const MODEL_SECTION_OVERRIDES: Record<string, TasyunuSectionKey> = {
   Marin: 'gemi-marin',
   Desibel: 'bolme-panel',
   'Kapı Paneli': 'bolme-panel',
   Panel: 'bolme-panel',
 }
 
-const SCOPE_TO_SECTION: Record<ApplicationScope, string> = {
+const SCOPE_TO_SECTION: Record<ApplicationScope, TasyunuSectionKey> = {
   sivali_dis_cephe_mantolama: 'mantolama',
   giydirme_cephe: 'giydirme-cephe',
   cati: 'cati',
@@ -92,7 +102,7 @@ const SCOPE_TO_SECTION: Record<ApplicationScope, string> = {
  * düşer (mevcut katalog çekirdeği mantolama ürünüdür; yeni kapsam
  * eklendiğinde profil de eklenir).
  */
-export function resolveTasyunuSection(modelShortName: string | null): string {
+export function resolveTasyunuSection(modelShortName: string | null): TasyunuSectionKey {
   if (modelShortName) {
     const override = MODEL_SECTION_OVERRIDES[modelShortName]
     if (override) return override
@@ -119,6 +129,22 @@ export function getDensityBadge(modelShortName: string | null): string | null {
     return `${[...new Set(values)].sort((a, b) => a - b).join('/')} kg/m³`
   }
   return getProfileByModel(modelShortName)?.density?.display ?? null
+}
+
+/** Yoğunluk rozetinin müşteri yüzeyinde gösterilecek doğrulanmış kaynağı. */
+export function getDensitySourceLabel(modelShortName: string | null): string | null {
+  if (!modelShortName) return null
+  const family = getBonusFamily(modelShortName)
+  const sourceTypes = family
+    ? family.variants
+        .map((variant) => getProfileByModel(variant.modelShortName)?.density?.sourceType)
+        .filter((value): value is keyof typeof DENSITY_SOURCE_LABELS => Boolean(value))
+    : [getProfileByModel(modelShortName)?.density?.sourceType]
+        .filter((value): value is keyof typeof DENSITY_SOURCE_LABELS => Boolean(value))
+
+  const unique = [...new Set(sourceTypes)]
+  if (unique.length !== 1) return null
+  return DENSITY_SOURCE_LABELS[unique[0]]
 }
 
 /** "2–15 cm · 13 kalınlık" biçiminde tek satır özet (TR ondalık virgül). */

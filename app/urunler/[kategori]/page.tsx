@@ -3,14 +3,15 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import ProductCard from '@/components/catalog/ProductCard';
+import TasyunuCategoryExperience from '@/components/catalog/TasyunuCategoryExperience';
 import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
-import { TASYUNU_SECTIONS, resolveTasyunuSection } from '@/lib/catalog/sections';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
 import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
 import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 interface Props {
   params: Promise<{ kategori: string }>;
@@ -40,10 +41,24 @@ export default async function KategoriPage({ params }: Props) {
   const info = KATEGORI_MAP[kategori];
   if (!info) notFound();
 
-  const { products } = await getCatalogProducts(
+  const catalogPromise = getCatalogProducts(
     info.material,
-    info.accessoryTypeSlug ? { accessoryTypeSlug: info.accessoryTypeSlug } : undefined
+    info.accessoryTypeSlug ? { accessoryTypeSlug: info.accessoryTypeSlug } : undefined,
   );
+  const zonesPromise = kategori === 'tasyunu-levha'
+    ? createServerSupabaseClient()
+        .from('shipping_zones')
+        .select('city_code, city_name')
+        .eq('is_active', true)
+        .order('city_name')
+    : Promise.resolve({ data: [] as Array<{ city_code: number; city_name: string }> });
+  const [{ products }, zonesResult] = await Promise.all([catalogPromise, zonesPromise]);
+  const shippingZones = [...(zonesResult.data ?? [])]
+    .sort((a, b) => {
+      if (a.city_code === 34) return -1;
+      if (b.city_code === 34) return 1;
+      return a.city_name.localeCompare(b.city_name, 'tr-TR');
+    });
 
   const breadcrumbNode = buildBreadcrumbList(
     [
@@ -59,8 +74,22 @@ export default async function KategoriPage({ params }: Props) {
     '@graph': [breadcrumbNode],
   };
 
+  if (kategori === 'tasyunu-levha' && products.length > 0) {
+    return (
+      <div className="flex min-h-screen min-w-0 flex-col bg-hub-warm text-hub-ink">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+        />
+        <SiteHeader tone="warm" />
+        <TasyunuCategoryExperience products={products} shippingZones={shippingZones} />
+        <SiteFooter tone="warm" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-fe-bg flex flex-col">
+    <div className="flex min-h-screen min-w-0 flex-col bg-fe-bg">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
@@ -71,12 +100,12 @@ export default async function KategoriPage({ params }: Props) {
       <div className="bg-fe-surface border-b border-fe-border">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1 text-xs text-fe-muted mb-4">
+          <nav aria-label="İçerik yolu" className="mb-4 flex items-center gap-1 text-xs text-fe-muted">
             <Link href="/" prefetch={false} className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
             <ChevronRight className="w-3 h-3" />
             <Link href="/urunler" prefetch={false} className="hover:text-brand-400 transition-colors">Ürünler</Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-fe-text">{info.title}</span>
+            <span aria-current="page" className="text-fe-text">{info.title}</span>
           </nav>
 
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -84,21 +113,12 @@ export default async function KategoriPage({ params }: Props) {
               <h1 className="mb-2 text-xl font-bold text-white sm:text-2xl">{info.title}</h1>
               <p className="text-sm text-fe-muted">{info.desc}</p>
             </div>
-            {kategori === 'tasyunu-levha' && (
-              <Link
-                href="/tasyunu-karsilastir?entry=category"
-                className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-brand-500/40 bg-brand-950/20 px-4 py-2.5 text-sm font-semibold text-brand-300 transition-colors hover:bg-brand-900/30"
-              >
-                8 mantolama levhasını karşılaştır
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            )}
           </div>
         </div>
       </div>
 
       {/* Ürün grid */}
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <main className="mx-auto w-full max-w-5xl min-w-0 px-4 py-8">
         {products.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-fe-muted mb-4">
@@ -112,62 +132,6 @@ export default async function KategoriPage({ params }: Props) {
               {info.emptyHint ? 'Hesap Makinesine Git' : 'Tüm kategorilere dön'}
             </Link>
           </div>
-        ) : kategori === 'tasyunu-levha' ? (
-          // ── Faz 1 (21 Temmuz kararı): taşyünü listesi kullanım alanına
-          // göre bölümlenir; mantolama müşterisi ile gemi/endüstriyel
-          // müşterisi aynı düz listede boğulmaz. Faz 2'de bölümler ayrı
-          // SEO sayfalarına taşınacak. ──
-          (() => {
-            const grouped = TASYUNU_SECTIONS.map((section) => ({
-              section,
-              items: products.filter(
-                (p) => resolveTasyunuSection(p.model) === section.key,
-              ),
-            })).filter((g) => g.items.length > 0);
-            let cardIndex = 0;
-            return (
-              <>
-                {/* Bölüm çipleri — tıklayınca ilgili bölüme kaydırır */}
-                <nav
-                  aria-label="Kullanım alanına göre bölümler"
-                  className="sticky top-0 z-20 -mx-4 mb-6 border-b border-fe-border bg-fe-bg/95 px-4 py-2.5 backdrop-blur"
-                >
-                  <div className="flex gap-2 overflow-x-auto">
-                    {grouped.map(({ section, items }) => (
-                      <a
-                        key={section.key}
-                        href={`#${section.key}`}
-                        className="shrink-0 rounded-full border border-fe-border px-3 py-1 text-xs text-fe-muted transition-colors hover:border-brand-400/60 hover:text-fe-text"
-                      >
-                        {section.title} ({items.length})
-                      </a>
-                    ))}
-                  </div>
-                </nav>
-
-                <p className="text-xs text-fe-muted mb-5">{products.length} ürün · {grouped.length} kullanım alanı</p>
-
-                {grouped.map(({ section, items }) => (
-                  <section key={section.key} id={section.key} className="mb-10 scroll-mt-16">
-                    <h2 className="text-lg font-bold text-white mb-1">{section.title}</h2>
-                    <p className="text-sm text-fe-muted mb-4 max-w-3xl">{section.desc}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {items.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          kategori={kategori}
-                          // İlk iki satır ekran üstündedir; LCP görseli lazy
-                          // kalırsa Next uyarı verir ve LCP gecikir.
-                          imagePriority={cardIndex++ < 6}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </>
-            );
-          })()
         ) : (
           <>
             <p className="text-xs text-fe-muted mb-5">{products.length} ürün</p>
@@ -189,16 +153,18 @@ export default async function KategoriPage({ params }: Props) {
         {/* Alt CTA */}
         <div className="mt-10 pt-8 border-t border-fe-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p className="text-fe-muted text-sm">
-            Ürün bulmakta zorlanıyor musunuz? Hesap makinesiyle doğrudan hesaplayın.
+            {info.material === 'eps'
+              ? 'EPS projeniz için ürün, şehir, kalınlık ve metrajla fiyat hesabına geçin.'
+              : 'Aradığınız ürünü bulamadıysanız tüm ürün gruplarını inceleyin.'}
           </p>
           <Link
-            href="/"
+            href={info.material === 'eps' ? '/#mantolama-hesaplayici' : '/urunler'}
             className="shrink-0 bg-brand-600 hover:bg-brand-500 text-[#0b0b0c] px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
           >
-            Hesap Makinesi
+            {info.material === 'eps' ? 'Fiyatımı Hesapla' : 'Tüm Ürünler'}
           </Link>
         </div>
-      </div>
+      </main>
 
       <SiteFooter />
     </div>

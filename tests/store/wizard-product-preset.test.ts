@@ -53,4 +53,28 @@ describe('karşılaştırma → wizard preset köprüsü', () => {
     })
     expect(useWizardStore.getState().consumeSituationPreset()).toBeNull()
   })
+
+  it('kategori şehir, metraj ve anonim yolculuk bağlamını bir kez taşır', () => {
+    useWizardStore.getState().setProductPreset({
+      material: 'tasyunu',
+      thicknessCm: 5,
+      cityCode: 6,
+      areaM2: 1200,
+      entrySurface: 'category',
+      catalogJourneyId: 'cat_test_1',
+      sectionKey: 'cati',
+    })
+
+    expect(useWizardStore.getState().consumeSituationPreset()).toEqual({
+      key: 'urun_sayfasi',
+      material: 'tasyunu',
+      thicknessCm: 5,
+      cityCode: 6,
+      areaM2: 1200,
+      entrySurface: 'category',
+      catalogJourneyId: 'cat_test_1',
+      sectionKey: 'cati',
+    })
+    expect(useWizardStore.getState().consumeSituationPreset()).toBeNull()
+  })
 })

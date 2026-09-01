@@ -13,6 +13,7 @@
 // üzerinde çift bildirim üretmez.
 
 const GA_EVENT_SHOW_PRICES = 'Fiyat_Gosterildi';
+const GA_EVENT_CALCULATION_STARTED = 'Fiyat_Hesaplama_Basladi';
 const GA_EVENT_PDF_QUOTE   = 'Pdf_Teklif_Talebi';
 const GA_EVENT_WHATSAPP    = 'Whatsapp_Siparis';
 const GA_EVENT_RESULT_CTA_CLICK = 'Wizard_Result_CTA_Click';
@@ -41,9 +42,13 @@ export interface WizardBasePayload {
   total_m2?: number;
   package_count?: number;
   result_session_id?: string;
-  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison' | 'category';
   comparison_session_id?: string | null;
+  catalog_journey_id?: string | null;
+  section_key?: string | null;
 }
+
+export type WizardCalculationStartedPayload = WizardBasePayload;
 
 // 1) Fiyat_Gosterildi
 export interface WizardShowPricesPayload extends WizardBasePayload {
@@ -82,8 +87,10 @@ export interface WizardResultCtaPayload {
   package_name: string;
   package_tier: string;
   result_session_id?: string;
-  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison' | 'category';
   comparison_session_id?: string | null;
+  catalog_journey_id?: string | null;
+  section_key?: string | null;
 }
 
 export interface WizardResultFormOpenPayload {
@@ -92,8 +99,10 @@ export interface WizardResultFormOpenPayload {
   package_name: string;
   package_tier: string;
   result_session_id?: string;
-  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison' | 'category';
   comparison_session_id?: string | null;
+  catalog_journey_id?: string | null;
+  section_key?: string | null;
 }
 
 export interface WizardResultFormErrorPayload {
@@ -103,8 +112,10 @@ export interface WizardResultFormErrorPayload {
   package_name?: string;
   package_tier?: string;
   result_session_id?: string;
-  entry_surface?: 'wizard' | 'product_detail' | 'comparison';
+  entry_surface?: 'wizard' | 'product_detail' | 'comparison' | 'category';
   comparison_session_id?: string | null;
+  catalog_journey_id?: string | null;
+  section_key?: string | null;
 }
 
 export interface ProductDetailBasePayload {
@@ -123,6 +134,9 @@ export interface ProductDetailBasePayload {
   vehicle_type?: 'lorry' | 'truck' | 'depot' | 'mixed' | null;
   product_slug?: string | null;
   result_session_id?: string;
+  entry_surface?: 'product_detail' | 'category';
+  catalog_journey_id?: string | null;
+  section_key?: string | null;
 }
 
 export interface ProductDetailPriceViewPayload extends ProductDetailBasePayload {
@@ -189,6 +203,22 @@ function emit(eventName: string, params: Record<string, unknown>): void {
   w.gtag('event', eventName, finalPayload);
 }
 
+export function notifyWizardCalculationStarted(p: WizardCalculationStartedPayload): void {
+  emit(GA_EVENT_CALCULATION_STARTED, {
+    material_type: p.material_type,
+    brand_name: p.brand_name,
+    model_name: p.model_name ?? null,
+    thickness_cm: p.thickness_cm,
+    city_code: p.city_code,
+    city_name: p.city_name,
+    area_m2: p.area_m2,
+    entry_surface: p.entry_surface ?? 'wizard',
+    comparison_session_id: p.comparison_session_id ?? null,
+    catalog_journey_id: p.catalog_journey_id ?? null,
+    section_key: p.section_key ?? null,
+  });
+}
+
 // ─── 1. Fiyatları Göster ──────────────────────────────────────────────
 export function notifyWizardShowPrices(p: WizardShowPricesPayload): void {
   debugGaEvent(
@@ -210,6 +240,8 @@ export function notifyWizardShowPrices(p: WizardShowPricesPayload): void {
     result_session_id:       p.result_session_id ?? null,
     entry_surface:           p.entry_surface ?? 'wizard',
     comparison_session_id:   p.comparison_session_id ?? null,
+    catalog_journey_id:      p.catalog_journey_id ?? null,
+    section_key:             p.section_key ?? null,
     results_count:           p.results_count ?? null,
     cheapest_total:          p.cheapest_total ?? null,
     cheapest_per_m2:         p.cheapest_per_m2 ?? null,
@@ -240,6 +272,8 @@ export function notifyPdfQuoteRequested(p: PdfQuoteRequestedPayload): void {
     source_channel:          p.source_channel ?? 'wizard',
     entry_surface:           p.entry_surface ?? 'wizard',
     comparison_session_id:   p.comparison_session_id ?? null,
+    catalog_journey_id:      p.catalog_journey_id ?? null,
+    section_key:             p.section_key ?? null,
   });
 }
 
@@ -262,6 +296,8 @@ export function notifyWhatsappOrderRequested(p: WhatsappOrderRequestedPayload): 
     source_channel:          p.source_channel ?? 'wizard',
     entry_surface:           p.entry_surface ?? 'wizard',
     comparison_session_id:   p.comparison_session_id ?? null,
+    catalog_journey_id:      p.catalog_journey_id ?? null,
+    section_key:             p.section_key ?? null,
   });
 }
 
@@ -275,6 +311,8 @@ export function notifyWizardResultCtaClick(p: WizardResultCtaPayload): void {
     result_session_id: p.result_session_id ?? null,
     entry_surface: p.entry_surface ?? 'wizard',
     comparison_session_id: p.comparison_session_id ?? null,
+    catalog_journey_id: p.catalog_journey_id ?? null,
+    section_key: p.section_key ?? null,
   });
 }
 
@@ -287,6 +325,8 @@ export function notifyWizardResultFormOpen(p: WizardResultFormOpenPayload): void
     result_session_id: p.result_session_id ?? null,
     entry_surface: p.entry_surface ?? 'wizard',
     comparison_session_id: p.comparison_session_id ?? null,
+    catalog_journey_id: p.catalog_journey_id ?? null,
+    section_key: p.section_key ?? null,
   });
 }
 
@@ -300,6 +340,8 @@ export function notifyWizardResultFormError(p: WizardResultFormErrorPayload): vo
     result_session_id: p.result_session_id ?? null,
     entry_surface: p.entry_surface ?? 'wizard',
     comparison_session_id: p.comparison_session_id ?? null,
+    catalog_journey_id: p.catalog_journey_id ?? null,
+    section_key: p.section_key ?? null,
   });
 }
 
@@ -321,6 +363,9 @@ function buildProductDetailPayload(p: ProductDetailBasePayload): Record<string, 
     vehicle_type:      p.vehicle_type ?? null,
     product_slug:      p.product_slug ?? null,
     result_session_id: p.result_session_id ?? null,
+    entry_surface:     p.entry_surface ?? 'product_detail',
+    catalog_journey_id: p.catalog_journey_id ?? null,
+    section_key:       p.section_key ?? null,
   };
 }
 
@@ -413,6 +458,7 @@ interface ComparisonJourneyPayload {
   surface: 'genel' | 'yogunluk_150';
   entry_placement: ComparisonEntryPlacement;
   comparison_session_id: string;
+  catalog_journey_id?: string | null;
 }
 
 export function notifyComparisonOpened(p: ComparisonJourneyPayload & {
