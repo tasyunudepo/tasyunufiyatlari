@@ -237,6 +237,50 @@ select:-webkit-autofill:focus {
   transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
 }
 
+/* Standart levha PDP — sıcak ticari föy varyantı.
+   ProductPricePanel başka yüzeylerde koyu fe-* sistemini kullanmaya devam eder;
+   bu kapsam yalnız seçilmiş A/B hibrit levha deneyimini açığa çevirir. */
+.pdp-warm-commercial [class*="text-fe-"] {
+  color: #625a4f;
+}
+
+.pdp-warm-commercial [class*="text-white"] {
+  color: #201c17;
+}
+
+.pdp-warm-commercial [class*="text-brand-"] {
+  color: #704c17;
+}
+
+.pdp-warm-commercial [class*="text-emerald-"] {
+  color: #20623d;
+}
+
+.pdp-warm-commercial [class*="bg-fe-"] {
+  background-color: #fffaf2;
+}
+
+.pdp-warm-commercial [class*="bg-brand-950"],
+.pdp-warm-commercial [class*="bg-brand-900"] {
+  background-color: #f3e4cc;
+}
+
+.pdp-warm-commercial [class*="border-fe-"] {
+  border-color: #d8cbb8;
+}
+
+.pdp-warm-commercial input:-webkit-autofill,
+.pdp-warm-commercial input:-webkit-autofill:hover,
+.pdp-warm-commercial input:-webkit-autofill:focus,
+.pdp-warm-commercial select:-webkit-autofill,
+.pdp-warm-commercial select:-webkit-autofill:hover,
+.pdp-warm-commercial select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #282219 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  caret-color: #282219 !important;
+}
+
 /* ─── Faz 1 — Foundation Type Scale & Section Rhythm ──────────────────
    Barlow için optimize edilmiş clamp() boyutları, tracking ve line-height.
    Yeni font yüklenmez; mevcut Barlow weights (400/600/700/800) kullanılır.

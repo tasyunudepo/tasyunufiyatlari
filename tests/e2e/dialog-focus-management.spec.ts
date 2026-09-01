@@ -66,7 +66,7 @@ test.describe('Dialog klavye ve odak yönetimi', () => {
   test('PDF teklif modalı etiketleri, odak tuzağı, Escape ve CTA kontrastını korur', async ({ page }) => {
     await page.goto(PRODUCT_PATH)
 
-    const opener = page.getByRole('button', { name: 'PDF teklifimi hazırla' })
+    const opener = page.getByRole('button', { name: 'Teklifimi hazırla →' })
     await opener.click()
 
     const dialog = page.getByRole('dialog', { name: 'Teklif Bilgileri' })

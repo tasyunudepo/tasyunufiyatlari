@@ -1297,3 +1297,60 @@ Panelden de düzenlenebilir: Fiyatlandırma › Marj Kuralları.
 | `npx playwright test` | 36/36 |
 | `tsc` · `eslint` · `build` · `copy-gate` | temiz · 0/0 · başarılı · 457 HTML |
 | Canlı doğrulama | Optimix Karbonlu seçilince malzeme `eps`'e geçti; set **48 · 48 · 3 kutu plastik dübel** üretti |
+
+---
+
+## 1 Eylül 2026 · Levha PDP mobil karar sırası ve Filli marka hiyerarşisi
+
+- Mobil fiyat paneli beş temsilci üründe 801–840 px başlangıcına çekildi.
+- Masaüstü ana PDF teklif alanı 1440×1000 görünümünde 794 px'de biter ve
+  alternatif ürün kartından önce gelir.
+- Sticky teklif özeti başlangıçta render edilmez; ana CTA geçildikten sonra
+  görünür ve footer görünürken kapanır.
+- Expert ve Optimix, ortak Fawori logosunun yanında görünür alt marka adıyla
+  ayrıldı; grup metni dilbilgisel olarak “Filli Boya ürün grubudur” oldu.
+- Test guard'ın işaretlediği eski `Filli Boya ürün grubu` assertion'ı davranışı
+  gevşetmek için kaldırılmadı. AC-PDP-005'in yeni ve daha kesin metniyle
+  değiştirildi; aynı test ayrıca görünür Expert/Optimix alt marka adını doğrular.
+- Kabul sözleşmesi: `PLAN-pdp-ui-ux-fixes-2026-09-01.md`.
+
+### Son kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| Hedefli Playwright | 13/13 geçti |
+| Kontrast | 4 temsilci rota AA geçti |
+| Browser audit | 5 rota × 2 viewport; axe 0, console 0, overflow 0, kırık görsel 0 |
+| Tam Playwright paketi | **79/79 geçti** (`workers=1`, 60 sn yükleme toleransı) |
+| Kritik teklif ve modal | 7/7 kritik teklif; 2/2 klavye/odak testi geçti |
+| `verify:full` | **77 dosya / 680 test**, TypeScript, ESLint ve üretim build'i geçti |
+| Kabul ve ziyaretçi metni | `verify:acceptance` ve `verify:visitor-copy` geçti |
+
+---
+
+## 1 Eylül 2026 · Levha PDP A+B ticari hiyerarşi
+
+- B seçeneğinin sıcak ticari ürün/fiyat bandı, A seçeneğinin iki sütunlu ürün
+  ve teklif mimarisiyle birleştirildi; C seçeneğindeki 1-2-3 wizard dili
+  kullanılmadı.
+- m² fiyatı, araç kapasitesi ve araç toplamı satış kararına uygun biçimde
+  büyütüldü. Kamyon ve TIR için oranları belirgin, arayüze özgü SVG silüetleri
+  çizildi.
+- Araç kartları masaüstünde yan yana, mobilde alt alta; 320 px dahil eşit
+  yükseklikte ve taşmasız çalışıyor. Kartın erişilebilir adı gerçek artırma /
+  azaltma davranışıyla eşleştirildi.
+- Üst aksiyon “Teslimat fiyatını hesapla”, final aksiyon “Teklifimi hazırla”
+  olarak ayrıldı; PDF çıktı formatı ana CTA vaadinden çıkarıldı.
+- Korunan kritik E2E dosyasında yalnız ziyaretçi etiketi değişti; teklif modalı,
+  payload, idempotency ve fail-closed kabul davranışı değişmedi. Kabul kilidi
+  gerekçesi ve hash'i görünür biçimde güncellendi.
+
+### Son kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `verify:full` | 77 dosya / 680 test; TypeScript, ESLint ve production build geçti |
+| Kabul / metin | `verify:acceptance` ve `verify:visitor-copy` geçti |
+| Tam Playwright | Tek işçiyle **79/79 geçti** |
+| Görsel ölçüm | 1440, 390 ve 320 px'te yatay taşma 0; araç kartı çiftleri eşit yükseklikte |
+| Erişilebilirlik | 5 temsilci rota × 2 viewport axe A/AA ihlali 0; console error 0 |

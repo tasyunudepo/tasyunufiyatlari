@@ -7,10 +7,10 @@
       "size": 46328
     },
     "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
-      "sha256": "3705ea37c32c32467b44e7e1203b5edf98017f1b6fbd1efe8c4ed44c00b99488",
+      "sha256": "7e4ce6fa948f6822a6b916d2c669b1a04153b1ae779e33035bd9b133b2efcf87",
       "size": 8941,
       "locked_at": "2026-09-01",
-      "reason": "PDF idempotency/capability ve WhatsApp fail-closed kabulleri korunur; iletişim kapısı Bonus olmayan PDP'lerde sürer, canlı fiyat ve geçerli araç planı üreten Bonus PDP'nin WhatsApp-first istisnası ayrı E2E sözleşmesiyle korunur"
+      "reason": "PDF idempotency/capability ve WhatsApp fail-closed kabulleri korunur; iletişim kapısı Bonus olmayan PDP'lerde sürer, canlı fiyat ve geçerli araç planı üreten Bonus PDP'nin WhatsApp-first istisnası ayrı E2E sözleşmesiyle korunur. 2026-09-01: aynı teklif modalını açan ziyaretçi etiketi, kullanıcı kararıyla PDF merkezli ifadeden 'Teklifimi hazırla' ifadesine geçirildi; kabul davranışı değişmedi."
     },
     "tests/api/quotes-route.integration.test.ts": {
       "sha256": "14dec81c02ec778ac4505e15d326c1ba41d29d7b4a898db17b753c30f6df8e84",

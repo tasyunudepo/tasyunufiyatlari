@@ -162,7 +162,7 @@ export default function BonusAlternativeCard({
         Bu ürünün Bonus alternatifi: Bonus {challenger}
       </p>
       {bonusProfile && (
-        <p className="mb-3 text-[11px] text-fe-muted">
+        <p className="mb-3 text-xs leading-5 text-fe-muted">
           {densityWithSourceLabel(bonusProfile)} · {bonusProfile.fireClass} yanmaz
         </p>
       )}
@@ -174,7 +174,7 @@ export default function BonusAlternativeCard({
               key={choice}
               type="button"
               onClick={() => setSubChoice(choice)}
-              className={`cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-11 cursor-pointer rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
                 subChoice === choice
                   ? "border-brand-500 bg-brand-900/30 text-brand-300"
                   : "border-fe-border bg-fe-raised/60 text-fe-text hover:border-brand-500/40"
@@ -191,11 +191,11 @@ export default function BonusAlternativeCard({
           {currentUnitPriceExVat != null && currentUnitPriceExVat > 0 && (
             <div className="mb-2 grid grid-cols-2 gap-2 text-sm">
               <div className="rounded-lg border border-fe-border/60 bg-fe-bg/40 p-2">
-                <p className="text-[10px] uppercase tracking-wide text-fe-muted">{sourceBrandName} {sourceModel}</p>
+                <p className="text-xs uppercase tracking-wide text-fe-muted">{sourceBrandName} {sourceModel}</p>
                 <p className="font-bold tabular-nums text-white">{fmt(currentUnitPriceExVat)} ₺/m²</p>
               </div>
               <div className="rounded-lg border border-brand-500/40 bg-brand-900/20 p-2">
-                <p className="text-[10px] uppercase tracking-wide text-brand-300">Bonus {challenger}</p>
+                <p className="text-xs uppercase tracking-wide text-brand-300">Bonus {challenger}</p>
                 <p className="font-bold tabular-nums text-white">{fmt(state.salePricePerM2)} ₺/m²</p>
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function BonusAlternativeCard({
               m² başına {fmt(unitDiff)} ₺ fark — gerçek hesap sonucu
             </p>
           )}
-          <p className="mb-3 text-[10px] leading-snug text-fe-muted">
+          <p className="mb-3 text-xs leading-5 text-fe-muted">
             Aynı şehir: {cityName}
             {subChoice ? ` (${SUB_LABELS[subChoice]})` : ""} · aynı kalınlık: {thicknessCm} cm ·
             tam araç levha fiyatı · KDV hariç
@@ -219,7 +219,7 @@ export default function BonusAlternativeCard({
       <button
         type="button"
         onClick={handlePick}
-        className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-brand-500/50 bg-brand-600/90 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-500"
+        className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-lg border border-brand-500/50 bg-brand-600/90 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-500"
       >
         Bonus {challenger} ile komple set hesapla →
       </button>

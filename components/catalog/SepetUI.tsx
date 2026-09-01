@@ -41,6 +41,9 @@ interface Props {
   /** Vehicle cards bloğunu portal ile başka bir DOM noktasına render et.
    *  null/verilmezse SepetUI'ın içinde yerinde render edilir (geri uyumlu). */
   vehicleCardsSlot?: HTMLElement | null;
+  vehicleCardsLayout?: "horizontal" | "vertical";
+  vehicleCardsPresentation?: "default" | "commercial";
+  showScenarioMessage?: boolean;
 }
 
 type OptimalResult = {
@@ -129,6 +132,9 @@ export default function SepetUI({
   ihtiyac,
   onChange,
   vehicleCardsSlot,
+  vehicleCardsLayout,
+  vehicleCardsPresentation = "default",
+  showScenarioMessage = true,
 }: Props) {
   // prevIhtiyac'ı state olarak tut: render sırasında ihtiyac değişimini yakalar
   // ve "setState during render" escape hatch'i ile tepki verir (effect yerine).
@@ -245,24 +251,26 @@ export default function SepetUI({
     (optimalCombo.kamyon !== kamyon || optimalCombo.tir !== tir);
 
   return (
-    <div className="mt-4 space-y-3" aria-label="Sepet">
+    <div className="mt-4 space-y-3" role="group" aria-label="Sepet">
 
       {/* ─── Tek Ana Karar Mesajı ──────────────────────────────────── */}
-      <SepetScenarioMessage
-        scenario={scenario}
-        lorryM2={lorryM2}
-        truckM2={truckM2}
-        lorryPrice={lorryPrice}
-        truckPrice={truckPrice}
-        ihtiyac={ihtiyac}
-        kamyon={kamyon}
-        tir={tir}
-        truckLotM2={truckLotM2}
-        truckRoundedUp={truckRoundedUp}
-        optimalCombo={optimalCombo}
-        suggestionDiffersFromCurrent={suggestionDiffersFromCurrent}
-        onGeriAl={handleGeriAl}
-      />
+      {showScenarioMessage && (
+        <SepetScenarioMessage
+          scenario={scenario}
+          lorryM2={lorryM2}
+          truckM2={truckM2}
+          lorryPrice={lorryPrice}
+          truckPrice={truckPrice}
+          ihtiyac={ihtiyac}
+          kamyon={kamyon}
+          tir={tir}
+          truckLotM2={truckLotM2}
+          truckRoundedUp={truckRoundedUp}
+          optimalCombo={optimalCombo}
+          suggestionDiffersFromCurrent={suggestionDiffersFromCurrent}
+          onGeriAl={handleGeriAl}
+        />
+      )}
 
       {/* ─── Araç Kartları (portal kullanılırsa üst grid'e taşınır) ──── */}
       {(() => {
@@ -287,7 +295,8 @@ export default function SepetUI({
               totalM2={totalM2}
               totalTL={totalTL}
               fazlaM2={fazlaM2}
-              layout={vehicleCardsSlot ? "vertical" : "horizontal"}
+              layout={vehicleCardsLayout ?? (vehicleCardsSlot ? "vertical" : "horizontal")}
+              presentation={vehicleCardsPresentation}
             />
           </div>
         );

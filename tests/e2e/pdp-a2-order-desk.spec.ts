@@ -269,7 +269,97 @@ test.describe('A2 hibrit Bonus Sipariş Masası', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Dalmaçyalı')
     await expect(page.getByTestId('pdp-whatsapp-primary')).toHaveCount(0)
     await expect(page.locator('a[href^="https://wa.me/"]')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'PDF teklifimi hazırla' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Teklifimi hazırla →' })).toBeVisible()
+  })
+
+  test('standart levha masaüstünde ticari fiyat bandını ilk ekranda, araç ve final teklifi doğru sırada sunar', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto(NON_BONUS_PATH)
+
+    const commercialHeader = page.getByTestId('pdp-commercial-header')
+    const unitPrice = page.getByTestId('pdp-commercial-unit-price')
+    const deliveryAction = commercialHeader.getByRole('button', { name: 'Teslimat fiyatını hesapla ↓' })
+    const primaryQuote = page.getByTestId('pdp-standard-primary-quote')
+    const alternative = page.getByTestId('bonus-alternative-card')
+    const vehicleCards = page.getByTestId('pdp-commercial-vehicle-card')
+    await expect(commercialHeader).toBeVisible()
+    await expect(unitPrice).toBeVisible()
+    await expect(deliveryAction).toBeVisible()
+    await expect(primaryQuote).toBeVisible()
+    await expect(vehicleCards).toHaveCount(2)
+    await expect(alternative).not.toBeVisible()
+
+    const deliveryBox = await deliveryAction.boundingBox()
+    const primaryBox = await primaryQuote.boundingBox()
+    const cardsBox = await vehicleCards.last().boundingBox()
+    const cardBoxes = await vehicleCards.evaluateAll((cards) => cards.map(card => card.getBoundingClientRect().height))
+    const lorryIcon = await page.getByTestId('pdp-vehicle-icon-lorry').boundingBox()
+    const truckIcon = await page.getByTestId('pdp-vehicle-icon-truck').boundingBox()
+    const unitPriceSize = Number.parseFloat(await unitPrice.evaluate(element => getComputedStyle(element).fontSize))
+    const capacitySize = Number.parseFloat(await vehicleCards.first().getByTestId('pdp-vehicle-capacity').evaluate(element => getComputedStyle(element).fontSize))
+    const totalSize = Number.parseFloat(await vehicleCards.first().getByTestId('pdp-vehicle-total').evaluate(element => getComputedStyle(element).fontSize))
+
+    expect((deliveryBox?.y ?? 9999) + (deliveryBox?.height ?? 9999)).toBeLessThanOrEqual(1000)
+    expect(primaryBox).not.toBeNull()
+    expect(primaryBox?.y ?? 0).toBeGreaterThan((cardsBox?.y ?? 0) + (cardsBox?.height ?? 0))
+    expect(Math.abs(cardBoxes[0] - cardBoxes[1])).toBeLessThanOrEqual(1)
+    expect(truckIcon?.width ?? 0).toBeGreaterThan(lorryIcon?.width ?? 0)
+    expect(Math.abs((truckIcon?.height ?? 0) - (lorryIcon?.height ?? 0))).toBeLessThanOrEqual(1)
+    const lorryImage = page.getByTestId('pdp-vehicle-icon-lorry').locator('img')
+    const truckImage = page.getByTestId('pdp-vehicle-icon-truck').locator('img')
+    await expect(lorryImage).toHaveCSS('transform', 'matrix(-1, 0, 0, 1, 0, 0)')
+    await expect(truckImage).toHaveCSS('transform', 'matrix(-1, 0, 0, 1, 0, 0)')
+    await expect(lorryImage).toHaveAttribute('src', /kamyon-siluet-selected\.svg/)
+    await expect(truckImage).toHaveAttribute('src', /tir-siluet-neutral\.svg/)
+    await page.getByRole('button', { name: 'TIR adetini bir artır' }).click()
+    await expect(truckImage).toHaveAttribute('src', /tir-siluet-selected\.svg/)
+    expect(unitPriceSize).toBeGreaterThanOrEqual(48)
+    expect(capacitySize).toBeGreaterThanOrEqual(24)
+    expect(totalSize).toBeGreaterThanOrEqual(32)
+  })
+
+  test('standart levha mobilde büyük m² fiyatını ilk ekranda, araç kartlarını alt alta gösterir ve sticky teklifi yalnız CTA geçilince açar', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/urunler/tasyunu-levha/expert-hd150-tasyunu')
+
+    const unitPrice = page.getByTestId('pdp-commercial-unit-price')
+    const primaryQuote = page.getByTestId('pdp-standard-primary-quote')
+    const sticky = page.getByTestId('pdp-standard-mobile-quote-sticky')
+    const priceBox = await unitPrice.boundingBox()
+    const vehicleCards = page.getByTestId('pdp-commercial-vehicle-card')
+
+    expect(priceBox).not.toBeNull()
+    expect(priceBox?.y ?? 9999).toBeLessThanOrEqual(844)
+    await expect(vehicleCards).toHaveCount(2)
+    const mobileCardBoxes = await vehicleCards.evaluateAll((cards) => cards.map(card => {
+      const box = card.getBoundingClientRect()
+      return { x: box.x, y: box.y, width: box.width, height: box.height }
+    }))
+    expect(mobileCardBoxes[1].y).toBeGreaterThan(mobileCardBoxes[0].y + mobileCardBoxes[0].height)
+    expect(mobileCardBoxes[0].height).toBeGreaterThanOrEqual(220)
+    await expect(page.getByText('Kalınlık ayarı')).toHaveCount(0)
+    await expect(sticky).toHaveCount(0)
+
+    const thicknessButton = page.getByRole('button', { name: /^5 santimetre/ })
+    const thicknessBox = await thicknessButton.boundingBox()
+    expect(thicknessBox?.height ?? 0).toBeGreaterThanOrEqual(44)
+
+    for (const buttonName of ['Kamyon adetini bir artır', 'TIR adetini bir artır']) {
+      const box = await page.getByRole('button', { name: buttonName }).boundingBox()
+      expect(box?.width ?? 0).toBeGreaterThanOrEqual(44)
+      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
+    }
+
+    await primaryQuote.evaluate((element) => {
+      const box = element.getBoundingClientRect()
+      window.scrollTo(0, box.bottom + window.scrollY + 24)
+    })
+    await expect(sticky).toBeVisible()
+    await expect(sticky.getByRole('button', { name: 'Teklifimi hazırla' })).toBeVisible()
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await expect(sticky).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
   })
 
   test('Expert ve Optimix PDP’leri aynı Filli Boya grup kabuğunu kullanır', async ({ page }) => {
@@ -281,7 +371,8 @@ test.describe('A2 hibrit Bonus Sipariş Masası', () => {
       expect(response?.status()).not.toBe(404)
       await expect(page.getByTestId('pdp-standard-plate-summary')).toBeVisible()
       await expect(page.getByTestId('pdp-standard-plate-brand')).toContainText(productCase.brand)
-      await expect(page.getByTestId('pdp-filli-group-mark')).toContainText('Filli Boya ürün grubu')
+      await expect(page.getByTestId('pdp-standard-plate-brand').getByText(productCase.brand, { exact: true })).toBeVisible()
+      await expect(page.getByTestId('pdp-filli-group-mark')).toContainText('Filli Boya ürün grubudur')
     }
   })
 
@@ -292,6 +383,8 @@ test.describe('A2 hibrit Bonus Sipariş Masası', () => {
     await expect(page.getByTestId('pdp-standard-plate-summary')).toBeVisible()
     await expect(page.getByTestId('pdp-standard-plate-brand')).toContainText('Expert')
     await expect(page.getByRole('heading', { level: 1 })).toContainText('EPS')
+    await expect(page.getByText('EPS ısı yalıtım levhası', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('TS EN 13163', { exact: true }).first()).toBeVisible()
   })
 
   test('aksesuar PDP yeni açık/koyu ürün ve sistem teklif kabuğunu kullanır', async ({ page }) => {

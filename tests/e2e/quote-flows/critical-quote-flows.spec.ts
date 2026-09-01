@@ -148,7 +148,7 @@ test.describe('kritik teklif akışları', () => {
     })
 
     await page.goto(PRODUCT_PATH)
-    await page.getByRole('button', { name: 'PDF teklifimi hazırla' }).click()
+    await page.getByRole('button', { name: 'Teklifimi hazırla →' }).click()
     const modal = await fillPdfModal(page)
     await modal.getByRole('button', { name: 'PDF Teklif Kaydı Oluştur' }).click()
 
@@ -187,7 +187,7 @@ test.describe('kritik teklif akışları', () => {
     })
 
     await page.goto(PRODUCT_PATH)
-    await page.getByRole('button', { name: 'PDF teklifimi hazırla' }).click()
+    await page.getByRole('button', { name: 'Teklifimi hazırla →' }).click()
     const modal = await fillPdfModal(page)
     await modal.getByRole('button', { name: 'PDF Teklif Kaydı Oluştur' }).click()
 
@@ -210,7 +210,7 @@ test.describe('kritik teklif akışları', () => {
   test('Bonus olmayan PDP iletişim kapısı: teklif öncesi WhatsApp ve telefon yayınlamaz', async ({ page }) => {
     await page.goto(PRODUCT_PATH)
 
-    await expect(page.getByRole('button', { name: 'PDF teklifimi hazırla' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Teklifimi hazırla →' })).toBeVisible()
     await expect(page.getByRole('link', { name: /WhatsApp'tan teyit iste/i })).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Telefonla konuş/i })).toHaveCount(0)
     expect(await page.locator('a[href^="https://wa.me/"]').count()).toBe(0)

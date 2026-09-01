@@ -15,6 +15,7 @@ interface ThicknessSelectorProps {
   thicknessOptions: number[];
   popularThickness?: number | null;
   mobileMode?: "block" | "inline";
+  presentation?: "default" | "warm";
 }
 
 interface MechanicalThicknessPickerProps {
@@ -33,7 +34,9 @@ export default function ThicknessSelector({
   thicknessOptions,
   popularThickness,
   mobileMode = "block",
+  presentation = "default",
 }: ThicknessSelectorProps) {
+  const isWarm = presentation === "warm";
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const interactive = useProductInteractiveOptional();
@@ -80,7 +83,9 @@ export default function ThicknessSelector({
   if (thicknessOptions.length === 1) {
     return (
       <div className="flex flex-wrap gap-2">
-        <span className="rounded-lg border border-brand-500/50 bg-brand-600/20 px-3 py-1.5 text-sm font-medium text-brand-400">
+        <span className={isWarm
+          ? "rounded-lg border border-[#9a762f] bg-[#f2dfad] px-3 py-1.5 text-sm font-bold text-[#3b2b12]"
+          : "rounded-lg border border-brand-500/50 bg-brand-600/20 px-3 py-1.5 text-sm font-medium text-brand-400"}>
           {thicknessOptions[0]} cm
         </span>
       </div>
@@ -90,14 +95,23 @@ export default function ThicknessSelector({
   return (
     <>
       <div className="lg:hidden">
-        <MechanicalThicknessPicker
-          key={`${mobileMode}-${activeThickness}`}
-          thicknessOptions={thicknessOptions}
-          activeThickness={activeThickness}
-          popularThickness={popularThickness ?? null}
-          onSelect={select}
-          mobileMode={mobileMode}
-        />
+        {mobileMode === "block" ? (
+          <MobileThicknessChips
+            thicknessOptions={thicknessOptions}
+            activeThickness={activeThickness}
+            popularThickness={popularThickness ?? null}
+            onSelect={select}
+          />
+        ) : (
+          <MechanicalThicknessPicker
+            key={`${mobileMode}-${activeThickness}`}
+            thicknessOptions={thicknessOptions}
+            activeThickness={activeThickness}
+            popularThickness={popularThickness ?? null}
+            onSelect={select}
+            mobileMode={mobileMode}
+          />
+        )}
       </div>
 
       <div className="hidden lg:flex lg:flex-wrap lg:gap-2">
@@ -113,16 +127,20 @@ export default function ThicknessSelector({
               <button
                 type="button"
                 onClick={() => select(thickness)}
-                className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`min-h-11 cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "border-brand-500/50 bg-brand-600/20 text-brand-400"
-                    : "border-fe-border bg-fe-raised/60 text-fe-text hover:border-brand-500/40 hover:text-brand-300"
+                    ? isWarm
+                      ? "border-[#9a762f] bg-[#f2dfad] font-bold text-[#3b2b12]"
+                      : "border-brand-500/50 bg-brand-600/20 text-brand-400"
+                    : isWarm
+                      ? "border-[#bcae99] bg-white text-[#3f382f] hover:border-[#8a5f1d] hover:bg-[#fff7e8]"
+                      : "border-fe-border bg-fe-raised/60 text-fe-text hover:border-brand-500/40 hover:text-brand-300"
                 }`}
               >
                 {thickness} cm
               </button>
               {isPopular && (
-                <span className="mt-0.5 text-[9px] leading-none text-brand-400/70">
+                <span className={`mt-0.5 text-[10px] font-semibold leading-none ${isWarm ? "text-[#704c17]" : "text-brand-400/70"}`}>
                   En çok tercih
                 </span>
               )}
@@ -131,6 +149,49 @@ export default function ThicknessSelector({
         })}
       </div>
     </>
+  );
+}
+
+function MobileThicknessChips({
+  thicknessOptions,
+  activeThickness,
+  popularThickness,
+  onSelect,
+}: {
+  thicknessOptions: number[];
+  activeThickness: number;
+  popularThickness: number | null;
+  onSelect: (thickness: number) => void;
+}) {
+  return (
+    <div>
+      <div className="grid grid-cols-5 gap-2" aria-label="Kalınlık seçenekleri">
+        {thicknessOptions.map((thickness) => {
+          const isActive = thickness === activeThickness;
+          return (
+            <button
+              key={thickness}
+              type="button"
+              onClick={() => onSelect(thickness)}
+              aria-pressed={isActive}
+              aria-label={`${thickness} santimetre${popularThickness === thickness ? ", en çok tercih edilen" : ""}`}
+              className={`min-h-11 rounded-xl border px-1 text-sm font-bold tabular-nums transition-colors ${
+                isActive
+                  ? "border-[#9a762f] bg-[#f2dfad] text-[#3b2b12] shadow-[0_0_0_1px_rgba(154,118,47,0.14)]"
+                  : "border-[#cfc6b5] bg-white/75 text-[#4f493f] active:bg-[#eee4d2]"
+              }`}
+            >
+              {thickness} cm
+            </button>
+          );
+        })}
+      </div>
+      {popularThickness != null && thicknessOptions.includes(popularThickness) && (
+        <p className="mt-2 text-xs font-medium text-[#6b6557]">
+          En çok tercih edilen: <strong className="text-[#3b2b12]">{popularThickness} cm</strong>
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -151,7 +151,11 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
   return (
     <>
       {showTopBar && (
-        <div className="hidden bg-fe-surface border-b border-fe-border text-center sm:block sm:py-2 sm:text-sm sm:px-4">
+        <div
+          role="region"
+          aria-label="Satış koşulları"
+          className="hidden bg-fe-surface border-b border-fe-border text-center sm:block sm:py-2 sm:text-sm sm:px-4"
+        >
           <span className="font-semibold text-white">Fabrika Çıkışlı Satış</span>
           <span className="hidden sm:inline mx-2 sm:mx-4 text-fe-muted">|</span>
           <span className="hidden sm:inline text-fe-text/80">Tam araç ve uygun EPS seti</span>

@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowRight, ChevronDown, Layers, Package } from "lucide-react";
+import { ArrowRight, ChevronDown, Layers, MapPin, Package } from "lucide-react";
 import {
   notifyProductDetailCtaClick,
   notifyProductDetailFormOpen,
@@ -61,6 +61,8 @@ interface Props {
   logisticsCapacity: ProductLogisticsCapacity[];
   selectedThickness: number | null;
   hideHeroPriceOnMobile?: boolean;
+  hideHeroPrice?: boolean;
+  presentation?: "default" | "warm-commercial";
 }
 
 const roundM2 = (value: number): number => Math.round(value * 10) / 10;
@@ -79,7 +81,10 @@ export default function ProductPricePanel({
   logisticsCapacity,
   selectedThickness,
   hideHeroPriceOnMobile = false,
+  hideHeroPrice = false,
+  presentation = "default",
 }: Props) {
+  const isWarmCommercial = presentation === "warm-commercial";
   const defaultCity = shippingZones.find((z) => z.city_code === 34) ?? shippingZones[0];
   const interactive = useProductInteractiveOptional();
   const [localCode, setLocalCode] = useState<number>(defaultCity?.city_code ?? 34);
@@ -99,6 +104,8 @@ export default function ProductPricePanel({
     `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
   );
   const lastPriceViewRef = useRef<string>("");
+  const primaryCtaRef = useRef<HTMLDivElement | null>(null);
+  const [showMobileSticky, setShowMobileSticky] = useState(false);
   const [loadedMarginRule, setLoadedMarginRule] = useState<{
     slug: string;
     rule: MarginRuleInput;
@@ -106,6 +113,40 @@ export default function ProductPricePanel({
   const marginRule = loadedMarginRule?.slug === product.material_type
     ? loadedMarginRule.rule
     : null;
+
+  // Mobil yapışkan teklif özeti yalnız kullanıcı ana CTA'yı gördükten ve
+  // aşağısına geçtikten sonra açılır. Böylece varsayılan araç/metraj,
+  // kullanıcı karar vermeden ürün görselinin üzerine bindirilmez.
+  useEffect(() => {
+    let frame = 0;
+    const syncSticky = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const cta = primaryCtaRef.current;
+        if (!cta) {
+          setShowMobileSticky(false);
+          return;
+        }
+        const ctaBottom = cta.getBoundingClientRect().bottom + window.scrollY;
+        const footer = document.querySelector("footer");
+        const footerTop = footer
+          ? footer.getBoundingClientRect().top + window.scrollY
+          : Number.POSITIVE_INFINITY;
+        const viewportBottom = window.scrollY + window.innerHeight;
+        setShowMobileSticky(window.scrollY > ctaBottom && viewportBottom < footerTop);
+      });
+    };
+
+    const initialSync = window.setTimeout(syncSticky, 500);
+    window.addEventListener("scroll", syncSticky, { passive: true });
+    window.addEventListener("resize", syncSticky);
+    return () => {
+      window.clearTimeout(initialSync);
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", syncSticky);
+      window.removeEventListener("resize", syncSticky);
+    };
+  }, [product.id]);
 
   // Ürün sayfası statik üretildiği için marjı doğrudan canlı material_types
   // kaydından okuruz. Kural yoksa/okunamazsa levha fiyatı fail-closed kalır.
@@ -438,8 +479,8 @@ export default function ProductPricePanel({
   ]);
 
   return (
-    <div className="space-y-3 pb-32 lg:pb-0">
-      <div className="rounded-xl border border-fe-border bg-fe-raised/40 p-5">
+    <div className={`space-y-3 pb-32 lg:pb-0 ${isWarmCommercial ? "pdp-warm-commercial text-[#282219]" : ""}`}>
+      <div className={isWarmCommercial ? "rounded-[15px] bg-[#fffdf8] p-5 sm:p-6" : "rounded-xl border border-fe-border bg-fe-raised/40 p-5"}>
 
         {/* ─── Fiyat Görünürlük Kontrolleri (decision.ts tek otorite) ─── */}
         {(() => {
@@ -450,7 +491,7 @@ export default function ProductPricePanel({
           // BonusRegionPrice'a bırakıyoruz. İstisna: fiyat listesinde
           // olmayan modeller (Desibel, Marin vb.) — onlarda canlı kart
           // yoktur, statik "Teklif ile belirlenir" akışı doğru mesajdır.
-          if (isPricedBonusModel) return null;
+          if (isPricedBonusModel || hideHeroPrice) return null;
 
           // Hero dinamik fiyat hesaplandığında statik etiket gizlenir.
           if (showTierPrice && heroPrice !== null) return null;
@@ -512,7 +553,7 @@ export default function ProductPricePanel({
         })()}
 
         {/* ─── Hero Fiyat (dinamik — şehir/metraj seçildiğinde) ─── */}
-        {showTierPrice && heroPrice !== null && (
+        {!hideHeroPrice && showTierPrice && heroPrice !== null && (
           <div className={`mb-5 ${hideHeroPriceOnMobile ? "hidden lg:block" : ""}`} aria-live="polite" aria-atomic="true">
             <p className="mb-1 text-xs font-medium uppercase tracking-wide text-fe-muted-strong">
               m² Fiyatı
@@ -524,7 +565,7 @@ export default function ProductPricePanel({
               })}
               <span className="ml-1 text-sm font-normal text-fe-muted">₺/m²</span>
             </p>
-            <div className="mt-1 space-y-0.5 text-[11px]">
+            <div className="mt-1 space-y-0.5 text-xs leading-5">
               <p className="font-medium text-brand-300/80">Fabrika çıkışlı bayilik fiyatı</p>
               <p className="text-fe-muted-strong">KDV hariç · KDV dahil tutar PDF teklifinde gösterilir</p>
             </div>
@@ -535,48 +576,22 @@ export default function ProductPricePanel({
         )}
 
         {shippingZones.length > 0 && (
-          <div className="mb-4 space-y-3 border-b border-fe-border/60 pb-4">
-            <div className="grid grid-cols-2 items-start gap-3">
+          <div className={`mb-4 space-y-4 border-b pb-5 ${isWarmCommercial ? "border-[#ded2c0]" : "border-fe-border/60"}`}>
+            <div className={isWarmCommercial ? "grid items-start gap-5" : "grid grid-cols-2 items-start gap-3"}>
               {/* SOL — şehir + metraj */}
-              <div className="space-y-3">
-                {/* Sipariş Toplamı — sol karar kolonunda, araç seçimiyle aynı hizada */}
-                {showTierPrice && heroPrice !== null && showSepet && (() => {
-                  const orderM2 = sepetState.totalM2 > 0 ? sepetState.totalM2 : neededM2Num;
-                  if (orderM2 <= 0 || heroPrice === null || inputInvalid) return null;
-                  const orderTotal = orderM2 * heroPrice;
-                  return (
-                    <div className="border-t border-fe-border/60 pt-4" aria-live="polite" aria-atomic="true">
-                      <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-fe-muted-strong">
-                        Sipariş Toplamı
-                      </p>
-                      <p className="text-2xl font-extrabold leading-none text-white">
-                        {orderTotal.toLocaleString("tr-TR", {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}
-                        <span className="ml-1 text-brand-300">₺</span>
-                      </p>
-                      <p className="mt-1 text-[11px] leading-snug text-fe-muted-strong">
-                        KDV hariç · {orderM2.toLocaleString("tr-TR")} m² ×{" "}
-                        {heroPrice.toLocaleString("tr-TR", {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        })}
-                        {" "}₺/m²
-                      </p>
-                    </div>
-                  );
-                })()}
-
+              <div className={isWarmCommercial ? "grid gap-4 sm:grid-cols-2" : "space-y-3"}>
                 <div>
-                  <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-fe-muted-strong">
+                  <label htmlFor="pdp-delivery-city" className={`mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
                     Teslimat Şehri
-                  </p>
+                  </label>
                   <div className="relative">
                     <select
+                      id="pdp-delivery-city"
                       value={selectedCode}
                       onChange={(e) => setSelectedCode(Number(e.target.value))}
-                      className="w-full appearance-none rounded-lg border border-fe-border bg-fe-surface px-3 py-2 pr-7 text-sm text-fe-text transition-colors hover:bg-fe-raised focus:outline-none focus:border-brand-500/60 [color-scheme:dark]"
+                      className={isWarmCommercial
+                        ? "min-h-12 w-full appearance-none rounded-[10px] border border-[#bcae99] bg-white px-3 py-2 pr-8 text-base font-semibold text-[#282219] transition-colors hover:border-[#8f7652] focus:border-[#8a5f1d] focus:outline-none focus:ring-2 focus:ring-[#d8b66f]/40"
+                        : "min-h-11 w-full appearance-none rounded-lg border border-fe-border bg-fe-surface px-3 py-2 pr-7 text-sm text-fe-text transition-colors hover:bg-fe-raised focus:outline-none focus:border-brand-500/60 [color-scheme:dark]"}
                     >
                       {shippingZones.map((z) => (
                         <option
@@ -588,38 +603,42 @@ export default function ProductPricePanel({
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-fe-muted" />
+                    <ChevronDown className={`pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted"}`} />
                   </div>
                   {zone && (zone.city_code === 34 || [41, 16, 14, 54, 81].includes(zone.city_code)) && (
-                    <p className="mt-1 text-[10px] text-fe-muted">
-                      📍 Bölgesel avantaj
+                    <p className={`mt-1.5 flex items-center gap-1.5 text-xs ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
+                      <MapPin className={`h-3.5 w-3.5 ${isWarmCommercial ? "text-[#8a5f1d]" : "text-brand-300"}`} aria-hidden="true" />
+                      {zone.city_name} bölge iskontosu uygulandı
                     </p>
                   )}
                 </div>
 
                 {showSepet && (
                   <div>
-                    <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-fe-muted-strong">
+                    <label htmlFor="pdp-needed-area" className={`mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
                       İhtiyaç Metrajı
-                    </p>
+                    </label>
                     <div className="relative">
                       <input
+                        id="pdp-needed-area"
                         type="text"
                         inputMode="decimal"
                         value={neededM2}
                         onChange={(e) => { setNeededM2(e.target.value); setMetrajMode("custom"); }}
-                        className={`w-full rounded-lg border bg-fe-bg/80 px-3 py-2 pr-9 text-sm text-fe-text transition-colors focus:outline-none ${
+                        className={`w-full rounded-[10px] border px-3 py-2 pr-9 transition-colors focus:outline-none ${isWarmCommercial ? "min-h-12 bg-white text-base font-semibold text-[#282219]" : "min-h-11 bg-fe-bg/80 text-sm text-fe-text"} ${
                           inputInvalid
                             ? "border-red-500/60 focus:border-red-500/80"
-                            : "border-brand-500/40 focus:border-brand-500/70 focus:shadow-[0_0_0_2px_rgba(212,132,90,0.10)]"
+                            : isWarmCommercial
+                              ? "border-[#bcae99] focus:border-[#8a5f1d] focus:ring-2 focus:ring-[#d8b66f]/40"
+                              : "border-brand-500/40 focus:border-brand-500/70 focus:shadow-[0_0_0_2px_rgba(212,132,90,0.10)]"
                         }`}
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-fe-muted">
+                      <span className={`pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted"}`}>
                         m²
                       </span>
                     </div>
                     {inputInvalid && (
-                      <p className="mt-1 text-[10px] text-red-400">Geçerli m² giriniz</p>
+                      <p className="mt-1 text-xs text-red-400">Geçerli m² giriniz</p>
                     )}
                   </div>
                 )}
@@ -627,7 +646,17 @@ export default function ProductPricePanel({
 
               {/* SAĞ — Kamyon + TIR vehicle cards (SepetUI'dan portal ile gelir) */}
               {showSepet && (
-                <div ref={setVehicleCardsSlot} className="flex min-w-0 flex-col justify-start" />
+                <div>
+                  {isWarmCommercial && (
+                    <div className="mb-3 flex items-end justify-between gap-4">
+                      <div>
+                        <h2 className="font-heading text-2xl font-extrabold text-[#282219]">Geçerli tam araç planları</h2>
+                        <p className="mt-1 text-sm text-[#625a4f]">Araç kapasitesi ve KDV hariç toplamı birlikte karşılaştırın.</p>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={setVehicleCardsSlot} className="flex min-w-0 flex-col justify-start" />
+                </div>
               )}
             </div>
           </div>
@@ -680,131 +709,32 @@ export default function ProductPricePanel({
           </div>
         )}
 
-        {/* ─── Bonus alternatif kartı (Sprint 1.3) — Filli grubu taşyünü
-            levhalarında; rakip eşleşmesi teknik profillerden gelir, profili
-            olmayan (çatı/endüstriyel) ürünlerde kart kendiliğinden çıkmaz. */}
-        {!isBonusPlate && product.product_type === "plate" && product.material_type === "tasyunu" && zone && product.model && (
-          <div className="mb-4">
-            <BonusAlternativeCard
-              sourceModel={product.model}
-              sourceBrandName={product.brand?.name ?? ""}
-              thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
-              cityCode={zone.city_code}
-              cityName={zone.city_name}
-              currentUnitPriceExVat={truckPrice}
-            />
-          </div>
-        )}
-
-        {/* ─── Karşılaştırma merkezi çapraz linki (Sprint 2) ─── */}
-        {product.product_type === "plate" &&
-          product.material_type === "tasyunu" &&
-          modelScope === "sivali_dis_cephe_mantolama" && (
-          <Link
-            href="/tasyunu-karsilastir?entry=pdp"
-            className="mb-4 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-fe-border bg-fe-surface/60 px-3 py-2.5 text-left text-xs font-semibold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-300"
-          >
-            <span>Bu ürünün mantolama alternatiflerini karşılaştır</span>
-            <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-          </Link>
-        )}
-
-        {/* ─── SepetUI ─── */}
-        {showSepet && lorryM2 !== null && truckM2 !== null && (
-          <SepetUI
-            lorryM2={lorryM2}
-            truckM2={truckM2}
-            lorryPrice={lorryPrice}
-            truckPrice={truckPrice}
-            packageRefPrice={packageRefPrice}
-            ihtiyac={neededM2Num}
-            onChange={handleSepetChange}
-            vehicleCardsSlot={vehicleCardsSlot}
-          />
-        )}
-
-        {/* Nakliye verisi yok uyarısı */}
-        {showTierPrice && logistics === null && activeThickness && (
-          <div className="mb-3 mt-3 rounded-lg border border-fe-border/50 bg-fe-raised/30 px-3 py-2.5">
-            <p className="text-xs text-fe-muted">
-              Bu kalınlık için lojistik verisi henüz tanımlı değil. Veri tamamlanmadan
-              teklif oluşturulamaz.
-            </p>
-          </div>
-        )}
-
-        {/* Lojistik minimum — yalnız fabrika tam araç kuralı. */}
-        {showTierPrice && logistics !== null && activeThickness !== null
-          && (lorryM2 !== null || truckM2 !== null) && (
-          <div className="mt-3 rounded-lg border border-fe-border/50 bg-fe-raised/40 px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fe-muted-strong">
-              Lojistik Minimum · {activeThickness} cm
-            </p>
-            <p className="mt-1 text-xs text-fe-text">
-              {lorryM2 !== null && truckM2 !== null
-                ? `Fabrika alımında minimum 1 Kamyon = ${formatM2(lorryM2)} m² veya 1 TIR = ${formatM2(truckM2)} m².`
-                : `Fabrika alımında nakliye verisi henüz tanımlı değil.`}
-            </p>
-            <p className="mt-0.5 text-[11px] leading-snug text-fe-muted-strong">
-              Teklifler fabrikadan tam Kamyon veya tam TIR yüklemesiyle hazırlanır. Tam dolu
-              araç siparişinde nakliye fiyata dahildir ve bölge iskontosu uygulanır.
-            </p>
-          </div>
-        )}
-
-        {/* ─── CTA ─── */}
+        {/* ─── Ana teklif aksiyonu: kararın hemen ardından ─── */}
         {showSepet && (
-          <div className="mt-4 space-y-3">
-            {quoteM2 > 0 && heroPrice !== null && !inputInvalid && (
-              <div className="hidden rounded-xl border border-brand-600/30 bg-brand-950/20 px-3 py-3 lg:block">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-300/80">
-                  Teklif Özeti
-                </p>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <p className="text-fe-muted">Sevkiyat planı</p>
-                    <p className="mt-0.5 font-semibold text-white">{quoteVehicleSummary}</p>
-                  </div>
-                  <div>
-                    <p className="text-fe-muted">Toplam metraj</p>
-                    <p className="mt-0.5 font-semibold text-white">{formatM2(quoteM2)} m²</p>
-                  </div>
-                  {quotePackageCount !== null && (
-                    <div>
-                      <p className="text-fe-muted">Paket adedi</p>
-                      <p className="mt-0.5 font-semibold text-white">
-                        {quotePackageCount} paket
-                        {packageSizeM2 && (
-                          <span className="ml-1 text-fe-muted">× {formatM2(packageSizeM2)} m²</span>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-fe-muted">Birim fiyat</p>
-                    <p className="mt-0.5 font-semibold text-white">{heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺/m²</p>
-                  </div>
-                  {quoteTotalKdvHaric !== null && (
-                    <div>
-                      <p className="text-fe-muted">Toplam tutar</p>
-                      <p className="mt-0.5 font-semibold text-white">{formatCurrency(quoteTotalKdvHaric)} ₺</p>
-                    </div>
-                  )}
-                </div>
-                <p className="mt-2 text-[11px] text-fe-muted-strong">
-                  Birim fiyat ve toplam tutar KDV hariçtir.
-                </p>
-                <p className="mt-2 text-[11px] leading-relaxed text-fe-muted-strong">
-                  Sipariş, seçilen tam Kamyon/TIR planına göre fabrikadan çıkar. Bölge iskontosu
-                  uygulanır ve nakliye fiyata dahildir.
-                </p>
+          <div ref={primaryCtaRef} data-testid="pdp-standard-primary-quote" className="mt-4 space-y-3">
+            {quoteM2 > 0 && heroPrice !== null && quoteTotalKdvHaric !== null && !inputInvalid && (
+              <div
+                className={isWarmCommercial
+                  ? "flex flex-wrap items-end justify-between gap-3 rounded-[12px] border border-[#cdbb9e] bg-[#f8eddb] px-4 py-3 text-sm"
+                  : "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-500/30 bg-brand-950/20 px-3 py-2.5 text-sm"}
+                aria-live="polite"
+              >
+                <span className="sr-only">Teklif Özeti</span>
+                <span className={isWarmCommercial ? "font-heading text-lg font-bold text-[#282219]" : "font-semibold text-fe-text"}>
+                  {quoteVehicleSummary} · {formatM2(quoteM2)} m²
+                </span>
+                <span className={isWarmCommercial ? "font-heading text-2xl font-extrabold tabular-nums text-[#282219]" : "font-black tabular-nums text-white"}>
+                  {formatCurrency(quoteTotalKdvHaric)} ₺ <span className={`text-xs font-medium ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted"}`}>KDV hariç</span>
+                </span>
               </div>
             )}
             {ctaDisabled ? (
               <button
                 type="button"
                 disabled
-                className="w-full rounded-xl bg-fe-raised/60 px-4 py-3.5 text-sm font-semibold text-fe-muted border border-fe-border/50 cursor-not-allowed"
+                className={isWarmCommercial
+                  ? "min-h-14 w-full cursor-not-allowed rounded-[10px] border border-[#d1c5b4] bg-[#eee8dd] px-4 py-3.5 font-heading text-base font-bold text-[#777066]"
+                  : "min-h-12 w-full cursor-not-allowed rounded-xl border border-fe-border/50 bg-fe-raised/60 px-4 py-3.5 text-sm font-semibold text-fe-muted"}
               >
                 {ctaLabel}
               </button>
@@ -819,39 +749,135 @@ export default function ProductPricePanel({
                 tierLabel={quoteTierLabel}
                 isShippingIncluded={quoteShippingIncluded}
                 vehicleType={quoteVehicleType}
-                label="PDF teklifimi hazırla"
+                label={isWarmCommercial ? "Teklifimi hazırla →" : "PDF teklifimi hazırla"}
                 resultSessionId={resultSessionId}
                 packageSizeM2={packageSizeM2}
                 onOpen={() => trackProductDetailPdfOpen('product_detail_summary')}
+                buttonClassName={isWarmCommercial
+                  ? "inline-flex min-h-14 w-full items-center justify-center rounded-[10px] border border-[#a6751c] bg-[#efb446] px-5 font-heading text-lg font-extrabold text-[#21190e] transition-colors hover:bg-[#dda334] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#704c17]"
+                  : undefined}
               />
             )}
-            <p className="hidden px-1 text-center text-[11px] leading-relaxed text-fe-muted-strong lg:block">
-              PDF teklif ürün, şehir ve tam araç metrajınızla hazırlanır. İletişim, teklif referansı oluştuktan sonra açılır.
+            <p className={`px-1 text-center text-xs leading-5 ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
+              Ürün, şehir ve tam araç planınız teklif referansına eklenir.
             </p>
           </div>
         )}
 
-        {/* "Neden tam araç?" eğitsel metni yukarıdaki özet kartı dipnotuyla birleştirildi */}
+        {/* Araç kartları üst karar alanına portal olur; açıklayıcı senaryo
+            ana teklif aksiyonundan sonra ikincil bilgi olarak kalır. */}
+        {showSepet && lorryM2 !== null && truckM2 !== null && (
+          <SepetUI
+            lorryM2={lorryM2}
+            truckM2={truckM2}
+            lorryPrice={lorryPrice}
+            truckPrice={truckPrice}
+            packageRefPrice={packageRefPrice}
+            ihtiyac={neededM2Num}
+            onChange={handleSepetChange}
+            vehicleCardsSlot={vehicleCardsSlot}
+            vehicleCardsLayout={isWarmCommercial ? "horizontal" : "vertical"}
+            vehicleCardsPresentation={isWarmCommercial ? "commercial" : "default"}
+            showScenarioMessage={!isWarmCommercial}
+          />
+        )}
+
+        {/* Nakliye koşulları karar akışını kesmeden erişilebilir kalır. */}
+        {showTierPrice && logistics !== null && activeThickness !== null
+          && (lorryM2 !== null || truckM2 !== null) && (
+          <details className={`group mt-4 rounded-xl border px-3 py-2.5 ${isWarmCommercial ? "border-[#d8cbb8] bg-[#fffaf2]" : "border-fe-border/50 bg-fe-raised/30"}`}>
+            <summary className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold marker:content-none ${isWarmCommercial ? "text-[#282219]" : "text-fe-text"}`}>
+              <span>Nakliye ve tam araç koşulları</span>
+              <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className={`border-t pb-1 pt-3 text-xs leading-5 ${isWarmCommercial ? "border-[#d8cbb8] text-[#625a4f]" : "border-fe-border/50 text-fe-muted-strong"}`}>
+              <p className={isWarmCommercial ? "text-[#282219]" : "text-fe-text"}>
+                {lorryM2 !== null && truckM2 !== null
+                  ? `Bu ${activeThickness} cm levhada 1 Kamyon ${formatM2(lorryM2)} m², 1 TIR ${formatM2(truckM2)} m² taşır.`
+                  : `Bu kalınlığın araç kapasitesi henüz tanımlı değil.`}
+              </p>
+              <p className="mt-1">
+                Teklifler fabrikadan tam Kamyon veya tam TIR yüklemesiyle hazırlanır. Tam dolu araç siparişinde nakliye fiyata dahildir ve bölge iskontosu uygulanır.
+              </p>
+            </div>
+          </details>
+        )}
+
+        {showTierPrice && logistics === null && activeThickness && (
+          <div className="mb-3 mt-3 rounded-lg border border-fe-border/50 bg-fe-raised/30 px-3 py-2.5">
+            <p className="text-xs leading-5 text-fe-muted">
+              Bu kalınlık için lojistik verisi henüz tanımlı değil. Veri tamamlanmadan teklif oluşturulamaz.
+            </p>
+          </div>
+        )}
+
+        {/* Mevcut ürünün teklifi tamamlandıktan sonra alternatif keşfi. */}
+        {!isBonusPlate && product.product_type === "plate" && product.material_type === "tasyunu" && zone && product.model && (
+          isWarmCommercial ? (
+            <details className="group mt-4 rounded-xl border border-[#d8cbb8] bg-[#fffaf2] px-3 py-2.5">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-heading text-sm font-bold text-[#282219] marker:content-none">
+                <span>Bonus komple sistem alternatifini karşılaştır</span>
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="border-t border-[#d8cbb8] pt-3">
+                <BonusAlternativeCard
+                  sourceModel={product.model}
+                  sourceBrandName={product.brand?.name ?? ""}
+                  thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
+                  cityCode={zone.city_code}
+                  cityName={zone.city_name}
+                  currentUnitPriceExVat={truckPrice}
+                />
+              </div>
+            </details>
+          ) : (
+            <div className="mt-4">
+              <BonusAlternativeCard
+                sourceModel={product.model}
+                sourceBrandName={product.brand?.name ?? ""}
+                thicknessCm={effectiveThickness ?? prefill?.kalinlik ?? null}
+                cityCode={zone.city_code}
+                cityName={zone.city_name}
+                currentUnitPriceExVat={truckPrice}
+              />
+            </div>
+          )
+        )}
+
+        {product.product_type === "plate" &&
+          product.material_type === "tasyunu" &&
+          modelScope === "sivali_dis_cephe_mantolama" && (
+          <Link
+            href="/tasyunu-karsilastir?entry=pdp"
+            className="mt-4 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-fe-border bg-fe-surface/60 px-3 py-2.5 text-left text-sm font-semibold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-300"
+          >
+            <span>Bu ürünün mantolama alternatiflerini karşılaştır</span>
+            <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </Link>
+        )}
       </div>
 
-      {showSepet && !ctaDisabled && quoteM2 > 0 && heroPrice !== null && !inputInvalid && (
-        <div className="fixed inset-x-3 bottom-16 z-[60] rounded-2xl border border-fe-border/80 bg-fe-bg/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur lg:hidden">
+      {showSepet && showMobileSticky && !ctaDisabled && quoteM2 > 0 && heroPrice !== null && !inputInvalid && (
+        <div
+          data-testid="pdp-standard-mobile-quote-sticky"
+          className="fixed inset-x-3 bottom-16 z-[60] rounded-2xl border border-fe-border/80 bg-fe-bg/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur lg:hidden"
+        >
           <div className="mx-auto flex max-w-screen-sm items-center gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-300/80">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-300/80">
                 {formatM2(quoteM2)} m²
               </p>
               <p className="truncate text-sm font-black leading-none text-white">
                 {heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                <span className="ml-0.5 text-[10px] font-normal text-fe-muted">₺/m²</span>
+                <span className="ml-0.5 text-xs font-normal text-fe-muted">₺/m²</span>
               </p>
               {quoteTotalKdvHaric !== null && (
-                <p className="mt-0.5 truncate text-[11px] font-medium leading-none text-fe-muted-strong">
+                <p className="mt-1 truncate text-xs font-medium leading-none text-fe-muted-strong">
                   ≈ {formatCurrency(quoteTotalKdvHaric)} ₺ toplam · KDV hariç
                 </p>
               )}
             </div>
-            <div className="w-[104px] shrink-0">
+            <div className="w-[126px] shrink-0">
               <SingleProductQuoteButton
                 product={product}
                 activeThickness={activeThickness ?? null}
@@ -862,11 +888,11 @@ export default function ProductPricePanel({
                 tierLabel={quoteTierLabel}
                 isShippingIncluded={quoteShippingIncluded}
                 vehicleType={quoteVehicleType}
-                label="PDF"
+                label="Teklifimi hazırla"
                 resultSessionId={resultSessionId}
                 packageSizeM2={packageSizeM2}
                 onOpen={() => trackProductDetailPdfOpen('sticky_mobile')}
-                buttonClassName="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-500/70 bg-brand-500 px-3 text-[13px] font-black text-fe-bg transition-colors hover:bg-brand-400"
+                buttonClassName="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-500/70 bg-brand-500 px-2 text-xs font-black leading-4 text-fe-bg transition-colors hover:bg-brand-400"
               />
             </div>
           </div>

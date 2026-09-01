@@ -23,14 +23,14 @@ describe('Katalog fiyat yüzeylerinde KDV etiketi', () => {
     expect(mobileHero).toMatch(/₺\/m²[\s\S]{0,500}KDV hariç/)
   })
 
-  it('masaüstü ve kompakt araç kartlarında birim fiyat KDV hariç diye nitelenir', () => {
+  it('ticari, masaüstü ve kompakt araç kartlarında fiyat KDV hariç diye nitelenir', () => {
     const vehicleCards = source('components/catalog/SepetVehicleCards.tsx')
     const priceCardSection = vehicleCards.slice(
       vehicleCards.indexOf('function AracKarti'),
       vehicleCards.indexOf('interface VehicleCardsProps'),
     )
 
-    expect(priceCardSection.match(/KDV hariç/g)).toHaveLength(2)
+    expect(priceCardSection.match(/KDV hariç/g)?.length ?? 0).toBeGreaterThanOrEqual(3)
   })
 
   it('depo stok fiyatının yanında KDV etiketi vardır', () => {
