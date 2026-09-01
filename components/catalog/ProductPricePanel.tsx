@@ -34,6 +34,9 @@ import { getProfileByModel } from "@/lib/technical-profiles";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 import { getCategoryEntryContext } from "@/lib/catalog/category-entry-context";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
+import type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
+
+export type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
 
 export interface ProductShippingZone {
   city_code: number;
@@ -42,15 +45,6 @@ export interface ProductShippingZone {
   optimix_levha_discount: string | number;
   discount_kamyon: string | number;
   discount_tir: string | number;
-}
-
-export interface ProductLogisticsCapacity {
-  thickness: number;
-  lorry_capacity_m2: string | number;
-  truck_capacity_m2: string | number;
-  package_size_m2: string | number;
-  lorry_capacity_packages: number;
-  truck_capacity_packages: number;
 }
 
 interface Props {
@@ -193,9 +187,15 @@ export default function ProductPricePanel({
 
   // Boş deps: setSepetState React useState'ten gelir → stabil.
   // Boş dep olmadan her render yeni fonksiyon → SepetUI'ın onChange effect'i döngüye girer.
+  const setInteractiveOrderPlan = interactive?.setOrderPlan;
   const handleSepetChange = useCallback((state: SepetState) => {
     setSepetState(state);
-  }, []);
+    setInteractiveOrderPlan?.({
+      lorryCount: state.kamyon,
+      truckCount: state.tir,
+      totalM2: state.totalM2,
+    });
+  }, [setInteractiveOrderPlan]);
 
   const zone = shippingZones.find((z) => z.city_code === selectedCode) ?? defaultCity;
   const { rules, base_price, thickness_prices } = product;

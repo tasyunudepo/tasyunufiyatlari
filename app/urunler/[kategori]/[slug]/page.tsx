@@ -47,7 +47,7 @@ const getLogisticsCapacity = unstable_cache(
     const supabase = createServerSupabaseClient();
     const { data } = await supabase
       .from('logistics_capacity')
-      .select('thickness, lorry_capacity_m2, truck_capacity_m2, package_size_m2, lorry_capacity_packages, truck_capacity_packages')
+      .select('thickness, lorry_capacity_m2, truck_capacity_m2, package_size_m2, lorry_capacity_packages, truck_capacity_packages, items_per_package, is_popular, notes')
       .order('thickness');
     return (data ?? []) as {
       thickness: number;
@@ -56,6 +56,9 @@ const getLogisticsCapacity = unstable_cache(
       package_size_m2: string | number;
       lorry_capacity_packages: number;
       truck_capacity_packages: number;
+      items_per_package: number | null;
+      is_popular: boolean;
+      notes: string | null;
     }[];
   },
   ['logistics_capacity'],

@@ -1354,3 +1354,35 @@ Panelden de düzenlenebilir: Fiyatlandırma › Marj Kuralları.
 | Tam Playwright | Tek işçiyle **79/79 geçti** |
 | Görsel ölçüm | 1440, 390 ve 320 px'te yatay taşma 0; araç kartı çiftleri eşit yükseklikte |
 | Erişilebilirlik | 5 temsilci rota × 2 viewport axe A/AA ihlali 0; console error 0 |
+
+---
+
+## 1 Eylül 2026 · Levha PDP paket ve ürün bilgisi
+
+- Tekrarlanan “Isı iletkenliği” kaldırıldı. Hızlı özet artık yoğunluk, yangın
+  sınıfı ve kalınlığı; teknik performans şeridi ısı iletkenliği, çekme ve basma
+  dayanımını gösteriyor.
+- Kalınlık seçimine bağlı levha ölçüsü, paket içi adet ve paket m² bilgisi
+  gerçek `plate_prices` + `logistics_capacity` verisinden çözülüyor. Ürüne özel
+  `package_m2` öncelikli; eksikse mevcut fiyat motoruyla aynı genel lojistik
+  yedeği kullanılıyor.
+- Seçili Kamyon/TIR adedi ortak etkileşim context'ine taşındı; alt ürün bilgisi
+  fiyatı tekrarlamadan toplam paket ve levha adedini gösteriyor.
+- `catalog_description` boş olan teknik profilli ürünlerde ürün adı, doğrulanmış
+  kullanım kapsamı ve paket davranışından doğal açıklama oluşturuluyor.
+- İlk E2E denemesinde yeni test masaüstü kalınlık düğmesini mobil erişilebilir
+  adıyla aradığı için başarısız oldu. Sayfa snapshot'ı düğmenin doğru erişilebilir
+  adının “6 cm” olduğunu kanıtladı; kabul davranışı değil locator düzeltildi.
+
+### Son kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| Paket çözümleme unit testi | 3/3 geçti |
+| Yeni ürün/paket E2E | 3/3 geçti |
+| PDP regresyon E2E | Toplam 16/16 geçti |
+| Tam Playwright paketi | 82/82 geçti (`workers=1`) |
+| `verify:full` | 78 dosya / 683 test; TypeScript, ESLint ve 467 sayfalık production build geçti |
+| Kabul / ziyaretçi metni | `verify:acceptance` ve `verify:visitor-copy` geçti |
+| Optimix mobil kontrast | WCAG AA altında metin yok |
+| Görsel kontrol | 1440 ve 390 px tam sayfa; yatay taşma ve kırık düzen yok |

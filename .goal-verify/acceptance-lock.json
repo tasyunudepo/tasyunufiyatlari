@@ -12,6 +12,12 @@
       "locked_at": "2026-09-01",
       "reason": "PDF idempotency/capability ve WhatsApp fail-closed kabulleri korunur; iletişim kapısı Bonus olmayan PDP'lerde sürer, canlı fiyat ve geçerli araç planı üreten Bonus PDP'nin WhatsApp-first istisnası ayrı E2E sözleşmesiyle korunur. 2026-09-01: aynı teklif modalını açan ziyaretçi etiketi, kullanıcı kararıyla PDF merkezli ifadeden 'Teklifimi hazırla' ifadesine geçirildi; kabul davranışı değişmedi."
     },
+    "tests/e2e/pdp-product-information.spec.ts": {
+      "sha256": "531975653424738abe9bd663d4341c1f98a61cb0febb68e28702b0e4f47e0565",
+      "size": 2293,
+      "locked_at": "2026-09-01",
+      "reason": "Levha PDP'de tekrarsız teknik özet, kalınlığa bağlı gerçek paket/levha bilgisi ve catalog_description boşken kaynaklı ürün açıklaması korunur."
+    },
     "tests/api/quotes-route.integration.test.ts": {
       "sha256": "14dec81c02ec778ac4505e15d326c1ba41d29d7b4a898db17b753c30f6df8e84",
       "size": 11478,

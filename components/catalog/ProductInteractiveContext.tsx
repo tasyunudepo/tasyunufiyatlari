@@ -22,6 +22,14 @@ interface ContextValue {
    *  ProductPricePanel yazar, MobileProductHero ve diğer tüketiciler okur. */
   heroPrice: number | null;
   setHeroPrice: (price: number | null) => void;
+  orderPlan: ProductOrderPlan | null;
+  setOrderPlan: (plan: ProductOrderPlan | null) => void;
+}
+
+export interface ProductOrderPlan {
+  lorryCount: number;
+  truckCount: number;
+  totalM2: number;
 }
 
 const ProductInteractiveContext = createContext<ContextValue | null>(null);
@@ -42,8 +50,12 @@ export function ProductInteractiveProvider({
   const [cityCode, setCityCodeState] = useState(initialCityCode);
   const [activeThickness, setActiveThicknessState] = useState<number | null>(initialThickness);
   const [heroPrice, setHeroPriceState] = useState<number | null>(null);
+  const [orderPlan, setOrderPlanState] = useState<ProductOrderPlan | null>(null);
   const setHeroPrice = useCallback((price: number | null) => {
     setHeroPriceState(price);
+  }, []);
+  const setOrderPlan = useCallback((plan: ProductOrderPlan | null) => {
+    setOrderPlanState(plan);
   }, []);
 
   const setActiveThickness = useCallback(
@@ -71,7 +83,7 @@ export function ProductInteractiveProvider({
 
   return (
     <ProductInteractiveContext.Provider
-      value={{ cityCode, setCityCode, activeThickness, setActiveThickness, heroPrice, setHeroPrice }}
+      value={{ cityCode, setCityCode, activeThickness, setActiveThickness, heroPrice, setHeroPrice, orderPlan, setOrderPlan }}
     >
       {children}
     </ProductInteractiveContext.Provider>

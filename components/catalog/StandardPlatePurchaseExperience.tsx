@@ -8,6 +8,7 @@ import {
   type TechnicalProfile,
 } from '@/lib/technical-profiles'
 import ProductImage from './ProductImage'
+import PlatePackageDetails from './PlatePackageDetails'
 import ProductPricePanel, {
   type ProductLogisticsCapacity,
   type ProductShippingZone,
@@ -61,7 +62,7 @@ function ProductTradeFacts({ product, profile, thicknessRange }: { product: Cata
       ...(product.catalog_description?.includes('TS EN 13163') ? [['Ürün standardı', 'TS EN 13163']] : []),
     ]
     return (
-      <dl className={`grid border-t border-[#ded2c0] bg-[#fffaf5] ${epsFacts.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      <dl data-testid="pdp-product-quick-facts" className={`grid border-t border-[#ded2c0] bg-[#fffaf5] ${epsFacts.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
         {epsFacts.map(([label, value], index) => (
           <div key={label} className={`min-w-0 px-4 py-4 sm:px-5 ${index > 0 ? 'border-l border-[#ded2c0]' : ''}`}>
             <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#625a4f] sm:text-xs">{label}</dt>
@@ -72,10 +73,14 @@ function ProductTradeFacts({ product, profile, thicknessRange }: { product: Cata
     )
   }
 
+  const primaryFact = profile.density
+    ? ['Yoğunluk', profile.density.display]
+    : ['Isı iletkenliği', profile.lambdaDisplay]
+
   return (
-    <dl className="grid grid-cols-3 border-t border-[#ded2c0] bg-[#fffaf5]">
+    <dl data-testid="pdp-product-quick-facts" className="grid grid-cols-3 border-t border-[#ded2c0] bg-[#fffaf5]">
       {[
-        ['Isı iletkenliği', profile.lambdaDisplay],
+        primaryFact,
         ['Yangına tepki', `${profile.fireClass} sınıfı`],
         ['Kalınlık', thicknessRange],
       ].map(([label, value], index) => (
@@ -92,10 +97,12 @@ function ProductDetails({
   product,
   profile,
   thicknessRange,
+  commercialTitle,
 }: {
   product: CatalogProductView
   profile: TechnicalProfile | null
   thicknessRange: string
+  commercialTitle: string
 }) {
   const descriptionParts = product.catalog_description
     ? product.catalog_description.split(/\s*ÖZELLİKLER\s*/i)
@@ -104,76 +111,28 @@ function ProductDetails({
   const descriptionBullets = descriptionParts.length > 1
     ? Array.from(new Set(descriptionParts.slice(1).join(' ').split(/\s*•\s*/).map(item => item.trim()).filter(Boolean)))
     : []
+  const applicationLabel = profile ? APPLICATION_SCOPE_LABELS[profile.applicationScope] : null
+  const fallbackDescription = profile
+    ? `${commercialTitle}, ${applicationLabel?.toLocaleLowerCase('tr-TR')} uygulamalarına yönelik taşyünü ısı yalıtım levhasıdır. Seçtiğiniz kalınlığa ait paket içeriği ve tam araç kapasitesi satın alma alanında birlikte hesaplanır.`
+    : ''
+  const aboutCopy = descriptionIntro || fallbackDescription
 
-  if (!profile && !product.catalog_description) return null
+  if (!profile && !aboutCopy) return null
 
   return (
     <section
       aria-label="Ürün teknik bilgileri"
       className="overflow-hidden rounded-[14px] border border-hub-rule bg-white shadow-[0_16px_36px_rgba(39,31,17,0.1)]"
     >
-      <dl className="grid border-b border-hub-rule bg-[#fffaf0] md:hidden">
-        {profile?.density && (
-          <div className="px-5 py-4">
-            <dt className="text-xs font-medium text-[#625c51]">Yoğunluk</dt>
-            <dd className="mt-1 text-sm font-bold text-[#282219]">{profile.density.display}</dd>
-            <dd className="mt-1 text-xs leading-5 text-[#625c51]">Kaynak ayrıntısı: {densitySourceLabel(profile)}</dd>
-          </div>
-        )}
-        <div className="border-t border-hub-rule px-5 py-4">
-          <dt className="text-xs font-medium text-[#625c51]">Kalınlık aralığı</dt>
-          <dd className="mt-1 text-sm font-bold text-[#282219]">{thicknessRange}</dd>
-        </div>
-        {profile && (
-          <div className="border-t border-hub-rule px-5 py-4">
-            <dt className="text-xs font-medium text-[#625c51]">Yangına tepki ve kullanım</dt>
-            <dd className="mt-1 text-sm font-bold leading-5 text-[#282219]">
-              {profile.fireClass} sınıfı · {APPLICATION_SCOPE_LABELS[profile.applicationScope]}
-            </dd>
-          </div>
-        )}
-        {!profile && product.material_type === 'eps' && (
-          <>
-            <div className="border-t border-hub-rule px-5 py-4">
-              <dt className="text-xs font-medium text-[#625c51]">Malzeme</dt>
-              <dd className="mt-1 text-sm font-bold text-[#282219]">EPS ısı yalıtım levhası</dd>
-            </div>
-            {product.catalog_description?.includes('TS EN 13163') && (
-              <div className="border-t border-hub-rule px-5 py-4">
-                <dt className="text-xs font-medium text-[#625c51]">Ürün standardı</dt>
-                <dd className="mt-1 text-sm font-bold text-[#282219]">TS EN 13163</dd>
-              </div>
-            )}
-          </>
-        )}
-      </dl>
-
-      {profile && (
-        <dl className="grid border-b border-hub-rule bg-[#fffdf8] sm:grid-cols-3">
-          {[
-            ['Isı iletkenliği', profile.lambdaDisplay],
-            ['Çekme dayanımı', profile.tensileDisplay],
-            ['Basma dayanımı', profile.compressiveDisplay],
-          ].map(([label, value], index) => (
-            <div
-              key={label}
-              className={`min-w-0 px-5 py-4 ${index < 2 ? 'border-b border-hub-rule sm:border-b-0 sm:border-r' : ''}`}
-            >
-              <dt className="text-xs font-medium text-[#625c51]">{label}</dt>
-              <dd className="mt-1 text-sm font-bold leading-5 text-[#282219] [overflow-wrap:anywhere]">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
-      {product.catalog_description && (
-        <div className="px-5 py-5 sm:px-7">
-          <h2 className="font-heading text-base font-bold text-[#282219]">Ürün hakkında</h2>
-          {descriptionIntro && (
-            <p className="mt-2 max-w-[72ch] text-sm leading-6 text-[#625b50]">{descriptionIntro}</p>
-          )}
+      <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
+        <article className="px-5 py-6 sm:px-7 lg:px-8">
+          <p className="font-heading text-xs font-bold uppercase tracking-[0.12em] text-[#765621]">Ürün açıklaması</p>
+          <h2 className="mt-2 font-heading text-2xl font-extrabold tracking-[-0.02em] text-[#282219]">
+            {commercialTitle} hakkında
+          </h2>
+          {aboutCopy && <p className="mt-3 max-w-[72ch] text-base leading-7 text-[#625b50]">{aboutCopy}</p>}
           {descriptionBullets.length > 0 && (
-            <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#625b50]">
+            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[#625b50] sm:grid-cols-2">
               {descriptionBullets.map(item => (
                 <li key={item} className="grid grid-cols-[8px_1fr] gap-2">
                   <span aria-hidden="true" className="mt-[9px] h-1.5 w-1.5 rounded-full bg-[#9a762f]" />
@@ -181,6 +140,50 @@ function ProductDetails({
                 </li>
               ))}
             </ul>
+          )}
+        </article>
+
+        <aside className="border-t border-hub-rule bg-[#fffaf0] px-5 py-6 sm:px-7 lg:border-l lg:border-t-0">
+          <h3 className="font-heading text-lg font-extrabold text-[#282219]">Kullanım ve seçim</h3>
+          <dl className="mt-4 grid gap-4">
+            {applicationLabel && (
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[#625c51]">Kullanım alanı</dt>
+                <dd className="mt-1 text-base font-bold text-[#282219]">{applicationLabel}</dd>
+              </div>
+            )}
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[#625c51]">Kalınlık aralığı</dt>
+              <dd className="mt-1 text-base font-bold text-[#282219]">{thicknessRange}</dd>
+            </div>
+          </dl>
+          <p className="mt-4 border-t border-[#ded2c0] pt-4 text-sm leading-6 text-[#625b50]">
+            Kalınlık seçimi paket içeriğini ve tam araçta taşınan toplam metrajı değiştirir.
+          </p>
+        </aside>
+      </div>
+
+      {profile && (
+        <div className="border-t border-hub-rule bg-[#fffdf8]">
+          <dl className="grid sm:grid-cols-3">
+            {[
+              ['Isı iletkenliği', profile.lambdaDisplay],
+              ['Çekme dayanımı', profile.tensileDisplay],
+              ['Basma dayanımı', profile.compressiveDisplay],
+            ].map(([label, value], index) => (
+              <div
+                key={label}
+                className={`min-w-0 px-5 py-4 sm:px-7 ${index < 2 ? 'border-b border-hub-rule sm:border-b-0 sm:border-r' : ''}`}
+              >
+                <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-[#625c51]">{label}</dt>
+                <dd className="mt-1 text-base font-bold leading-6 text-[#282219] [overflow-wrap:anywhere]">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {profile.density && (
+            <p className="border-t border-hub-rule px-5 py-3 text-xs leading-5 text-[#625c51] sm:px-7">
+              Yoğunluk bilgisinin kaynağı: {densitySourceLabel(profile)}.
+            </p>
           )}
         </div>
       )}
@@ -251,8 +254,18 @@ export default function StandardPlatePurchaseExperience({
             />
           </div>
 
-          <div className="order-3 min-w-0 xl:col-span-2">
-            <ProductDetails product={product} profile={profile} thicknessRange={thicknessRange} />
+          <div className="order-3 min-w-0 space-y-5 xl:col-span-2">
+            <PlatePackageDetails
+              product={product}
+              logisticsCapacity={logisticsCapacity}
+              fallbackThickness={selectedThickness ?? prefill?.kalinlik ?? thicknessOptions[0] ?? null}
+            />
+            <ProductDetails
+              product={product}
+              profile={profile}
+              thicknessRange={thicknessRange}
+              commercialTitle={commercialTitle}
+            />
           </div>
         </section>
       </div>
