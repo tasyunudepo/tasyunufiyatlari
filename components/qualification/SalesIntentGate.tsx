@@ -20,7 +20,10 @@ const EXCLUDED_PREFIXES = [
   '/kullanim-kosullari',
   '/tasyunu-karsilastir',
   '/tasyunu-yogunluk',
-  '/urunler/tasyunu-levha',
+  // Kategori ve ürün detayları zaten kendi karar/teklif akışını kurar.
+  // Zorunlu modal ürün incelemesini kesmemeli; yalnız /urunler hub'ında
+  // ilk niyet ayrımı olarak kalır.
+  '/urunler/',
 ]
 
 export default function SalesIntentGate() {
@@ -135,7 +138,7 @@ export default function SalesIntentGate() {
             onClick={() => selectIntent('project_scale')}
             className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-base font-bold text-fe-bg transition-colors hover:bg-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-fe-bg"
           >
-            1 TIR istiyorum
+            Proje fiyatımı hesapla
             <ArrowRight size={18} weight={ICON_WEIGHT} aria-hidden="true" />
           </button>
           <button

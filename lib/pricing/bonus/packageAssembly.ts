@@ -33,6 +33,30 @@ export interface BonusVehiclePlan {
   vehicleType: 'lorry' | 'truck' | null
 }
 
+export interface BonusVehicleAdjustment {
+  plan: BonusVehiclePlan
+  shortfallM2: number
+}
+
+function createBonusVehiclePlan(
+  tir: number,
+  kamyon: 0 | 1,
+  kamyonM2: number,
+  tirM2: number,
+): BonusVehiclePlan {
+  const planM2 = roundToKurus(tir * tirM2 + kamyon * kamyonM2)
+  const parts: string[] = []
+  if (tir > 0) parts.push(`${tir} TIR`)
+  if (kamyon > 0) parts.push('1 Kamyon')
+  return {
+    tir,
+    kamyon,
+    planM2,
+    label: parts.join(' + '),
+    vehicleType: kamyon === 0 ? 'truck' : tir === 0 ? 'lorry' : null,
+  }
+}
+
 /**
  * Metraj → tam araç planları (karar: Emrah, 20 Temmuz 2026).
  *
@@ -55,19 +79,8 @@ export function buildBonusVehiclePlans(
     return []
   }
 
-  const plan = (tir: number, kamyon: 0 | 1): BonusVehiclePlan => {
-    const planM2 = roundToKurus(tir * tirM2 + kamyon * kamyonM2)
-    const parts: string[] = []
-    if (tir > 0) parts.push(`${tir} TIR`)
-    if (kamyon > 0) parts.push('1 Kamyon')
-    return {
-      tir,
-      kamyon,
-      planM2,
-      label: parts.join(' + '),
-      vehicleType: kamyon === 0 ? 'truck' : tir === 0 ? 'lorry' : null,
-    }
-  }
+  const plan = (tir: number, kamyon: 0 | 1): BonusVehiclePlan =>
+    createBonusVehiclePlan(tir, kamyon, kamyonM2, tirM2)
 
   if (neededM2 <= kamyonM2) {
     // Küçük metraj: 1 Kamyon yeter; 1 TIR alternatif olarak sunulur.
@@ -81,6 +94,46 @@ export function buildBonusVehiclePlans(
   const plans: BonusVehiclePlan[] = [plan(tirFloor + 1, 0)]
   if (kalan <= kamyonM2) plans.push(plan(tirFloor, 1))
   return plans
+}
+
+/**
+ * İhtiyacı karşılamayan fakat kurala uygun en yakın alt araç kapasitesini
+ * bulur. Bu sonuç sipariş planı değildir; kullanıcı ancak proje metrajını
+ * açıkça bu kapasiteye indirirse geçerli plana dönüşür.
+ */
+export function findNearestLowerBonusVehiclePlan(
+  neededM2: number,
+  kamyonM2: number,
+  tirM2: number,
+): BonusVehicleAdjustment | null {
+  if (
+    !Number.isFinite(neededM2) || neededM2 <= 0 ||
+    !Number.isFinite(kamyonM2) || kamyonM2 <= 0 ||
+    !Number.isFinite(tirM2) || tirM2 <= 0
+  ) {
+    return null
+  }
+
+  const epsilon = 1e-9
+  const candidates: BonusVehiclePlan[] = []
+  const maxTir = Math.floor(neededM2 / tirM2)
+
+  for (let tir = 0; tir <= maxTir; tir += 1) {
+    for (const kamyon of [0, 1] as const) {
+      if (tir === 0 && kamyon === 0) continue
+      const candidate = createBonusVehiclePlan(tir, kamyon, kamyonM2, tirM2)
+      if (Math.abs(candidate.planM2 - neededM2) <= epsilon) return null
+      if (candidate.planM2 < neededM2) candidates.push(candidate)
+    }
+  }
+
+  const plan = candidates.sort((a, b) => b.planM2 - a.planM2)[0]
+  if (!plan) return null
+
+  return {
+    plan,
+    shortfallM2: roundToKurus(neededM2 - plan.planM2),
+  }
 }
 
 /**

@@ -60,7 +60,7 @@ export default function IletisimPage() {
                 Ürün, kalınlık, şehir ve tam araç metrajınızı seçin. Sistem referanslı PDF teklifinizi oluştursun.
               </p>
               <Link href="/#mantolama-hesaplayici" className="btn-primary mt-7">
-                1 TIR istiyorum
+                Proje fiyatımı hesapla
                 <ArrowRight size={18} weight={ICON_WEIGHT} className="btn-arrow" />
               </Link>
             </div>

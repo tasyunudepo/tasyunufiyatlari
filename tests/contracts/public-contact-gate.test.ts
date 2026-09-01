@@ -22,6 +22,19 @@ describe('herkese açık satış iletişim kapısı', () => {
     }
   })
 
+  it('Bonus WhatsApp-first istisnasını yalnız çözülmüş fiyat ve araç planında açar', () => {
+    const source = fs.readFileSync(
+      path.join(root, 'components/catalog/BonusRegionPrice.tsx'),
+      'utf8',
+    )
+    const purchaseBranch = source.slice(source.indexOf('variant === "purchase-desk"'))
+
+    expect(purchaseBranch).toContain('buildWhatsAppLink(message)')
+    expect(purchaseBranch).toMatch(/resolvedData\s*&&\s*purchaseCalculation/)
+    expect(purchaseBranch).toContain('data-testid="pdp-whatsapp-primary"')
+    expect(purchaseBranch).not.toContain('tel:')
+  })
+
   it('danışmanlık vaadiyle kararsız talep toplamaz', () => {
     const source = publicSalesFiles
       .map((relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8'))

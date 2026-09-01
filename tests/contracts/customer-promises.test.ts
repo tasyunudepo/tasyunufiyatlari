@@ -15,6 +15,8 @@ const PROMISE_FILES = [
   'components/cro/SituationSelector.tsx',
   'components/cro/TrustStrip.tsx',
   'components/shared/BrandTrustLogos.tsx',
+  'components/catalog/BonusPurchaseExperience.tsx',
+  'components/catalog/BonusRegionPrice.tsx',
 ] as const
 
 const sources = PROMISE_FILES.map((file) => ({

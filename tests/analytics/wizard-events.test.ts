@@ -143,4 +143,45 @@ describe('Wizard GA4 event allowlist', () => {
       section_key: 'cati',
     })
   })
+
+  it('WhatsApp-first PDP CTA eventini anonim seçim ve deney bağlamına bağlar', () => {
+    const gtag = vi.fn()
+    vi.stubGlobal('window', {
+      gtag,
+      location: { pathname: '/urunler/tasyunu-levha/bonus-f-150-pro-tasyunu' },
+    })
+
+    notifyProductDetailCtaClick({
+      product_name: 'Bonus Premium F 150 Pro',
+      brand_name: 'Bonus',
+      product_slug: 'bonus-f-150-pro-tasyunu',
+      thickness_cm: 5,
+      city_code: 34,
+      city_name: 'İstanbul',
+      sub_region_name: 'Avrupa Yakası',
+      area_m2: 967.68,
+      total_m2: 967.68,
+      vehicle_type: 'lorry',
+      vehicle_label: '1 Kamyon',
+      price_per_m2: 348.77,
+      total_price: 337_497.75,
+      shipping_mode: 'included_in_sale_price',
+      experience_variant: 'a_whatsapp_first',
+      result_session_id: 'pdp-test-session',
+      cta_type: 'whatsapp',
+      cta_location: 'product_detail_summary',
+    })
+
+    expect(gtag).toHaveBeenCalledTimes(1)
+    expect(gtag.mock.calls[0][1]).toBe('PDP_CTA_Click')
+    expect(gtag.mock.calls[0][2]).toMatchObject({
+      cta_type: 'whatsapp',
+      sub_region_name: 'Avrupa Yakası',
+      vehicle_label: '1 Kamyon',
+      shipping_mode: 'included_in_sale_price',
+      experience_variant: 'a_whatsapp_first',
+      result_session_id: 'pdp-test-session',
+    })
+    expect(gtag.mock.calls[0][2]).not.toHaveProperty('ref_code')
+  })
 })

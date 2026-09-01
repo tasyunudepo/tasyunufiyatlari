@@ -30,6 +30,10 @@ import {
 } from '@/lib/pricing/margin';
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 import type { CatalogProductView } from '@/lib/catalog/types';
+import { isUnpricedBonusModel } from '@/lib/pricing/bonus/families';
+import BonusPurchaseExperience from '@/components/catalog/BonusPurchaseExperience';
+import StandardPlatePurchaseExperience from '@/components/catalog/StandardPlatePurchaseExperience';
+import AccessoryPurchaseExperience from '@/components/catalog/AccessoryPurchaseExperience';
 
 // Tam statik (force-static): tüm ürün detayları build'de prerender → CDN'den servis → ISR Read Unit = 0.
 // Fiyatlar aylık güncelleniyor; ay başı (otomatik) redeploy fiyat snapshot'ını ve metadata'yı yeniler.
@@ -334,6 +338,16 @@ export async function ProductDetailPage({
        (Array.isArray(product.thickness_options) && product.thickness_options.length > 0
          ? product.thickness_options[0]
          : null));
+  const isHybridBonusPdp =
+    product.product_type === 'plate' &&
+    product.brand.name === 'Bonus' &&
+    !!product.model &&
+    !isUnpricedBonusModel(product.model);
+  const isStandardPlatePdp =
+    product.product_type === 'plate' &&
+    !isHybridBonusPdp;
+  const isAccessoryPdp = product.product_type === 'accessory';
+  const usesWarmPurchaseShell = isHybridBonusPdp || isStandardPlatePdp || isAccessoryPdp;
 
   // ─── Schema.org JSON-LD ──────────────────────────────────────
   const productUrl = `${SITE_ORIGIN}${pagePath}`;
@@ -390,7 +404,7 @@ export async function ProductDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-fe-bg flex flex-col">
+    <div className={`min-h-screen flex flex-col ${usesWarmPurchaseShell ? 'bg-hub-warm' : 'bg-fe-bg'}`}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
@@ -398,27 +412,70 @@ export async function ProductDetailPage({
       <SiteHeader />
 
       {/* Breadcrumb */}
-      <div className="bg-fe-surface/80 border-b border-fe-border/60">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-2.5 sm:py-3.5">
-          <nav className="flex items-center gap-1 text-xs text-fe-muted flex-wrap">
-            <Link href="/" prefetch={false} className="hover:text-brand-400 transition-colors">Ana Sayfa</Link>
+      <div className={usesWarmPurchaseShell ? 'border-b border-hub-rule bg-[#efe8da]' : 'bg-fe-surface/80 border-b border-fe-border/60'}>
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3.5">
+          <nav className={`flex min-w-0 flex-wrap items-center gap-1 text-xs ${usesWarmPurchaseShell ? 'text-hub-muted' : 'text-fe-muted'}`}>
+            <Link href="/" prefetch={false} className={usesWarmPurchaseShell ? 'transition-colors hover:text-hub-gold' : 'hover:text-brand-400 transition-colors'}>Ana Sayfa</Link>
             <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <Link href="/urunler" prefetch={false} className="hover:text-brand-400 transition-colors">Ürünler</Link>
+            <Link href="/urunler" prefetch={false} className={usesWarmPurchaseShell ? 'transition-colors hover:text-hub-gold' : 'hover:text-brand-400 transition-colors'}>Ürünler</Link>
             <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <Link href={`/urunler/${kategori}`} prefetch={false} className="hover:text-brand-400 transition-colors">
+            <Link href={`/urunler/${kategori}`} prefetch={false} className={usesWarmPurchaseShell ? 'transition-colors hover:text-hub-gold' : 'hover:text-brand-400 transition-colors'}>
               {kategoriLabel}
             </Link>
             <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <span className="text-fe-text truncate max-w-[200px]">{product.name}</span>
+            <span className={`truncate max-w-[200px] ${usesWarmPurchaseShell ? 'text-hub-ink-2' : 'text-fe-text'}`}>{product.name}</span>
           </nav>
+          <Suspense fallback={null}>
+            <ProductCategoryContext warm={usesWarmPurchaseShell} />
+          </Suspense>
         </div>
       </div>
 
-      <Suspense fallback={null}>
-        <ProductCategoryContext />
-      </Suspense>
-
       {/* Ana İçerik */}
+      {isHybridBonusPdp ? (
+        <ErrorBoundaryWrapper>
+          <ProductInteractiveProvider
+            initialCityCode={initialCityCode}
+            initialThickness={initialThickness}
+          >
+            <BonusPurchaseExperience
+              product={product}
+              shippingZones={shippingZones}
+            />
+          </ProductInteractiveProvider>
+        </ErrorBoundaryWrapper>
+      ) : isStandardPlatePdp ? (
+        <ErrorBoundaryWrapper>
+          <ProductInteractiveProvider
+            initialCityCode={initialCityCode}
+            initialThickness={initialThickness}
+          >
+            <StandardPlatePurchaseExperience
+              product={product}
+              decision={decision}
+              prefill={activePrefill}
+              shippingZones={shippingZones}
+              logisticsCapacity={logisticsCapacity}
+              selectedThickness={isValidThickness ? selectedThicknessValue : null}
+            />
+          </ProductInteractiveProvider>
+        </ErrorBoundaryWrapper>
+      ) : isAccessoryPdp ? (
+        <ErrorBoundaryWrapper>
+          <ProductInteractiveProvider
+            initialCityCode={initialCityCode}
+            initialThickness={initialThickness}
+          >
+            <AccessoryPurchaseExperience
+              product={product}
+              decision={decision}
+              prefill={activePrefill}
+              shippingZones={shippingZones}
+              logisticsCapacity={logisticsCapacity}
+            />
+          </ProductInteractiveProvider>
+        </ErrorBoundaryWrapper>
+      ) : (
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4 lg:py-12">
         <ErrorBoundaryWrapper>
         <ProductInteractiveProvider
@@ -588,6 +645,7 @@ export async function ProductDetailPage({
         </ProductInteractiveProvider>
         </ErrorBoundaryWrapper>
       </div>
+      )}
 
       <SiteFooter />
     </div>

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { List, X, ArrowRight } from '@phosphor-icons/react';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 
@@ -30,6 +30,15 @@ const NAV_MOBILE = [
   ...NAV,
 ];
 
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;
   if (href === '/') return pathname === '/';
@@ -43,6 +52,9 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileDrawerRef = useRef<HTMLElement>(null);
+  const mobileCloseButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -70,14 +82,56 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
     }
   }, [mobileOpen]);
 
-  // ESC ile kapat
+  // Mobil drawer odak yönetimi: açılışta ilk kontrole geç,
+  // odağı drawer içinde tut ve kapanışta tetikleyiciye iade et.
   useEffect(() => {
     if (!mobileOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileOpen(false);
+
+    const menuButton = mobileMenuButtonRef.current;
+    const focusFrame = window.requestAnimationFrame(() => {
+      mobileCloseButtonRef.current?.focus();
+    });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMobileOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab' || !mobileDrawerRef.current) return;
+
+      const focusableElements = Array.from(
+        mobileDrawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((element) => element.getAttribute('aria-hidden') !== 'true' && element.offsetParent !== null);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        mobileDrawerRef.current.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+
+      if (event.shiftKey && (activeElement === firstElement || !mobileDrawerRef.current.contains(activeElement))) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && (activeElement === lastElement || !mobileDrawerRef.current.contains(activeElement))) {
+        event.preventDefault();
+        firstElement.focus();
+      }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', onKeyDown);
+      if (menuButton?.isConnected) {
+        menuButton.focus();
+      }
+    };
   }, [mobileOpen]);
 
   // ─── Sticky scroll arka plan + alt çizgi reaksiyonu ────────────
@@ -163,12 +217,13 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
                   prefetch={false}
                   className="btn-primary !py-2 !px-4 !text-sm ml-1 sm:ml-2 hidden sm:inline-flex"
                 >
-                  1 TIR istiyorum
+                  Fiyatımı Hesapla
                 </Link>
               )}
 
               {/* Mobile hamburger */}
               <button
+                ref={mobileMenuButtonRef}
                 type="button"
                 onClick={() => setMobileOpen(true)}
                 className="sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg text-fe-text/90 hover:text-hub-gold-soft hover:bg-fe-surface-raised/50 transition-colors"
@@ -194,12 +249,16 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
 
       {/* Mobile Drawer Panel */}
       <aside
+        ref={mobileDrawerRef}
         id="mobile-drawer"
+        tabIndex={-1}
+        inert={!mobileOpen}
         className={`fixed top-0 right-0 z-[70] h-dvh w-[88%] max-w-sm bg-hub-dark text-fe-text flex flex-col shadow-[-8px_0_32px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out sm:hidden ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
-        role="dialog"
-        aria-modal="true"
+        role={mobileOpen ? 'dialog' : undefined}
+        aria-modal={mobileOpen ? true : undefined}
+        aria-hidden={mobileOpen ? undefined : true}
         aria-label="Mobil menü"
       >
         {/* Drawer header */}
@@ -212,6 +271,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
             className="h-7 w-auto"
           />
           <button
+            ref={mobileCloseButtonRef}
             type="button"
             onClick={() => setMobileOpen(false)}
             className="inline-flex items-center justify-center w-11 h-11 rounded-lg text-fe-text/85 hover:text-hub-gold-soft hover:bg-fe-surface-raised/50 transition-colors"
@@ -257,7 +317,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
               onClick={() => setMobileOpen(false)}
               className="btn-primary w-full"
             >
-              1 TIR istiyorum
+              Fiyatımı Hesapla
               <ArrowRight weight={ICON_WEIGHT} size={18} className="btn-arrow" />
             </Link>
           </div>

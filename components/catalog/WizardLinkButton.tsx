@@ -55,7 +55,7 @@ export default function WizardLinkButton({
 
   const base    = 'inline-flex items-center justify-center gap-2 rounded-lg transition-all duration-150 cursor-pointer';
   const variant_= variant === 'primary'
-    ? 'px-5 py-3 font-semibold text-sm bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white'
+    ? 'px-5 py-3 font-semibold text-sm bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-fe-bg'
     : variant === 'secondary'
     ? 'px-5 py-3 font-semibold text-sm border border-fe-border hover:border-brand-500 text-fe-text hover:text-brand-400 bg-transparent'
     : 'font-normal text-fe-muted hover:text-fe-text bg-transparent';

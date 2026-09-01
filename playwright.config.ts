@@ -1,12 +1,15 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3100'
+const useExistingServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:3100',
+    baseURL,
     storageState: {
       cookies: [],
       origins: [
@@ -27,10 +30,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev -- --hostname 127.0.0.1 --port 3100',
-    url: 'http://127.0.0.1:3100',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: useExistingServer
+    ? undefined
+    : {
+        command: 'npm run dev -- --hostname 127.0.0.1 --port 3100',
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 })

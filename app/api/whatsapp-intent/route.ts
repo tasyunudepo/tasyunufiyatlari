@@ -50,6 +50,26 @@ const intentSchema = z.object({
   // Ölçüm sözleşmesi: oturum zinciri alanları (GA4 tarafıyla ortak).
   resultSessionId: z.string().max(64).optional(),
   ctaLocation: z.string().max(64).optional(),
+  experienceVariant: z.literal('a_whatsapp_first').optional(),
+  pricedContext: z.object({
+    refCode: z.string().regex(/^TYW[A-Z0-9]{8,16}$/),
+    modelName: z.string().min(1).max(80),
+    thicknessCm: z.number().positive().max(30),
+    cityCode: z.number().int().min(1).max(81),
+    cityName: z.string().min(1).max(80),
+    subRegionName: z.string().min(1).max(80).optional(),
+    areaM2: z.number().positive().max(1_000_000),
+    packageCount: z.number().int().positive().max(1_000_000),
+    vehicleType: z.enum(['lorry', 'truck', 'mixed']),
+    vehicleLabel: z.string().min(1).max(80),
+    pricePerM2: z.number().positive().max(10_000_000),
+    totalExVat: z.number().positive().max(10_000_000_000),
+    shippingMode: z.enum([
+      'included_in_sale_price',
+      'buyer_responsible',
+      'separate_quote_required',
+    ]),
+  }).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -80,6 +100,14 @@ export async function POST(req: NextRequest) {
         source: WHATSAPP_SOURCE_LABEL[data.source] ?? data.source,
         page: data.page,
         productName: data.productName,
+        refCode: data.pricedContext?.refCode,
+        thicknessCm: data.pricedContext?.thicknessCm,
+        areaM2: data.pricedContext?.areaM2,
+        cityName: data.pricedContext?.cityName,
+        totalPrice: data.pricedContext?.totalExVat,
+        vehicleLabel: data.pricedContext?.vehicleLabel,
+        pricePerM2: data.pricedContext?.pricePerM2,
+        shippingMode: data.pricedContext?.shippingMode,
       });
     } catch (err) {
       console.warn('[whatsapp-intent] notify failed (non-fatal):', err);

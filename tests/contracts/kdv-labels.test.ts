@@ -74,6 +74,20 @@ describe('Katalog fiyat yüzeylerinde KDV etiketi', () => {
     expect(mobileSticky).toContain('KDV hariç')
   })
 
+  it('Bonus Sipariş Masası fiyatı ve mobil WhatsApp özetini KDV hariç diye niteler', () => {
+    const bonusPrice = source('components/catalog/BonusRegionPrice.tsx')
+    const branchStart = bonusPrice.indexOf('if (variant === "purchase-desk")')
+    const branchEnd = bonusPrice.indexOf(
+      'className="rounded-xl border border-brand-500/25',
+      branchStart,
+    )
+    const purchaseDesk = bonusPrice.slice(branchStart, branchEnd)
+
+    expect(purchaseDesk).toContain('KDV hariç')
+    expect(purchaseDesk).toContain('data-testid="pdp-mobile-order-sticky"')
+    expect(purchaseDesk.match(/KDV hariç/g)?.length ?? 0).toBeGreaterThanOrEqual(2)
+  })
+
   it('Wizard mobil sabit kartında m² ve toplam fiyatın KDV niteliği görünürdür', () => {
     const wizard = source('components/wizard/WizardCalculator.tsx')
     const mobileSticky = wizard.slice(

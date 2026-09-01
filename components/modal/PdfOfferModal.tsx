@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X, CaretDown } from '@phosphor-icons/react';
@@ -16,6 +16,15 @@ interface PdfOfferModalProps {
   defaultCity?: string;
 }
 
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled]):not([type="hidden"])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 export function PdfOfferModal({
   isOpen,
   onClose,
@@ -27,6 +36,10 @@ export function PdfOfferModal({
   // Detay toggle — Akkaya tipi kararlı kullanıcı için opsiyonel alanları
   // gizli ama erişilebilir tutar; sürtünme azaltır.
   const [showDetails, setShowDetails] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const relatedPersonInputRef = useRef<HTMLInputElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   // Modal her açılışta detaylar kapalı başlar — effect yerine render
   // sırasında uyarlama (cascading render tetiklemez).
@@ -54,6 +67,7 @@ export function PdfOfferModal({
       kvkkConsent: false,
     },
   });
+  const relatedPersonRegistration = register('relatedPerson');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,6 +81,31 @@ export function PdfOfferModal({
     }));
   }, [isOpen, reset, defaultCity]);
 
+  // Açılışta teklif akışının ilk zorunlu alanına odaklan;
+  // modal kapanır veya unmount olursa odağı onu açan öğeye iade et.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    openerRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      if (relatedPersonInputRef.current) {
+        relatedPersonInputRef.current.focus();
+      } else {
+        titleRef.current?.focus();
+      }
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      const opener = openerRef.current;
+      openerRef.current = null;
+      if (opener?.isConnected) opener.focus();
+    };
+  }, [isOpen]);
+
   // Body scroll lock — modal açıkken arka sayfa kaymaz
   useEffect(() => {
     if (!isOpen) return;
@@ -77,14 +116,45 @@ export function PdfOfferModal({
     };
   }, [isOpen]);
 
-  // ESC ile kapat
+  // ESC ve Tab / Shift+Tab klavye davranışları
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isSubmitting) onClose();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (isSubmitting) return;
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusableElements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((element) => element.getAttribute('aria-hidden') !== 'true' && element.offsetParent !== null);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        titleRef.current?.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+
+      if (event.shiftKey && (activeElement === firstElement || !dialogRef.current.contains(activeElement))) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && (activeElement === lastElement || !dialogRef.current.contains(activeElement))) {
+        event.preventDefault();
+        firstElement.focus();
+      }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
   }, [isOpen, isSubmitting, onClose]);
 
   if (!isOpen) return null;
@@ -92,14 +162,18 @@ export function PdfOfferModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-fe-bg/80 backdrop-blur-sm"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Teklif Bilgileri"
+      onClick={() => {
+        if (!isSubmitting) onClose();
+      }}
     >
       <div
+        ref={dialogRef}
         className="bg-fe-bg border border-fe-border w-full sm:max-w-lg shadow-2xl relative flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[100dvh] sm:max-h-[90dvh]"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Teklif Bilgileri"
+        aria-describedby="pdf-offer-modal-description"
       >
         {/* HEADER — sticky top */}
         <div className="shrink-0 px-6 pt-6 pb-4 border-b border-fe-border/60 relative">
@@ -112,8 +186,15 @@ export function PdfOfferModal({
           >
             <X weight={ICON_WEIGHT} size={20} />
           </button>
-          <h3 className="text-xl font-bold text-white mb-1">PDF Teklif Kaydı</h3>
-          <p className="text-sm text-fe-muted">
+          <h3
+            ref={titleRef}
+            id="pdf-offer-modal-title"
+            tabIndex={-1}
+            className="text-xl font-bold text-white mb-1"
+          >
+            PDF Teklif Kaydı
+          </h3>
+          <p id="pdf-offer-modal-description" className="text-sm text-fe-muted">
             Teklif belgenizi oluşturalım. Satış ekibimiz aynı kayıt üzerinden stok, ödeme ve sevkiyat koşullarını teyit eder.
           </p>
           {defaultCity && (
@@ -135,51 +216,68 @@ export function PdfOfferModal({
             {/* ── Zorunlu alanlar: İlgili kişi + Telefon. İl wizard seçiminden gelir. ── */}
             {defaultCity && <input type="hidden" {...register('city')} />}
             <div>
-              <label className="block text-sm font-medium text-fe-text mb-1">
+              <label htmlFor="pdf-related-person" className="block text-sm font-medium text-fe-text mb-1">
                 Ad Soyad / Firma <span className="text-red-400">*</span>
               </label>
               <input
+                id="pdf-related-person"
                 type="text"
-                {...register('relatedPerson')}
+                autoComplete="name"
+                {...relatedPersonRegistration}
+                ref={(element) => {
+                  relatedPersonRegistration.ref(element);
+                  relatedPersonInputRef.current = element;
+                }}
+                aria-required="true"
+                aria-invalid={errors.relatedPerson ? true : undefined}
+                aria-describedby={errors.relatedPerson ? 'pdf-related-person-error' : undefined}
                 className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
                 disabled={isSubmitting}
               />
               {errors.relatedPerson && (
-                <p className="text-red-400 text-xs mt-1">{errors.relatedPerson.message}</p>
+                <p id="pdf-related-person-error" className="text-red-400 text-xs mt-1">{errors.relatedPerson.message}</p>
               )}
             </div>
 
             <div className={defaultCity ? '' : 'grid grid-cols-1 sm:grid-cols-2 gap-3'}>
               <div>
-                <label className="block text-sm font-medium text-fe-text mb-1">
+                <label htmlFor="pdf-phone" className="block text-sm font-medium text-fe-text mb-1">
                   Telefon <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="pdf-phone"
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel"
                   {...register('phone')}
+                  aria-required="true"
+                  aria-invalid={errors.phone ? true : undefined}
+                  aria-describedby={errors.phone ? 'pdf-phone-error' : undefined}
                   className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
                   disabled={isSubmitting}
                 />
                 {errors.phone && (
-                  <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>
+                  <p id="pdf-phone-error" className="text-red-400 text-xs mt-1">{errors.phone.message}</p>
                 )}
               </div>
 
               {!defaultCity && (
                 <div>
-                  <label className="block text-sm font-medium text-fe-text mb-1">
+                  <label htmlFor="pdf-city" className="block text-sm font-medium text-fe-text mb-1">
                     İl <span className="text-red-400">*</span>
                   </label>
                   <input
+                    id="pdf-city"
                     type="text"
                     {...register('city')}
+                    aria-required="true"
+                    aria-invalid={errors.city ? true : undefined}
+                    aria-describedby={errors.city ? 'pdf-city-error' : undefined}
                     className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
                     disabled={isSubmitting}
                   />
                   {errors.city && (
-                    <p className="text-red-400 text-xs mt-1">{errors.city.message}</p>
+                    <p id="pdf-city-error" className="text-red-400 text-xs mt-1">{errors.city.message}</p>
                   )}
                 </div>
               )}
@@ -213,64 +311,76 @@ export function PdfOfferModal({
               {showDetails && (
                 <div id="pdf-modal-details" className="mt-4 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-fe-text mb-1">
+                    <label htmlFor="pdf-customer-company" className="block text-sm font-medium text-fe-text mb-1">
                       Firma Adı <span className="text-fe-muted text-xs">(opsiyonel)</span>
                     </label>
                     <input
+                      id="pdf-customer-company"
                       type="text"
                       {...register('customerCompany')}
+                      aria-invalid={errors.customerCompany ? true : undefined}
+                      aria-describedby={errors.customerCompany ? 'pdf-customer-company-error' : undefined}
                       className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
                       disabled={isSubmitting}
                     />
                     {errors.customerCompany && (
-                      <p className="text-red-400 text-xs mt-1">{errors.customerCompany.message}</p>
+                      <p id="pdf-customer-company-error" className="text-red-400 text-xs mt-1">{errors.customerCompany.message}</p>
                     )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-fe-text mb-1">
+                      <label htmlFor="pdf-district" className="block text-sm font-medium text-fe-text mb-1">
                         İlçe <span className="text-fe-muted text-xs">(opsiyonel)</span>
                       </label>
                       <input
+                        id="pdf-district"
                         type="text"
                         {...register('district')}
+                        aria-invalid={errors.district ? true : undefined}
+                        aria-describedby={errors.district ? 'pdf-district-error' : undefined}
                         className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
                         disabled={isSubmitting}
                       />
                       {errors.district && (
-                        <p className="text-red-400 text-xs mt-1">{errors.district.message}</p>
+                        <p id="pdf-district-error" className="text-red-400 text-xs mt-1">{errors.district.message}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-fe-text mb-1">
+                      <label htmlFor="pdf-email" className="block text-sm font-medium text-fe-text mb-1">
                         E-posta <span className="text-fe-muted text-xs">(opsiyonel)</span>
                       </label>
                       <input
+                        id="pdf-email"
                         type="email"
                         autoComplete="email"
                         {...register('email')}
+                        aria-invalid={errors.email ? true : undefined}
+                        aria-describedby={errors.email ? 'pdf-email-error' : undefined}
                         className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none"
                         disabled={isSubmitting}
                       />
                       {errors.email && (
-                        <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
+                        <p id="pdf-email-error" className="text-red-400 text-xs mt-1">{errors.email.message}</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-fe-text mb-1">
+                    <label htmlFor="pdf-delivery-address" className="block text-sm font-medium text-fe-text mb-1">
                       Açık Adres <span className="text-fe-muted text-xs">(opsiyonel)</span>
                     </label>
                     <textarea
+                      id="pdf-delivery-address"
                       rows={2}
                       {...register('deliveryAddress')}
+                      aria-invalid={errors.deliveryAddress ? true : undefined}
+                      aria-describedby={errors.deliveryAddress ? 'pdf-delivery-address-error' : undefined}
                       className="w-full px-4 py-3 bg-fe-surface border border-fe-border rounded-xl text-white focus:ring-2 focus:ring-brand-500 outline-none resize-none"
                       disabled={isSubmitting}
                     />
                     {errors.deliveryAddress && (
-                      <p className="text-red-400 text-xs mt-1">{errors.deliveryAddress.message}</p>
+                      <p id="pdf-delivery-address-error" className="text-red-400 text-xs mt-1">{errors.deliveryAddress.message}</p>
                     )}
                   </div>
                 </div>
@@ -282,6 +392,8 @@ export function PdfOfferModal({
                 type="checkbox"
                 id="kvkkConsent"
                 {...register('kvkkConsent')}
+                aria-invalid={errors.kvkkConsent ? true : undefined}
+                aria-describedby={errors.kvkkConsent ? 'pdf-kvkk-consent-error' : undefined}
                 disabled={isSubmitting}
                 className="mt-0.5 w-4 h-4 rounded accent-brand-500 cursor-pointer"
               />
@@ -293,7 +405,7 @@ export function PdfOfferModal({
               </label>
             </div>
             {errors.kvkkConsent && (
-              <p className="text-red-400 text-xs">{errors.kvkkConsent.message}</p>
+              <p id="pdf-kvkk-consent-error" className="text-red-400 text-xs">{errors.kvkkConsent.message}</p>
             )}
           </div>
 
@@ -302,7 +414,7 @@ export function PdfOfferModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-xl font-bold text-base text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors min-h-[48px]"
+              className="w-full py-3 rounded-xl font-bold text-base text-hub-dark bg-brand-500 hover:bg-brand-400 disabled:opacity-60 disabled:cursor-not-allowed transition-colors min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-fe-bg"
             >
               {isSubmitting ? 'Hazırlanıyor...' : 'PDF Teklif Kaydı Oluştur'}
             </button>

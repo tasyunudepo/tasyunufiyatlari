@@ -63,6 +63,74 @@ describe('/api/whatsapp-intent kaynak izin listesi', () => {
     expect(mocks.sendNotification).toHaveBeenCalledTimes(1)
   })
 
+  it('fiyat çözülmüş PDP bağlamını kişisel veri olmadan bildirime taşır', async () => {
+    const response = await POST(request({
+      source: 'product_detail_summary',
+      productName: 'Bonus Premium F 150 Pro',
+      page: '/urunler/tasyunu-levha/bonus-f-150-pro-tasyunu',
+      resultSessionId: 'pdp-test-session',
+      ctaLocation: 'product_detail_summary',
+      experienceVariant: 'a_whatsapp_first',
+      pricedContext: {
+        refCode: 'TYWABC12345',
+        modelName: 'F 150 Pro',
+        thicknessCm: 5,
+        cityCode: 34,
+        cityName: 'İstanbul',
+        subRegionName: 'Avrupa Yakası',
+        areaM2: 967.68,
+        packageCount: 336,
+        vehicleType: 'lorry',
+        vehicleLabel: '1 Kamyon',
+        pricePerM2: 348.77,
+        totalExVat: 337_497.75,
+        shippingMode: 'included_in_sale_price',
+      },
+    }))
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.ok).toBe(true)
+    expect(mocks.sendNotification).toHaveBeenCalledWith(
+      'whatsapp_intent',
+      expect.objectContaining({
+        source: 'Ürün detay karar özeti',
+        refCode: 'TYWABC12345',
+        thicknessCm: 5,
+        areaM2: 967.68,
+        cityName: 'İstanbul',
+        totalPrice: 337_497.75,
+        vehicleLabel: '1 Kamyon',
+        pricePerM2: 348.77,
+        shippingMode: 'included_in_sale_price',
+      }),
+    )
+  })
+
+  it('geçersiz fiyat bağlamını bildirime dönüştürmeden reddeder', async () => {
+    const response = await POST(request({
+      source: 'product_detail_summary',
+      experienceVariant: 'a_whatsapp_first',
+      pricedContext: {
+        refCode: 'gecersiz',
+        modelName: 'F 150 Pro',
+        thicknessCm: 5,
+        cityCode: 99,
+        cityName: 'İstanbul',
+        areaM2: -10,
+        packageCount: 0,
+        vehicleType: 'lorry',
+        vehicleLabel: '1 Kamyon',
+        pricePerM2: 348.77,
+        totalExVat: 337_497.75,
+        shippingMode: 'included_in_sale_price',
+      },
+    }))
+
+    expect(response.status).toBe(400)
+    expect(mocks.sendNotification).not.toHaveBeenCalled()
+  })
+
   it('tanımsız kaynağı 400 ile reddeder', async () => {
     const response = await POST(request({ source: 'olmayan_kaynak' }))
 

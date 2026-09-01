@@ -35,7 +35,7 @@ import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 import { getCategoryEntryContext } from "@/lib/catalog/category-entry-context";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 
-interface ShippingZone {
+export interface ProductShippingZone {
   city_code: number;
   city_name: string;
   base_shipping_cost: string | number;
@@ -44,7 +44,7 @@ interface ShippingZone {
   discount_tir: string | number;
 }
 
-interface LogisticsCap {
+export interface ProductLogisticsCapacity {
   thickness: number;
   lorry_capacity_m2: string | number;
   truck_capacity_m2: string | number;
@@ -57,8 +57,8 @@ interface Props {
   product: CatalogProductView;
   decision: DecisionContext;
   prefill: WizardPrefill | null;
-  shippingZones: ShippingZone[];
-  logisticsCapacity: LogisticsCap[];
+  shippingZones: ProductShippingZone[];
+  logisticsCapacity: ProductLogisticsCapacity[];
   selectedThickness: number | null;
   hideHeroPriceOnMobile?: boolean;
 }

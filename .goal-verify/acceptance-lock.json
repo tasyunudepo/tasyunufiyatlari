@@ -7,10 +7,10 @@
       "size": 46328
     },
     "tests/e2e/quote-flows/critical-quote-flows.spec.ts": {
-      "sha256": "a45afdab71b8dc18855e1ed8b6fdaae3c611ade6d285f284ef7571bca222e0b0",
-      "size": 8927,
-      "locked_at": "2026-08-31",
-      "reason": "PDF idempotency/capability, WhatsApp fail-closed ve PDP iletişim kapısı kabulleri korunur; kaldırılmış çok adımlı wizard yerine güncel kompakt ana sayfa formu kullanılır"
+      "sha256": "3705ea37c32c32467b44e7e1203b5edf98017f1b6fbd1efe8c4ed44c00b99488",
+      "size": 8941,
+      "locked_at": "2026-09-01",
+      "reason": "PDF idempotency/capability ve WhatsApp fail-closed kabulleri korunur; iletişim kapısı Bonus olmayan PDP'lerde sürer, canlı fiyat ve geçerli araç planı üreten Bonus PDP'nin WhatsApp-first istisnası ayrı E2E sözleşmesiyle korunur"
     },
     "tests/api/quotes-route.integration.test.ts": {
       "sha256": "14dec81c02ec778ac4505e15d326c1ba41d29d7b4a898db17b753c30f6df8e84",

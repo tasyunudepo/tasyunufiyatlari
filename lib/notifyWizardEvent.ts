@@ -137,6 +137,10 @@ export interface ProductDetailBasePayload {
   entry_surface?: 'product_detail' | 'category';
   catalog_journey_id?: string | null;
   section_key?: string | null;
+  sub_region_name?: string | null;
+  vehicle_label?: string | null;
+  shipping_mode?: 'included_in_sale_price' | 'buyer_responsible' | 'separate_quote_required' | null;
+  experience_variant?: 'a_whatsapp_first' | null;
 }
 
 export interface ProductDetailPriceViewPayload extends ProductDetailBasePayload {
@@ -366,6 +370,10 @@ function buildProductDetailPayload(p: ProductDetailBasePayload): Record<string, 
     entry_surface:     p.entry_surface ?? 'product_detail',
     catalog_journey_id: p.catalog_journey_id ?? null,
     section_key:       p.section_key ?? null,
+    sub_region_name:   p.sub_region_name ?? null,
+    vehicle_label:     p.vehicle_label ?? null,
+    shipping_mode:     p.shipping_mode ?? null,
+    experience_variant: p.experience_variant ?? null,
   };
 }
 

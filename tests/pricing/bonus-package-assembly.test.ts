@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildBonusPlateOrder, buildBonusVehiclePlans } from '@/lib/pricing/bonus/packageAssembly'
+import {
+  buildBonusPlateOrder,
+  buildBonusVehiclePlans,
+  findNearestLowerBonusVehiclePlan,
+} from '@/lib/pricing/bonus/packageAssembly'
 
 // Çifte marj kilidi: sunucunun marjlı satış fiyatı istemcide DEĞİŞMEDEN
 // kaleme döner. Emrah kuralı (13 Temmuz 2026): toz grubu marjı zaten
@@ -91,5 +95,43 @@ describe('Bonus tam araç planı', () => {
   it('geçersiz girişte boş liste (fail-closed)', () => {
     expect(buildBonusVehiclePlans(0, KAMYON, TIR)).toEqual([])
     expect(buildBonusVehiclePlans(100, 0, TIR)).toEqual([])
+  })
+
+  it('kamyonu az aşan ihtiyaçta kamyonu geçerli plan yapmadan yakın alt seçenek olarak verir', () => {
+    const lowerPlan = findNearestLowerBonusVehiclePlan(1050, 950.4, 1742.4)
+
+    expect(lowerPlan).toEqual({
+      plan: {
+        tir: 0,
+        kamyon: 1,
+        planM2: 950.4,
+        label: '1 Kamyon',
+        vehicleType: 'lorry',
+      },
+      shortfallM2: 99.6,
+    })
+    expect(buildBonusVehiclePlans(1050, 950.4, 1742.4).map((plan) => plan.label)).toEqual([
+      '1 TIR',
+    ])
+  })
+
+  it('ihtiyacı tam karşılayan araç varken gereksiz alt seçenek üretmez', () => {
+    expect(findNearestLowerBonusVehiclePlan(950.4, 950.4, 1742.4)).toBeNull()
+    expect(findNearestLowerBonusVehiclePlan(1742.4, 950.4, 1742.4)).toBeNull()
+  })
+
+  it('yüksek metrajda kurala uygun en yakın alt TIR + Kamyon birleşimini bulur', () => {
+    const lowerPlan = findNearestLowerBonusVehiclePlan(2800, 950.4, 1742.4)
+
+    expect(lowerPlan).toEqual({
+      plan: {
+        tir: 1,
+        kamyon: 1,
+        planM2: 2692.8,
+        label: '1 TIR + 1 Kamyon',
+        vehicleType: null,
+      },
+      shortfallM2: 107.2,
+    })
   })
 })

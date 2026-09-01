@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   // bağlanırken Next 16 HMR kaynağını varsayılan olarak cross-origin sayıyor.
   // Bu izin yalnız geliştirmede geçerlidir; production yapılandırmasına taşınmaz.
   allowedDevOrigins: process.env.NODE_ENV === "development"
-    ? ["192.168.1.2"]
+    ? ["localhost", "127.0.0.1", "192.168.1.2"]
     : undefined,
   webpack(config) {
     config.resolve = config.resolve ?? {};

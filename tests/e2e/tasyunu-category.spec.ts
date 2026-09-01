@@ -89,17 +89,19 @@ test.describe('Taşyünü Levha Karar Masası', () => {
     await expect(page.getByRole('status')).toContainText('karşılaştırmada işaretlendi')
   })
 
-  test('ürün detayı kullanım bağlamını gösterir ve aynı ürün grubuna döndürür', async ({ page }) => {
+  test('ürün detayı ayrı bağlam bandı oluşturmadan aynı ürün grubuna döndürür', async ({ page }) => {
     await page.goto('/urunler/tasyunu-levha/bonus-premium-r-tasyunu?entry=category&uygulama=cati')
 
     const context = page.getByTestId('product-category-context')
-    await expect(context).toContainText('Çatı Levhaları')
-    await expect(context.getByRole('link', { name: 'Çatı ürünlerine dön' })).toHaveAttribute(
+    await expect(context).toHaveText('Çatı Levhaları listesine dön')
+    await expect(context).toHaveAttribute(
       'href',
       '/urunler/tasyunu-levha?uygulama=cati#urunler',
     )
+    await expect(page.getByText('Karar Masası bağlamı')).toHaveCount(0)
+    await expect(page.getByText(/Bu ürünü .* listesinden açtınız/)).toHaveCount(0)
 
-    await context.getByRole('link', { name: 'Çatı ürünlerine dön' }).click()
+    await context.click()
     await expect(page).toHaveURL(/\/urunler\/tasyunu-levha\?uygulama=cati#urunler$/)
     await expect(page.getByRole('heading', { level: 2, name: 'Çatı Levhaları' })).toBeVisible()
   })

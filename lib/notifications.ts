@@ -24,6 +24,9 @@ export interface NotificationData {
   areaM2?: number;
   cityName?: string;
   totalPrice?: number;
+  pricePerM2?: number;
+  vehicleLabel?: string;
+  shippingMode?: 'included_in_sale_price' | 'buyer_responsible' | 'separate_quote_required';
   pdfUrl?: string;
   /** WhatsApp niyet bildirimleri için kaynak (header_mobile, footer_link, ...) */
   source?: string;
@@ -55,6 +58,20 @@ function buildMessage(event: LeadEventType, data: NotificationData): string {
   }
   if (data.totalPrice) {
     lines.push(`Tutar: ${data.totalPrice.toLocaleString('tr-TR')} ₺`);
+  }
+  if (data.pricePerM2) {
+    lines.push(`Birim: ${data.pricePerM2.toLocaleString('tr-TR')} ₺/m² (KDV hariç)`);
+  }
+  if (data.vehicleLabel) {
+    lines.push(`Araç planı: ${data.vehicleLabel}`);
+  }
+  if (data.shippingMode) {
+    const shippingLabel = data.shippingMode === 'included_in_sale_price'
+      ? 'Tam araç planında fiyata dahil'
+      : data.shippingMode === 'buyer_responsible'
+        ? 'Alıcıya ait'
+        : 'Satış görüşmesinde netleşir';
+    lines.push(`Nakliye: ${shippingLabel}`);
   }
   if (data.pdfUrl) {
     lines.push(`PDF: ${data.pdfUrl}`);

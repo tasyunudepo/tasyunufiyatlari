@@ -22,7 +22,7 @@ export default function TrustStrip() {
             prefetch={false}
             className="text-hub-gold-soft font-medium hover:underline"
           >
-            1 TIR istiyorum →
+            Proje fiyatını hesapla →
           </Link>
         </div>
       </div>

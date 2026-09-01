@@ -207,7 +207,7 @@ test.describe('kritik teklif akışları', () => {
     })
   })
 
-  test('PDP iletişim kapısı: teklif öncesi WhatsApp ve telefon yayınlamaz', async ({ page }) => {
+  test('Bonus olmayan PDP iletişim kapısı: teklif öncesi WhatsApp ve telefon yayınlamaz', async ({ page }) => {
     await page.goto(PRODUCT_PATH)
 
     await expect(page.getByRole('button', { name: 'PDF teklifimi hazırla' })).toBeVisible()

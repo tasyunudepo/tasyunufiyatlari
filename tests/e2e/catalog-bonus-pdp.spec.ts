@@ -44,9 +44,11 @@ test.describe('Bonus katalog PDP', () => {
     // Commit 7e27a73 ("mantolama dışı PDP'lerde takım CTA'sı kaldırıldı, PDF
     // teklif açıldı") bu bloğu kaldırdı ama hiçbir testi güncellemedi; bu
     // spec o tarihten beri CTA'yı tıklamaya çalışıp zaman aşımına uğruyordu.
-    // Yeni sözleşme: bu sayfanın dönüşüm yolu PDF teklifidir.
+    // Yeni sözleşme: WhatsApp sipariş başlangıcı birincil, PDF destekleyici
+    // ikincil yoldur; iki CTA aynı seçili araç planını kullanır.
     await expect(page.getByRole('button', { name: /Takım Fiyatını Gör/ })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: /PDF teklifimi hazırla/ }).first()).toBeVisible()
+    await expect(page.getByTestId('pdp-whatsapp-primary')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Referanslı PDF teklifini hazırla/ }).first()).toBeVisible()
 
     // Tam araç planı seçilebilir olmalı — ara metraja teklif üretilmez.
     await expect(page.getByRole('button', { name: /1 Kamyon/ }).first()).toBeVisible()

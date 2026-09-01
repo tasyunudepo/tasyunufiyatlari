@@ -39,6 +39,26 @@ export interface WhatsappIntentPayload {
   resultSessionId?: string;
   /** Masaüstü / sticky mobil ayrımı için */
   ctaLocation?: string;
+  /** Fiyat çözüldükten sonraki anonim ticari bağlam; kişisel veri içermez. */
+  pricedContext?: PricedWhatsappContext;
+  /** Deney varyantı; A/B sonuçlarını aynı event zincirinde ayırır. */
+  experienceVariant?: 'a_whatsapp_first';
+}
+
+export interface PricedWhatsappContext {
+  refCode: string;
+  modelName: string;
+  thicknessCm: number;
+  cityCode: number;
+  cityName: string;
+  subRegionName?: string;
+  areaM2: number;
+  packageCount: number;
+  vehicleType: 'lorry' | 'truck' | 'mixed';
+  vehicleLabel: string;
+  pricePerM2: number;
+  totalExVat: number;
+  shippingMode: 'included_in_sale_price' | 'buyer_responsible' | 'separate_quote_required';
 }
 
 export interface PhoneCallPayload {

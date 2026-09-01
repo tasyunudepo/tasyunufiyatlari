@@ -50,4 +50,26 @@ describe('WhatsApp teklif nakliye metni', () => {
     expect(message).toContain('Sistem: Dengeli Sistem')
     expect(message).toContain('İstanbul / Avrupa Yakası')
   })
+
+  it('Bonus Sipariş Masası bağlamını araç, fiyat, koşul ve referansla taşır', () => {
+    const message = generateQuoteWhatsAppMessage({
+      productName: 'Bonus Premium F 150 Pro',
+      thicknessCm: 5,
+      metrajM2: 967.68,
+      vehicleLabel: '1 Kamyon',
+      cityName: 'İstanbul',
+      subRegionName: 'Avrupa Yakası',
+      pricePerM2: 348.77,
+      totalKdvHaric: 337_497.75,
+      shippingMessage: 'tam araç planında fiyata dahil',
+      refCode: 'TYWABC12345',
+    })
+
+    expect(message).toContain('Bonus Premium F 150 Pro (5 cm)')
+    expect(message).toContain('967,7 m² · 1 Kamyon')
+    expect(message).toContain('İstanbul / Avrupa Yakası')
+    expect(message).toContain('348,77 ₺/m² (KDV hariç)')
+    expect(message).toContain('Nakliye: tam araç planında fiyata dahil')
+    expect(message).toContain('Ref: TYWABC12345')
+  })
 })
