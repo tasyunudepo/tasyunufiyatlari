@@ -46,7 +46,12 @@ if (!scope || !token) {
 console.log(`Vercel'e üretim dağıtımı — hesap: ${scope}`)
 const sonuc = spawnSync(
   'npx',
-  ['vercel', 'deploy', '--prod', '--yes', '--scope', scope, '--token', token],
-  { stdio: 'inherit' },
+  ['vercel', 'deploy', '--prod', '--yes', '--scope', scope],
+  {
+    stdio: 'inherit',
+    // Tokenı komut satırı argümanına koymak npm/process çıktısında sırrı
+    // görünür hâle getirir. Vercel CLI tokenı süreç ortamından okur.
+    env: { ...process.env, VERCEL_TOKEN: token },
+  },
 )
 process.exit(sonuc.status ?? 1)
