@@ -37,6 +37,7 @@ interface Props {
   modelNameOverride?: string | null;
   onOpen?: () => void;
   buttonClassName?: string;
+  getJourneyAttribution?: () => Record<string, string | null>;
 }
 
 interface SuccessState {
@@ -63,6 +64,7 @@ export default function SingleProductQuoteButton({
   modelNameOverride,
   onOpen,
   buttonClassName,
+  getJourneyAttribution,
 }: Props) {
   // API kapasite doğrulaması için model adı (Bonus'ta kısa ad şart).
   const apiModelName = modelNameOverride ?? product.name;
@@ -91,6 +93,7 @@ export default function SingleProductQuoteButton({
       const categoryContext = getCategoryEntryContext();
       const fromCategory = Boolean(categoryContext);
       const catalogJourneyId = fromCategory ? readCatalogJourneyId() : null;
+      const journeyAttribution = getJourneyAttribution?.() ?? {};
 
       // Marka+ürün adını duplikasyonsuz, Fawori parent ekleyerek formatla
       const brandProductName = formatBrandProductName(product.brand.name, product.name);
@@ -230,6 +233,7 @@ export default function SingleProductQuoteButton({
                 catalog_journey_id: catalogJourneyId,
                 section_key: categoryContext?.sectionKey ?? null,
                 result_session_id: resultSessionId ?? null,
+                ...journeyAttribution,
               },
             },
             quoteCode:       refCode,

@@ -190,11 +190,13 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
     const [entryAttribution, setEntryAttribution] = useState<{
         entrySurface: WizardEntrySurface;
         comparisonSessionId: string | null;
+        comparisonRoute: 'bonus_system' | 'all_products' | null;
         catalogJourneyId: string | null;
         sectionKey: string | null;
     }>({
         entrySurface: 'wizard',
         comparisonSessionId: null,
+        comparisonRoute: null,
         catalogJourneyId: null,
         sectionKey: null,
     });
@@ -451,6 +453,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             setEntryAttribution({
                 entrySurface: situationPresetFromStore.entrySurface,
                 comparisonSessionId: situationPresetFromStore.comparisonSessionId ?? null,
+                comparisonRoute: situationPresetFromStore.comparisonRoute ?? null,
                 catalogJourneyId: situationPresetFromStore.catalogJourneyId ?? null,
                 sectionKey: situationPresetFromStore.sectionKey ?? null,
             });
@@ -885,6 +888,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         result_session_id: resultSessionId,
         entry_surface: entryAttribution.entrySurface,
         comparison_session_id: entryAttribution.comparisonSessionId,
+        comparison_route: entryAttribution.comparisonRoute,
         catalog_journey_id: entryAttribution.catalogJourneyId,
         section_key: entryAttribution.sectionKey,
     });
@@ -1017,6 +1021,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     result_session_id:      resultSessionId,
                     entry_surface:          entryAttribution.entrySurface,
                     comparison_session_id:  entryAttribution.comparisonSessionId,
+                    comparison_route:       entryAttribution.comparisonRoute,
                     catalog_journey_id:     entryAttribution.catalogJourneyId,
                     section_key:            entryAttribution.sectionKey,
                 });
@@ -1444,6 +1449,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 result_session_id: nextResultSessionId,
                 entry_surface: entryAttribution.entrySurface,
                 comparison_session_id: entryAttribution.comparisonSessionId,
+                comparison_route: entryAttribution.comparisonRoute,
                 catalog_journey_id: entryAttribution.catalogJourneyId,
                 section_key: entryAttribution.sectionKey,
             });
@@ -1644,6 +1650,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 area_m2: parseFloat(metraj) || 0,
                 entry_surface: entryAttribution.entrySurface,
                 comparison_session_id: entryAttribution.comparisonSessionId,
+                comparison_route: entryAttribution.comparisonRoute,
                 catalog_journey_id: entryAttribution.catalogJourneyId,
                 section_key: entryAttribution.sectionKey,
             });
@@ -1935,6 +1942,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             result_session_id:      nextResultSessionId,
             entry_surface:          entryAttribution.entrySurface,
             comparison_session_id:  entryAttribution.comparisonSessionId,
+            comparison_route:       entryAttribution.comparisonRoute,
             catalog_journey_id:     entryAttribution.catalogJourneyId,
             section_key:            entryAttribution.sectionKey,
         });
@@ -2050,6 +2058,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 attribution: {
                     entry_surface: entryAttribution.entrySurface,
                     comparison_session_id: entryAttribution.comparisonSessionId,
+                    comparison_route: entryAttribution.comparisonRoute,
                     catalog_journey_id: entryAttribution.catalogJourneyId,
                     section_key: entryAttribution.sectionKey,
                     result_session_id: resultSessionId || null,
@@ -2123,6 +2132,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     result_session_id:      resultSessionId,
                     entry_surface:          entryAttribution.entrySurface,
                     comparison_session_id:  entryAttribution.comparisonSessionId,
+                    comparison_route:       entryAttribution.comparisonRoute,
                     catalog_journey_id:     entryAttribution.catalogJourneyId,
                     section_key:            entryAttribution.sectionKey,
                 });

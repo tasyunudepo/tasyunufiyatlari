@@ -10,6 +10,7 @@ import { devtools, persist } from 'zustand/middleware';
 // consumeSituationPreset() ile bir kez okunup temizlenir.
 export type SituationPresetKey = 'isi_yalitimi' | 'ses_yalitimi' | 'cati_yalitimi' | 'urun_sayfasi';
 export type WizardEntrySurface = 'wizard' | 'product_detail' | 'comparison' | 'category';
+export type WizardComparisonRoute = 'bonus_system' | 'all_products';
 export type WizardCitySubRegion = 'avrupa' | 'anadolu' | 'gebze' | 'diger';
 
 export interface SituationPreset {
@@ -29,6 +30,7 @@ export interface SituationPreset {
   areaM2?: number;
   entrySurface?: WizardEntrySurface;
   comparisonSessionId?: string;
+  comparisonRoute?: WizardComparisonRoute;
   catalogJourneyId?: string;
   sectionKey?: string;
 }

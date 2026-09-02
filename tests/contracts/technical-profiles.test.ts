@@ -73,6 +73,9 @@ describe('teknik profil verisi — AC-001', () => {
     expect(density!.display.length).toBeGreaterThan(0)
     expect(density!.minKgM3).toBeLessThanOrEqual(density!.maxKgM3)
     expect(profile!.datasheetRef.length).toBeGreaterThan(0)
+    expect(profile!.editorial?.summary.length).toBeGreaterThan(40)
+    expect(profile!.editorial?.highlights.length).toBeGreaterThanOrEqual(3)
+    expect(profile!.editorial?.boardSize).toMatch(/mm$/)
   })
 })
 

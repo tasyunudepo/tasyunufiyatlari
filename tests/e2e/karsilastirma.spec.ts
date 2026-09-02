@@ -146,7 +146,7 @@ test.describe('Karşılaştırma Merkezi', () => {
       test.skip(true, 'HD150 PDP yok.')
       return
     }
-    await page.getByRole('link', { name: /mantolama alternatiflerini karşılaştır/ }).click()
+    await page.getByRole('link', { name: /Diğer taşyünü levhalarla karşılaştır/ }).click()
     await page.waitForURL(/tasyunu-karsilastir/)
     await expect(page.getByRole('heading', { name: 'Teknik karşılaştırma' })).toBeVisible({ timeout: 20_000 })
   })
@@ -223,6 +223,7 @@ test.describe('Karşılaştırma Merkezi', () => {
     expect(attribution).toMatchObject({
       entry_surface: 'comparison',
       comparison_session_id: submitted.comparisonSessionId,
+      comparison_route: 'all_products',
     })
   })
 })

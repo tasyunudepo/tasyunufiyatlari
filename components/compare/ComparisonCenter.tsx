@@ -56,6 +56,16 @@ const COMPARISON_ENTRY_PLACEMENTS = new Set<ComparisonEntryPlacement>([
 const createComparisonSessionId = () =>
   `cmp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
+function readComparisonSessionId(): string {
+  if (typeof window === 'undefined') return createComparisonSessionId();
+  const fromQuery = new URLSearchParams(window.location.search).get('comparison_session_id');
+  const fromPdp = window.sessionStorage.getItem('pdp_comparison_session_id');
+  const candidate = fromQuery ?? fromPdp;
+  return candidate && /^cmp_[a-z0-9_]+$/i.test(candidate)
+    ? candidate
+    : createComparisonSessionId();
+}
+
 const formatSourceDate = (isoDate: string) =>
   new Intl.DateTimeFormat("tr-TR", {
     day: "numeric",
@@ -109,11 +119,14 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const [comparisonDataError, setComparisonDataError] = useState(false);
   const [requestVersion, setRequestVersion] = useState(0);
   const [focusedModel, setFocusedModel] = useState<string | null>(null);
-  const [comparisonSessionId] = useState(createComparisonSessionId);
+  const comparisonSessionIdRef = useRef<string | null>(null);
   const entryPlacementRef = useRef<ComparisonEntryPlacement>("direct");
   const catalogJourneyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    comparisonSessionIdRef.current = readComparisonSessionId();
+    window.sessionStorage.removeItem('pdp_comparison_session_id');
+    const comparisonSessionId = comparisonSessionIdRef.current;
     entryPlacementRef.current = readEntryPlacement();
     catalogJourneyIdRef.current = entryPlacementRef.current === "category"
       ? readCatalogJourneyId()
@@ -125,6 +138,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       entry_placement: entryPlacementRef.current,
       comparison_session_id: comparisonSessionId,
       catalog_journey_id: catalogJourneyIdRef.current,
+      comparison_route: 'all_products',
     });
     return () => window.clearTimeout(focusTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -239,11 +253,13 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   }
 
   function handleCalculate(profile: TechnicalProfile) {
+    const comparisonSessionId = comparisonSessionIdRef.current ?? readComparisonSessionId();
     notifyComparisonCtaClick({
       surface: variant,
       entry_placement: entryPlacementRef.current,
       comparison_session_id: comparisonSessionId,
       catalog_journey_id: catalogJourneyIdRef.current,
+      comparison_route: 'all_products',
       brand_name: profile.brandName,
       model_name: profile.modelShortName,
       city_code: cityCode,
@@ -269,6 +285,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       citySubRegion: subChoice,
       entrySurface: "comparison",
       comparisonSessionId,
+      comparisonRoute: 'all_products',
       catalogJourneyId: catalogJourneyIdRef.current ?? undefined,
     });
   }

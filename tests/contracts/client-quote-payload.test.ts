@@ -26,6 +26,7 @@ describe('teklif istemcisi KVKK sözleşmesi', () => {
 
     expect(source).toContain('entry_surface: entryAttribution.entrySurface')
     expect(source).toContain('comparison_session_id: entryAttribution.comparisonSessionId')
+    expect(source).toContain('comparison_route: entryAttribution.comparisonRoute')
     expect(source).toContain('catalog_journey_id: entryAttribution.catalogJourneyId')
     expect(source).toContain('section_key: entryAttribution.sectionKey')
     expect(source).toContain('result_session_id: resultSessionId || null')
@@ -40,5 +41,6 @@ describe('teklif istemcisi KVKK sözleşmesi', () => {
 
     expect(source).toContain('kvkkConsent:   formData.kvkkConsent')
     expect(source).toContain('section_key: categoryContext?.sectionKey ?? null')
+    expect(source).toContain('...journeyAttribution')
   })
 })

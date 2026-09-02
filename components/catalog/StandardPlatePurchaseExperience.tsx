@@ -15,6 +15,8 @@ import ProductPricePanel, {
 } from './ProductPricePanel'
 import StandardPlateCommercialHeader from './StandardPlateCommercialHeader'
 import ThicknessSelector from './ThicknessSelector'
+import ProductSectionTracker from './ProductSectionTracker'
+import StandardPurchaseAssurance from './StandardPurchaseAssurance'
 
 interface StandardPlatePurchaseExperienceProps {
   product: CatalogProductView
@@ -39,7 +41,7 @@ function ProductVisual({ product, prefill }: { product: CatalogProductView; pref
         className="min-h-[230px] w-full flex-1 sm:min-h-[390px]"
       />
       {thicknessOptions.length > 0 && (
-        <div className="mt-5 border-t border-[#ded2c0] pt-5">
+        <div className="mt-5 border-t border-[#ded2c0] pt-5 xl:hidden">
           <h2 className="mb-3 font-heading text-xl font-bold text-[#282219]">Kalınlığı seçin</h2>
           <Suspense fallback={null}>
             <ThicknessSelector
@@ -115,7 +117,8 @@ function ProductDetails({
   const fallbackDescription = profile
     ? `${commercialTitle}, ${applicationLabel?.toLocaleLowerCase('tr-TR')} uygulamalarına yönelik taşyünü ısı yalıtım levhasıdır. Seçtiğiniz kalınlığa ait paket içeriği ve tam araç kapasitesi satın alma alanında birlikte hesaplanır.`
     : ''
-  const aboutCopy = descriptionIntro || fallbackDescription
+  const aboutCopy = profile?.editorial?.summary ?? (descriptionIntro || fallbackDescription)
+  const verifiedBullets = profile?.editorial?.highlights ?? descriptionBullets
 
   if (!profile && !aboutCopy) return null
 
@@ -131,9 +134,9 @@ function ProductDetails({
             {commercialTitle} hakkında
           </h2>
           {aboutCopy && <p className="mt-3 max-w-[72ch] text-base leading-7 text-[#625b50]">{aboutCopy}</p>}
-          {descriptionBullets.length > 0 && (
+          {verifiedBullets.length > 0 && (
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[#625b50] sm:grid-cols-2">
-              {descriptionBullets.map(item => (
+              {verifiedBullets.map(item => (
                 <li key={item} className="grid grid-cols-[8px_1fr] gap-2">
                   <span aria-hidden="true" className="mt-[9px] h-1.5 w-1.5 rounded-full bg-[#9a762f]" />
                   <span>{item}</span>
@@ -156,6 +159,12 @@ function ProductDetails({
               <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[#625c51]">Kalınlık aralığı</dt>
               <dd className="mt-1 text-base font-bold text-[#282219]">{thicknessRange}</dd>
             </div>
+            {profile?.editorial?.boardSize && (
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[#625c51]">Levha ölçüsü</dt>
+                <dd className="mt-1 text-base font-bold text-[#282219]">{profile.editorial.boardSize}</dd>
+              </div>
+            )}
           </dl>
           <p className="mt-4 border-t border-[#ded2c0] pt-4 text-sm leading-6 text-[#625b50]">
             Kalınlık seçimi paket içeriğini ve tam araçta taşınan toplam metrajı değiştirir.
@@ -255,17 +264,24 @@ export default function StandardPlatePurchaseExperience({
           </div>
 
           <div className="order-3 min-w-0 space-y-5 xl:col-span-2">
-            <PlatePackageDetails
-              product={product}
-              logisticsCapacity={logisticsCapacity}
-              fallbackThickness={selectedThickness ?? prefill?.kalinlik ?? thicknessOptions[0] ?? null}
-            />
-            <ProductDetails
-              product={product}
-              profile={profile}
-              thicknessRange={thicknessRange}
-              commercialTitle={commercialTitle}
-            />
+            <ProductSectionTracker sectionName="seller_payment_process" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
+              <StandardPurchaseAssurance />
+            </ProductSectionTracker>
+            <ProductSectionTracker sectionName="package" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
+              <PlatePackageDetails
+                product={product}
+                logisticsCapacity={logisticsCapacity}
+                fallbackThickness={selectedThickness ?? prefill?.kalinlik ?? thicknessOptions[0] ?? null}
+              />
+            </ProductSectionTracker>
+            <ProductSectionTracker sectionName="technical" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
+              <ProductDetails
+                product={product}
+                profile={profile}
+                thicknessRange={thicknessRange}
+                commercialTitle={commercialTitle}
+              />
+            </ProductSectionTracker>
           </div>
         </section>
       </div>

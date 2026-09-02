@@ -22,6 +22,7 @@ import {
 } from "@/lib/notifyWizardEvent";
 import { getCategoryEntryContext } from "@/lib/catalog/category-entry-context";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
+import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 // ============================================================
 // Bonus PDP canlı bölge fiyatı (Faz 2)
@@ -130,6 +131,7 @@ export default function BonusRegionPrice({
   resultSessionId,
   variant = "default",
 }: BonusRegionPriceProps) {
+  const interactive = useProductInteractiveOptional();
   const [subChoice, setSubChoice] = useState<BonusSubRegionChoice | null>(
     () => defaultSubChoice(cityCode),
   );
@@ -146,6 +148,15 @@ export default function BonusRegionPrice({
   const lastPriceViewRef = useRef("");
 
   const subInfo = citySubRegionQuestion(cityCode);
+  const getJourneyAttribution = () => {
+    const snapshot = interactive?.getMeasurementSnapshot();
+    return {
+      price_context: 'selected_vehicle_plan',
+      seen_sections: snapshot?.seen_sections ?? null,
+      elapsed_ms_bucket: snapshot?.elapsed_ms_bucket ?? null,
+      max_scroll_bucket: snapshot?.max_scroll_bucket ?? null,
+    };
+  };
   const currentRequestKey = [modelShortName, thicknessCm ?? "none", cityCode, subChoice ?? "none"].join("|");
 
   // Şehir değişince o şehrin varsayılan yaka/bölge seçimine dön.
@@ -358,6 +369,13 @@ export default function BonusRegionPrice({
       vehicle_label: purchaseCalculation.selectedLabel,
       shipping_mode: "included_in_sale_price" as const,
       experience_variant: "a_whatsapp_first" as const,
+      price_context: "selected_vehicle_plan" as const,
+      journey_context: (() => {
+        const snapshot = interactive?.getMeasurementSnapshot();
+        return snapshot
+          ? `${snapshot.seen_sections ?? 'none'};${snapshot.elapsed_ms_bucket};${snapshot.max_scroll_bucket}`
+          : null;
+      })(),
     };
   };
 
@@ -808,6 +826,7 @@ export default function BonusRegionPrice({
                   packageSizeM2={resolvedData.packageM2}
                   modelNameOverride={modelShortName}
                   onOpen={trackPdfOpen}
+                  getJourneyAttribution={getJourneyAttribution}
                   buttonClassName="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[8px] border-0 bg-transparent px-3 text-xs font-bold text-[#e2c57e] transition-colors hover:bg-white/[0.035] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d2aa55] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1c1d1a]"
                 />
               </div>
@@ -1061,6 +1080,7 @@ export default function BonusRegionPrice({
                       resultSessionId={resultSessionId}
                       packageSizeM2={state.data.packageM2}
                       modelNameOverride={modelShortName}
+                      getJourneyAttribution={getJourneyAttribution}
                     />
                     <p className="mt-1.5 text-center text-[10px] leading-snug text-fe-muted">
                       Seçili tam araç planıyla (

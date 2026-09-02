@@ -38,6 +38,7 @@ describe('karşılaştırma → wizard preset köprüsü', () => {
       citySubRegion: null,
       entrySurface: 'comparison',
       comparisonSessionId: 'cmp_test_1',
+      comparisonRoute: 'all_products',
     })
 
     expect(useWizardStore.getState().consumeSituationPreset()).toEqual({
@@ -50,6 +51,7 @@ describe('karşılaştırma → wizard preset köprüsü', () => {
       citySubRegion: null,
       entrySurface: 'comparison',
       comparisonSessionId: 'cmp_test_1',
+      comparisonRoute: 'all_products',
     })
     expect(useWizardStore.getState().consumeSituationPreset()).toBeNull()
   })

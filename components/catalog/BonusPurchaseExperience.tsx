@@ -21,6 +21,7 @@ import {
 import { WAREHOUSE_INFO } from "@/lib/business/info";
 import ProductImage from "./ProductImage";
 import BonusPurchaseDesk, { type BonusPurchaseShippingZone } from "./BonusPurchaseDesk";
+import ProductSectionTracker from "./ProductSectionTracker";
 
 interface BonusPurchaseExperienceProps {
   product: CatalogProductView;
@@ -206,10 +207,8 @@ export default function BonusPurchaseExperience({
             <BonusPurchaseDesk product={product} shippingZones={shippingZones} />
           </div>
 
-          <div
-            aria-label="Sipariş ve satış güvenceleri"
-            className="grid border-t border-[#ded7c8] bg-[#fffdf8] lg:grid-cols-[1.08fr_1.92fr]"
-          >
+          <ProductSectionTracker sectionName="seller_payment_process" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
+          <div aria-label="Sipariş ve satış güvenceleri" className="grid border-t border-[#ded7c8] bg-[#fffdf8] lg:grid-cols-[1.08fr_1.92fr]">
             <div className="flex items-start gap-3 border-b border-[#ded7c8] bg-[#faf6ed] px-5 py-5 sm:px-7 lg:border-b-0 lg:border-r">
               <CheckCircle2 aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-[#7d5d20]" />
               <div>
@@ -255,6 +254,7 @@ export default function BonusPurchaseExperience({
               ))}
             </ul>
           </div>
+          </ProductSectionTracker>
         </section>
 
         <section className="mt-5 overflow-hidden rounded-[14px] bg-[#171612] text-white shadow-[0_20px_46px_rgba(39,31,17,0.15)]">
@@ -299,6 +299,7 @@ export default function BonusPurchaseExperience({
           </div>
         </section>
 
+        <ProductSectionTracker sectionName="technical" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
         <section className="mt-5 overflow-hidden rounded-[14px] border border-[#d8d0bf] bg-white shadow-[0_10px_28px_rgba(39,31,17,0.07)]">
           <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
@@ -306,8 +307,18 @@ export default function BonusPurchaseExperience({
                 Teknik ürün bilgisi ve mantolama karşılaştırması
               </h2>
               <p className="mt-3 max-w-[68ch] text-sm leading-6 text-[#665f53]">
-                {product.catalog_description ?? `${product.name} için ürün, kalınlık ve teslim koşullarını birlikte değerlendirin.`}
+                {profile?.editorial?.summary ?? product.catalog_description ?? `${product.name} için ürün, kalınlık ve teslim koşullarını birlikte değerlendirin.`}
               </p>
+              {profile?.editorial?.highlights && (
+                <ul className="mt-4 grid gap-2 text-sm leading-6 text-[#665f53] sm:grid-cols-2">
+                  {profile.editorial.highlights.map((item) => (
+                    <li key={item} className="grid grid-cols-[8px_1fr] gap-2">
+                      <span aria-hidden="true" className="mt-[9px] h-1.5 w-1.5 rounded-full bg-[#9a762f]" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="flex flex-col justify-center gap-3 lg:items-end">
               <Link
@@ -315,7 +326,7 @@ export default function BonusPurchaseExperience({
                 prefetch={false}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-[#7d5d20] px-5 text-sm font-extrabold text-[#604615] transition-colors hover:bg-[#faf6ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7d5d20] focus-visible:ring-offset-2 sm:w-auto"
               >
-                Mantolama alternatiflerini karşılaştır
+                Diğer taşyünü levhalarla karşılaştır
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
               <a
@@ -355,6 +366,7 @@ export default function BonusPurchaseExperience({
             </ul>
           </div>
         </section>
+        </ProductSectionTracker>
       </div>
     </main>
   );

@@ -82,6 +82,12 @@ export interface TechnicalProfile {
   thicknessMmMax: number
   /** Kaynak belge (yerel arşiv yolu) */
   datasheetRef: string
+  /** Müşteri yüzeyi için teknik föyden editoryal olarak türetilmiş kısa içerik. */
+  editorial?: {
+    summary: string
+    highlights: readonly string[]
+    boardSize: string
+  }
 }
 
 const PROFILES: readonly TechnicalProfile[] = [
@@ -108,6 +114,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 20,
     thicknessMmMax: 130,
     datasheetRef: '_audit/teknik-foyler/2026-07/bonus-premium-f-150.pdf',
+    editorial: {
+      summary: 'Bazalt mineral liflerinden üretilen, kaplamasız bir dış cephe ısı yalıtım levhasıdır. Sıvalı dış cephe mantolama sistemlerinde ısı, ses ve yangın yalıtımına katkı sağlamak üzere kullanılır.',
+      highlights: [
+        '1200 × 600 mm levha ölçüsünde üretilir.',
+        'Föyde 20–130 mm kalınlık aralığı beyan edilir.',
+        'A1 yangına tepki sınıfındadır.',
+      ],
+      boardSize: '1200 × 600 mm',
+    },
   },
   {
     productKey: 'bonus-premium-f-150-pro',
@@ -132,6 +147,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 30,
     thicknessMmMax: 120,
     datasheetRef: '_audit/teknik-foyler/2026-07/bonus-premium-f-150-pro.pdf',
+    editorial: {
+      summary: 'Bazalt mineral liflerinden üretilen, kaplamasız ve sıvalı dış cephe uygulamalarına yönelik taşyünü levhadır. Mantolama sisteminde ısı, ses ve yangın yalıtımına katkı sağlar.',
+      highlights: [
+        '1200 × 600 mm levha ölçüsünde üretilir.',
+        'Föyde 30–120 mm kalınlık aralığı beyan edilir.',
+        'A1 yangına tepki sınıfındadır.',
+      ],
+      boardSize: '1200 × 600 mm',
+    },
   },
   {
     productKey: 'expert-hd150',
@@ -156,6 +180,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 30,
     thicknessMmMax: 150,
     datasheetRef: 'docs/ExpertTaşyünüHD150IsiYalitimLevhasiTDS.pdf',
+    editorial: {
+      summary: 'Volkanik kayaçlardan elde edilen inorganik liflerle üretilmiş, sıvalı dış cephe mantolama uygulamalarına yönelik taşyünü ısı yalıtım levhasıdır.',
+      highlights: [
+        '600 × 1000 mm levha ölçüsünde üretilir.',
+        'Föyde 30–150 mm kalınlık aralığı beyan edilir.',
+        'TR15 çekme ve CS(10)40 basma sınıfı beyanına sahiptir.',
+      ],
+      boardSize: '600 × 1000 mm',
+    },
   },
   {
     productKey: 'bonus-premium-f-120',
@@ -180,6 +213,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 30,
     thicknessMmMax: 130,
     datasheetRef: '_audit/teknik-foyler/2026-07/bonus-premium-f-120.pdf',
+    editorial: {
+      summary: 'Bazalt mineral liflerinden üretilen, kaplamasız bir mantolama levhasıdır. Sıvalı dış cephe sistemlerinde ısı, ses ve yangın yalıtımına katkı sağlamak üzere kullanılır.',
+      highlights: [
+        '1200 × 600 mm levha ölçüsünde üretilir.',
+        'Föyde 30–130 mm kalınlık aralığı beyan edilir.',
+        'A1 yangına tepki sınıfındadır.',
+      ],
+      boardSize: '1200 × 600 mm',
+    },
   },
   {
     productKey: 'expert-ld125',
@@ -204,6 +246,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 30,
     thicknessMmMax: 150,
     datasheetRef: 'docs/6.ExpertTaşyünüLD125IsiYalitimLevhasiTDS.pdf',
+    editorial: {
+      summary: 'Volkanik kayaçlardan elde edilen inorganik liflerle üretilmiş, sıvalı dış cephe mantolama uygulamalarına yönelik taşyünü ısı yalıtım levhasıdır.',
+      highlights: [
+        '600 × 1000 mm levha ölçüsünde üretilir.',
+        'Föyde 30–150 mm kalınlık aralığı beyan edilir.',
+        'TR7.5 çekme ve CS(10)30 basma sınıfı beyanına sahiptir.',
+      ],
+      boardSize: '600 × 1000 mm',
+    },
   },
   {
     productKey: 'dalmacyali-sw035',
@@ -228,6 +279,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 30,
     thicknessMmMax: 100,
     datasheetRef: 'docs/dalmacyali_stonewool_sw_035_tasyuenue_isi_yalitim_levhasi_68f039f652.pdf',
+    editorial: {
+      summary: 'Sıvalı dış cephe mantolama sistemlerinde kullanılmak üzere geliştirilmiş taşyünü ısı yalıtım levhasıdır. Teknik föyünde ısı iletkenliği, mekanik dayanım ve A1 yangına tepki değerleri birlikte beyan edilir.',
+      highlights: [
+        '600 × 1000 mm levha ölçüsünde üretilir.',
+        'Föyde 30–100 mm kalınlık aralığı beyan edilir.',
+        'TR10 çekme ve CS(10)30 basma sınıfı beyanına sahiptir.',
+      ],
+      boardSize: '600 × 1000 mm',
+    },
   },
   {
     productKey: 'expert-tasyunu-premium',
@@ -252,6 +312,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 30,
     thicknessMmMax: 100,
     datasheetRef: 'docs/4-1ExpertTaşyünüPremiumIsiYalitimLevhasiTDS_Rev.pdf',
+    editorial: {
+      summary: 'Sıvalı dış cephe mantolama sistemlerinde kullanılmak üzere geliştirilmiş taşyünü ısı yalıtım levhasıdır. Teknik seçimde ısı iletkenliği ile yüzeye dik çekme ve basma dayanımı birlikte değerlendirilir.',
+      highlights: [
+        '600 × 1000 mm levha ölçüsünde üretilir.',
+        'Föyde 30–100 mm kalınlık aralığı beyan edilir.',
+        'TR7.5 çekme ve CS(10)25 basma sınıfı beyanına sahiptir.',
+      ],
+      boardSize: '600 × 1000 mm',
+    },
   },
   {
     productKey: 'fawori-optimix-tr75',
@@ -276,6 +345,15 @@ const PROFILES: readonly TechnicalProfile[] = [
     thicknessMmMin: 40,
     thicknessMmMax: 150,
     datasheetRef: 'docs/Fawori_Tasyuenue_TR_7_5_Isi_Yalitim_Levhasi_TDS_4b4e64b7ab.pdf',
+    editorial: {
+      summary: 'Sıvalı dış cephe mantolama uygulamalarına yönelik taşyünü ısı yalıtım levhasıdır. Teknik föyünde ısı iletkenliği, çekme dayanımı, basma dayanımı ve A1 yangına tepki sınıfı beyan edilir.',
+      highlights: [
+        '600 × 1000 mm levha ölçüsünde üretilir.',
+        'Föyde 40–150 mm kalınlık aralığı beyan edilir.',
+        'TR7.5 çekme ve CS(10)25 basma sınıfı beyanına sahiptir.',
+      ],
+      boardSize: '600 × 1000 mm',
+    },
   },
   // ── 2026-07-20 genişletmesi — Bonus mantolama dışı aileler ──
   // Kaynak: bonus-fiyat-listesi-haziran-2026.pdf teknik özellik sayfaları

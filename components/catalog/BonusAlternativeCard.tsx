@@ -13,7 +13,10 @@ import { useWizardStore } from "@/lib/store/wizardStore";
 import {
   notifyBonusChallengeShown,
   notifyBonusChallengePicked,
+  notifyProductDetailComparisonPathClick,
 } from "@/lib/notifyWizardEvent";
+import { createComparisonSessionId } from "@/lib/analytics/pdpJourney";
+import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
 // ============================================================
 // Filli grubu PDP'sinde Bonus alternatif kartı (Sprint 1.3)
@@ -63,6 +66,8 @@ export default function BonusAlternativeCard({
   );
   const [state, setState] = useState<PriceState>({ status: "idle" });
   const shownEventFired = useRef(false);
+  const interactive = useProductInteractiveOptional();
+  const [comparisonSessionId] = useState(createComparisonSessionId);
 
   const subInfo = citySubRegionQuestion(cityCode);
 
@@ -139,6 +144,18 @@ export default function BonusAlternativeCard({
       unit_diff_tl: unitDiff,
       city_code: cityCode,
       thickness_cm: thicknessCm,
+      result_session_id: interactive?.resultSessionId ?? null,
+      comparison_session_id: comparisonSessionId,
+    });
+    notifyProductDetailComparisonPathClick({
+      product_name: `${sourceBrandName} ${sourceModel}`,
+      brand_name: sourceBrandName,
+      product_slug: sourceModel,
+      result_session_id: interactive?.resultSessionId ?? `pdp_${comparisonSessionId}`,
+      comparison_session_id: comparisonSessionId,
+      comparison_route: 'bonus_system',
+      thickness_cm: thicknessCm,
+      city_code: cityCode,
     });
     const store = useWizardStore.getState();
     store.reset();
@@ -147,6 +164,11 @@ export default function BonusAlternativeCard({
       thicknessCm: thicknessCm ?? 5,
       brandName: "Bonus",
       modelShortName: challenger ?? undefined,
+      cityCode,
+      citySubRegion: subChoice,
+      entrySurface: 'comparison',
+      comparisonSessionId,
+      comparisonRoute: 'bonus_system',
     });
     // Çapasız '/' hero'ya bırakıyordu; müşteri hesaplayıcıyı görmeden
     // kayboluyordu — doğrudan hesaplayıcıya in.

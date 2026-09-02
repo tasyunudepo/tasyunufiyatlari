@@ -7,11 +7,18 @@
 // Mobil özet kart, picker ve fiyat paneli bu state'e abone → şehir/kalınlık her
 // değiştiğinde tüm bağımlı bloklar anında reaktif.
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   buildProductPathWithThickness,
 } from "@/lib/catalog/thickness-url";
+import {
+  bucketElapsedMs,
+  bucketScrollPercent,
+  serializeSeenSections,
+  type PdpJourneySnapshot,
+  type PdpMeasuredSection,
+} from "@/lib/analytics/pdpJourney";
 
 interface ContextValue {
   cityCode: number;
@@ -24,6 +31,9 @@ interface ContextValue {
   setHeroPrice: (price: number | null) => void;
   orderPlan: ProductOrderPlan | null;
   setOrderPlan: (plan: ProductOrderPlan | null) => void;
+  resultSessionId: string;
+  markSectionSeen: (section: PdpMeasuredSection) => void;
+  getMeasurementSnapshot: () => PdpJourneySnapshot;
 }
 
 export interface ProductOrderPlan {
@@ -51,11 +61,49 @@ export function ProductInteractiveProvider({
   const [activeThickness, setActiveThicknessState] = useState<number | null>(initialThickness);
   const [heroPrice, setHeroPriceState] = useState<number | null>(null);
   const [orderPlan, setOrderPlanState] = useState<ProductOrderPlan | null>(null);
+  const [resultSessionId] = useState(
+    () => `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+  );
+  const [journeyStartedAt] = useState(() => Date.now());
+  const maxScrollPercentRef = useRef(0);
+  const seenSectionsRef = useRef<Set<PdpMeasuredSection>>(new Set());
   const setHeroPrice = useCallback((price: number | null) => {
     setHeroPriceState(price);
   }, []);
   const setOrderPlan = useCallback((plan: ProductOrderPlan | null) => {
     setOrderPlanState(plan);
+  }, []);
+  const markSectionSeen = useCallback((section: PdpMeasuredSection) => {
+    seenSectionsRef.current.add(section);
+  }, []);
+  const getMeasurementSnapshot = useCallback((): PdpJourneySnapshot => ({
+    seen_sections: serializeSeenSections(seenSectionsRef.current),
+    elapsed_ms_bucket: bucketElapsedMs(Date.now() - journeyStartedAt),
+    max_scroll_bucket: bucketScrollPercent(maxScrollPercentRef.current),
+  }), [journeyStartedAt]);
+
+  useEffect(() => {
+    let frame = 0;
+    const updateScrollDepth = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const documentHeight = Math.max(
+          document.documentElement.scrollHeight,
+          document.body.scrollHeight,
+        );
+        const available = Math.max(1, documentHeight - window.innerHeight);
+        const percent = Math.min(100, Math.max(0, (window.scrollY / available) * 100));
+        maxScrollPercentRef.current = Math.max(maxScrollPercentRef.current, percent);
+      });
+    };
+    updateScrollDepth();
+    window.addEventListener('scroll', updateScrollDepth, { passive: true });
+    window.addEventListener('resize', updateScrollDepth);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', updateScrollDepth);
+      window.removeEventListener('resize', updateScrollDepth);
+    };
   }, []);
 
   const setActiveThickness = useCallback(
@@ -83,7 +131,19 @@ export function ProductInteractiveProvider({
 
   return (
     <ProductInteractiveContext.Provider
-      value={{ cityCode, setCityCode, activeThickness, setActiveThickness, heroPrice, setHeroPrice, orderPlan, setOrderPlan }}
+      value={{
+        cityCode,
+        setCityCode,
+        activeThickness,
+        setActiveThickness,
+        heroPrice,
+        setHeroPrice,
+        orderPlan,
+        setOrderPlan,
+        resultSessionId,
+        markSectionSeen,
+        getMeasurementSnapshot,
+      }}
     >
       {children}
     </ProductInteractiveContext.Provider>

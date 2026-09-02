@@ -13,6 +13,7 @@ import {
   notifyProductDetailCtaClick,
   notifyProductDetailFormOpen,
   notifyProductDetailPriceView,
+  notifyProductDetailComparisonPathClick,
   type ProductDetailCtaLocation,
 } from "@/lib/notifyWizardEvent";
 import {
@@ -35,6 +36,8 @@ import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 import { getCategoryEntryContext } from "@/lib/catalog/category-entry-context";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
+import { formatLocalizedM2Input, parseLocalizedM2Input } from "@/lib/catalog/m2Input";
+import { createComparisonSessionId } from "@/lib/analytics/pdpJourney";
 
 export type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
 
@@ -60,8 +63,6 @@ interface Props {
 }
 
 const roundM2 = (value: number): number => Math.round(value * 10) / 10;
-const formatM2Input = (value: number): string =>
-  Number.isInteger(value) ? String(value) : String(roundM2(value));
 const formatCurrency = (value: number): string =>
   value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const formatM2 = (value: number): string =>
@@ -94,9 +95,10 @@ export default function ProductPricePanel({
   const [, setMetrajMode] = useState<MetrajMode>("custom");
   // Bonus aile-PDP'de seçili yoğunluk varyantı (null = plate'in kendi modeli)
   const [bonusVariantModel, setBonusVariantModel] = useState<string | null>(null);
-  const [resultSessionId] = useState(() =>
+  const [localResultSessionId] = useState(() =>
     `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
   );
+  const resultSessionId = interactive?.resultSessionId ?? localResultSessionId;
   const lastPriceViewRef = useRef<string>("");
   const primaryCtaRef = useRef<HTMLDivElement | null>(null);
   const [showMobileSticky, setShowMobileSticky] = useState(false);
@@ -214,8 +216,7 @@ export default function ProductPricePanel({
   const isKdvIncluded = activeThicknessPrice?.is_kdv_included ?? false;
   const rawPrice = activeThicknessPrice?.base_price ?? base_price;
   const neededM2Num = (() => {
-    const raw = debouncedM2 ? parseFloat(debouncedM2.replace(",", ".")) : 0;
-    return isNaN(raw) || raw < 0 ? 0 : raw;
+    return parseLocalizedM2Input(debouncedM2) ?? 0;
   })();
 
   // logistics_capacity.thickness mm cinsinden tutuluyor (50, 75, 125)
@@ -276,7 +277,7 @@ export default function ProductPricePanel({
   // Kalınlık değişince lorryM2 değişir → effect yeniden tetiklenir (doğal sıfırlama).
   useEffect(() => {
     if (lorryM2 !== null) {
-      const val = formatM2Input(lorryM2);
+      const val = formatLocalizedM2Input(lorryM2);
       const syncPrefill = window.setTimeout(() => {
         setNeededM2(val);
         setDebouncedM2(val);
@@ -288,8 +289,7 @@ export default function ProductPricePanel({
 
   // Geçerlilik kontrolü direkt neededM2 üzerinden (anlık kırmızı border için)
   const inputInvalid = neededM2 !== "" && (() => {
-    const raw = parseFloat(neededM2.replace(",", "."));
-    return isNaN(raw) || raw < 0;
+    return parseLocalizedM2Input(neededM2) === null;
   })();
 
   // CTA label — senaryoya ve araç sayısına göre dinamik
@@ -402,6 +402,19 @@ export default function ProductPricePanel({
     sepetState.tir > 0 && sepetState.kamyon > 0
       ? 'mixed' as const
       : quoteVehicleType;
+  const priceContext = sepetState.totalM2 > 0
+    ? 'selected_vehicle_plan' as const
+    : 'tir_anchor' as const;
+
+  const getJourneyAttribution = () => {
+    const snapshot = interactive?.getMeasurementSnapshot();
+    return {
+      price_context: priceContext,
+      seen_sections: snapshot?.seen_sections ?? null,
+      elapsed_ms_bucket: snapshot?.elapsed_ms_bucket ?? null,
+      max_scroll_bucket: snapshot?.max_scroll_bucket ?? null,
+    };
+  };
 
   const buildProductDetailPayload = () => {
     const categoryContext = getCategoryEntryContext();
@@ -424,6 +437,13 @@ export default function ProductPricePanel({
       entry_surface: categoryContext?.entrySurface ?? 'product_detail' as const,
       catalog_journey_id: categoryContext ? readCatalogJourneyId() : null,
       section_key: categoryContext?.sectionKey ?? null,
+      price_context: priceContext,
+      journey_context: (() => {
+        const snapshot = interactive?.getMeasurementSnapshot();
+        return snapshot
+          ? `${snapshot.seen_sections ?? 'none'};${snapshot.elapsed_ms_bucket};${snapshot.max_scroll_bucket}`
+          : null;
+      })(),
     };
   };
 
@@ -579,7 +599,7 @@ export default function ProductPricePanel({
           <div className={`mb-4 space-y-4 border-b pb-5 ${isWarmCommercial ? "border-[#ded2c0]" : "border-fe-border/60"}`}>
             <div className={isWarmCommercial ? "grid items-start gap-5" : "grid grid-cols-2 items-start gap-3"}>
               {/* SOL — şehir + metraj */}
-              <div className={isWarmCommercial ? "grid gap-4 sm:grid-cols-2" : "space-y-3"}>
+              <div className={isWarmCommercial ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "space-y-3"}>
                 <div>
                   <label htmlFor="pdp-delivery-city" className={`mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
                     Teslimat Şehri
@@ -613,6 +633,29 @@ export default function ProductPricePanel({
                   )}
                 </div>
 
+                {isWarmCommercial && product.thickness_options && product.thickness_options.length > 0 && (
+                  <div className="hidden xl:block">
+                    <label htmlFor="pdp-thickness" className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] text-[#625a4f]">
+                      Kalınlık
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="pdp-thickness"
+                        value={activeThickness ?? ""}
+                        onChange={(event) => interactive?.setActiveThickness(Number(event.target.value))}
+                        className="min-h-12 w-full appearance-none rounded-[10px] border border-[#bcae99] bg-white px-3 py-2 pr-8 text-base font-semibold text-[#282219] transition-colors hover:border-[#8f7652] focus:border-[#8a5f1d] focus:outline-none focus:ring-2 focus:ring-[#d8b66f]/40"
+                      >
+                        {product.thickness_options.map((thickness) => (
+                          <option key={thickness} value={thickness}>
+                            {thickness.toLocaleString("tr-TR")} cm
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[#625a4f]" />
+                    </div>
+                  </div>
+                )}
+
                 {showSepet && (
                   <div>
                     <label htmlFor="pdp-needed-area" className={`mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
@@ -625,6 +668,10 @@ export default function ProductPricePanel({
                         inputMode="decimal"
                         value={neededM2}
                         onChange={(e) => { setNeededM2(e.target.value); setMetrajMode("custom"); }}
+                        onBlur={() => {
+                          const parsed = parseLocalizedM2Input(neededM2);
+                          if (parsed !== null) setNeededM2(formatLocalizedM2Input(parsed));
+                        }}
                         className={`w-full rounded-[10px] border px-3 py-2 pr-9 transition-colors focus:outline-none ${isWarmCommercial ? "min-h-12 bg-white text-base font-semibold text-[#282219]" : "min-h-11 bg-fe-bg/80 text-sm text-fe-text"} ${
                           inputInvalid
                             ? "border-red-500/60 focus:border-red-500/80"
@@ -753,6 +800,7 @@ export default function ProductPricePanel({
                 resultSessionId={resultSessionId}
                 packageSizeM2={packageSizeM2}
                 onOpen={() => trackProductDetailPdfOpen('product_detail_summary')}
+                getJourneyAttribution={getJourneyAttribution}
                 buttonClassName={isWarmCommercial
                   ? "inline-flex min-h-14 w-full items-center justify-center rounded-[10px] border border-[#a6751c] bg-[#efb446] px-5 font-heading text-lg font-extrabold text-[#21190e] transition-colors hover:bg-[#dda334] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#704c17]"
                   : undefined}
@@ -816,7 +864,7 @@ export default function ProductPricePanel({
           isWarmCommercial ? (
             <details className="group mt-4 rounded-xl border border-[#d8cbb8] bg-[#fffaf2] px-3 py-2.5">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-heading text-sm font-bold text-[#282219] marker:content-none">
-                <span>Bonus komple sistem alternatifini karşılaştır</span>
+                <span>Bonus komple mantolama setini hesapla</span>
                 <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
               </summary>
               <div className="border-t border-[#d8cbb8] pt-3">
@@ -849,9 +897,23 @@ export default function ProductPricePanel({
           modelScope === "sivali_dis_cephe_mantolama" && (
           <Link
             href="/tasyunu-karsilastir?entry=pdp"
+            onClick={() => {
+              const comparisonSessionId = createComparisonSessionId();
+              window.sessionStorage.setItem('pdp_comparison_session_id', comparisonSessionId);
+              notifyProductDetailComparisonPathClick({
+                product_name: product.name,
+                brand_name: product.brand.name,
+                product_slug: product.slug,
+                result_session_id: resultSessionId,
+                comparison_session_id: comparisonSessionId,
+                comparison_route: 'all_products',
+                thickness_cm: activeThickness ?? null,
+                city_code: selectedCode,
+              });
+            }}
             className="mt-4 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-fe-border bg-fe-surface/60 px-3 py-2.5 text-left text-sm font-semibold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-300"
           >
-            <span>Bu ürünün mantolama alternatiflerini karşılaştır</span>
+            <span>Diğer taşyünü levhalarla karşılaştır</span>
             <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
           </Link>
         )}
@@ -892,6 +954,7 @@ export default function ProductPricePanel({
                 resultSessionId={resultSessionId}
                 packageSizeM2={packageSizeM2}
                 onOpen={() => trackProductDetailPdfOpen('sticky_mobile')}
+                getJourneyAttribution={getJourneyAttribution}
                 buttonClassName="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-500/70 bg-brand-500 px-2 text-xs font-black leading-4 text-fe-bg transition-colors hover:bg-brand-400"
               />
             </div>

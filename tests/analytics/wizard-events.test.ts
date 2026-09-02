@@ -5,6 +5,8 @@ import {
   notifyComparisonOpened,
   notifyPdfQuoteRequested,
   notifyProductDetailCtaClick,
+  notifyProductDetailComparisonPathClick,
+  notifyProductDetailSectionView,
   notifyWhatsappOrderRequested,
   notifyWizardCalculationStarted,
   notifyWizardShowPrices,
@@ -183,5 +185,49 @@ describe('Wizard GA4 event allowlist', () => {
       result_session_id: 'pdp-test-session',
     })
     expect(gtag.mock.calls[0][2]).not.toHaveProperty('ref_code')
+    expect(Object.keys(gtag.mock.calls[0][2] as Record<string, unknown>).length).toBeLessThanOrEqual(25)
+  })
+
+  it('PDP bölüm görünümü ile karşılaştırma yolunu kişisel veri olmadan ölçer', () => {
+    const gtag = vi.fn()
+    vi.stubGlobal('window', {
+      gtag,
+      location: { pathname: '/urunler/tasyunu-levha/optimix-tr7-5-tasyunu' },
+    })
+
+    notifyProductDetailSectionView({
+      product_name: 'Optimix TR7.5',
+      brand_name: 'Optimix',
+      product_slug: 'optimix-tr7-5-tasyunu',
+      result_session_id: 'pdp_test_1',
+      section_name: 'technical',
+      seen_sections: 'package|technical',
+      elapsed_ms_bucket: '46_120s',
+      max_scroll_bucket: '75_89',
+    })
+    notifyProductDetailComparisonPathClick({
+      product_name: 'Optimix TR7.5',
+      brand_name: 'Optimix',
+      product_slug: 'optimix-tr7-5-tasyunu',
+      result_session_id: 'pdp_test_1',
+      comparison_session_id: 'cmp_test_1',
+      comparison_route: 'all_products',
+      thickness_cm: 5,
+      city_code: 34,
+    })
+
+    expect(gtag.mock.calls.map((call) => call[1])).toEqual([
+      'PDP_Section_View',
+      'PDP_Comparison_Path_Click',
+    ])
+    expect(gtag.mock.calls[0][2]).toMatchObject({
+      seen_sections: 'package|technical',
+      elapsed_ms_bucket: '46_120s',
+    })
+    expect(gtag.mock.calls[1][2]).toMatchObject({
+      comparison_route: 'all_products',
+      comparison_session_id: 'cmp_test_1',
+    })
+    expect(JSON.stringify(gtag.mock.calls)).not.toContain('customer_')
   })
 })

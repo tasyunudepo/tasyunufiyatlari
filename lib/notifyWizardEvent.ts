@@ -22,6 +22,8 @@ const GA_EVENT_RESULT_FORM_ERROR = 'Wizard_Result_Form_Error';
 const GA_EVENT_PDP_PRICE_VIEW = 'PDP_Price_View';
 const GA_EVENT_PDP_CTA_CLICK = 'PDP_CTA_Click';
 const GA_EVENT_PDP_FORM_OPEN = 'PDP_Form_Open';
+const GA_EVENT_PDP_SECTION_VIEW = 'PDP_Section_View';
+const GA_EVENT_PDP_COMPARISON_PATH_CLICK = 'PDP_Comparison_Path_Click';
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-VCHRKVJCEN';
 
 export type WizardResultCtaType = 'pdf' | 'whatsapp' | 'phone';
@@ -46,6 +48,7 @@ export interface WizardBasePayload {
   comparison_session_id?: string | null;
   catalog_journey_id?: string | null;
   section_key?: string | null;
+  comparison_route?: 'bonus_system' | 'all_products' | null;
 }
 
 export type WizardCalculationStartedPayload = WizardBasePayload;
@@ -91,6 +94,7 @@ export interface WizardResultCtaPayload {
   comparison_session_id?: string | null;
   catalog_journey_id?: string | null;
   section_key?: string | null;
+  comparison_route?: 'bonus_system' | 'all_products' | null;
 }
 
 export interface WizardResultFormOpenPayload {
@@ -103,6 +107,7 @@ export interface WizardResultFormOpenPayload {
   comparison_session_id?: string | null;
   catalog_journey_id?: string | null;
   section_key?: string | null;
+  comparison_route?: 'bonus_system' | 'all_products' | null;
 }
 
 export interface WizardResultFormErrorPayload {
@@ -116,6 +121,7 @@ export interface WizardResultFormErrorPayload {
   comparison_session_id?: string | null;
   catalog_journey_id?: string | null;
   section_key?: string | null;
+  comparison_route?: 'bonus_system' | 'all_products' | null;
 }
 
 export interface ProductDetailBasePayload {
@@ -141,6 +147,9 @@ export interface ProductDetailBasePayload {
   vehicle_label?: string | null;
   shipping_mode?: 'included_in_sale_price' | 'buyer_responsible' | 'separate_quote_required' | null;
   experience_variant?: 'a_whatsapp_first' | null;
+  price_context?: 'selected_vehicle_plan' | 'tir_anchor' | null;
+  journey_context?: string | null;
+  comparison_route?: 'bonus_system' | 'all_products' | null;
 }
 
 export interface ProductDetailPriceViewPayload extends ProductDetailBasePayload {
@@ -155,6 +164,28 @@ export interface ProductDetailCtaPayload extends ProductDetailBasePayload {
 export interface ProductDetailFormOpenPayload extends ProductDetailBasePayload {
   form_type: 'pdf';
   cta_location: ProductDetailCtaLocation;
+}
+
+export interface ProductDetailSectionViewPayload {
+  product_name: string;
+  brand_name: string;
+  product_slug: string;
+  result_session_id: string;
+  section_name: 'package' | 'technical' | 'seller_payment_process';
+  seen_sections: string | null;
+  elapsed_ms_bucket: '0_15s' | '16_45s' | '46_120s' | '120s_plus';
+  max_scroll_bucket: '0_24' | '25_49' | '50_74' | '75_89' | '90_100';
+}
+
+export interface ProductDetailComparisonPathPayload {
+  product_name: string;
+  brand_name: string;
+  product_slug: string;
+  result_session_id: string;
+  comparison_session_id: string;
+  comparison_route: 'bonus_system' | 'all_products';
+  thickness_cm?: number | null;
+  city_code?: number | null;
 }
 
 type GtagWindow = Window & {
@@ -220,6 +251,7 @@ export function notifyWizardCalculationStarted(p: WizardCalculationStartedPayloa
     comparison_session_id: p.comparison_session_id ?? null,
     catalog_journey_id: p.catalog_journey_id ?? null,
     section_key: p.section_key ?? null,
+    comparison_route: p.comparison_route ?? null,
   });
 }
 
@@ -246,6 +278,7 @@ export function notifyWizardShowPrices(p: WizardShowPricesPayload): void {
     comparison_session_id:   p.comparison_session_id ?? null,
     catalog_journey_id:      p.catalog_journey_id ?? null,
     section_key:             p.section_key ?? null,
+    comparison_route:        p.comparison_route ?? null,
     results_count:           p.results_count ?? null,
     cheapest_total:          p.cheapest_total ?? null,
     cheapest_per_m2:         p.cheapest_per_m2 ?? null,
@@ -278,6 +311,7 @@ export function notifyPdfQuoteRequested(p: PdfQuoteRequestedPayload): void {
     comparison_session_id:   p.comparison_session_id ?? null,
     catalog_journey_id:      p.catalog_journey_id ?? null,
     section_key:             p.section_key ?? null,
+    comparison_route:        p.comparison_route ?? null,
   });
 }
 
@@ -302,6 +336,7 @@ export function notifyWhatsappOrderRequested(p: WhatsappOrderRequestedPayload): 
     comparison_session_id:   p.comparison_session_id ?? null,
     catalog_journey_id:      p.catalog_journey_id ?? null,
     section_key:             p.section_key ?? null,
+    comparison_route:        p.comparison_route ?? null,
   });
 }
 
@@ -317,6 +352,7 @@ export function notifyWizardResultCtaClick(p: WizardResultCtaPayload): void {
     comparison_session_id: p.comparison_session_id ?? null,
     catalog_journey_id: p.catalog_journey_id ?? null,
     section_key: p.section_key ?? null,
+    comparison_route: p.comparison_route ?? null,
   });
 }
 
@@ -331,6 +367,7 @@ export function notifyWizardResultFormOpen(p: WizardResultFormOpenPayload): void
     comparison_session_id: p.comparison_session_id ?? null,
     catalog_journey_id: p.catalog_journey_id ?? null,
     section_key: p.section_key ?? null,
+    comparison_route: p.comparison_route ?? null,
   });
 }
 
@@ -346,6 +383,7 @@ export function notifyWizardResultFormError(p: WizardResultFormErrorPayload): vo
     comparison_session_id: p.comparison_session_id ?? null,
     catalog_journey_id: p.catalog_journey_id ?? null,
     section_key: p.section_key ?? null,
+    comparison_route: p.comparison_route ?? null,
   });
 }
 
@@ -354,7 +392,6 @@ function buildProductDetailPayload(p: ProductDetailBasePayload): Record<string, 
   return {
     product_name:      p.product_name,
     brand_name:        p.brand_name,
-    category_name:     p.category_name ?? null,
     material_type:     p.material_type ?? null,
     thickness_cm:      p.thickness_cm ?? null,
     city_code:         p.city_code ?? null,
@@ -365,7 +402,6 @@ function buildProductDetailPayload(p: ProductDetailBasePayload): Record<string, 
     price_per_m2:      p.price_per_m2 ?? null,
     total_price:       p.total_price ?? null,
     vehicle_type:      p.vehicle_type ?? null,
-    product_slug:      p.product_slug ?? null,
     result_session_id: p.result_session_id ?? null,
     entry_surface:     p.entry_surface ?? 'product_detail',
     catalog_journey_id: p.catalog_journey_id ?? null,
@@ -374,30 +410,65 @@ function buildProductDetailPayload(p: ProductDetailBasePayload): Record<string, 
     vehicle_label:     p.vehicle_label ?? null,
     shipping_mode:     p.shipping_mode ?? null,
     experience_variant: p.experience_variant ?? null,
+    price_context:     p.price_context ?? null,
+    journey_context:   p.journey_context ?? null,
+    comparison_route:  p.comparison_route ?? null,
   };
+}
+
+function compactProductDetailPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => (
+      value !== undefined && value !== null && value !== ''
+    )),
+  );
 }
 
 export function notifyProductDetailPriceView(p: ProductDetailPriceViewPayload): void {
   emit(GA_EVENT_PDP_PRICE_VIEW, {
-    ...buildProductDetailPayload(p),
+    ...compactProductDetailPayload(buildProductDetailPayload(p)),
     source_channel: p.source_channel ?? 'catalog',
   });
 }
 
 export function notifyProductDetailCtaClick(p: ProductDetailCtaPayload): void {
+  const base = compactProductDetailPayload(buildProductDetailPayload(p));
+  // CTA olayında sayfa yolu ve ürün adı kimliği korur; GA4 özel olay
+  // parametre sınırını aşmamak için kategoriye göre zaten türeyen malzeme
+  // türü tekrar gönderilmez.
+  delete base.material_type;
   emit(GA_EVENT_PDP_CTA_CLICK, {
-    ...buildProductDetailPayload(p),
+    ...base,
     cta_type:     p.cta_type,
     cta_location: p.cta_location,
   });
 }
 
 export function notifyProductDetailFormOpen(p: ProductDetailFormOpenPayload): void {
+  const base = compactProductDetailPayload(buildProductDetailPayload(p));
+  delete base.material_type;
   emit(GA_EVENT_PDP_FORM_OPEN, {
-    ...buildProductDetailPayload(p),
+    ...base,
     form_type:    p.form_type,
     cta_location: p.cta_location,
   });
+}
+
+export function notifyProductDetailSectionView(p: ProductDetailSectionViewPayload): void {
+  emit(GA_EVENT_PDP_SECTION_VIEW, {
+    product_name: p.product_name,
+    brand_name: p.brand_name,
+    product_slug: p.product_slug,
+    result_session_id: p.result_session_id,
+    section_name: p.section_name,
+    seen_sections: p.seen_sections,
+    elapsed_ms_bucket: p.elapsed_ms_bucket,
+    max_scroll_bucket: p.max_scroll_bucket,
+  });
+}
+
+export function notifyProductDetailComparisonPathClick(p: ProductDetailComparisonPathPayload): void {
+  emit(GA_EVENT_PDP_COMPARISON_PATH_CLICK, { ...p });
 }
 
 // ─── 4. Situation Selected (Sprint 2 — Karar Yardımı) ────────────────
@@ -467,6 +538,7 @@ interface ComparisonJourneyPayload {
   entry_placement: ComparisonEntryPlacement;
   comparison_session_id: string;
   catalog_journey_id?: string | null;
+  comparison_route?: 'all_products';
 }
 
 export function notifyComparisonOpened(p: ComparisonJourneyPayload & {

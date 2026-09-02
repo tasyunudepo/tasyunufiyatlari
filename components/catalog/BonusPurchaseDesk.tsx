@@ -27,9 +27,7 @@ export default function BonusPurchaseDesk({
 }: BonusPurchaseDeskProps) {
   const interactive = useProductInteractive();
   const [bonusVariantModel, setBonusVariantModel] = useState<string | null>(null);
-  const [resultSessionId] = useState(
-    () => `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-  );
+  const resultSessionId = interactive.resultSessionId;
 
   const defaultZone = shippingZones.find((zone) => zone.city_code === 34) ?? shippingZones[0];
   const zone =

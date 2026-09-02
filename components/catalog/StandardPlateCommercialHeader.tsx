@@ -26,6 +26,14 @@ export default function StandardPlateCommercialHeader({
   const cityName = cityOptions.find((city) => city.code === cityCode)?.name ?? cityOptions[0]?.name ?? "Teslimat bölgesi";
   const thickness = interactive?.activeThickness ?? fallbackThickness;
   const heroPrice = interactive?.heroPrice ?? null;
+  const orderPlan = interactive?.orderPlan ?? null;
+  const planParts = [
+    orderPlan?.truckCount ? `${orderPlan.truckCount} TIR` : null,
+    orderPlan?.lorryCount ? `${orderPlan.lorryCount} Kamyon` : null,
+  ].filter(Boolean);
+  const priceContext = planParts.length > 0
+    ? `Seçili ${planParts.join(" + ")} planında m² fiyatı`
+    : "1 TIR tam araç başlangıç fiyatı";
 
   function scrollToPlanner() {
     document.getElementById("pdp-commercial-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -82,7 +90,13 @@ export default function StandardPlateCommercialHeader({
           <p className="font-heading text-xs font-bold uppercase tracking-[0.14em] text-[#66543a]">
             {cityName}{thickness ? ` · ${thickness.toLocaleString("tr-TR")} cm` : ""}
           </p>
-          <div className="mt-3 min-h-[64px]" aria-live="polite" aria-atomic="true">
+          <p
+            data-testid="pdp-commercial-price-context"
+            className="mt-5 text-sm font-bold leading-5 text-[#5f4b2e]"
+          >
+            {priceContext}
+          </p>
+          <div className="mt-1 min-h-[64px]" aria-live="polite" aria-atomic="true">
             {heroPrice !== null ? (
               <p data-testid="pdp-commercial-unit-price" className="font-heading text-[3.1rem] font-extrabold leading-none tracking-[-0.035em] text-[#201c17] sm:text-[4rem]">
                 {heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
