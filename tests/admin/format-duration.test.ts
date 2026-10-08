@@ -5,8 +5,7 @@ import {
   saatFarki,
   sureGosterimi,
   temasSiddeti,
-  bekleyisSuresi,
-} from '@/lib/admin/formatDuration'
+  bekleyisSuresi, formatGecikme } from '@/lib/admin/formatDuration'
 
 // Audit V3: "Ortalama ilk temas" kartı canlıda **1674 saat** yazıyordu.
 // 70 günü saat cinsinden okumak metriği kullanılamaz kılıyordu; üstelik
@@ -115,5 +114,29 @@ describe('bekleyiş metni — Türkçe ek uyumu', () => {
 
   it('geçersiz girdide çizgi döner', () => {
     expect(bekleyisSuresi(Number.NaN)).toBe('—')
+  })
+})
+
+// 9 Ekim 2026: iş sırası rozeti "888 dk gecikti" yazıyordu; operatör saati
+// kafadan bölmek zorunda kalıyordu.
+describe('formatGecikme — iş sırası rozeti', () => {
+  it('bir saatten kısa gecikmeyi dakikayla yazar', () => {
+    expect(formatGecikme(0)).toBe('0 dk')
+    expect(formatGecikme(48)).toBe('48 dk')
+  })
+
+  it('bir günden kısa gecikmede saat ve dakikayı birlikte yazar', () => {
+    expect(formatGecikme(60)).toBe('1 sa')
+    expect(formatGecikme(888)).toBe('14 sa 48 dk')
+  })
+
+  it('bir günü aşınca gün ve saate geçer', () => {
+    expect(formatGecikme(1440)).toBe('1 gün')
+    expect(formatGecikme(3000)).toBe('2 gün 2 sa')
+  })
+
+  it('geçersiz ya da negatif süre için sayı uydurmaz', () => {
+    expect(formatGecikme(-5)).toBe('—')
+    expect(formatGecikme(Number.NaN)).toBe('—')
   })
 })

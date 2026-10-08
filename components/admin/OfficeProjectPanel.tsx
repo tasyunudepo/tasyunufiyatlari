@@ -9,14 +9,14 @@ import {contactTargets} from '@/lib/phone/normalize';
 import {formatCurrency} from '@/lib/admin/utils';
 const date=(v:string)=>new Date(v).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',dateStyle:'short',timeStyle:'short'});
 
-export function OfficeProjectPanel({quoteId,taskId}:{quoteId:string;taskId?:string}){
+export function OfficeProjectPanel({quoteId,taskId,openPhone=false}:{quoteId:string;taskId?:string;openPhone?:boolean}){
  const query=useOffice();
  if(query.isPending)return <p>Proje dosyası yükleniyor…</p>;
  if(query.error)return <p role="status">{query.error.message}</p>;
  const data=query.data!,quote=data.quotes.find(q=>String(q.id)===String(quoteId));
  if(!quote)return <p>Teklif bu veri görünümünde bulunamadı.</p>;
  const project=data.projects.find(p=>p.id===quote.project_id);
- return project?<ProjectRecord key={project.id+'-'+quote.id+'-'+(taskId??'manual')} data={data} project={project} quote={quote} taskId={taskId}/>:<UnlinkedQuote key={quote.id} data={data} quote={quote}/>;
+ return project?<ProjectRecord key={project.id+'-'+quote.id+'-'+(taskId??'manual')} data={data} project={project} quote={quote} taskId={taskId} openPhone={openPhone}/>:<UnlinkedQuote key={quote.id} data={data} quote={quote}/>;
 }
 function UnlinkedQuote({data,quote}:{data:OfficeData;quote:OfficeQuoteData}){
  const role=useAdminRole(),operation=useOfficeOperation();
@@ -37,13 +37,13 @@ function UnlinkedQuote({data,quote}:{data:OfficeData;quote:OfficeQuoteData}){
   </>:<p>Salt okunur hesap; proje bağlantısını yönetici kurabilir.</p>}
  </section>;
 }
-function ProjectRecord({data,project,quote,taskId}:{data:OfficeData;project:OfficeProject;quote:OfficeQuoteData;taskId?:string}){
+function ProjectRecord({data,project,quote,taskId,openPhone}:{data:OfficeData;project:OfficeProject;quote:OfficeQuoteData;taskId?:string;openPhone:boolean}){
  const role=useAdminRole(),operation=useOfficeOperation();
  const contact=projectContact(data,project.id);
  const task=data.tasks.find(t=>t.id===taskId&&t.project_id===project.id&&t.status==='open');
  const alternatives=data.quotes.filter(q=>q.project_id===project.id);
  const [channel,setChannel]=useState<'phone'|'whatsapp'>('phone');
- const [note,setNote]=useState('');const [phoneOpen,setPhoneOpen]=useState(false);
+ const [note,setNote]=useState('');const [phoneOpen,setPhoneOpen]=useState(openPhone);
  const [contactPhone,setContactPhone]=useState(quote.customer_phone??'');
  const [feedback,setFeedback]=useState('');const [message,setMessage]=useState(()=>quoteMessage(quote));
  const [due,setDue]=useState('');const [owner,setOwner]=useState(project.owner??role.user);
@@ -74,9 +74,9 @@ function ProjectRecord({data,project,quote,taskId}:{data:OfficeData;project:Offi
  return <section className="ofis-panel ofis-project-panel" data-testid="office-project-panel" aria-label="Proje dosyası">
   <div><p className="ofis-eyebrow">PROJE DOSYASI</p><h2>{project.name}</h2><p className="ofis-muted">{quote.quote_code??quote.id} · {quote.customer_name}</p></div>
   <dl className="ofis-facts"><div><dt>Satış aşaması · proje</dt><dd>{QUOTE_STATUS_LABELS[project.status as keyof typeof QUOTE_STATUS_LABELS]??'Durumu belirsiz'}</dd></div><div><dt>Temas durumu</dt><dd data-testid="project-contact-state">{contact.label}</dd></div><div><dt>Son girişim</dt><dd>{contact.latest?`${INTERACTION_RESULT_LABELS[contact.latest.outcome??'']??'Sonuç belirsiz'} · ${date(contact.latest.occurredAt)}`:'Girişim kaydı yok'}</dd></div><div><dt>Kayıtlı en eski başarı</dt><dd>{contact.firstRecordedSuccessAt?date(contact.firstRecordedSuccessAt):contact.hasSuccess?'Eski kayıtta var; tarih bilinmiyor':'Başarı kaydı yok'}</dd></div></dl>
-  <div className="ofis-next-step"><strong>{task?task.kind==='initial_contact'?'Sıradaki iş: ilk temas':'Sıradaki iş: takip':'Görüşme sonucu veya sonraki adımı kaydedin'}</strong>{task&&<p>{date(task.due_at)} · {task.owner}</p>}<p className="ofis-helper">Bağlantıya basmak görevi tamamlamaz. Sonuç kaydedildiğinde tamamlanır.</p></div>
+  <div className="ofis-next-step"><strong>{task?task.kind==='initial_contact'?'Sıradaki iş: ilk temas':'Sıradaki iş: takip':'Görüşme sonucu veya sonraki adımı kaydedin'}</strong>{task&&<p>{date(task.due_at)} · {task.owner}</p>}<p className="ofis-helper">Görev, sonucu kaydedince tamamlanır.</p></div>
   <div className="ofis-actions">
-   <button className="ofis-primary" onClick={()=>setPhoneOpen(v=>!v)} aria-expanded={phoneOpen}>Telefon / Numarayı göster</button>
+   <button className="ofis-primary" onClick={()=>setPhoneOpen(v=>!v)} aria-expanded={phoneOpen} aria-label="Telefon / Numarayı göster">Numarayı göster</button>
    {targets&&role.canMutate?<a className="ofis-whatsapp" href={targets.whatsapp} target="_blank" rel="noreferrer" onClick={()=>void operation.run({type:'contact_link_clicked',projectId:project.id,channel:'whatsapp'})}>WhatsApp</a>:<span className="ofis-helper">{targets?'Salt okunur hesap':'Numara eksik veya biçimi geçersiz'}</span>}
   </div>
   {phoneOpen&&<div className="ofis-phone-box"><p className="ofis-phone-number">{quote.customer_phone||'Numara kayıtlı değil'}</p><div className="ofis-actions"><button className="ofis-secondary" disabled={actionDisabled||!quote.customer_phone} onClick={()=>void copy()}>Kopyala</button>{targets&&role.canMutate&&<a className="ofis-secondary" href={targets.tel} onClick={()=>void operation.run({type:'contact_link_clicked',projectId:project.id,channel:'phone'})}>Arama uygulamasında aç</a>}</div><p className="ofis-helper">Ham kayıt korunur. Numara biçimi, aktif hat veya WhatsApp hesabı olduğunu doğrulamaz.</p></div>}

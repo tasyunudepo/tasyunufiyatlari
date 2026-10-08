@@ -70,11 +70,11 @@
   "errors": [],
   "external": [],
   "pdfTextCaptured": true,
-  "quoteId": 26,
+  "quoteId": 28,
   "timings": [
     {
       "action": "save+pdf",
-      "ms": 3470
+      "ms": 3790
     }
   ],
   "passed": true

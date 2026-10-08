@@ -28,7 +28,6 @@ import { buildQuotesCsvBlob, csvFileName, type CsvQuote } from "@/lib/admin/quot
 const ofisPanel = "rounded-2xl border border-[var(--nx-border)] bg-[rgba(13,15,18,0.72)] shadow-[0_18px_44px_rgba(0,0,0,0.24)]";
 const ofisInner = "rounded-xl border border-[rgba(92,98,108,0.18)] bg-[rgba(255,255,255,0.025)]";
 const ofisControl = "rounded-xl border border-[rgba(92,98,108,0.24)] bg-[rgba(18,20,24,0.82)] text-[var(--nx-text-soft)] transition-colors focus:outline-none focus-visible:border-[var(--nx-border-accent)] focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.14)]";
-const ofisChip = "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.16)]";
 
 type OfficeQuote = QuoteRow & {
     // DB: quotes.request_type text NOT NULL DEFAULT 'whatsapp_order'
@@ -134,6 +133,7 @@ export function QuotesTab({
     function selectQuote(quote:OfficeQuote | null) {
         if(quote) savedScroll.current={page:window.scrollY,list:listRef.current?.scrollTop??0};
         setSelectedQuote(quote);
+        if(quote) requestAnimationFrame(()=>document.querySelector(`[data-testid="quote-row-${quote.id}"]`)?.scrollIntoView({block:'nearest'}));
         if(!quote) requestAnimationFrame(()=>{window.scrollTo(0,savedScroll.current.page);if(listRef.current)listRef.current.scrollTop=savedScroll.current.list});
     }
 
@@ -371,12 +371,6 @@ export function QuotesTab({
     const hasMore = filteredSeries.length > visibleCount;
 
 
-    const urgencyStyle: Record<string, string> = {
-        urgent: "border-red-400/30 bg-red-400/10 text-red-200",
-        high:   "border-amber-400/30 bg-amber-400/10 text-amber-200",
-        normal: "border-[rgba(201,168,76,0.22)] bg-[rgba(201,168,76,0.08)] text-[var(--nx-gold)]",
-        low:    "border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] text-[var(--nx-text-soft)]",
-    };
     const urgencyLabel: Record<string, string> = { urgent: "Acil", high: "Yüksek", normal: "Normal", low: "Düşük" };
 
     // Gerçek ciro yalnız KAZANILMIŞ (completed) siparişlerden hesaplanır;
@@ -402,7 +396,7 @@ export function QuotesTab({
     }
 
     return (
-        <div className="space-y-5">
+        <div className="ofis-sheet-page">
             {/* Mutasyon hata bandı — sessiz başarısızlık yasağı (audit B2). */}
             {actionError && (
                 <div
@@ -429,106 +423,108 @@ export function QuotesTab({
                     Salt okunur hesap — teklifleri görüntüleyebilir, değiştiremezsiniz.
                 </div>
             )}
-            <header className="ofis-page-heading"><div><p className="ofis-eyebrow">TEKNİK FÖY</p><h1>Teklifler</h1><p className="ofis-muted">Teklif belgeleri, revizyonlar ve proje dosyası.</p></div><button className="ofis-secondary" onClick={loadQuotes}>Yenile</button></header>
-            <div className="ofis-quote-totals"><p><strong>{filteredQuotes.length}</strong> filtrelenen teklif</p><p><strong>{formatCurrency(totalQuoteValue)}</strong> KDV dahil belge toplamı · alternatifler dahil</p><p><strong>{formatCurrency(wonRevenue)}</strong> KDV hariç kayıtlı satış · {wonQuotes.filter(q=>q.sales_final_price==null).length} tutarı eksik</p></div>
-            <details className="ofis-panel" data-testid="quote-status-distribution"><summary>Teklif durum dağılımı</summary><p data-testid="status-denominator" className="ofis-helper">Seçili filtrelerde {distribution.total} teklif · Her teklif bir kez sayılır.</p><div className="ofis-state-counts">{Object.entries(distribution.counts).map(([status,count])=><span key={status}>{quoteStatusLabel(status)} <strong data-testid={`status-count-${status}`}>{count}</strong></span>)}</div></details>
-            <div className="ofis-sheet-workspace">
-            {/* Teklif Masası */}
-            <div ref={listRef} className="ofis-panel ofis-sheet-list">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-                    <div>
-                        <div className="text-sm uppercase tracking-[0.28em] text-[var(--nx-text-muted)]">Operasyon</div>
-                        <h2 className="mt-1.5 text-xl font-semibold">Teklif Masası</h2>
-                        <p className="mt-1 text-sm text-[var(--nx-text-muted)]">
-                            {filteredSeries.length} seri • {filteredQuotes.length} / {quotes.length} teklif gösteriliyor
-                            {multiQuoteSeriesCount > 0 && (
-                                <span className="ml-1 text-[var(--nx-gold)]">· {multiQuoteSeriesCount} çoklu seri</span>
-                            )}
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 text-base">
-                        {[
-                            { value: "all", label: "Tümü" },
-                            { value: "pending", label: "Bekliyor" },
-                            { value: "contacted", label: "İletişimde" },
-                            { value: "quoted", label: "Teklif Verildi" },
-                            { value: "approved", label: "Onaylandı" },
-                            { value: "rejected", label: "Reddedildi" },
-                            { value: "completed", label: "Tamamlandı" },
-                            { value: "unknown", label: "Durumu belirsiz" },
-                        ].map((f) => (
-                            <button key={f.value} onClick={() => { setStatusFilter(f.value); resetPagination(); }}
-                                className={`${ofisChip} ${statusFilter === f.value ? "border-[var(--nx-gold)] bg-[var(--nx-gold)] text-[#101114]" : "border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] text-[var(--nx-text-soft)] hover:bg-[rgba(255,255,255,0.055)] hover:text-[var(--nx-text)]"}`}>
-                                {f.label}
-                            </button>
-                        ))}
-                    </div>
+            <header className="ofis-page-heading ofis-sheet-head">
+                <div>
+                    <h1>Teklifler</h1>
+                    <p className="ofis-day-line">
+                        <span><strong>{filteredQuotes.length}</strong> teklif</span>
+                        <span><strong>{formatCurrency(totalQuoteValue)}</strong> KDV dahil belge toplamı, alternatifler dahil</span>
+                        {wonQuotes.length === 0
+                            ? <span>Kayıtlı satış yok</span>
+                            : <span><strong>{formatCurrency(wonRevenue)}</strong> KDV hariç kayıtlı satış · {wonQuotes.filter(q=>q.sales_final_price==null).length} tutarı eksik</span>}
+                    </p>
                 </div>
-                <div className="ofis-sheet-filters">
-                    <select value={requestTypeFilter} onChange={(e) => { setRequestTypeFilter(e.target.value); resetPagination(); }}
-                        aria-label="Talep türüne göre filtrele"
-                        className={`${ofisControl} px-4 py-2.5 text-base`}>
-                        <option value="all">Tüm Talep Türleri</option>
-                        <option value="pdf_quote">PDF Teklif</option>
-                        <option value="whatsapp_order">WhatsApp Onay</option>
-                        <option value="manual_quote">Ofis Teklifi</option>
-                    </select>
-                    <select value={dateRangeDays} onChange={(e) => { setDateRangeDays(Number(e.target.value)); resetPagination(); }}
-                        aria-label="Tarih aralığına göre filtrele"
-                        className={`${ofisControl} px-4 py-2.5 text-base [color-scheme:dark]`}>
-                        <option value={0}>Tüm zamanlar</option>
-                        <option value={7}>Son 7 gün</option>
-                        <option value={30}>Son 30 gün</option>
-                        <option value={90}>Son 90 gün</option>
-                    </select>
-                    <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--nx-text-muted)] text-base">⌕</span>
-                        <input type="text" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
-                            aria-label="Tekliflerde ara"
-                            placeholder="Müşteri, marka, şehir veya paket ara…"
-                            className={`${ofisControl} w-full pl-9 pr-4 py-2.5 text-base placeholder:text-[var(--nx-text-muted)]`} />
-                    </div>
-                    {/* Audit E4: panelde hiç dışa aktarım yoktu. Filtrelenmiş
-                        liste indirilir — ekranda ne görüyorsa o iner. */}
-                    <button
-                        type="button"
-                        onClick={exportCsv}
-                        disabled={filteredQuotes.length === 0}
-                        data-testid="quotes-export-csv"
-                        title="Filtrelenmiş teklifleri CSV olarak indir"
-                        className={`${ofisControl} inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-base hover:bg-[rgba(255,255,255,0.05)] hover:text-[var(--nx-text)] disabled:opacity-40`}
-                    >
-                        <Download className="h-3.5 w-3.5" />
-                        CSV ({filteredQuotes.length})
+                <button className="ofis-secondary" onClick={loadQuotes}>Yenile</button>
+            </header>
+
+            {/* Filtre çubuğu tam genişlikte, listenin ÜSTÜNDE durur. Dar sol
+                sütuna sıkışınca arama kutusu kesiliyor, ilk teklif ikinci
+                ekrana düşüyordu (9 Ekim 2026). */}
+            <section className="ofis-sheet-bar" aria-label="Teklif filtreleri">
+                <div className="ofis-sheet-search">
+                    <span aria-hidden="true">⌕</span>
+                    <input type="text" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
+                        aria-label="Tekliflerde ara"
+                        placeholder="Müşteri, marka, şehir ya da teklif kodu" />
+                </div>
+                <select value={requestTypeFilter} onChange={(e) => { setRequestTypeFilter(e.target.value); resetPagination(); }}
+                    aria-label="Talep türüne göre filtrele">
+                    <option value="all">Tüm talep türleri</option>
+                    <option value="pdf_quote">PDF Teklif</option>
+                    <option value="whatsapp_order">WhatsApp Onay</option>
+                    <option value="manual_quote">Ofis Teklifi</option>
+                </select>
+                <select value={dateRangeDays} onChange={(e) => { setDateRangeDays(Number(e.target.value)); resetPagination(); }}
+                    aria-label="Tarih aralığına göre filtrele">
+                    <option value={0}>Tüm zamanlar</option>
+                    <option value={7}>Son 7 gün</option>
+                    <option value={30}>Son 30 gün</option>
+                    <option value={90}>Son 90 gün</option>
+                </select>
+                {/* Audit E4: panelde hiç dışa aktarım yoktu. Filtrelenmiş
+                    liste indirilir — ekranda ne görüyorsa o iner. */}
+                <button
+                    type="button"
+                    onClick={exportCsv}
+                    disabled={filteredQuotes.length === 0}
+                    data-testid="quotes-export-csv"
+                    title="Filtrelenmiş teklifleri CSV olarak indir"
+                    className="ofis-secondary"
+                >
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    CSV ({filteredQuotes.length})
+                </button>
+            </section>
+            <div className="ofis-filter-row ofis-status-row" aria-label="Duruma göre filtrele">
+                {[
+                    { value: "all", label: "Tümü" },
+                    { value: "pending", label: "Bekliyor" },
+                    { value: "contacted", label: "İletişimde" },
+                    { value: "quoted", label: "Teklif Verildi" },
+                    { value: "approved", label: "Onaylandı" },
+                    { value: "rejected", label: "Reddedildi" },
+                    { value: "completed", label: "Tamamlandı" },
+                    { value: "unknown", label: "Durumu belirsiz" },
+                ].map((f) => (
+                    <button key={f.value} type="button" className="ofis-filter" aria-pressed={statusFilter === f.value}
+                        onClick={() => { setStatusFilter(f.value); resetPagination(); }}>
+                        {f.label}
                     </button>
-                </div>
-                <div className="ofis-saved-views">
-                    <label>Görünüm adı<input aria-label="Görünüm adı" value={viewName} onChange={e=>setViewName(e.target.value)} maxLength={60}/></label>
+                ))}
+            </div>
+            <div className="ofis-saved-views">
+                    <label><span className="ofis-helper">Görünüm adı</span><input aria-label="Görünüm adı" value={viewName} onChange={e=>setViewName(e.target.value)} maxLength={60}/></label>
                     <button className="ofis-secondary" disabled={!viewName.trim()} onClick={()=>{const view={name:viewName.trim(),search:searchTerm,status:statusFilter,request:requestTypeFilter,days:dateRangeDays};try{const old=JSON.parse(localStorage.getItem('ofis-quote-views')??'[]');const next=[...(Array.isArray(old)?old:[]).filter(v=>v.name!==view.name),view].slice(-10);localStorage.setItem('ofis-quote-views',JSON.stringify(next));setSavedViews(next);setViewName('')}catch{setActionError('Görünüm bu tarayıcıya kaydedilemedi.')}}}>Görünümü kaydet</button>
                     <button className="ofis-secondary" onClick={()=>{try{const rows=JSON.parse(localStorage.getItem('ofis-quote-views')??'[]');setSavedViews(Array.isArray(rows)?rows.filter(v=>typeof v.name==='string'&&typeof v.search==='string'&&['all','unknown','pending','contacted','quoted','approved','completed','rejected'].includes(v.status)&&['all','pdf_quote','whatsapp_order','manual_quote'].includes(v.request)&&[0,7,30,90].includes(v.days)):[])}catch{setActionError('Kayıtlı görünümler okunamadı.')}}}>Kayıtlı görünümler</button>
                     {savedViews.map(v=><button key={v.name} className="ofis-filter" onClick={()=>{setSearchTerm(v.search);setStatusFilter(v.status);setRequestTypeFilter(v.request);setDateRangeDays(v.days);resetPagination()}}>{v.name}</button>)}
                 </div>
-                <div className="ofis-filter-row" aria-label="Etkin filtreler">
+            <div className="ofis-filter-row" aria-label="Etkin filtreler">
                     {searchTerm&&<button className="ofis-filter" onClick={()=>setSearchTerm('')}>Arama: {searchTerm} ×</button>}
                     {statusFilter!=='all'&&<button className="ofis-filter" onClick={()=>setStatusFilter('all')}>{quoteStatusLabel(statusFilter)} ×</button>}
                     {requestTypeFilter!=='all'&&<button className="ofis-filter" onClick={()=>setRequestTypeFilter('all')}>Talep türü ×</button>}
                     {dateRangeDays>0&&<button className="ofis-filter" onClick={()=>setDateRangeDays(0)}>Son {dateRangeDays} gün ×</button>}
                 </div>
-                <div className="space-y-3">
+
+            <div className="ofis-sheet-workspace" data-has-selection={Boolean(selectedQuote)}>
+            {/* Teklif Masası */}
+            <div ref={listRef} className="ofis-panel ofis-sheet-list">
+                <div className="ofis-sheet-list-head">
+                    <h2>Teklif Masası</h2>
+                    <p className="ofis-helper">
+                        {filteredSeries.length} seri · {filteredQuotes.length} / {quotes.length} teklif
+                        {multiQuoteSeriesCount > 0 && ` · ${multiQuoteSeriesCount} çoklu seri`}
+                    </p>
+                </div>
+                <div className="ofis-sheet-columns" aria-hidden="true"><span>Müşteri</span><span>Ürün</span><span>Tutar · KDV dahil</span><span>Durum · temas</span></div>
+                <div>
                     {filteredSeries.length === 0 ? (
-                        <div className={`${ofisInner} p-8 text-center text-[var(--nx-text-muted)]`}>Seçili filtrelerde teklif talebi bulunmuyor.</div>
+                        <div className="ofis-empty px-5">Seçili filtrelerde teklif talebi bulunmuyor.</div>
                     ) : visibleSeries.map((series) => {
                         const isMulti = series.quoteCount > 1;
                         // Tek teklifli seriler default açık; çok teklifliler default kapalı.
                         const isOpen = isMulti ? (expandedSeries[series.seriesKey] ?? false) : true;
-                        const requestTypes = Array.from(new Set(series.quotes.map(q => q.request_type).filter(Boolean)));
-                        const matLabel = series.materialType === "tasyunu"
-                            ? "Taşyünü"
-                            : series.materialType === "eps"
-                                ? "EPS"
-                                : (series.materialType ?? "");
                         return (
-                            <div key={series.seriesKey} className={`${ofisInner}`}>
+                            <div key={series.seriesKey} className="ofis-series" data-multi={isMulti}>
                                 {/* ── Seri başlık satırı ── */}
                                 {isMulti && (
                                     <button
@@ -536,113 +532,63 @@ export function QuotesTab({
                                         onClick={() => setExpandedSeries(prev => ({ ...prev, [series.seriesKey]: !isOpen }))}
                                         aria-expanded={isOpen}
                                         aria-controls={`series-body-${series.seriesKey}`}
-                                        className="w-full text-left px-5 py-4 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between hover:bg-[rgba(255,255,255,0.025)] transition-colors rounded-xl"
+                                        className="ofis-series-head"
                                     >
-                                        <div className="min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Layers className="w-4 h-4 text-[var(--nx-gold)]" />
-                                                <span className="text-base font-semibold text-white">
-                                                    {series.customerCompany || series.customerName || "Müşteri yok"}
-                                                </span>
-                                                <span className="rounded-full border border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-2.5 py-0.5 text-sm text-[var(--nx-gold)]">
-                                                    Teklif Serisi · {series.quoteCount} teklif
-                                                </span>
-                                                {series.durationMinutes > 0 && (
-                                                    <span className="rounded-full border border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] px-2.5 py-0.5 text-sm text-slate-300">
-                                                        {formatSeriesDuration(series.durationMinutes)}
-                                                    </span>
-                                                )}
-                                                {requestTypes.map((rt) => (
-                                                    <span key={String(rt)} className={`rounded-full px-2.5 py-0.5 text-sm border ${rt === "pdf_quote" ? "border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] text-[var(--nx-gold)]" : "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"}`}>
-                                                        {rt === "pdf_quote" ? "PDF" : rt === "manual_quote" ? "Ofis" : "WhatsApp"}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            <div className="mt-1 text-base text-slate-400 break-words">
-                                                {series.customerPhone === "no_phone" ? "Telefon yok" : series.customerPhone}
-                                                {series.cityName ? ` • ${series.cityName}` : ""}
-                                                {matLabel ? ` • ${matLabel}` : ""}
-                                                {series.thicknesses.length > 0 ? ` • ${formatThicknesses(series.thicknesses)}` : ""}
-                                            </div>
-                                            <div className="mt-0.5 text-sm text-[var(--nx-text-muted)]">
-                                                {series.brands.length > 0 ? series.brands.join(" / ") : "—"}
-                                                {series.packageNames.length > 0 ? ` · ${series.packageNames.join(" / ")}` : ""}
-                                            </div>
-                                            <div className="mt-0.5 text-sm text-[var(--nx-text-muted)]">
-                                                Son teklif: {new Date(series.endedAt).toLocaleDateString("tr-TR")} {new Date(series.endedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 flex-shrink-0">
-                                            <div className="text-right">
-                                                <div className="text-sm text-[var(--nx-text-muted)]">
-                                                    {series.minPrice != null && series.maxPrice != null && series.minPrice !== series.maxPrice
-                                                        ? "Teklif aralığı"
-                                                        : "Teklif tutarı"}
-                                                </div>
-                                                <div className="text-lg font-semibold text-white">
-                                                    {series.minPrice != null && series.maxPrice != null
-                                                        ? series.minPrice === series.maxPrice
-                                                            ? `${Math.round(series.maxPrice).toLocaleString("tr-TR")} ₺`
-                                                            : `${Math.round(series.minPrice).toLocaleString("tr-TR")} – ${Math.round(series.maxPrice).toLocaleString("tr-TR")} ₺`
-                                                        : "—"}
-                                                </div>
-                                            </div>
-                                            <ChevronDown className={`w-5 h-5 text-[var(--nx-text-muted)] transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                                        </div>
+                                        <Layers className="h-4 w-4" aria-hidden="true" />
+                                        <span className="ofis-quote-who">
+                                            <strong>{series.customerCompany || series.customerName || "Müşteri yok"}</strong>
+                                            <span className="ofis-helper">
+                                                Teklif serisi · {series.quoteCount} teklif
+                                                {series.durationMinutes > 0 ? ` · ${formatSeriesDuration(series.durationMinutes)}` : ""}
+                                                {series.cityName ? ` · ${series.cityName}` : ""}
+                                                {series.thicknesses.length > 0 ? ` · ${formatThicknesses(series.thicknesses)}` : ""}
+                                            </span>
+                                        </span>
+                                        <span className="ofis-quote-sum">
+                                            <strong>
+                                                {series.minPrice != null && series.maxPrice != null
+                                                    ? series.minPrice === series.maxPrice
+                                                        ? `${Math.round(series.maxPrice).toLocaleString("tr-TR")} ₺`
+                                                        : `${Math.round(series.minPrice).toLocaleString("tr-TR")} – ${Math.round(series.maxPrice).toLocaleString("tr-TR")} ₺`
+                                                    : "—"}
+                                            </strong>
+                                            <small>
+                                                {series.minPrice != null && series.maxPrice != null && series.minPrice !== series.maxPrice
+                                                    ? "Teklif aralığı"
+                                                    : "Teklif tutarı"}
+                                            </small>
+                                        </span>
+                                        <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                                     </button>
                                 )}
 
                                 {/* ── Seri içindeki teklif satırları ── */}
                                 {isOpen && (
-                                    <div id={`series-body-${series.seriesKey}`} className={isMulti ? "border-t border-[rgba(92,98,108,0.18)] divide-y divide-[rgba(92,98,108,0.12)]" : ""}>
+                                    <div id={`series-body-${series.seriesKey}`}>
                                         {series.quotes.map((quote) => {
                                             const priorityKey = quote.priority ?? "normal";
                                             return (
-                                            <div key={quote.id} data-testid={`quote-row-${quote.id}`} className={`${isMulti ? "px-5 py-4" : "px-5 py-4"} transition-colors hover:bg-[rgba(255,255,255,0.045)]`}>
-                                                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                                                    <div className="min-w-0">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <span className="text-base font-semibold text-white">{quote.customer_name}</span>
-                                                            {quote.quote_code && (
-                                                                <span className="rounded-md px-2 py-0.5 text-sm font-mono bg-[rgba(255,255,255,0.04)] text-slate-400 border border-[rgba(92,98,108,0.22)]">
-                                                                    {quote.quote_code}
-                                                                </span>
-                                                            )}
-                                                            <span className={`rounded-full px-2.5 py-0.5 text-sm border ${urgencyStyle[priorityKey] ?? urgencyStyle.normal}`}>
-                                                                {urgencyLabel[priorityKey] ?? "Normal"}
-                                                            </span>
-                                                            <span className={`rounded-full px-2.5 py-0.5 text-sm border ${quote.request_type === "pdf_quote" ? "border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] text-[var(--nx-gold)]" : "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"}`}>
-                                                                {quote.request_type === "manual_quote" ? "Ofis Teklifi" : quote.request_type === "pdf_quote" ? "PDF" : quote.request_type === "whatsapp_order" ? "WhatsApp" : "Diğer"}
-                                                            </span>
-                                                        </div>
-                                                        <div className="mt-1 text-base text-slate-400 break-words">
-                                                            {quote.brand_name || "Marka yok"} • {quote.package_name || "Paket yok"} • {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm}cm • {quote.area_m2} m² • {quote.city_name || "—"}
-                                                        </div>
-                                                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-[var(--nx-text-muted)]">
-                                                            <span>
-                                                                {new Date(quote.created_at).toLocaleDateString("tr-TR")} {new Date(quote.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                                                            </span>
-                                                            <span className="ofis-status" data-testid={`quote-contact-${quote.id}`}>
-                                                                {contactLabel(quote.id)}
-                                                            </span>
-                                                            {quote.status === "completed" && quote.gross_profit != null && (
-                                                                <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-sm font-medium text-emerald-300">
-                                                                    kâr {Number(quote.gross_profit).toLocaleString("tr-TR")} ₺
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="ofis-quote-actions">
-                                                        <div className="ofis-quote-price tabular-nums">
-                                                            <div className="text-xl font-semibold">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</div>
-                                                            <div className="text-sm text-[var(--nx-text-muted)]">KDV dahil · {(quote.price_per_m2 ?? 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺/m² KDV hariç</div>
-                                                            <span className="ofis-status">{quoteStatusLabel(quote.status)}</span>
-                                                        </div>
-                                                        <div className="ofis-quote-buttons">
-                                                            <button type="button" onClick={() => selectQuote(quote)} className="ofis-primary" aria-label={`${quote.customer_name}: Detay`}>
-                                                                Detay →
-                                                            </button>
-                                                            <QuoteMoreActions name={quote.customer_name ?? "Teklif"}>
+                                            <div key={quote.id} data-testid={`quote-row-${quote.id}`} className="ofis-quote-row" data-selected={selectedQuote?.id === quote.id}>
+                                                {/* Satırın tamamı tek ana eylemdir: teklifi sağdaki föyde açar. */}
+                                                <button type="button" onClick={() => selectQuote(quote)} className="ofis-quote-main" aria-label={`${quote.customer_name}: Detay`}>
+                                                    <strong className="ofis-q-name">{quote.customer_name}</strong>
+                                                    <span className="ofis-q-product">
+                                                        {quote.brand_name || "Marka yok"} · {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm} cm · {quote.area_m2} m² · {quote.city_name || "—"}
+                                                    </span>
+                                                    <strong className="ofis-q-amount">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</strong>
+                                                    <span className="ofis-helper ofis-q-date">{new Date(quote.created_at).toLocaleDateString("tr-TR")}</span>
+                                                    <span className="ofis-q-state">
+                                                        <span className="ofis-status">{quoteStatusLabel(quote.status)}</span>
+                                                        <span className="ofis-helper" data-testid={`quote-contact-${quote.id}`}>{contactLabel(quote.id)}</span>
+                                                    </span>
+                                                    <span className="ofis-helper ofis-q-code">
+                                                        {quote.quote_code ? `${quote.quote_code} · ` : ""}
+                                                        {quote.request_type === "manual_quote" ? "Ofis teklifi" : quote.request_type === "pdf_quote" ? "PDF" : quote.request_type === "whatsapp_order" ? "WhatsApp" : "Diğer"}
+                                                        {priorityKey !== "normal" ? ` · Öncelik: ${urgencyLabel[priorityKey] ?? priorityKey}` : ""}
+                                                        {quote.status === "completed" && quote.gross_profit != null ? ` · kâr ${Number(quote.gross_profit).toLocaleString("tr-TR")} ₺` : ""}
+                                                    </span>
+                                                </button>
+                                                <QuoteMoreActions compact name={quote.customer_name ?? "Teklif"}>
                                                         {/* Salt-okunur hesapta değiştirme kontrolü hiç render edilmez;
                                                             bilgi rozet olarak kalır (audit B1). */}
                                                         {canMutate ? (
@@ -716,10 +662,7 @@ export function QuotesTab({
                                                                 <Trash2 className="w-3.5 h-3.5" /> Sil
                                                             </button>
                                                         )}
-                                                            </QuoteMoreActions>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                </QuoteMoreActions>
                                             </div>
                                         )})}
                                     </div>
@@ -733,9 +676,9 @@ export function QuotesTab({
                             type="button"
                             onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
                             data-testid="quotes-load-more"
-                            className={`${ofisInner} w-full py-3 text-base text-slate-300 transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-white`}
+                            className="ofis-secondary ofis-load-more"
                         >
-                            Daha fazla göster — {filteredSeries.length - visibleCount} seri daha
+                            Daha fazla göster · {filteredSeries.length - visibleCount} seri daha
                         </button>
                     )}
                 </div>
@@ -755,24 +698,23 @@ export function QuotesTab({
                         tabIndex={-1}
                         className="ofis-sheet-content"
                     >
-                        <div className="sticky top-0 rounded-t-2xl border-b border-[rgba(92,98,108,0.24)] bg-[rgba(15,17,21,0.96)] p-6 text-white shadow-[0_14px_30px_rgba(0,0,0,0.28)]">
+                        <div className="ofis-sheet-top sticky top-0">
                             <div className="flex justify-between items-start gap-2">
-                                <div>
-                                    <h3 className="text-2xl font-bold mb-2">
-                                        Teklif Detayı #{selectedQuote.id}
-                                        {selectedQuote.quote_code && (
-                                            <span className="block text-base font-mono font-normal text-amber-300/80">{selectedQuote.quote_code}</span>
-                                        )}
-                                    </h3>
-                                        <p className="text-[var(--nx-text-soft)] text-base">{new Date(selectedQuote.created_at).toLocaleString("tr-TR")}</p>
+                                <div className="min-w-0">
+                                    <h3>{selectedQuote.customer_name}</h3>
+                                    <p className="ofis-muted">
+                                        <span className="font-mono">{selectedQuote.quote_code ?? `#${selectedQuote.id}`}</span>
+                                        {" · "}{new Date(selectedQuote.created_at).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
+                                        {" · "}{quoteStatusLabel(selectedQuote.status)}
+                                    </p>
                                     {canMutate && onOpenInBuilder && hasLineItems(selectedQuote) && (
-                                        <div className="flex flex-wrap gap-2 mt-3">
+                                        <div className="ofis-actions mt-3">
                                             {selectedQuote.request_type === "manual_quote" && (
                                                 <button
                                                     type="button"
                                                     onClick={() => openInBuilder(selectedQuote, "revize")}
                                                     data-testid="quote-detail-revise"
-                                                    className={`${ofisControl} inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-sky-200 hover:bg-sky-400/10`}
+                                                    className="ofis-secondary"
                                                 >
                                                     <PencilLine className="h-3.5 w-3.5" />
                                                     Teklifi revize et
@@ -782,7 +724,7 @@ export function QuotesTab({
                                                 type="button"
                                                 onClick={() => openInBuilder(selectedQuote, "cogalt")}
                                                 data-testid="quote-detail-duplicate"
-                                                className={`${ofisControl} inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold hover:bg-[rgba(255,255,255,0.06)]`}
+                                                className="ofis-secondary"
                                             >
                                                 <Copy className="h-3.5 w-3.5" />
                                                 Çoğalt
@@ -790,33 +732,33 @@ export function QuotesTab({
                                         </div>
                                     )}
                                     {(selectedQuote.pdf_storage_path || selectedQuote.pdf_url) && (
-                                        <div className="flex flex-wrap gap-2 mt-3">
+                                        <div className="ofis-actions mt-3">
                                             <a
                                                 href={`/api/admin/quotes/${selectedQuote.id}/pdf`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`${ofisControl} px-4 py-2 text-sm font-semibold text-sky-300 hover:bg-sky-500/10`}
+                                                className="ofis-secondary"
                                             >
                                                 PDF Görüntüle
                                             </a>
                                             <a
                                                 href={`/api/admin/quotes/${selectedQuote.id}/pdf?download=1`}
                                                 download
-                                                className={`${ofisControl} px-4 py-2 text-sm font-semibold hover:bg-[rgba(255,255,255,0.06)]`}
+                                                className="ofis-secondary"
                                             >
                                                 ↓ İndir
                                             </a>
                                         </div>
                                     )}
                                 </div>
-                                <button onClick={() => selectQuote(null)} className="rounded-full p-2 text-[var(--nx-text-soft)] transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.18)]" aria-label="Listeye dön">
+                                <button onClick={() => selectQuote(null)} className="ofis-secondary ofis-icon-button" aria-label="Listeye dön">
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
                         </div>
-                        <div className="p-6 space-y-6">
+                        <div className="ofis-sheet-body">
                             <QuoteTechnicalSummary quote={selectedQuote as unknown as Record<string,unknown>} />
                             <OfficeProjectPanel quoteId={String(selectedQuote.id)} />
                             <details className="space-y-4"><summary>Belgedeki müşteri, ürün ve lojistik ayrıntıları</summary>
@@ -903,8 +845,8 @@ export function QuotesTab({
                     </div>
                 </div>
             )}
-            {!selectedQuote&&<aside className="ofis-panel ofis-sheet-placeholder"><h2>Bir teklif seçin</h2><p>Teknik föy, revizyon farkı ve proje dosyası burada açılır.</p></aside>}
             </div>
+            <details className="ofis-panel" data-testid="quote-status-distribution"><summary>Teklif durum dağılımı</summary><p data-testid="status-denominator" className="ofis-helper">Seçili filtrelerde {distribution.total} teklif · Her teklif bir kez sayılır.</p><div className="ofis-state-counts">{Object.entries(distribution.counts).map(([status,count])=><span key={status}>{quoteStatusLabel(status)} <strong data-testid={`status-count-${status}`}>{count}</strong></span>)}</div></details>
         </div>
     );
 }

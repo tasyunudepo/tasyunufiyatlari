@@ -46,6 +46,32 @@ export function formatSaat(saat: number): string {
 }
 
 /**
+ * Dakikayı kısa gecikme süresine çevirir — iş sırası rozeti için.
+ *
+ * "888 dk gecikti" operatöre bir şey söylemiyordu; saati kafadan bölmek
+ * gerekiyordu (9 Ekim 2026). Bir günden kısa sürede dakika korunur, çünkü
+ * ilk temas hedefi dakikayla ölçülür.
+ *
+ * @example
+ * formatGecikme(48)   // "48 dk"
+ * formatGecikme(888)  // "14 sa 48 dk"
+ * formatGecikme(3000) // "2 gün 2 sa"
+ */
+export function formatGecikme(dakika: number): string {
+  if (!Number.isFinite(dakika) || dakika < 0) return '—'
+  const dk = Math.floor(dakika)
+  if (dk < 60) return `${dk} dk`
+  if (dk < 60 * SAAT_GUN) {
+    const sa = Math.floor(dk / 60)
+    const kalan = dk % 60
+    return kalan > 0 ? `${sa} sa ${kalan} dk` : `${sa} sa`
+  }
+  const gun = Math.floor(dk / (60 * SAAT_GUN))
+  const sa = Math.floor((dk % (60 * SAAT_GUN)) / 60)
+  return sa > 0 ? `${gun} gün ${sa} sa` : `${gun} gün`
+}
+
+/**
  * İlk temas süresi için şiddet.
  *
  * Eşikler ticari karar değil, operasyonel sağduyu: teklif geldikten sonra
