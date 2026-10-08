@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Pano hatasında ham numara seçilebilir ve geri bildirim açık. Geçersiz girişte dış link yok. +44 kodu korunur; gerçek arama/mesaj açılmadı.",
+    "Mobilde bağlantıya basmadan WhatsApp yanıtı elle kaydedildi; doğru proje/kanal, kullanılan farklı numara notta, ham teklif numarası değişmedi."
+  ],
+  "external": [],
+  "passed": true
+}

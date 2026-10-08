@@ -1,0 +1,70 @@
+{
+  "method": "Tek masaüstü otomasyon geçişi, 1440 px. Alan odağı da tıklama sayılır; metin fill ile girilir. İnsan süresi veya dönüşüm artışı değildir. Eksik eski adımlar tamamlanmış sayılmaz.",
+  "rows": [
+    {
+      "variant": "old",
+      "task": 1,
+      "clicks": 3,
+      "seconds": 0.46,
+      "complete": false,
+      "note": "Talep/telefon bulundu; eski dosyada arama veya WhatsApp bağlantısı yok."
+    },
+    {
+      "variant": "old",
+      "task": 2,
+      "clicks": 5,
+      "seconds": 1.32,
+      "complete": true,
+      "note": "Temas ve tek follow_up_date alanı kaydedildi; ayrı görev/başarı geçmişi sözleşmesi yok."
+    },
+    {
+      "variant": "old",
+      "task": 3,
+      "clicks": 3,
+      "seconds": 0.34,
+      "complete": false,
+      "note": "Geciken tarih bulundu; bağımsız takip görevini tamamlayacak işlem yok. Tarihi silmek tamamlanma geçmişi değildir."
+    },
+    {
+      "variant": "old",
+      "task": 4,
+      "clicks": 18,
+      "seconds": 6.07,
+      "complete": false,
+      "note": "Teklif/PDF/revizyon tamamlandı; eski arayüzde sürüm karşılaştırması yok."
+    },
+    {
+      "variant": "new",
+      "task": 1,
+      "clicks": 3,
+      "seconds": 0.13,
+      "complete": true,
+      "note": "Tel hedefi doğru; dış arama engellendi, başarılı temas sayısı değişmedi."
+    },
+    {
+      "variant": "new",
+      "task": 2,
+      "clicks": 3,
+      "seconds": 0.59,
+      "complete": true,
+      "note": "Temas sonucu ve tarih/sorumlulu ayrı takip görevi kaydedildi."
+    },
+    {
+      "variant": "new",
+      "task": 3,
+      "clicks": 3,
+      "seconds": 0.14,
+      "complete": true,
+      "note": "Geciken görev sonuçla tamamlandı; önceki başarılı temas korundu."
+    },
+    {
+      "variant": "new",
+      "task": 4,
+      "clicks": 19,
+      "seconds": 4,
+      "complete": true,
+      "note": "Yeni teklif, PDF, aynı numaraya revizyon ve önce/güncel karşılaştırma tamamlandı."
+    }
+  ],
+  "passed": true
+}

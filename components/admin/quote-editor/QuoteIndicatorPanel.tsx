@@ -75,7 +75,7 @@ function MarjKadrani({ value, label }: { value: number | null; label: string }) 
       </text>
       <text
         x="60" y="78"
-        className="rotate-[210deg] origin-center fill-[var(--nx-text-muted)] text-[10px] uppercase tracking-wider"
+        className="rotate-[210deg] origin-center fill-[var(--nx-text-muted)] text-sm uppercase tracking-wider"
         textAnchor="middle" dominantBaseline="middle"
       >
         {label}
@@ -103,14 +103,14 @@ function Kutu({
     ton === "iyi" ? "text-emerald-300" : ton === "uyari" ? "text-amber-300" : "text-white";
   return (
     <div className="rounded-xl border border-[rgba(92,98,108,0.22)] bg-[rgba(255,255,255,0.02)] px-3 py-2.5">
-      <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">
+      <p className="flex items-center gap-1.5 text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">
         {icon}
         {baslik}
       </p>
       <p className={`mt-1 text-[15px] font-semibold tabular-nums ${renk}`} data-testid={testId}>
         {deger}
       </p>
-      {alt && <p className="mt-0.5 text-[10px] text-[var(--nx-text-muted)]">{alt}</p>}
+      {alt && <p className="mt-0.5 text-sm text-[var(--nx-text-muted)]">{alt}</p>}
     </div>
   );
 }
@@ -132,11 +132,11 @@ export function QuoteIndicatorPanel({
       className="rounded-2xl border border-[rgba(201,168,76,0.22)] bg-[linear-gradient(160deg,rgba(201,168,76,0.07),rgba(13,15,18,0.7)_55%)] p-4"
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-white">
+        <h3 className="flex items-center gap-1.5 text-base font-semibold text-white">
           <Gauge className="h-4 w-4 text-[var(--nx-gold)]" />
           Teklif göstergeleri
         </h3>
-        <span className="rounded-full border border-[rgba(92,98,108,0.3)] px-2 py-0.5 text-[10px] text-[var(--nx-text-muted)]">
+        <span className="rounded-full border border-[rgba(92,98,108,0.3)] px-2 py-0.5 text-sm text-[var(--nx-text-muted)]">
           yalnız ofis — belgeye yazılmaz
         </span>
       </div>
@@ -147,7 +147,7 @@ export function QuoteIndicatorPanel({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <label htmlFor="hedef-marj" className="text-[11px] uppercase tracking-wider text-[var(--nx-text-muted)]">
+            <label htmlFor="hedef-marj" className="text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">
               Hedef marj
             </label>
             <div className="flex items-center gap-1">
@@ -160,9 +160,9 @@ export function QuoteIndicatorPanel({
                 }}
                 inputMode="decimal"
                 aria-label="Hedef marj yüzdesi"
-                className="w-16 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.85)] px-2 py-1 text-right text-sm font-semibold tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.55)]"
+                className="w-16 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.85)] px-2 py-1 text-right text-base font-semibold tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.55)]"
               />
-              <span className="text-xs text-slate-400">%</span>
+              <span className="text-sm text-slate-400">%</span>
             </div>
           </div>
 
@@ -183,7 +183,7 @@ export function QuoteIndicatorPanel({
                 key={m}
                 type="button"
                 onClick={() => onTargetMarginChange(m)}
-                className={`rounded-lg border px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors ${
+                className={`rounded-lg border px-2 py-1 text-sm font-semibold tabular-nums transition-colors ${
                   targetMarginPct === m
                     ? "border-[rgba(201,168,76,0.6)] bg-[rgba(201,168,76,0.18)] text-[var(--nx-gold)]"
                     : "border-[rgba(92,98,108,0.28)] text-slate-400 hover:border-[rgba(201,168,76,0.35)] hover:text-white"
@@ -197,14 +197,14 @@ export function QuoteIndicatorPanel({
               onClick={onApplyMargin}
               disabled={disabled}
               data-testid="apply-margin"
-              className="ml-auto rounded-lg bg-[var(--nx-gold)] px-3 py-1.5 text-[11px] font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="ml-auto rounded-lg bg-[var(--nx-gold)] px-3 py-1.5 text-sm font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Fiyatlara uygula
             </button>
           </div>
 
           {uniformMarginPct == null && g.knownCost > 0 && (
-            <p className="mt-2 flex items-start gap-1.5 text-[10px] text-amber-200/80">
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-amber-200/80">
               <Info className="mt-0.5 h-3 w-3 shrink-0" />
               Kalemler farklı marjlarda — kadran tek değer gösteremiyor.
               &ldquo;Fiyatlara uygula&rdquo; hepsini eşitler.

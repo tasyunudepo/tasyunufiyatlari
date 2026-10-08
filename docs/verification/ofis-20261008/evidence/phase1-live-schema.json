@@ -1,0 +1,617 @@
+{
+  "target_host_sha256_prefix": "2bb261a83e4b",
+  "method": "GET",
+  "schema_http_status": 200,
+  "production_writes": 0,
+  "customer_rows_read": 0,
+  "tables": {
+    "quotes": {
+      "required": [
+        "id",
+        "customer_name",
+        "customer_email",
+        "customer_phone",
+        "material_type",
+        "brand_name",
+        "thickness_cm",
+        "area_m2",
+        "city_code",
+        "city_name",
+        "package_name",
+        "plate_brand_name",
+        "accessory_brand_name",
+        "total_price",
+        "price_per_m2",
+        "price_without_vat",
+        "vat_amount",
+        "package_count",
+        "package_size_m2",
+        "items_per_package",
+        "package_items",
+        "request_type",
+        "source_channel",
+        "kvkk_consent"
+      ],
+      "properties": {
+        "id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "updated_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "customer_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "customer_email": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "customer_phone": {
+          "format": "character varying",
+          "maxLength": 50,
+          "type": "string"
+        },
+        "customer_company": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "customer_address": {
+          "format": "text",
+          "type": "string"
+        },
+        "material_type": {
+          "format": "character varying",
+          "maxLength": 50,
+          "type": "string"
+        },
+        "brand_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "brand_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "model_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "thickness_cm": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "area_m2": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "city_code": {
+          "format": "character varying",
+          "maxLength": 10,
+          "type": "string"
+        },
+        "city_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "package_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "package_description": {
+          "format": "text",
+          "type": "string"
+        },
+        "plate_brand_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "accessory_brand_name": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "total_price": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "price_per_m2": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "shipping_cost": {
+          "default": 0,
+          "format": "numeric",
+          "type": "number"
+        },
+        "discount_percentage": {
+          "default": 0,
+          "format": "numeric",
+          "type": "number"
+        },
+        "price_without_vat": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "vat_amount": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "package_count": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "package_size_m2": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "items_per_package": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "vehicle_type": {
+          "format": "character varying",
+          "maxLength": 20,
+          "type": "string"
+        },
+        "lorry_capacity_packages": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "truck_capacity_packages": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "lorry_fill_percentage": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "truck_fill_percentage": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "package_items": {
+          "format": "jsonb"
+        },
+        "status": {
+          "default": "pending",
+          "format": "character varying",
+          "maxLength": 50,
+          "type": "string"
+        },
+        "priority": {
+          "default": "normal",
+          "format": "character varying",
+          "maxLength": 20,
+          "type": "string"
+        },
+        "admin_notes": {
+          "format": "text",
+          "type": "string"
+        },
+        "quoted_price": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "quote_sent_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "quote_sent_by": {
+          "format": "character varying",
+          "maxLength": 255,
+          "type": "string"
+        },
+        "contact_attempted_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "contact_successful": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "follow_up_date": {
+          "format": "date",
+          "type": "string"
+        },
+        "request_type": {
+          "default": "whatsapp_order",
+          "format": "text",
+          "type": "string"
+        },
+        "source_channel": {
+          "default": "wizard",
+          "format": "text",
+          "type": "string"
+        },
+        "quote_code": {
+          "format": "text",
+          "type": "string"
+        },
+        "pdf_url": {
+          "format": "text",
+          "type": "string"
+        },
+        "pdf_storage_path": {
+          "format": "text",
+          "type": "string"
+        },
+        "notification_sent_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "kvkk_consent": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "consent_timestamp": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "consent_ip": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_version": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_purpose": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_channel": {
+          "format": "text",
+          "type": "string"
+        },
+        "loss_category": {
+          "format": "text",
+          "type": "string"
+        },
+        "loss_reason": {
+          "format": "text",
+          "type": "string"
+        },
+        "sales_final_price": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "gross_profit": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "quoted_by": {
+          "format": "text",
+          "type": "string"
+        },
+        "closed_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "customer_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "customer_link_status": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_basis": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_recorded_by": {
+          "format": "text",
+          "type": "string"
+        },
+        "rule_overrides": {
+          "format": "jsonb"
+        },
+        "rule_override_reason": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_by": {
+          "format": "text",
+          "type": "string"
+        },
+        "comparison_session_id": {
+          "format": "text",
+          "type": "string"
+        }
+      }
+    },
+    "customers": {
+      "required": [
+        "id",
+        "business_unit",
+        "phone_normalized",
+        "phone_display",
+        "display_name",
+        "customer_type",
+        "origin",
+        "status",
+        "kvkk_consent",
+        "first_seen_at",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "business_unit": {
+          "default": "tasyunu",
+          "format": "text",
+          "type": "string"
+        },
+        "phone_normalized": {
+          "format": "text",
+          "type": "string"
+        },
+        "phone_display": {
+          "format": "text",
+          "type": "string"
+        },
+        "display_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "company_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "email": {
+          "format": "text",
+          "type": "string"
+        },
+        "city_code": {
+          "format": "text",
+          "type": "string"
+        },
+        "city_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "address": {
+          "format": "text",
+          "type": "string"
+        },
+        "customer_type": {
+          "default": "bireysel",
+          "format": "text",
+          "type": "string"
+        },
+        "origin": {
+          "default": "wizard",
+          "format": "text",
+          "type": "string"
+        },
+        "owner": {
+          "format": "text",
+          "type": "string"
+        },
+        "status": {
+          "default": "aktif",
+          "format": "text",
+          "type": "string"
+        },
+        "kvkk_consent": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "consent_basis": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_version": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_channel": {
+          "format": "text",
+          "type": "string"
+        },
+        "consent_timestamp": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "consent_recorded_by": {
+          "format": "text",
+          "type": "string"
+        },
+        "retention_until": {
+          "format": "date",
+          "type": "string"
+        },
+        "notes": {
+          "format": "text",
+          "type": "string"
+        },
+        "first_seen_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "last_contact_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "updated_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      }
+    },
+    "customer_interactions": {
+      "required": [
+        "id",
+        "customer_id",
+        "kind",
+        "occurred_at",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "customer_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "quote_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "kind": {
+          "format": "text",
+          "type": "string"
+        },
+        "outcome": {
+          "format": "text",
+          "type": "string"
+        },
+        "body": {
+          "format": "text",
+          "type": "string"
+        },
+        "occurred_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "next_action_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "next_action_note": {
+          "format": "text",
+          "type": "string"
+        },
+        "next_action_done_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "reminder_sent_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "created_by": {
+          "default": "ofis",
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      }
+    },
+    "quote_funnel_events": {
+      "required": [
+        "id",
+        "event_type",
+        "metadata",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "event_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "quote_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "material_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "brand_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "brand_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "model_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "thickness_cm": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "area_m2": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "city_code": {
+          "format": "text",
+          "type": "string"
+        },
+        "city_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "package_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "total_price": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "metadata": {
+          "format": "jsonb"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      }
+    },
+    "sales_projects": null,
+    "sales_tasks": null,
+    "office_operations": null
+  },
+  "history_projection_limit_zero": {
+    "http_status": 200,
+    "empty_result": true
+  }
+}

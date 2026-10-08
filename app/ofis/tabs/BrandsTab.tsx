@@ -99,7 +99,7 @@ export function BrandsTab() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Markalar</h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-base text-slate-400">
               Marka bazlı kâr marjı yönetimi. Marka marjı doluysa o markanın bütün
               fiyat yüzeylerinde geçerlidir; <span className="text-slate-300">boş bırakılan marka</span>,
               Marj Kuralları sekmesindeki malzeme-tipi kademelerini kullanır.
@@ -122,7 +122,7 @@ export function BrandsTab() {
               <div className="min-w-[10rem]">
                 <div className="font-semibold text-white">{brand.name}</div>
                 {brand.tier && (
-                  <div className="text-xs uppercase tracking-wide text-[var(--nx-text-muted)]">{brand.tier}</div>
+                  <div className="text-sm uppercase tracking-wide text-[var(--nx-text-muted)]">{brand.tier}</div>
                 )}
               </div>
 
@@ -130,7 +130,7 @@ export function BrandsTab() {
               {canMutate ? (
                 <>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Marka Marjı (%)</label>
+                    <label className="block text-sm text-slate-400 mb-1">Marka Marjı (%)</label>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -145,7 +145,7 @@ export function BrandsTab() {
                     <button
                       onClick={() => save(brand.id)}
                       disabled={!dirty || saving[brand.id]}
-                      className="rounded-lg bg-amber-500/90 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-40"
+                      className="rounded-lg bg-amber-500/90 px-4 py-2 text-base font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-40"
                     >
                       {saving[brand.id] ? "Kaydediliyor..." : "Kaydet"}
                     </button>
@@ -153,13 +153,13 @@ export function BrandsTab() {
                 </>
               ) : null}
 
-              <div className="pt-4 text-sm">
+              <div className="pt-4 text-base">
                 {successId === brand.id && <span className="text-green-400">Kaydedildi ✓</span>}
                 {errors[brand.id] && <span className="text-red-400">{errors[brand.id]}</span>}
               </div>
             </div>
 
-            <div className="mt-2 text-xs text-[var(--nx-text-muted)]">
+            <div className="mt-2 text-sm text-[var(--nx-text-muted)]">
               Geçerli marj:{" "}
               {brand.margin_pct === null ? (
                 <span>malzeme-tipi kademe kuralı (Marj Kuralları sekmesi)</span>
@@ -168,7 +168,7 @@ export function BrandsTab() {
               )}
             </div>
 
-            {note && <div className="mt-2 text-xs text-[var(--nx-text-muted)]">{note}</div>}
+            {note && <div className="mt-2 text-sm text-[var(--nx-text-muted)]">{note}</div>}
           </div>
         );
       })}

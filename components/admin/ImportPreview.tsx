@@ -38,7 +38,7 @@ function formatPrice(price: number): string {
 function StatusBadge({ status }: { status: MatchStatus }) {
     const cfg = STATUS_CONFIG[status];
     return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${cfg.badgeClass}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-sm font-medium border ${cfg.badgeClass}`}>
             {cfg.label}
         </span>
     );
@@ -61,7 +61,7 @@ function SummaryCard({
                 <span className={`text-2xl font-bold tabular-nums ${colorClass}`}>{value}</span>
                 {icon && <span className="opacity-60">{icon}</span>}
             </div>
-            <span className="text-xs text-slate-400 leading-tight">{label}</span>
+            <span className="text-sm text-slate-400 leading-tight">{label}</span>
         </div>
     );
 }
@@ -74,7 +74,7 @@ function LoadingState() {
     return (
         <div className="bg-slate-900/80 backdrop-blur-md rounded-xl border border-slate-800/50 p-16 flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-slate-400 text-sm">Import analizi çalışıyor...</p>
+            <p className="text-slate-400 text-base">Import analizi çalışıyor...</p>
         </div>
     );
 }
@@ -85,8 +85,8 @@ function EmptyState() {
             <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
                 <HelpCircle className="w-6 h-6 text-[var(--nx-text-muted)]" />
             </div>
-            <p className="text-slate-400 text-sm">Henüz dosya yüklenmedi.</p>
-            <p className="text-[var(--nx-text-muted)] text-xs max-w-xs">
+            <p className="text-slate-400 text-base">Henüz dosya yüklenmedi.</p>
+            <p className="text-[var(--nx-text-muted)] text-sm max-w-xs">
                 Dosya yüklenip analiz edildikten sonra eşleşme sonuçları ve uyarılar burada görünecek.
             </p>
         </div>
@@ -174,10 +174,10 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                     <div className="flex items-start gap-3 mb-3">
                         <Plus className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
                         <div>
-                            <p className="text-blue-300 font-semibold text-sm">
+                            <p className="text-blue-300 font-semibold text-base">
                                 {newProductRows.length} yeni ürün DB&apos;de bulunamadı — apply edilmez
                             </p>
-                            <p className="text-orange-400/70 text-xs mt-1">
+                            <p className="text-orange-400/70 text-sm mt-1">
                                 Bu ürünler <strong className="text-blue-300">plates</strong> veya <strong className="text-blue-300">accessories</strong> tablosunda mevcut değil.
                                 Önce Admin → Ürün tablosuna manuel ekleyin, ardından bu Excel dosyasını tekrar import edin.
                             </p>
@@ -187,16 +187,16 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                         {newProductRows.map((row) => (
                             <div key={row.raw.rowIndex} className="px-3 py-2 bg-blue-950/30 flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-xs text-blue-200 font-medium truncate">
+                                    <span className="text-sm text-blue-200 font-medium truncate">
                                         {row.raw.rawProductName}
                                     </span>
                                     {row.debug.thicknessCm !== null && (
-                                        <span className="text-[10px] text-orange-400/60 flex-shrink-0">
+                                        <span className="text-sm text-orange-400/60 flex-shrink-0">
                                             {row.debug.thicknessCm} cm
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-3 flex-shrink-0 text-[11px] text-orange-400/60">
+                                <div className="flex items-center gap-3 flex-shrink-0 text-sm text-orange-400/60">
                                     <span>{row.debug.productType === 'plate' ? 'Levha' : row.debug.productType === 'accessory' ? 'Aksesuar' : '?'}</span>
                                     <span>{row.debug.materialType === 'eps' ? 'EPS' : row.debug.materialType === 'tasyunu' ? 'Taşyünü' : '?'}</span>
                                 </div>
@@ -211,10 +211,10 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                 <div className="bg-purple-950/40 border border-purple-500/40 rounded-xl p-4 flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="text-purple-300 font-semibold text-sm">
+                        <p className="text-purple-300 font-semibold text-base">
                             {reviewRows.length} satırda %30&apos;dan fazla fiyat değişimi var
                         </p>
-                        <p className="text-purple-400/70 text-xs mt-1">
+                        <p className="text-purple-400/70 text-sm mt-1">
                             Uygulamadan önce bu satırları manuel incelemeniz önerilir.
                         </p>
                     </div>
@@ -225,12 +225,12 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
             {rows.length > 0 && (
                 <div className="bg-slate-900/80 backdrop-blur-md rounded-xl border border-slate-800/50 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-800/50 flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-white">Satır Önizleme</h3>
-                        <span className="text-xs text-[var(--nx-text-muted)]">{rows.length} satır</span>
+                        <h3 className="text-base font-semibold text-white">Satır Önizleme</h3>
+                        <span className="text-sm text-[var(--nx-text-muted)]">{rows.length} satır</span>
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
+                        <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-slate-800/50 bg-slate-800/30">
                                     <th className="text-left px-4 py-3 text-slate-400 font-medium w-8">#</th>
@@ -281,7 +281,7 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
                                                         )}
                                                         {row.raw.rawProductName}
                                                     </span>
-                                                    <div className="text-[10px] leading-tight text-[var(--nx-text-muted)]">
+                                                    <div className="text-sm leading-tight text-[var(--nx-text-muted)]">
                                                         <div>class: {debug.productClass}</div>
                                                         <div>family: {debug.familyCanonical ?? '—'}</div>
                                                         <div>variant: {debug.variantCanonical ?? '—'}</div>
@@ -381,17 +381,17 @@ export function ImportPreview({ summary, rows, isLoading = false }: ImportPrevie
             {allWarnings.length > 0 && (
                 <div className="bg-slate-900/80 backdrop-blur-md rounded-xl border border-slate-800/50 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-800/50 flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-white">
+                        <h3 className="text-base font-semibold text-white">
                             Uyarılar
                         </h3>
-                        <span className="text-xs text-[var(--nx-text-muted)]">{allWarnings.length} uyarı</span>
+                        <span className="text-sm text-[var(--nx-text-muted)]">{allWarnings.length} uyarı</span>
                     </div>
 
                     <div className="divide-y divide-slate-800/40 max-h-72 overflow-y-auto">
                         {allWarnings.map((w, idx) => (
                             <div key={idx} className="px-4 py-3 flex items-start gap-3">
                                 {SEVERITY_ICON[w.severity]}
-                                <p className="text-xs text-slate-300 leading-relaxed">
+                                <p className="text-sm text-slate-300 leading-relaxed">
                                     {w.rowIndex !== undefined && (
                                         <span className="text-[var(--nx-text-muted)] mr-1.5">Satır {w.rowIndex + 1} —</span>
                                     )}

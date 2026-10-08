@@ -190,7 +190,7 @@ export function ExperimentsTab() {
     }
 
     if (loading) {
-        return <div className="p-8 text-sm text-slate-400">Deney defteri yükleniyor…</div>;
+        return <div className="p-8 text-base text-slate-400">Deney defteri yükleniyor…</div>;
     }
 
     return (
@@ -198,16 +198,16 @@ export function ExperimentsTab() {
             <div className={`${ofisPanel} p-5`}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <div className="text-xs uppercase tracking-[0.28em] text-amber-300/80">Satış Hipotez Motoru · Gözlem Katmanı</div>
+                        <div className="text-sm uppercase tracking-[0.28em] text-amber-300/80">Satış Hipotez Motoru · Gözlem Katmanı</div>
                         <h2 className="mt-1.5 text-xl font-semibold">Satış Deneyleri</h2>
-                        <p className="mt-1 text-sm text-slate-400">
+                        <p className="mt-1 text-base text-slate-400">
                             Her fikir sözleşmeyle kaydedilir; sonuç gerçek teklif verisiyle izlenir.
                             Öneri beyni (teşhis/otomasyon) yeterli kapanmış teklif birikince açılacak — kazanan ilanını veri verir, biz onaylarız.
                         </p>
                     </div>
                     {canMutate && (
                         <button type="button" onClick={() => setShowForm((s) => !s)}
-                            className={`${ofisControl} shrink-0 px-4 py-2 text-sm font-semibold hover:bg-[rgba(255,255,255,0.06)]`}>
+                            className={`${ofisControl} shrink-0 px-4 py-2 text-base font-semibold hover:bg-[rgba(255,255,255,0.06)]`}>
                             {showForm ? "Vazgeç" : "+ Yeni deney"}
                         </button>
                     )}
@@ -216,50 +216,50 @@ export function ExperimentsTab() {
                 {showForm && (
                     <div className={`${ofisInner} mt-4 grid gap-3 p-4 sm:grid-cols-2`}>
                         <label className="block sm:col-span-2">
-                            <span className="text-xs text-slate-400">Deney adı</span>
+                            <span className="text-sm text-slate-400">Deney adı</span>
                             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <label className="block sm:col-span-2">
-                            <span className="text-xs text-slate-400">Hipotez (kanıtlanan problem + beklenti + neden)</span>
+                            <span className="text-sm text-slate-400">Hipotez (kanıtlanan problem + beklenti + neden)</span>
                             <textarea rows={2} value={form.hypothesis} onChange={(e) => setForm({ ...form, hypothesis: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <label className="block">
-                            <span className="text-xs text-slate-400">Hedef ziyaretçi</span>
+                            <span className="text-sm text-slate-400">Hedef ziyaretçi</span>
                             <input value={form.targetVisitor} onChange={(e) => setForm({ ...form, targetVisitor: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <label className="block">
-                            <span className="text-xs text-slate-400">Değiştirilen yüzey</span>
+                            <span className="text-sm text-slate-400">Değiştirilen yüzey</span>
                             <input value={form.surface} onChange={(e) => setForm({ ...form, surface: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <label className="block">
-                            <span className="text-xs text-slate-400">Ana karar metriği</span>
+                            <span className="text-sm text-slate-400">Ana karar metriği</span>
                             <input value={form.primaryMetric} onChange={(e) => setForm({ ...form, primaryMetric: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <label className="block">
-                            <span className="text-xs text-slate-400">Başlangıç tarihi</span>
+                            <span className="text-sm text-slate-400">Başlangıç tarihi</span>
                             <input type="date" value={form.startedAt} onChange={(e) => setForm({ ...form, startedAt: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm [color-scheme:dark]`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base [color-scheme:dark]`} />
                         </label>
                         <label className="block sm:col-span-2">
-                            <span className="text-xs text-slate-400">Korumalar (brüt kâr / müşteri kalitesi)</span>
+                            <span className="text-sm text-slate-400">Korumalar (brüt kâr / müşteri kalitesi)</span>
                             <input value={form.guardrails} onChange={(e) => setForm({ ...form, guardrails: e.target.value })}
-                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${ofisControl} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <div className="sm:col-span-2">
                             <button type="button" onClick={() => void createExperiment()}
-                                className="rounded-lg bg-[var(--nx-gold)] px-4 py-2 text-sm font-bold text-black transition-opacity hover:opacity-90">
+                                className="rounded-lg bg-[var(--nx-gold)] px-4 py-2 text-base font-bold text-black transition-opacity hover:opacity-90">
                                 Deneyi kaydet
                             </button>
                         </div>
                     </div>
                 )}
 
-                {error && <p className="mt-3 text-xs text-red-300">{error}</p>}
+                {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
             </div>
 
             <div className="space-y-4">
@@ -272,7 +272,7 @@ export function ExperimentsTab() {
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold text-white">{exp.name}</h3>
-                                        <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${
+                                        <span className={`rounded-full border px-2.5 py-0.5 text-sm font-medium ${
                                             exp.status === "yayinda"
                                                 ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
                                                 : exp.status === "duraklatildi"
@@ -282,33 +282,33 @@ export function ExperimentsTab() {
                                             {STATUS_LABELS[exp.status]}
                                         </span>
                                         {exp.decision && (
-                                            <span className="rounded-full border border-[rgba(201,168,76,0.3)] bg-[rgba(201,168,76,0.1)] px-2.5 py-0.5 text-[10px] text-[var(--nx-gold)]">
+                                            <span className="rounded-full border border-[rgba(201,168,76,0.3)] bg-[rgba(201,168,76,0.1)] px-2.5 py-0.5 text-sm text-[var(--nx-gold)]">
                                                 {DECISION_LABELS[exp.decision] ?? exp.decision}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mt-2 max-w-3xl text-sm text-slate-300">{exp.hypothesis}</p>
-                                    <p className="mt-2 text-xs text-[var(--nx-text-muted)]">
+                                    <p className="mt-2 max-w-3xl text-base text-slate-300">{exp.hypothesis}</p>
+                                    <p className="mt-2 text-sm text-[var(--nx-text-muted)]">
                                         Yüzey: {exp.surface} · Metrik: {exp.primary_metric}
                                         {exp.guardrails && <> · Koruma: {exp.guardrails}</>}
                                     </p>
                                     {exp.result_summary && (
-                                        <p className="mt-2 text-xs text-amber-200/90">Sonuç: {exp.result_summary}</p>
+                                        <p className="mt-2 text-sm text-amber-200/90">Sonuç: {exp.result_summary}</p>
                                     )}
                                 </div>
-                                <div className={`${ofisInner} shrink-0 p-3 text-center text-sm`}>
-                                    <div className="text-[10px] uppercase tracking-wide text-slate-400">
+                                <div className={`${ofisInner} shrink-0 p-3 text-center text-base`}>
+                                    <div className="text-sm uppercase tracking-wide text-slate-400">
                                         {new Date(exp.started_at).toLocaleDateString("tr-TR")}
                                         {exp.ended_at ? ` – ${new Date(exp.ended_at).toLocaleDateString("tr-TR")}` : "'ten beri"} · {w.days} gün penceresi
                                     </div>
                                     <div className="mt-2 grid grid-cols-2 gap-3">
                                         <div>
-                                            <div className="text-lg font-semibold tabular-nums text-slate-400">{w.beforeBonus}<span className="text-xs">/{w.beforeTotal}</span></div>
-                                            <div className="text-[10px] text-[var(--nx-text-muted)]">önce (Bonus/tüm)</div>
+                                            <div className="text-lg font-semibold tabular-nums text-slate-400">{w.beforeBonus}<span className="text-sm">/{w.beforeTotal}</span></div>
+                                            <div className="text-sm text-[var(--nx-text-muted)]">önce (Bonus/tüm)</div>
                                         </div>
                                         <div>
-                                            <div className="text-lg font-semibold tabular-nums text-white">{w.afterBonus}<span className="text-xs">/{w.afterTotal}</span></div>
-                                            <div className="text-[10px] text-[var(--nx-text-muted)]">sonra (Bonus/tüm)</div>
+                                            <div className="text-lg font-semibold tabular-nums text-white">{w.afterBonus}<span className="text-sm">/{w.afterTotal}</span></div>
+                                            <div className="text-sm text-[var(--nx-text-muted)]">sonra (Bonus/tüm)</div>
                                         </div>
                                     </div>
                                 </div>
@@ -318,12 +318,12 @@ export function ExperimentsTab() {
                                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[rgba(92,98,108,0.18)] pt-3">
                                     <button type="button"
                                         onClick={() => void patchExperiment(exp.id, { status: exp.status === "yayinda" ? "duraklatildi" : "yayinda" })}
-                                        className={`${ofisControl} px-3 py-1.5 text-xs hover:bg-[rgba(255,255,255,0.05)]`}>
+                                        className={`${ofisControl} px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)]`}>
                                         {exp.status === "yayinda" ? "Duraklat" : "Yeniden yayınla"}
                                     </button>
                                     <select value={c.decision}
                                         onChange={(e) => setClosing({ ...closing, [exp.id]: { ...c, decision: e.target.value } })}
-                                        className={`${ofisControl} px-3 py-1.5 text-xs [color-scheme:dark]`}>
+                                        className={`${ofisControl} px-3 py-1.5 text-sm [color-scheme:dark]`}>
                                         <option value="">Kapanış kararı…</option>
                                         {Object.entries(DECISION_LABELS).map(([v, l]) => (
                                             <option key={v} value={v}>{l}</option>
@@ -331,16 +331,16 @@ export function ExperimentsTab() {
                                     </select>
                                     <input placeholder="Sonuç özeti (öğrenme belleği için)" value={c.summary}
                                         onChange={(e) => setClosing({ ...closing, [exp.id]: { ...c, summary: e.target.value } })}
-                                        className={`${ofisControl} min-w-[240px] flex-1 px-3 py-1.5 text-xs`} />
+                                        className={`${ofisControl} min-w-[240px] flex-1 px-3 py-1.5 text-sm`} />
                                     <button type="button" onClick={() => completeExperiment(exp)}
-                                        className={`${ofisControl} px-3 py-1.5 text-xs font-semibold text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.1)]`}>
+                                        className={`${ofisControl} px-3 py-1.5 text-sm font-semibold text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.1)]`}>
                                         Deneyi kapat
                                     </button>
                                     {/* Audit B5: yanlış girilen deney defterde kalıcı kalıyordu.
                                         Tamamlanmış deney silinemez — sunucu 409 döner. */}
                                     <button type="button" onClick={() => void deleteExperiment(exp)}
                                         title="Deneyi sil"
-                                        className="ml-auto rounded-xl border border-red-500/20 bg-red-500/[0.08] px-3 py-1.5 text-xs text-red-400/80 transition-colors hover:bg-red-500/15 hover:text-red-300">
+                                        className="ml-auto rounded-xl border border-red-500/20 bg-red-500/[0.08] px-3 py-1.5 text-sm text-red-400/80 transition-colors hover:bg-red-500/15 hover:text-red-300">
                                         Sil
                                     </button>
                                 </div>
@@ -349,7 +349,7 @@ export function ExperimentsTab() {
                     );
                 })}
                 {experiments.length === 0 && (
-                    <div className={`${ofisPanel} p-8 text-center text-sm text-slate-400`}>Kayıtlı deney yok.</div>
+                    <div className={`${ofisPanel} p-8 text-center text-base text-slate-400`}>Kayıtlı deney yok.</div>
                 )}
             </div>
         </div>

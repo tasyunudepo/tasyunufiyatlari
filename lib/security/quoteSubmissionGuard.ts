@@ -1,3 +1,4 @@
+import { normalizePhoneDigits } from '@/lib/phone/normalize'
 import 'server-only'
 
 import { createHmac } from 'node:crypto'
@@ -117,23 +118,9 @@ function canonicalize(value: unknown): CanonicalValue {
  * Açık uluslararası önek yoksa 10/11 haneli numaralar Türkiye numarası kabul edilir.
  */
 export function normalizePhoneForGuard(rawPhone: string): string {
-  const raw = rawPhone.trim()
-  const hasExplicitInternationalPrefix = raw.startsWith('+') || raw.startsWith('00')
-  let digits = raw.replace(/\D/g, '')
-
-  if (digits.startsWith('00')) digits = digits.slice(2)
-
-  if (!hasExplicitInternationalPrefix && digits.length === 11 && digits.startsWith('0')) {
-    digits = `90${digits.slice(1)}`
-  } else if (!hasExplicitInternationalPrefix && digits.length === 10) {
-    digits = `90${digits}`
-  }
-
-  if (digits.length < 10 || digits.length > 15) {
-    throw new QuoteGuardInputError(
-      'invalid_phone',
-      'Telefon numarası 10 ila 15 rakam içermelidir.',
-    )
+  const digits = normalizePhoneDigits(rawPhone)
+  if (digits === null) {
+    throw new QuoteGuardInputError('invalid_phone', 'Telefon numarası 10 ila 15 rakam içermelidir.')
   }
 
   return digits

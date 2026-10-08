@@ -1,0 +1,22 @@
+{
+  "checks": [
+    "Yeni tabloların etkin ACL kontrolü geçti; işlem defteri SELECT/INSERT, eski tablo ACL’leri aynı.",
+    "Alternatifler tek ilk temas işinde; tutar kayıtlı revizyondan gelir, istemci tutarı reddedilir, revize otomatik değer değiştirmez ve satış aşaması değişmez.",
+    "8 eşzamanlı aynı işlem → tek görüşme, tek işlem ve tek görev geçişi; aynı anahtarla farklı içerik 409.",
+    "Başarılı görüşmeden sonraki başarısız girişim önceki başarıyı ve ilk başarı tarihini korur.",
+    "Journal ve görüşme INSERT sonrası görev UPDATE tetikleyicisi hata verdi: hiçbir kısmi kayıt kalmadı; aynı anahtarla tekrar deneme başarılı.",
+    "Sunucu commit sonrası HTTP cevabı kesildi; tekrar deneme aynı görevi döndürdü ve yeni kayıt üretmedi.",
+    "Anonim, bilinmeyen ve patron HTTP yazamaz; anon/authenticated RPC çağıramaz; service_role defteri UPDATE/DELETE/TRUNCATE edemez.",
+    "Tıklama/kopyalama görevi veya teması değiştirmez. Yeni veri varken ham rollback silmeyi reddeder; veri korunur."
+  ],
+  "startedAt": "2026-10-08T19:45:33.503Z",
+  "target": "isolated localhost PostgreSQL 55438",
+  "productionWrites": 0,
+  "projectId": "2c65786b-7938-4f1a-b7fe-ceb42f79c435",
+  "quoteIds": [
+    "19",
+    "20"
+  ],
+  "finishedAt": "2026-10-08T19:45:35.923Z",
+  "passed": true
+}

@@ -25,7 +25,7 @@ export function PricingTab() {
     return (
         <div className="space-y-4">
             {/* Fiyat kuralları rehberi (eski Ayarlar sekmesinden taşındı) */}
-            <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-4 text-sm text-slate-300">
+            <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-4 text-base text-slate-300">
                 <span className="font-medium text-white">Kural haritası:</span>{" "}
                 kâr marjı kademeleri <span className="text-amber-300">Marj Kuralları</span>&apos;nda,
                 marka bazlı marj (ör. Bonus %5) <span className="text-amber-300">Markalar</span>&apos;da,
@@ -39,7 +39,7 @@ export function PricingTab() {
                         key={tab.id}
                         type="button"
                         onClick={() => setActive(tab.id)}
-                        className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                        className={`rounded-xl border px-4 py-2 text-base font-medium transition-colors ${
                             active === tab.id
                                 ? "border-[rgba(201,168,76,0.45)] bg-[rgba(201,168,76,0.12)] text-[var(--nx-gold)]"
                                 : "border-[rgba(92,98,108,0.24)] bg-[rgba(18,20,24,0.6)] text-[var(--nx-text-soft)] hover:text-[var(--nx-text)]"

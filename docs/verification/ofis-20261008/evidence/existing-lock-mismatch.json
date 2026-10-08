@@ -1,0 +1,9 @@
+{
+  "file": "tests/e2e/pdp-product-information.spec.ts",
+  "current": "f74c4d0f0a945b5a7561895d3b88dc937d0acb552839b26e3cba2bcd675b080c",
+  "HEAD": "f74c4d0f0a945b5a7561895d3b88dc937d0acb552839b26e3cba2bcd675b080c",
+  "baseline716f6bd": "f74c4d0f0a945b5a7561895d3b88dc937d0acb552839b26e3cba2bcd675b080c",
+  "lock": "531975653424738abe9bd663d4341c1f98a61cb0febb68e28702b0e4f47e0565",
+  "changedByOfisWork": false,
+  "explanation": "Kilit hash uyumsuzluğu başlangıç commitinde de var. Dosya ve kilit bu çalışma kapsamında değiştirilmedi."
+}

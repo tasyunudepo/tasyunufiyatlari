@@ -1,0 +1,95 @@
+BUILD_DATA_MODE: isolated empty catalog; writes denied; no remote credentials
+▲ Next.js 16.3.3 (webpack)
+✓ Running next.config.ts took 27ms
+
+  Creating an optimized production build ...
+(node:3202823) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ Compiled successfully in 9.4s
+  Running TypeScript ...
+  Finished TypeScript in 2.6s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/84) ...
+(node:3203355) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  Generating static pages using 15 workers (21/84) 
+  Generating static pages using 15 workers (42/84) 
+  Generating static pages using 15 workers (63/84) 
+✓ Generating static pages using 15 workers (84/84) in 977ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/admin/accessories/[id]
+├ ƒ /api/admin/accessory-sets
+├ ƒ /api/admin/brands
+├ ƒ /api/admin/brands/[id]
+├ ƒ /api/admin/catalog-items
+├ ƒ /api/admin/combination-metrics
+├ ƒ /api/admin/customers
+├ ƒ /api/admin/customers/[id]
+├ ƒ /api/admin/customers/[id]/interactions
+├ ƒ /api/admin/dashboard-metrics
+├ ƒ /api/admin/experiments
+├ ƒ /api/admin/experiments/[id]
+├ ƒ /api/admin/material-types
+├ ƒ /api/admin/material-types/[id]
+├ ƒ /api/admin/me
+├ ƒ /api/admin/plates/[id]
+├ ƒ /api/admin/quotes
+├ ƒ /api/admin/quotes/[id]
+├ ƒ /api/admin/quotes/[id]/pdf
+├ ƒ /api/admin/quotes/manual
+├ ƒ /api/admin/storage-images
+├ ƒ /api/bonus-price
+├ ƒ /api/bonus-price/capacity
+├ ƒ /api/catalog/products
+├ ƒ /api/catalog/products/[slug]
+├ ƒ /api/import
+├ ƒ /api/import/[id]/apply
+├ ƒ /api/import/[id]/create-new-products
+├ ƒ /api/import/[id]/rollback
+├ ƒ /api/products/bulk-insert
+├ ƒ /api/quotes
+├ ƒ /api/upload-pdf
+├ ƒ /api/whatsapp-intent
+├ ○ /cerez-politikasi
+├ ○ /depomuz
+├ ○ /hakkimizda
+├ ○ /iletisim
+├ ○ /kullanim-kosullari
+├ ○ /kvkk
+├   /marka/[brand]
+│ ├ ● /marka/dalmacyali
+│ ├ ● /marka/filli-boya
+│ ├ ● /marka/optimix
+│ └ ● [+2 more paths]
+├   /marka/[brand]/[kategori]
+│ ├ ● /marka/dalmacyali/tasyunu-levha
+│ ├ ● /marka/dalmacyali/eps-levha
+│ ├ ● /marka/dalmacyali/dubel
+│ └ ● [+42 more paths]
+├ ƒ /ofis
+├ ○ /piyasa
+├ ○ /robots.txt
+├ ○ /sitemap.xml
+├ ○ /tasyunu-karsilastir
+├ ○ /tasyunu-yogunluk/150-kg-m3
+├ ○ /urunler
+├   /urunler/[kategori]
+│ ├ ● /urunler/tasyunu-levha
+│ ├ ● /urunler/eps-levha
+│ ├ ● /urunler/dubel
+│ └ ● [+6 more paths]
+├ ○ /urunler/[kategori]/[slug]
+└ ○ /urunler/[kategori]/[slug]/[kalinlik]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

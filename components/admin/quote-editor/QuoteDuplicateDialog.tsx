@@ -35,6 +35,7 @@ export interface DuplicateSource {
   /** Kaynak teklifin kimliği — revizede hangi kaydın güncelleneceği. */
   quoteId: number | null;
   quoteCode: string | null;
+  revisionNo?: number;
   /** `manual_quote` = ofis teklifi; yalnız o revize edilebilir. */
   requestType: string | null;
   lines: EditorLine[];
@@ -156,6 +157,7 @@ export function quoteToDuplicateSource(teklif: Record<string, unknown>): Duplica
           validityDays?: number | null;
           title?: string | null;
           notes?: string | null;
+          revisions?: unknown[];
         };
       }
     | null;
@@ -174,6 +176,7 @@ export function quoteToDuplicateSource(teklif: Record<string, unknown>): Duplica
   return {
     quoteId: Number.isSafeInteger(id) && id > 0 ? id : null,
     quoteCode: duzMetin(teklif.quote_code) || null,
+    revisionNo: Array.isArray(pi?.manual?.revisions) ? pi.manual.revisions.length : 0,
     requestType: duzMetin(teklif.request_type) || null,
     lines: satirlar,
     areaM2: Number(teklif.area_m2 ?? 0),
@@ -253,7 +256,7 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
         <div className="flex items-start justify-between gap-4 border-b border-[rgba(92,98,108,0.24)] px-5 py-4">
           <div>
             <h3 className="text-base font-semibold text-white">Teklifi çoğalt</h3>
-            <p className="mt-0.5 text-xs text-slate-400">
+            <p className="mt-0.5 text-sm text-slate-400">
               Müşteri, şehir ve kalemler gelir; metrajı değiştirdiğinizde
               sarfiyata bağlı miktarlar kendiliğinden yeniden hesaplanır.
             </p>
@@ -272,16 +275,16 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
               onChange={(e) => setArama(e.target.value)}
               aria-label="Teklif ara"
               autoFocus
-              className="w-full rounded-xl border border-[rgba(92,98,108,0.28)] bg-[rgba(18,20,24,0.8)] py-2 pl-9 pr-3 text-sm text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
+              className="w-full rounded-xl border border-[rgba(92,98,108,0.28)] bg-[rgba(18,20,24,0.8)] py-2 pl-9 pr-3 text-base text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
             />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
-          {isLoading && <p className="p-6 text-center text-sm text-slate-400">Teklifler yükleniyor…</p>}
+          {isLoading && <p className="p-6 text-center text-base text-slate-400">Teklifler yükleniyor…</p>}
 
           {!isLoading && adaylar.length === 0 && (
-            <p className="p-6 text-center text-sm text-slate-400">
+            <p className="p-6 text-center text-base text-slate-400">
               {arama ? "Aramaya uyan teklif yok." : "Çoğaltılabilir teklif bulunamadı."}
             </p>
           )}
@@ -299,10 +302,10 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
                     className="flex w-full items-center justify-between gap-3 rounded-xl border border-[rgba(92,98,108,0.22)] px-3 py-2.5 text-left transition-colors hover:border-[rgba(201,168,76,0.45)] hover:bg-[rgba(201,168,76,0.06)]"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
+                      <p className="truncate text-base font-medium text-white">
                         {String(t.package_name ?? "Teklif")}
                       </p>
-                      <p className="mt-0.5 truncate text-[11px] text-[var(--nx-text-muted)]">
+                      <p className="mt-0.5 truncate text-sm text-[var(--nx-text-muted)]">
                         <span className="font-mono">{String(t.quote_code ?? "—")}</span>
                         {" · "}{String(t.customer_name ?? "—")}
                         {" · "}{Number(t.area_m2 ?? 0).toLocaleString("tr-TR")} m²
@@ -310,7 +313,7 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="tabular-nums text-sm font-semibold text-[var(--nx-gold)]">
+                      <span className="tabular-nums text-base font-semibold text-[var(--nx-gold)]">
                         {formatCurrency(Number(t.total_price ?? 0))}
                       </span>
                       <Copy className="h-3.5 w-3.5 text-[var(--nx-text-muted)]" />

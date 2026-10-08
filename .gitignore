@@ -108,3 +108,7 @@ playwright-report/
 # okunur. Yeni belge eklerken bu ayrımı koru.
 _audit/teknik-foyler/**/*fiyat-listesi*
 _audit/teknik-foyler/**/*iskonto*
+
+# Ofis bağlantısız önizleme font/derleme önbelleği
+.ofis-preview/
+.worktrees/

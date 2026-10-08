@@ -1,0 +1,16 @@
+[
+  {
+    "file": "scripts/migrations-proposed/20261008_ofis_phase1.rollback.sql",
+    "statements": 13,
+    "syntax": "PostgreSQL parser passed",
+    "executed": false,
+    "data_mutation_statements": 0
+  },
+  {
+    "file": "scripts/migrations-proposed/20261008_ofis_phase1.sql",
+    "statements": 32,
+    "syntax": "PostgreSQL parser passed",
+    "executed": false,
+    "data_mutation_statements": 0
+  }
+]

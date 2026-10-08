@@ -17,7 +17,7 @@ import { parsePastedRows, parseTrNumber, type EditorLine } from "./useQuoteEdito
 //   · Birim fiyat katalogdan gelir; operatör üstüne yazarsa fark rozetle görünür
 
 const cell =
-  "w-full bg-transparent px-2 py-1.5 text-sm text-white outline-none rounded " +
+  "w-full bg-transparent px-2 py-1.5 text-base text-white outline-none rounded " +
   "focus:bg-[rgba(255,255,255,0.06)] focus:ring-1 focus:ring-[rgba(201,168,76,0.4)]";
 
 interface Props {
@@ -84,16 +84,16 @@ export function QuoteLineTable({
   return (
     <div className="rounded-xl border border-[rgba(92,98,108,0.24)] bg-[rgba(13,15,18,0.6)] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[880px] text-sm">
+        <table className="w-full min-w-[880px] text-base">
           <thead>
             <tr className="border-b border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.02)]">
-              <th className="w-10 px-2 py-2.5 text-left text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">#</th>
-              <th className="px-2 py-2.5 text-left text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">Ürün / Hizmet</th>
-              <th className="w-24 px-2 py-2.5 text-right text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">Miktar</th>
-              <th className="w-20 px-2 py-2.5 text-left text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">Birim</th>
-              <th className="w-32 px-2 py-2.5 text-right text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">Birim Fiyat</th>
-              <th className="w-20 px-2 py-2.5 text-right text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]" title="Satır bazlı iskonto">İsk. %</th>
-              <th className="w-32 px-2 py-2.5 text-right text-[10px] uppercase tracking-wider text-[var(--nx-text-muted)]">Tutar</th>
+              <th className="w-10 px-2 py-2.5 text-left text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">#</th>
+              <th className="px-2 py-2.5 text-left text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">Ürün / Hizmet</th>
+              <th className="w-24 px-2 py-2.5 text-right text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">Miktar</th>
+              <th className="w-20 px-2 py-2.5 text-left text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">Birim</th>
+              <th className="w-32 px-2 py-2.5 text-right text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">Birim Fiyat</th>
+              <th className="w-20 px-2 py-2.5 text-right text-sm uppercase tracking-wider text-[var(--nx-text-muted)]" title="Satır bazlı iskonto">İsk. %</th>
+              <th className="w-32 px-2 py-2.5 text-right text-sm uppercase tracking-wider text-[var(--nx-text-muted)]">Tutar</th>
               {!readOnly && <th className="w-28 px-2 py-2.5" />}
             </tr>
           </thead>
@@ -109,7 +109,7 @@ export function QuoteLineTable({
                   key={line.rowId}
                   className="border-b border-[rgba(92,98,108,0.12)] hover:bg-[rgba(255,255,255,0.02)]"
                 >
-                  <td className="px-2 py-1 text-center text-xs text-[var(--nx-text-muted)]">{index + 1}</td>
+                  <td className="px-2 py-1 text-center text-sm text-[var(--nx-text-muted)]">{index + 1}</td>
 
                   <td className="relative px-1 py-1">
                     <div className="flex items-center gap-1">
@@ -164,13 +164,13 @@ export function QuoteLineTable({
                           type="button"
                           onClick={() => onPickProduct(line.rowId)}
                           title="Katalogdan seç"
-                          className="shrink-0 rounded-md border border-[rgba(201,168,76,0.3)] bg-[rgba(201,168,76,0.1)] px-2 py-1 text-[10px] font-medium text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.18)]"
+                          className="shrink-0 rounded-md border border-[rgba(201,168,76,0.3)] bg-[rgba(201,168,76,0.1)] px-2 py-1 text-sm font-medium text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.18)]"
                         >
                           Katalog
                         </button>
                       )}
                     </div>
-                    {line.note && <p className="px-2 text-[10px] text-[var(--nx-text-muted)]">{line.note}</p>}
+                    {line.note && <p className="px-2 text-sm text-[var(--nx-text-muted)]">{line.note}</p>}
 
                     {/* Yazdıkça öneri — katalog istemcide olduğu için her
                         tuşta sunucuya gidilmez (27 Tem 2026 isteği). */}
@@ -195,17 +195,17 @@ export function QuoteLineTable({
                               }`}
                             >
                               <span className="min-w-0">
-                                <span className="block truncate text-xs text-white" title={item.kind === "aksesuar" ? item.fullName : item.label}>
+                                <span className="block truncate text-sm text-white" title={item.kind === "aksesuar" ? item.fullName : item.label}>
                                   {item.kind === "aksesuar" ? item.fullName : item.label}
                                 </span>
-                                <span className="block text-[10px] text-[var(--nx-text-muted)]">
+                                <span className="block text-sm text-[var(--nx-text-muted)]">
                                   {item.brandName} · {item.unit}
                                   {item.kind === "aksesuar" && item.unitContent && item.unitContent > 1
                                     ? ` · paket içeriği ${item.unitContent}`
                                     : ""}
                                 </span>
                               </span>
-                              <span className="shrink-0 tabular-nums text-xs font-semibold text-[var(--nx-gold)]">
+                              <span className="shrink-0 tabular-nums text-sm font-semibold text-[var(--nx-gold)]">
                                 {formatCurrency(item.suggestedUnitPrice)}
                               </span>
                             </button>
@@ -257,7 +257,7 @@ export function QuoteLineTable({
                             onUpdate(line.rowId, { unitPrice: line.suggestedUnitPrice! })
                           }
                           title={`Sistem önerisi: ${formatCurrency(line.suggestedUnitPrice!)} — tıkla, geri al`}
-                          className="shrink-0 rounded px-1 text-[10px] font-semibold text-amber-300 hover:bg-amber-400/15"
+                          className="shrink-0 rounded px-1 text-sm font-semibold text-amber-300 hover:bg-amber-400/15"
                         >
                           ●
                         </button>
@@ -281,7 +281,7 @@ export function QuoteLineTable({
                     />
                   </td>
 
-                  <td className="px-2 py-1 text-right text-sm font-medium tabular-nums text-white">
+                  <td className="px-2 py-1 text-right text-base font-medium tabular-nums text-white">
                     {tutar > 0 ? formatCurrency(tutar) : "—"}
                   </td>
 
@@ -319,12 +319,12 @@ export function QuoteLineTable({
           <button
             type="button"
             onClick={onAdd}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(92,98,108,0.3)] px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(92,98,108,0.3)] px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white"
           >
             <Plus className="h-3.5 w-3.5" />
             Satır ekle
           </button>
-          <p className="text-[11px] text-[var(--nx-text-muted)]">
+          <p className="text-sm text-[var(--nx-text-muted)]">
             <kbd className="rounded bg-white/10 px-1">Enter</kbd> yeni satır ·
             Excel&apos;den kopyalayıp tabloya yapıştırabilirsiniz
           </p>

@@ -1,0 +1,19 @@
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: {"status":500,"data":{"ok":false,"error":"Teklif revize edilemedi."}}
+
+500 !== 200
+
+    at file:///home/emrah/projeler/aktif/tasyunufiyatlari/.worktrees/ofis-redesign-20261008/scripts/ofis-test/accept-phase4.mjs:15:134
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 500,
+  expected: 200,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.10.0

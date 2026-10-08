@@ -1,0 +1,1261 @@
+{
+  "roles": [
+    {
+      "name": "anon",
+      "inherit": true,
+      "bypassrls": false,
+      "superuser": false
+    },
+    {
+      "name": "authenticated",
+      "inherit": true,
+      "bypassrls": false,
+      "superuser": false
+    },
+    {
+      "name": "service_role",
+      "inherit": true,
+      "bypassrls": true,
+      "superuser": false
+    }
+  ],
+  "tables": [
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=arwdDxtm/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "quote_funnel_events",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "quote_submission_keys",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "quote_rate_limit_events",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=arwdDxtm/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "quotes",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=arwdDxtm/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "customers",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=r/ofis_test_owner",
+        "anon=r/ofis_test_owner",
+        "authenticated=r/ofis_test_owner"
+      ],
+      "rls": false,
+      "name": "material_types",
+      "owner": "ofis_test_owner",
+      "force_rls": false
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=arwdDxtm/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "customer_interactions",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=arw/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "sales_projects",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=arw/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "sales_tasks",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    },
+    {
+      "acl": [
+        "ofis_test_owner=arwdDxtm/ofis_test_owner",
+        "service_role=ar/ofis_test_owner"
+      ],
+      "rls": true,
+      "name": "office_operations",
+      "owner": "ofis_test_owner",
+      "force_rls": true
+    }
+  ],
+  "database": "ofis_acceptance",
+  "policies": null,
+  "triggers": [
+    "CREATE TRIGGER trg_quotes_set_closed_at BEFORE UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION quotes_set_closed_at()",
+    "CREATE TRIGGER trg_quotes_link_customer BEFORE INSERT ON public.quotes FOR EACH ROW EXECUTE FUNCTION quotes_link_customer()",
+    "CREATE TRIGGER trg_customers_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION customers_touch_updated_at()"
+  ],
+  "constraints": [
+    {
+      "name": "quotes_id_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "quotes_created_at_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "quotes_customer_name_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL customer_name"
+    },
+    {
+      "name": "quotes_customer_email_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL customer_email"
+    },
+    {
+      "name": "quotes_customer_phone_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL customer_phone"
+    },
+    {
+      "name": "quotes_material_type_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL material_type"
+    },
+    {
+      "name": "quotes_brand_name_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL brand_name"
+    },
+    {
+      "name": "quotes_thickness_cm_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL thickness_cm"
+    },
+    {
+      "name": "quotes_area_m2_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL area_m2"
+    },
+    {
+      "name": "quotes_city_code_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL city_code"
+    },
+    {
+      "name": "quotes_city_name_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL city_name"
+    },
+    {
+      "name": "quotes_package_name_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL package_name"
+    },
+    {
+      "name": "quotes_plate_brand_name_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL plate_brand_name"
+    },
+    {
+      "name": "quotes_accessory_brand_name_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL accessory_brand_name"
+    },
+    {
+      "name": "quotes_total_price_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL total_price"
+    },
+    {
+      "name": "quotes_price_per_m2_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL price_per_m2"
+    },
+    {
+      "name": "quotes_price_without_vat_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL price_without_vat"
+    },
+    {
+      "name": "quotes_vat_amount_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL vat_amount"
+    },
+    {
+      "name": "quotes_package_count_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL package_count"
+    },
+    {
+      "name": "quotes_package_size_m2_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL package_size_m2"
+    },
+    {
+      "name": "quotes_items_per_package_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL items_per_package"
+    },
+    {
+      "name": "quotes_package_items_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL package_items"
+    },
+    {
+      "name": "quotes_pkey",
+      "table": "quotes",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "quote_funnel_events_id_not_null",
+      "table": "quote_funnel_events",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "quote_funnel_events_event_type_not_null",
+      "table": "quote_funnel_events",
+      "definition": "NOT NULL event_type"
+    },
+    {
+      "name": "quote_funnel_events_metadata_not_null",
+      "table": "quote_funnel_events",
+      "definition": "NOT NULL metadata"
+    },
+    {
+      "name": "quote_funnel_events_created_at_not_null",
+      "table": "quote_funnel_events",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "quote_funnel_events_pkey",
+      "table": "quote_funnel_events",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "quote_funnel_events_quote_id_fkey",
+      "table": "quote_funnel_events",
+      "definition": "FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "quotes_request_type_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL request_type"
+    },
+    {
+      "name": "quotes_source_channel_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL source_channel"
+    },
+    {
+      "name": "quotes_kvkk_consent_not_null",
+      "table": "quotes",
+      "definition": "NOT NULL kvkk_consent"
+    },
+    {
+      "name": "material_types_id_not_null",
+      "table": "material_types",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "quote_submission_keys_idempotency_hash_format",
+      "table": "quote_submission_keys",
+      "definition": "CHECK ((idempotency_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "quote_submission_keys_request_fingerprint_format",
+      "table": "quote_submission_keys",
+      "definition": "CHECK ((request_fingerprint ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "quote_submission_keys_phone_hash_format",
+      "table": "quote_submission_keys",
+      "definition": "CHECK ((phone_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "quote_submission_keys_id_not_null",
+      "table": "quote_submission_keys",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "quote_submission_keys_idempotency_hash_not_null",
+      "table": "quote_submission_keys",
+      "definition": "NOT NULL idempotency_hash"
+    },
+    {
+      "name": "quote_submission_keys_request_fingerprint_not_null",
+      "table": "quote_submission_keys",
+      "definition": "NOT NULL request_fingerprint"
+    },
+    {
+      "name": "quote_submission_keys_phone_hash_not_null",
+      "table": "quote_submission_keys",
+      "definition": "NOT NULL phone_hash"
+    },
+    {
+      "name": "quote_submission_keys_quote_id_not_null",
+      "table": "quote_submission_keys",
+      "definition": "NOT NULL quote_id"
+    },
+    {
+      "name": "quote_submission_keys_created_at_not_null",
+      "table": "quote_submission_keys",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "quote_submission_keys_pkey",
+      "table": "quote_submission_keys",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "quote_submission_keys_quote_id_fkey",
+      "table": "quote_submission_keys",
+      "definition": "FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "quote_rate_limit_events_ip_hash_format",
+      "table": "quote_rate_limit_events",
+      "definition": "CHECK ((ip_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "quote_rate_limit_events_phone_hash_format",
+      "table": "quote_rate_limit_events",
+      "definition": "CHECK ((phone_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "quote_rate_limit_events_id_not_null",
+      "table": "quote_rate_limit_events",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "quote_rate_limit_events_ip_hash_not_null",
+      "table": "quote_rate_limit_events",
+      "definition": "NOT NULL ip_hash"
+    },
+    {
+      "name": "quote_rate_limit_events_phone_hash_not_null",
+      "table": "quote_rate_limit_events",
+      "definition": "NOT NULL phone_hash"
+    },
+    {
+      "name": "quote_rate_limit_events_quote_id_not_null",
+      "table": "quote_rate_limit_events",
+      "definition": "NOT NULL quote_id"
+    },
+    {
+      "name": "quote_rate_limit_events_created_at_not_null",
+      "table": "quote_rate_limit_events",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "quote_rate_limit_events_pkey",
+      "table": "quote_rate_limit_events",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "quote_rate_limit_events_quote_id_fkey",
+      "table": "quote_rate_limit_events",
+      "definition": "FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "material_types_pkey",
+      "table": "material_types",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "material_types_slug_key",
+      "table": "material_types",
+      "definition": "UNIQUE (slug)"
+    },
+    {
+      "name": "quotes_status_gecerli",
+      "table": "quotes",
+      "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'contacted'::text, 'quoted'::text, 'approved'::text, 'rejected'::text, 'completed'::text])))"
+    },
+    {
+      "name": "quotes_loss_category_gecerli",
+      "table": "quotes",
+      "definition": "CHECK (((loss_category IS NULL) OR (loss_category = ANY (ARRAY['fiyat'::text, 'stok_termin'::text, 'vade_odeme'::text, 'ulasilamadi'::text, 'rakip'::text, 'vazgecti'::text, 'diger'::text]))))"
+    },
+    {
+      "name": "customers_customer_type_check",
+      "table": "customers",
+      "definition": "CHECK ((customer_type = ANY (ARRAY['bireysel'::text, 'kurumsal'::text])))"
+    },
+    {
+      "name": "customers_status_check",
+      "table": "customers",
+      "definition": "CHECK ((status = ANY (ARRAY['aktif'::text, 'pasif'::text, 'kara_liste'::text])))"
+    },
+    {
+      "name": "customers_consent_basis_check",
+      "table": "customers",
+      "definition": "CHECK (((consent_basis IS NULL) OR (consent_basis = ANY (ARRAY['acik_riza'::text, 'sozlesme_hazirligi'::text, 'mesru_menfaat'::text]))))"
+    },
+    {
+      "name": "customers_id_not_null",
+      "table": "customers",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "customers_business_unit_not_null",
+      "table": "customers",
+      "definition": "NOT NULL business_unit"
+    },
+    {
+      "name": "customers_phone_normalized_not_null",
+      "table": "customers",
+      "definition": "NOT NULL phone_normalized"
+    },
+    {
+      "name": "customers_phone_display_not_null",
+      "table": "customers",
+      "definition": "NOT NULL phone_display"
+    },
+    {
+      "name": "customers_display_name_not_null",
+      "table": "customers",
+      "definition": "NOT NULL display_name"
+    },
+    {
+      "name": "customers_customer_type_not_null",
+      "table": "customers",
+      "definition": "NOT NULL customer_type"
+    },
+    {
+      "name": "customers_origin_not_null",
+      "table": "customers",
+      "definition": "NOT NULL origin"
+    },
+    {
+      "name": "customers_status_not_null",
+      "table": "customers",
+      "definition": "NOT NULL status"
+    },
+    {
+      "name": "customers_kvkk_consent_not_null",
+      "table": "customers",
+      "definition": "NOT NULL kvkk_consent"
+    },
+    {
+      "name": "customers_first_seen_at_not_null",
+      "table": "customers",
+      "definition": "NOT NULL first_seen_at"
+    },
+    {
+      "name": "customers_created_at_not_null",
+      "table": "customers",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "customers_updated_at_not_null",
+      "table": "customers",
+      "definition": "NOT NULL updated_at"
+    },
+    {
+      "name": "customers_pkey",
+      "table": "customers",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "customers_phone_benzersiz",
+      "table": "customers",
+      "definition": "UNIQUE (business_unit, phone_normalized)"
+    },
+    {
+      "name": "customer_interactions_kind_check",
+      "table": "customer_interactions",
+      "definition": "CHECK ((kind = ANY (ARRAY['arama_giden'::text, 'arama_gelen'::text, 'whatsapp'::text, 'eposta'::text, 'ziyaret'::text, 'not'::text, 'teklif_gonderildi'::text, 'kvkk_aydinlatma'::text, 'hatirlatma'::text])))"
+    },
+    {
+      "name": "customer_interactions_outcome_check",
+      "table": "customer_interactions",
+      "definition": "CHECK (((outcome IS NULL) OR (outcome = ANY (ARRAY['ulasildi'::text, 'ulasilamadi'::text, 'mesaj_birakildi'::text, 'randevu'::text, 'ilgilenmiyor'::text, 'fiyat_verildi'::text]))))"
+    },
+    {
+      "name": "customer_interactions_id_not_null",
+      "table": "customer_interactions",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "customer_interactions_customer_id_not_null",
+      "table": "customer_interactions",
+      "definition": "NOT NULL customer_id"
+    },
+    {
+      "name": "customer_interactions_kind_not_null",
+      "table": "customer_interactions",
+      "definition": "NOT NULL kind"
+    },
+    {
+      "name": "customer_interactions_occurred_at_not_null",
+      "table": "customer_interactions",
+      "definition": "NOT NULL occurred_at"
+    },
+    {
+      "name": "customer_interactions_created_by_not_null",
+      "table": "customer_interactions",
+      "definition": "NOT NULL created_by"
+    },
+    {
+      "name": "customer_interactions_created_at_not_null",
+      "table": "customer_interactions",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "customer_interactions_pkey",
+      "table": "customer_interactions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "customer_interactions_customer_id_fkey",
+      "table": "customer_interactions",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "customer_interactions_quote_id_fkey",
+      "table": "customer_interactions",
+      "definition": "FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "quotes_customer_id_fkey",
+      "table": "quotes",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "sales_projects_rejected_reason",
+      "table": "sales_projects",
+      "definition": "CHECK (((status IS DISTINCT FROM 'rejected'::text) OR (loss_category IS NOT NULL)))"
+    },
+    {
+      "name": "sales_projects_id_not_null",
+      "table": "sales_projects",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "sales_projects_name_not_null",
+      "table": "sales_projects",
+      "definition": "NOT NULL name"
+    },
+    {
+      "name": "quotes_comparison_session_id_format",
+      "table": "quotes",
+      "definition": "CHECK (((comparison_session_id IS NULL) OR ((char_length(comparison_session_id) <= 80) AND (comparison_session_id ~ '^cmp_[A-Za-z0-9]+_[A-Za-z0-9]+$'::text))))"
+    },
+    {
+      "name": "quotes_comparison_source_requires_session",
+      "table": "quotes",
+      "definition": "CHECK (((source_channel <> 'comparison'::text) OR (comparison_session_id IS NOT NULL)))"
+    },
+    {
+      "name": "quotes_comparison_session_requires_source",
+      "table": "quotes",
+      "definition": "CHECK (((comparison_session_id IS NULL) OR (source_channel = 'comparison'::text)))"
+    },
+    {
+      "name": "sales_projects_created_by_not_null",
+      "table": "sales_projects",
+      "definition": "NOT NULL created_by"
+    },
+    {
+      "name": "sales_projects_created_at_not_null",
+      "table": "sales_projects",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "sales_projects_updated_at_not_null",
+      "table": "sales_projects",
+      "definition": "NOT NULL updated_at"
+    },
+    {
+      "name": "sales_projects_pkey",
+      "table": "sales_projects",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "sales_projects_customer_id_fkey",
+      "table": "sales_projects",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "quotes_project_id_fkey",
+      "table": "quotes",
+      "definition": "FOREIGN KEY (project_id) REFERENCES sales_projects(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "quotes_project_id_id_unique",
+      "table": "quotes",
+      "definition": "UNIQUE (project_id, id)"
+    },
+    {
+      "name": "sales_projects_valuation_same_project",
+      "table": "sales_projects",
+      "definition": "FOREIGN KEY (id, valuation_quote_id) REFERENCES quotes(project_id, id) ON DELETE RESTRICT DEFERRABLE"
+    },
+    {
+      "name": "office_operations_actor_check",
+      "table": "office_operations",
+      "definition": "CHECK ((length(btrim(actor)) > 0))"
+    },
+    {
+      "name": "office_operations_operation_type_check",
+      "table": "office_operations",
+      "definition": "CHECK ((operation_type = ANY (ARRAY['contact_link_clicked'::text, 'phone_number_copied'::text, 'contact_attempt'::text, 'contact_success'::text, 'followup_scheduled'::text, 'task_completed'::text, 'task_cancelled'::text, 'project_created'::text, 'project_linked'::text, 'project_unlinked'::text, 'valuation_selected'::text, 'valuation_cleared'::text, 'outcome_recorded'::text])))"
+    },
+    {
+      "name": "office_operations_payload_hash_check",
+      "table": "office_operations",
+      "definition": "CHECK ((payload_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "name": "office_operations_project_id_fkey",
+      "table": "office_operations",
+      "definition": "FOREIGN KEY (project_id) REFERENCES sales_projects(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "customer_interactions_project_id_fkey",
+      "table": "customer_interactions",
+      "definition": "FOREIGN KEY (project_id) REFERENCES sales_projects(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "customers_origin_check",
+      "table": "customers",
+      "definition": "CHECK ((origin = ANY (ARRAY['wizard'::text, 'catalog'::text, 'comparison'::text, 'telefon'::text, 'ofis'::text, 'ithal'::text])))"
+    },
+    {
+      "name": "sales_projects_name_check",
+      "table": "sales_projects",
+      "definition": "CHECK (((length(btrim(name)) >= 1) AND (length(btrim(name)) <= 200)))"
+    },
+    {
+      "name": "office_operations_result_check",
+      "table": "office_operations",
+      "definition": "CHECK ((jsonb_typeof(result) = 'object'::text))"
+    },
+    {
+      "name": "office_operations_id_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "office_operations_actor_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL actor"
+    },
+    {
+      "name": "office_operations_operation_type_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL operation_type"
+    },
+    {
+      "name": "office_operations_payload_hash_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL payload_hash"
+    },
+    {
+      "name": "office_operations_project_id_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL project_id"
+    },
+    {
+      "name": "sales_projects_status_check",
+      "table": "sales_projects",
+      "definition": "CHECK (((status IS NULL) OR (status = ANY (ARRAY['pending'::text, 'contacted'::text, 'quoted'::text, 'approved'::text, 'completed'::text, 'rejected'::text]))))"
+    },
+    {
+      "name": "sales_projects_loss_category_check",
+      "table": "sales_projects",
+      "definition": "CHECK (((loss_category IS NULL) OR (loss_category = ANY (ARRAY['fiyat'::text, 'stok_termin'::text, 'vade_odeme'::text, 'ulasilamadi'::text, 'rakip'::text, 'vazgecti'::text, 'diger'::text]))))"
+    },
+    {
+      "name": "sales_projects_valuation_revision_check",
+      "table": "sales_projects",
+      "definition": "CHECK ((valuation_revision >= 0))"
+    },
+    {
+      "name": "sales_projects_valuation_net_amount_check",
+      "table": "sales_projects",
+      "definition": "CHECK ((valuation_net_amount >= (0)::numeric))"
+    },
+    {
+      "name": "sales_projects_created_by_check",
+      "table": "sales_projects",
+      "definition": "CHECK ((length(btrim(created_by)) > 0))"
+    },
+    {
+      "name": "sales_projects_valuation_complete",
+      "table": "sales_projects",
+      "definition": "CHECK ((num_nonnulls(valuation_quote_id, valuation_revision, valuation_net_amount, valuation_selected_at, valuation_selected_by) = ANY (ARRAY[0, 5])))"
+    },
+    {
+      "name": "sales_projects_closed_consistent",
+      "table": "sales_projects",
+      "definition": "CHECK ((((status IS NOT NULL) AND (status = ANY (ARRAY['completed'::text, 'rejected'::text])) AND (closed_at IS NOT NULL)) OR (((status IS NULL) OR (status <> ALL (ARRAY['completed'::text, 'rejected'::text]))) AND (closed_at IS NULL))))"
+    },
+    {
+      "name": "office_operations_result_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL result"
+    },
+    {
+      "name": "office_operations_created_at_not_null",
+      "table": "office_operations",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "office_operations_pkey",
+      "table": "office_operations",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "office_operations_project_id_id_unique",
+      "table": "office_operations",
+      "definition": "UNIQUE (project_id, id)"
+    },
+    {
+      "name": "customer_interactions_operation_unique",
+      "table": "customer_interactions",
+      "definition": "UNIQUE (operation_id)"
+    },
+    {
+      "name": "customer_interactions_project_id_id_unique",
+      "table": "customer_interactions",
+      "definition": "UNIQUE (project_id, id)"
+    },
+    {
+      "name": "customer_interactions_operation_project",
+      "table": "customer_interactions",
+      "definition": "CHECK (((operation_id IS NULL) OR (project_id IS NOT NULL)))"
+    },
+    {
+      "name": "customer_interactions_operation_same_project",
+      "table": "customer_interactions",
+      "definition": "FOREIGN KEY (project_id, operation_id) REFERENCES office_operations(project_id, id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "sales_tasks_kind_check",
+      "table": "sales_tasks",
+      "definition": "CHECK ((kind = ANY (ARRAY['initial_contact'::text, 'followup'::text])))"
+    },
+    {
+      "name": "sales_tasks_owner_check",
+      "table": "sales_tasks",
+      "definition": "CHECK ((length(btrim(owner)) > 0))"
+    },
+    {
+      "name": "sales_tasks_status_check",
+      "table": "sales_tasks",
+      "definition": "CHECK ((status = ANY (ARRAY['open'::text, 'done'::text, 'cancelled'::text])))"
+    },
+    {
+      "name": "sales_tasks_scheduled_by_check",
+      "table": "sales_tasks",
+      "definition": "CHECK ((length(btrim(scheduled_by)) > 0))"
+    },
+    {
+      "name": "sales_tasks_lifecycle",
+      "table": "sales_tasks",
+      "definition": "CHECK ((((status = 'open'::text) AND (num_nonnulls(completed_at, completed_by, result_interaction_id, cancelled_at, cancelled_by, cancellation_reason) = 0)) OR ((status = 'done'::text) AND (completed_at IS NOT NULL) AND (completed_by IS NOT NULL) AND (length(btrim(completed_by)) > 0) AND (result_interaction_id IS NOT NULL) AND (num_nonnulls(cancelled_at, cancelled_by, cancellation_reason) = 0)) OR ((status = 'cancelled'::text) AND (cancelled_at IS NOT NULL) AND (cancelled_by IS NOT NULL) AND (length(btrim(cancelled_by)) > 0) AND (cancellation_reason IS NOT NULL) AND (length(btrim(cancellation_reason)) > 0) AND (num_nonnulls(completed_at, completed_by, result_interaction_id) = 0))))"
+    },
+    {
+      "name": "sales_tasks_id_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL id"
+    },
+    {
+      "name": "sales_tasks_project_id_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL project_id"
+    },
+    {
+      "name": "sales_tasks_kind_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL kind"
+    },
+    {
+      "name": "sales_tasks_due_at_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL due_at"
+    },
+    {
+      "name": "sales_tasks_owner_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL owner"
+    },
+    {
+      "name": "sales_tasks_status_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL status"
+    },
+    {
+      "name": "sales_tasks_scheduled_at_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL scheduled_at"
+    },
+    {
+      "name": "sales_tasks_scheduled_by_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL scheduled_by"
+    },
+    {
+      "name": "sales_tasks_created_at_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "name": "sales_tasks_updated_at_not_null",
+      "table": "sales_tasks",
+      "definition": "NOT NULL updated_at"
+    },
+    {
+      "name": "sales_tasks_pkey",
+      "table": "sales_tasks",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "sales_tasks_project_id_fkey",
+      "table": "sales_tasks",
+      "definition": "FOREIGN KEY (project_id) REFERENCES sales_projects(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "sales_tasks_result_same_project",
+      "table": "sales_tasks",
+      "definition": "FOREIGN KEY (project_id, result_interaction_id) REFERENCES customer_interactions(project_id, id) ON DELETE RESTRICT"
+    }
+  ],
+  "memberships": [
+    {
+      "role": "pg_read_all_settings",
+      "member": "pg_monitor"
+    },
+    {
+      "role": "pg_read_all_stats",
+      "member": "pg_monitor"
+    },
+    {
+      "role": "pg_stat_scan_tables",
+      "member": "pg_monitor"
+    }
+  ],
+  "server_port": "55438",
+  "data_directory": "/tmp/ofis-test-20261008/data",
+  "server_address": null,
+  "system_identifier": "7694368303238246410",
+  "effective_permissions": [
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": true,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": true,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": true,
+      "privilege": "SELECT"
+    },
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": true,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": true,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": true,
+      "privilege": "INSERT"
+    },
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": true,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": true,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "DELETE"
+    },
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "role": "anon",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_projects",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "anon",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "authenticated",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "service_role",
+      "table": "sales_tasks",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "anon",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "authenticated",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "role": "service_role",
+      "table": "office_operations",
+      "allowed": false,
+      "privilege": "TRIGGER"
+    }
+  ]
+}

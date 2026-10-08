@@ -59,7 +59,7 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
         <div className="flex items-center justify-between border-b border-[rgba(92,98,108,0.24)] px-5 py-4">
           <div>
             <h3 className="text-base font-semibold text-white">Katalogdan seç</h3>
-            <p className="mt-0.5 text-xs text-slate-400">
+            <p className="mt-0.5 text-sm text-slate-400">
               Fiyatlar şehir/araç iskontosu ve marj kuralı uygulanmış hâlde gelir.
             </p>
           </div>
@@ -78,7 +78,7 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ürün ara…"
               aria-label="Katalogda ara"
-              className="w-full rounded-xl border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] py-2 pl-9 pr-3 text-sm text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
+              className="w-full rounded-xl border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] py-2 pl-9 pr-3 text-base text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
             />
           </div>
           {(["hepsi", "levha", "aksesuar"] as const).map((k) => (
@@ -86,7 +86,7 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
               key={k}
               type="button"
               onClick={() => setKind(k)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 kind === k
                   ? "border-[var(--nx-gold)] bg-[var(--nx-gold)] text-[#101114]"
                   : "border-[rgba(92,98,108,0.3)] text-slate-300 hover:bg-white/5"
@@ -99,9 +99,9 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
 
         <div className="flex-1 overflow-y-auto p-2">
           {loading ? (
-            <p className="p-6 text-center text-sm text-slate-400">Katalog yükleniyor…</p>
+            <p className="p-6 text-center text-base text-slate-400">Katalog yükleniyor…</p>
           ) : filtered.length === 0 ? (
-            <p className="p-6 text-center text-sm text-slate-400">Eşleşen ürün yok.</p>
+            <p className="p-6 text-center text-base text-slate-400">Eşleşen ürün yok.</p>
           ) : (
             <ul className="divide-y divide-[rgba(92,98,108,0.12)]">
               {filtered.map((item) => (
@@ -112,10 +112,10 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
                     className="flex w-full items-center justify-between gap-4 px-3 py-2.5 text-left transition-colors hover:bg-[rgba(201,168,76,0.08)]"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm text-white" title={item.kind === "aksesuar" ? item.fullName : item.label}>
+                      <p className="truncate text-base text-white" title={item.kind === "aksesuar" ? item.fullName : item.label}>
                         {item.kind === "aksesuar" ? item.fullName : item.label}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-[var(--nx-text-muted)]">
+                      <p className="mt-0.5 text-sm text-[var(--nx-text-muted)]">
                         {item.kind === "levha" ? "Levha" : "Aksesuar"} · {item.unit}
                         {item.kind === "aksesuar" && item.unitContent && item.unitContent > 1
                           ? ` · paket içeriği ${item.unitContent}`
@@ -125,10 +125,10 @@ export function ProductPickerDialog({ open, items, loading, onClose, onPick }: P
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-semibold tabular-nums text-[var(--nx-gold)]">
+                      <p className="text-base font-semibold tabular-nums text-[var(--nx-gold)]">
                         {formatCurrency(item.suggestedUnitPrice)}
                       </p>
-                      <p className="text-[10px] text-[var(--nx-text-muted)]">/{item.unit} · KDV hariç</p>
+                      <p className="text-sm text-[var(--nx-text-muted)]">/{item.unit} · KDV hariç</p>
                     </div>
                   </button>
                 </li>

@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "200 Excel kalemli teklif gerçek endpoint ile oluşturulup revize edildi; sürüm filtresi URL boyutuna bağlı hata üretmedi.",
+    "6 eşzamanlı gerçek PUT: 1 başarılı, 5 çatışma; tek revizyon snapshotı, aynı teklif kimliği, tek ilk temas işi. Seçili proje değeri 30.000 TL’de kaldı.",
+    "Projeye bağlı teklifin numarası revizyonla değiştirilmedi; mevcut müşteri bağı korundu.",
+    "Eski revizyon numarası ve geçersiz sürüm reddedildi; istemci toplamı sunucu hesaplamasını değiştiremedi.",
+    "Eski ve yeni revizyon için değerlemeye esas seçim yalnız ilgili kayıtlı KDV hariç tutarı kullandı."
+  ],
+  "productionWrites": 0,
+  "passed": true
+}

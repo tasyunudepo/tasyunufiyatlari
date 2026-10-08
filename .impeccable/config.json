@@ -1,0 +1,143 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-color",
+        "value": "#235a91",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.193Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "26px",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.232Z",
+        "reason": "Kullanıcının 08.10.2026 uygulama talimatı Faz 0 yazı ölçeği."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "19px",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.276Z",
+        "reason": "Kullanıcının 08.10.2026 uygulama talimatı Faz 0 yazı ölçeği."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "14px",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.316Z",
+        "reason": "Kullanıcının 08.10.2026 uygulama talimatı Faz 0 yazı ölçeği."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#949d96",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.357Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#edc6b4",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.411Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e8ece7",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.458Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#70430b",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.505Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#9b2424",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.545Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#21613b",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.585Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#63368b",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.623Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff3d9",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.676Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#58616c",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.716Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#a33509",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.755Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#14181f1f",
+        "files": [
+          "app/ofis/ofis.css"
+        ],
+        "createdAt": "2026-10-08T15:54:28.796Z",
+        "reason": "Ofis açık teması için bilinçli durum, odak, sınır ve hover tonu; public DESIGN.md kapsamına taşınmaz. Kontrast ayrıca tarayıcıda ölçülür."
+      }
+    ]
+  }
+}

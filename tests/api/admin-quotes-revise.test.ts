@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   existing: vi.fn(),
   update: vi.fn(),
   insert: vi.fn(),
+  filter: vi.fn(),
+  updated: vi.fn(),
 }))
 
 vi.mock('server-only', () => ({}))
@@ -38,14 +40,13 @@ vi.mock('@/lib/supabase-server', () => ({
         update: (payload: Record<string, unknown>) => {
           mocks.update(payload)
           const sonuc = {
+            eq: (key: string, value: unknown) => { mocks.filter(key, value); return sonuc },
+            is: (key: string, value: unknown) => { mocks.filter(key, value); return sonuc },
             select: () => ({
-              maybeSingle: async () => ({
-                data: { id: 240, quote_code: 'TE-2026-000240' },
-                error: null,
-              }),
+              maybeSingle: mocks.updated,
             }),
           }
-          return { eq: () => ({ eq: () => sonuc, ...sonuc }) }
+          return sonuc
         },
       }
     },
@@ -116,6 +117,23 @@ describe('teklif revizyonu (PUT /api/admin/quotes/manual)', () => {
     mocks.existing.mockReset().mockResolvedValue({ data: KAYITLI, error: null })
     mocks.update.mockReset()
     mocks.insert.mockReset()
+    mocks.filter.mockReset()
+    mocks.updated.mockReset().mockResolvedValue({ data: { id: 240, quote_code: 'TE-2026-000240' }, error: null })
+  })
+
+  it('eski sürümle gelen düzenlemeyi yazmadan reddeder', async () => {
+    const res = await PUT(istek(govde({ expectedRevisionNo: 1 })))
+    expect(res.status).toBe(409)
+    expect(mocks.update).not.toHaveBeenCalled()
+  })
+
+  it('eşzamanlı değişiklikte 409 döner; revizyon yuvası, güncelleme zamanı ve PDF koşullarını kullanır', async () => {
+    mocks.updated.mockResolvedValue({ data: null, error: null })
+    const res = await PUT(istek(govde({ expectedRevisionNo: 0 })))
+    expect(res.status).toBe(409)
+    expect(mocks.filter).toHaveBeenCalledWith('package_items->manual->revisions->0', null)
+    expect(mocks.filter).toHaveBeenCalledWith('updated_at', null)
+    expect(mocks.filter).toHaveBeenCalledWith('pdf_storage_path', KAYITLI.pdf_storage_path)
   })
 
   it('kimliksiz istek 401 alır ve kayda dokunmaz', async () => {

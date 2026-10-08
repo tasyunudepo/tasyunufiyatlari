@@ -1,0 +1,20 @@
+{
+  "previewStatus": 200,
+  "iframeReady": true,
+  "errors": [],
+  "reviewImages": [
+    {
+      "src": "evidence/phase2-today-1440.png",
+      "loaded": true
+    },
+    {
+      "src": "evidence/phase3-detail-1440.png",
+      "loaded": true
+    },
+    {
+      "src": "evidence/phase4-builder-1440.png",
+      "loaded": true
+    }
+  ],
+  "passed": true
+}

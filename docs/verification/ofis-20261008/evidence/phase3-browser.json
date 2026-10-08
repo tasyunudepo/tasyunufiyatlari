@@ -1,0 +1,102 @@
+{
+  "screens": [
+    {
+      "label": "list-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "detail-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "list-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "detail-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "list-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "detail-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "list-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "detail-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "sheet-200-percent",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    }
+  ],
+  "checks": [
+    "375/390/768 px tam ekran detay; 1440 px yan yana liste/dosya. Kapanınca arama korunur.",
+    "Filtre sonuçları eşleşiyor; adlandırılmış görünüm tarayıcı yenilemesinde korunur.",
+    "Mobil detaydan Escape ile dönünce liste kaydırması ve filtre korunur."
+  ],
+  "errors": [],
+  "external": [],
+  "passed": true
+}

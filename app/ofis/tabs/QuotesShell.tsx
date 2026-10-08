@@ -39,7 +39,7 @@ export function QuotesShell() {
                         type="button"
                         onClick={() => setActive(id)}
                         aria-current={active === id ? "page" : undefined}
-                        className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                        className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-base font-medium transition-colors ${
                             active === id
                                 ? "border-[rgba(201,168,76,0.45)] bg-[rgba(201,168,76,0.12)] text-[var(--nx-gold)]"
                                 : "border-[rgba(92,98,108,0.24)] bg-[rgba(18,20,24,0.6)] text-[var(--nx-text-soft)] hover:text-[var(--nx-text)]"

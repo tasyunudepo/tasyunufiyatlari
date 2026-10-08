@@ -1,0 +1,2133 @@
+{
+  "errors": [],
+  "external": [],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:3210/ofis",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf?v=1791475376951",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf?v=1791475376951",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475376951",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475376951",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/webpack.js?v=1791475376951",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/main-app.js?v=1791475376951",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app-pages-internals.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/layout.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/ofis/page.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/me",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/quotes",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/dashboard-metrics",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/_app-pages-browser_node_modules_tanstack_query-devtools_build_DevtoolsComponent_7HGFFDPC_js.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/__nextjs_font/geist-latin.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/bd797f859f6e336f.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.bd797f859f6e336f.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.bd797f859f6e336f.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475379028",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475379028",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/57569b906248509b.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.57569b906248509b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.57569b906248509b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475379601",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475379601",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/49ef8aaa8b04f58a.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.49ef8aaa8b04f58a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.49ef8aaa8b04f58a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475380135",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475380135",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/combination-metrics",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/59aa860a99460778.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.59aa860a99460778.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.59aa860a99460778.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475380803",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475380803",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/fcbf545bd37bb72b.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.fcbf545bd37bb72b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.fcbf545bd37bb72b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475381464",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475381464",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/ab4cd1c7a90047df.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.ab4cd1c7a90047df.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.ab4cd1c7a90047df.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475382338",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475382338",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/77322cf440bb0f17.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.77322cf440bb0f17.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.77322cf440bb0f17.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475382877",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475382877",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/393d7f0a5aebfc9e.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.393d7f0a5aebfc9e.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.393d7f0a5aebfc9e.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475383360",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475383360",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/185bc1f19e757917.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.185bc1f19e757917.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.185bc1f19e757917.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475384176",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475384176",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/7c5e6c270e440afa.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.7c5e6c270e440afa.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.7c5e6c270e440afa.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475384897",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475384897",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/61eb0bc1cdeb3e64.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.61eb0bc1cdeb3e64.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.61eb0bc1cdeb3e64.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475385252",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475385252",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/773ad1e3e1ca999a.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.773ad1e3e1ca999a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.773ad1e3e1ca999a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475386166",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475386166",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/df4c2ad46149e81b.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475387048",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475387048",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.df4c2ad46149e81b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.df4c2ad46149e81b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/1281fafb566a255b.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.1281fafb566a255b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.1281fafb566a255b.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475387838",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475387838",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/f1425b3f82b0de48.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475388691",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475388691",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.f1425b3f82b0de48.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.f1425b3f82b0de48.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/e44203efd41cb60d.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.e44203efd41cb60d.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.e44203efd41cb60d.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475389503",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475389503",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/1ab644b1799217cf.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.1ab644b1799217cf.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.1ab644b1799217cf.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475390424",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475390424",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/c96c4f8c103c82c4.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.c96c4f8c103c82c4.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.c96c4f8c103c82c4.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475391268",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475391268",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/b63a90ad7df94898.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.b63a90ad7df94898.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.b63a90ad7df94898.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475392097",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475392097",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/051daea7c4d11479.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.051daea7c4d11479.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.051daea7c4d11479.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475392852",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475392852",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/fdfe0f9d53ca6711.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.fdfe0f9d53ca6711.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.fdfe0f9d53ca6711.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475393633",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475393633",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/48a4bea2354003f5.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.48a4bea2354003f5.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.48a4bea2354003f5.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475394385",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475394385",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/6bde7352485496c1.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.6bde7352485496c1.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.6bde7352485496c1.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475395306",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475395306",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/experiments",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/7bda4caa1636c432.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.7bda4caa1636c432.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.7bda4caa1636c432.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475396331",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475396331",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/707913f598d97c40.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.707913f598d97c40.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.707913f598d97c40.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475396974",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475396974",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/5c850a5d1bcc03f7.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plates?select=*%2Cbrands%3Abrand_id%28name%29%2Cmaterial_types%3Amaterial_type_id%28name%2Cslug%29&order=material_type_id.desc%2Cshort_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/accessories?select=*%2Caccessory_types%3Aaccessory_type_id%28name%2Csort_order%29%2Cbrands%3Abrand_id%28name%29&order=name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/plate_prices?select=*",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=*&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/logistics_capacity?select=*&order=thickness.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.5c850a5d1bcc03f7.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.5c850a5d1bcc03f7.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475397705",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475397705",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/952f2fe5bef6005a.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475398503",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475398503",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.952f2fe5bef6005a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.952f2fe5bef6005a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/a8bcd0492b5976ee-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/1b9f1acd416bca3a.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.1b9f1acd416bca3a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.1b9f1acd416bca3a.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475399305",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475399305",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/catalog-items?vehicle=tir&materialType=karma",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/rest/v1/shipping_zones?select=city_code%2Ccity_name&order=city_name.asc",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/catalog-items?cityCode=34&areaM2=1680&vehicle=tir&materialType=eps",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/3862f642f92305e1.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf?v=1791475399612",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf?v=1791475399612",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475399612",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475399612",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/webpack.js?v=1791475399612",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/main-app.js?v=1791475399612",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app-pages-internals.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/layout.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/ofis/page.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/me",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/quotes",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/dashboard-metrics",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/_app-pages-browser_node_modules_tanstack_query-devtools_build_DevtoolsComponent_7HGFFDPC_js.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/combination-metrics",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?role=patron",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/__nextjs_font/geist-latin.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf?v=1791475402072",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf?v=1791475402072",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791475402072",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/ofis/layout.css?v=1791475402072",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/webpack.js?v=1791475402072",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/main-app.js?v=1791475402072",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app-pages-internals.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/layout.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/ofis/page.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/c8efbd429579fdb4-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/fcf8b7916b94895b-s.p.ttf",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/0be08cad6fae8421-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/me",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/quotes",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/dashboard-metrics",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/_app-pages-browser_node_modules_tanstack_query-devtools_build_DevtoolsComponent_7HGFFDPC_js.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/ea06843a6d8e9ab3-s.woff2",
+      "method": "GET"
+    }
+  ],
+  "screens": [
+    {
+      "label": "dashboard-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "quotes-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "analytics-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "experiments-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "pricing-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "catalog-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "dashboard-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "quotes-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "analytics-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "experiments-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "pricing-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "catalog-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "dashboard-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "quotes-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "analytics-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "experiments-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "pricing-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "catalog-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "dashboard-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "quotes-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "analytics-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "experiments-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "pricing-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "catalog-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "menu-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "detail-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "revise-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "analytics-200-percent",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "analytics-200-reflow-equivalent",
+      "width": 720,
+      "scroll": 720,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    }
+  ],
+  "checks": [
+    "Diğer: klavye aç/kapat, Tab erişimi, Escape odağı, silme iptali",
+    "Revize menüsü mevcut editörü açar",
+    "Patron: yeni teklif, revize, çoğalt, sil, durum ve öncelik mutasyonları yok"
+  ],
+  "fonts": {
+    "loaded": [
+      {
+        "family": "Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Fallback",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "Geist Mono Fallback",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "loaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "loaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow",
+        "status": "unloaded"
+      },
+      {
+        "family": "Barlow Fallback",
+        "status": "error"
+      },
+      {
+        "family": "officeSans",
+        "status": "loaded"
+      },
+      {
+        "family": "officeSans Fallback",
+        "status": "error"
+      },
+      {
+        "family": "officeMono",
+        "status": "loaded"
+      },
+      {
+        "family": "officeMono Fallback",
+        "status": "error"
+      },
+      {
+        "family": "__nextjs-Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "__nextjs-Geist Mono",
+        "status": "unloaded"
+      },
+      {
+        "family": "__nextjs-Geist",
+        "status": "unloaded"
+      },
+      {
+        "family": "__nextjs-Geist Mono",
+        "status": "unloaded"
+      }
+    ],
+    "rendered": {
+      "font-specimen": {
+        "fonts": [
+          {
+            "familyName": "Atkinson Hyperlegible Next",
+            "postScriptName": "AtkinsonHyperlegibleNext-Regular",
+            "isCustomFont": true,
+            "glyphCount": 70
+          },
+          {
+            "familyName": "Barlow",
+            "postScriptName": "Barlow-Regular",
+            "isCustomFont": true,
+            "glyphCount": 1
+          }
+        ]
+      },
+      "font-turkish": {
+        "fonts": [
+          {
+            "familyName": "Atkinson Hyperlegible Next",
+            "postScriptName": "AtkinsonHyperlegibleNext-Regular",
+            "isCustomFont": true,
+            "glyphCount": 23
+          }
+        ]
+      },
+      "font-technical": {
+        "fonts": [
+          {
+            "familyName": "Atkinson Hyperlegible Mono ExtraLight",
+            "postScriptName": "AtkinsonHyperlegibleMono-ExtraLight",
+            "isCustomFont": true,
+            "glyphCount": 42
+          }
+        ]
+      }
+    },
+    "computed": {
+      "family": "officeSans, \"officeSans Fallback\", Barlow, \"Barlow Fallback\", sans-serif",
+      "size": "16px",
+      "numeric": "tabular-nums"
+    }
+  },
+  "mutationGuard": [
+    {
+      "method": "POST",
+      "url": "/api/upload-pdf",
+      "status": 405
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/admin/quotes/201",
+      "status": 405
+    },
+    {
+      "method": "DELETE",
+      "url": "/rest/v1/quotes",
+      "status": 405
+    },
+    {
+      "method": "POST",
+      "url": "/auth/v1/token",
+      "status": 405
+    },
+    {
+      "method": "PUT",
+      "url": "/storage/v1/object/test/file",
+      "status": 405
+    }
+  ]
+}

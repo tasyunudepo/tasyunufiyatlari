@@ -1,0 +1,25 @@
+import {randomBytes,createHmac} from 'node:crypto';
+import fs from 'node:fs';
+import {sql,apply,verifyTarget,inventory,state} from './db.mjs';
+verifyTarget();
+if(sql("SELECT 1 FROM pg_database WHERE datname='ofis_acceptance'",'postgres').trim())throw Error('Test DB zaten var; otomatik silme/yeniden kurma yapılmaz');
+sql('CREATE DATABASE ofis_acceptance','postgres');
+apply('tests/db/quote-guard-bootstrap.sql');
+apply('scripts/migration-v17-quote-submission-guard.sql');
+apply('scripts/ofis-test/legacy-baseline.sql');
+apply('scripts/migration-v22-satis-sonucu-modeli.sql');
+apply('scripts/migration-v24-musteri-varligi.sql');
+apply('scripts/migration-v26-comparison-attribution.sql');
+inventory('phase1-test-before');
+apply('scripts/migrations-proposed/20261008_ofis_phase1.sql');
+inventory('phase1-test-after');
+// Boş şemanın ham rollback'i; legacy nesneler kalmalı.
+apply('scripts/migrations-proposed/20261008_ofis_phase1.rollback.sql');
+if(sql("SELECT to_regclass('public.sales_projects') IS NULL AND to_regclass('public.quotes') IS NOT NULL").trim()!=='t')throw Error('Boş rollback başarısız');
+apply('scripts/migrations-proposed/20261008_ofis_phase1.sql');
+const secret=randomBytes(36).toString('hex');
+const token=role=>{const body=[{alg:'HS256',typ:'JWT'},{role,iss:'ofis-local-only',exp:Math.floor(Date.now()/1000)+86400*7}].map(v=>Buffer.from(JSON.stringify(v)).toString('base64url')).join('.');return body+'.'+createHmac('sha256',secret).update(body).digest('base64url')};
+sql('CREATE ROLE authenticator LOGIN NOINHERIT; GRANT anon, authenticated, service_role TO authenticator');
+fs.writeFileSync(state+'/local-keys.json',JSON.stringify({secret,service:token('service_role'),anon:token('anon'),authenticated:token('authenticated')}),{mode:0o600});
+fs.writeFileSync(state+'/postgrest.conf',`db-uri = "postgresql://authenticator@/ofis_acceptance?host=${state}/socket&port=55438"\ndb-schemas = "public"\ndb-anon-role = "anon"\njwt-secret = "${secret}"\nserver-host = "127.0.0.1"\nserver-port = 3212\ndb-max-rows = 2000\n`,{mode:0o600});
+console.log('İzole DB, ham migration, etkin yetkiler ve boş rollback geçti. Üretim bağlantısı yok.');

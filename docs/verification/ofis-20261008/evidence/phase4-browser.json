@@ -1,0 +1,81 @@
+{
+  "screens": [
+    {
+      "label": "builder-375",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "builder-390",
+      "width": 390,
+      "scroll": 390,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "builder-768",
+      "width": 768,
+      "scroll": 768,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "builder-1440",
+      "width": 1440,
+      "scroll": 1440,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "builder-200-percent",
+      "width": 1440,
+      "scroll": 1442,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    },
+    {
+      "label": "revision-mobile",
+      "width": 375,
+      "scroll": 375,
+      "small": [],
+      "contrast": [],
+      "targets": [],
+      "outside": [],
+      "gradients": []
+    }
+  ],
+  "checks": [
+    "Excel iki satır yapıştırma, %10 iskonto ve 500 TL nakliye: sunucu 33.080 KDV hariç / 39.696 KDV dahil; gerçek PDF üretildi, yerel depoya yüklendi ve gerçek PDF endpoint’inden alındı.",
+    "Mobilde aynı numaraya revize edildi; eski PDF ve metraj/birim/nakliye/toplam snapshotı korundu, önce/güncel karşılaştırma görüntülendi. İç maliyet ve marj PDF çizim kaynağına girmedi.",
+    "Çoğalt müşteri/kalemleri taşır; revize kipine girmez.",
+    "Mobil salt okunur hesapta oluşturma/revizyon eylemleri yok; gerçek PUT endpoint’i 403."
+  ],
+  "errors": [],
+  "external": [],
+  "pdfTextCaptured": true,
+  "quoteId": 26,
+  "timings": [
+    {
+      "action": "save+pdf",
+      "ms": 3470
+    }
+  ],
+  "passed": true
+}

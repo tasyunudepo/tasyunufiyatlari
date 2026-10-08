@@ -1,0 +1,14 @@
+[
+  {
+    "name": "fetch",
+    "result": "blocked before request"
+  },
+  {
+    "name": "socket",
+    "result": "blocked before request"
+  },
+  {
+    "name": "dns",
+    "result": "blocked before request"
+  }
+]

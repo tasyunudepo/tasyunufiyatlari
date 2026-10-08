@@ -54,8 +54,8 @@ import {
 // ve zorunlu KVKK rızası operatör akışıyla bağdaşmıyor).
 
 const control =
-    "rounded-xl border border-[rgba(92,98,108,0.28)] bg-[rgba(18,20,24,0.8)] px-3 py-2 text-sm text-white outline-none focus:border-[rgba(201,168,76,0.5)]";
-const label = "block text-[11px] uppercase tracking-wider text-[var(--nx-text-muted)] mb-1";
+    "rounded-xl border border-[rgba(92,98,108,0.28)] bg-[rgba(18,20,24,0.8)] px-3 py-2 text-base text-white outline-none focus:border-[rgba(201,168,76,0.5)]";
+const label = "block text-sm uppercase tracking-wider text-[var(--nx-text-muted)] mb-1";
 
 const SUB_LABELS: Record<string, string> = {
     avrupa: "Avrupa Yakası",
@@ -128,7 +128,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
     const [sonuc, setSonuc] = useState<Sonuc>({ tip: "yok" });
     const [overrideReason, setOverrideReason] = useState("");
     // Revize kipi: doluysa kayıt yeni teklif açmaz, bu teklifi günceller.
-    const [revize, setRevize] = useState<{ quoteId: number; quoteCode: string } | null>(null);
+    const [revize, setRevize] = useState<{ quoteId: number; quoteCode: string; revisionNo: number } | null>(null);
 
     const areaNum = Number(areaM2.replace(",", ".")) || 0;
     const editor = useQuoteEditor(areaNum);
@@ -395,7 +395,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
             // gelen kayıt müşterinin kendi talebidir, üstüne yazılmaz.
             setRevize(
                 mod === "revize" && kaynak.quoteId != null && kaynak.requestType === "manual_quote"
-                    ? { quoteId: kaynak.quoteId, quoteCode: kaynak.quoteCode ?? `#${kaynak.quoteId}` }
+                    ? { quoteId: kaynak.quoteId, quoteCode: kaynak.quoteCode ?? `#${kaynak.quoteId}`, revisionNo: kaynak.revisionNo ?? 0 }
                     : null,
             );
             setCogaltDialogAcik(false);
@@ -469,7 +469,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                 method: revizeHedefi ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(
-                    revizeHedefi ? { ...payload, quoteId: revizeHedefi.quoteId } : payload,
+                    revizeHedefi ? { ...payload, quoteId: revizeHedefi.quoteId, expectedRevisionNo: revizeHedefi.revisionNo } : payload,
                 ),
             });
             const json = await res.json().catch(() => null);
@@ -570,7 +570,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
 
     if (!canMutate) {
         return (
-            <div className="rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-6 text-sm text-sky-200">
+            <div className="rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-6 text-base text-sky-200">
                 Salt okunur hesap — teklif yazma yetkiniz yok.
             </div>
         );
@@ -585,7 +585,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                         <h3 className="text-lg font-semibold text-white">
                             {sonuc.revize ? "Teklif revize edildi" : "Teklif kaydedildi"}
                         </h3>
-                        <p className="mt-1 text-sm text-emerald-200">
+                        <p className="mt-1 text-base text-emerald-200">
                             Teklif no: <span className="font-mono">{sonuc.quoteCode}</span>
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -596,7 +596,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                     href={sonuc.pdfBlobUrl}
                                     download={sonuc.pdfFilename ?? `${sonuc.quoteCode}.pdf`}
                                     data-testid="manual-quote-pdf-download"
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-400/15 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-400/25"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-400/15 px-4 py-2 text-base font-semibold text-emerald-100 hover:bg-emerald-400/25"
                                 >
                                     <Download className="h-4 w-4" /> PDF indir
                                 </a>
@@ -606,25 +606,25 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                     href={`/api/admin/quotes/${sonuc.quoteId}/pdf`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-400/10 px-4 py-2 text-sm font-semibold text-sky-200 hover:bg-sky-400/20"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-400/10 px-4 py-2 text-base font-semibold text-sky-200 hover:bg-sky-400/20"
                                 >
                                     <FileText className="h-4 w-4" /> Arşivdeki PDF
                                 </a>
                             )}
                             <button type="button" onClick={yeniTeklif}
-                                className="rounded-lg bg-[var(--nx-gold)] px-4 py-2 text-sm font-bold text-black hover:opacity-90">
+                                className="rounded-lg bg-[var(--nx-gold)] px-4 py-2 text-base font-bold text-black hover:opacity-90">
                                 Yeni teklif yaz
                             </button>
                         </div>
 
                         {sonuc.pdfUyarisi && (
-                            <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200"
+                            <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200"
                                 data-testid="manual-quote-pdf-warning">
                                 {sonuc.pdfUyarisi}
                             </p>
                         )}
 
-                        <p className="mt-3 text-[11px] text-emerald-200/70">
+                        <p className="mt-3 text-sm text-emerald-200/70">
                             {sonuc.revize
                                 ? "Teklif numarası aynı kaldı; listedeki kayıt ve PDF yeni hâliyle güncellendi."
                                 : <>Teklif listede &ldquo;Ofis&rdquo; kanalı ve &ldquo;Teklif Verildi&rdquo; durumuyla görünür.</>}
@@ -644,7 +644,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                         <h3 className="text-base font-semibold text-white">
                             {revize ? "Teklif Revizyonu" : "Yeni Teklif"}
                         </h3>
-                        <p className="mt-0.5 text-xs text-slate-400">
+                        <p className="mt-0.5 text-sm text-slate-400">
                             Fiyatlar şehir/araç iskontosu ve marj kuralıyla gelir; her kalem yine tek tek düzenlenebilir.
                         </p>
                     </div>
@@ -652,7 +652,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                         type="button"
                         onClick={() => setCogaltDialogAcik(true)}
                         data-testid="open-duplicate-dialog"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(92,98,108,0.35)] px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-[rgba(201,168,76,0.4)] hover:text-white"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(92,98,108,0.35)] px-3 py-1.5 text-sm font-semibold text-slate-300 transition-colors hover:border-[rgba(201,168,76,0.4)] hover:text-white"
                     >
                         <Copy className="h-3.5 w-3.5" />
                         Teklifi çoğalt
@@ -664,10 +664,10 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                         data-testid="revize-banner"
                         className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-400/30 bg-sky-400/10 px-3 py-2"
                     >
-                        <p className="flex items-center gap-2 text-xs text-sky-100">
+                        <p className="flex items-center gap-2 text-sm text-sky-100">
                             <PencilLine className="h-3.5 w-3.5 shrink-0" />
                             <span>
-                                <span className="font-mono font-semibold">{revize.quoteCode}</span> revize ediliyor.
+                                <span className="font-mono font-semibold">{revize.quoteCode}</span> · Revizyon {revize.revisionNo} düzenleniyor.
                                 Kaydedince aynı numarayla güncellenir, yeni teklif açılmaz.
                             </span>
                         </p>
@@ -675,7 +675,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                             type="button"
                             onClick={() => setRevize(null)}
                             data-testid="revize-cik"
-                            className="rounded-lg border border-sky-400/30 px-2.5 py-1 text-[11px] font-semibold text-sky-100 transition-colors hover:bg-sky-400/15"
+                            className="rounded-lg border border-sky-400/30 px-2.5 py-1 text-sm font-semibold text-sky-100 transition-colors hover:bg-sky-400/15"
                         >
                             Yeni teklif olarak kaydet
                         </button>
@@ -702,7 +702,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
 
                     <label className="block">
                         <span className={label}>Şehir *</span>
-                        <select value={cityCode} onChange={(e) => setCityCode(e.target.value)} className={`${control} w-full [color-scheme:dark]`}>
+                        <select aria-label="Şehir *" value={cityCode} onChange={(e) => setCityCode(e.target.value)} className={`${control} w-full [color-scheme:dark]`}>
                             <option value="">Seçin…</option>
                             {zones.map((z) => (
                                 <option key={z.city_code} value={String(z.city_code)}>{z.city_name}</option>
@@ -711,7 +711,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                     </label>
                     <label className="block">
                         <span className={label}>Malzeme</span>
-                        <select value={materialType} onChange={(e) => setMaterialType(e.target.value as typeof materialType)} className={`${control} w-full [color-scheme:dark]`}>
+                        <select aria-label="Malzeme" value={materialType} onChange={(e) => setMaterialType(e.target.value as typeof materialType)} className={`${control} w-full [color-scheme:dark]`}>
                             <option value="karma">Karma</option>
                             <option value="tasyunu">Taşyünü</option>
                             <option value="eps">EPS</option>
@@ -719,7 +719,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                     </label>
                     <label className="block">
                         <span className={label}>Araç (taşyünü iskontosu)</span>
-                        <select value={vehicle} onChange={(e) => setVehicle(e.target.value as typeof vehicle)} className={`${control} w-full [color-scheme:dark]`}>
+                        <select aria-label="Araç (taşyünü iskontosu)" value={vehicle} onChange={(e) => setVehicle(e.target.value as typeof vehicle)} className={`${control} w-full [color-scheme:dark]`}>
                             <option value="tir">Tır</option>
                             <option value="kamyon">Kamyon</option>
                         </select>
@@ -752,20 +752,20 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                             type="button"
                                             onClick={() => aracSec(n)}
                                             data-testid={`arac-${n}`}
-                                            className="rounded border border-[rgba(92,98,108,0.3)] px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 transition-colors hover:border-[rgba(201,168,76,0.45)] hover:text-white"
+                                            className="rounded border border-[rgba(92,98,108,0.3)] px-1.5 py-0.5 text-sm font-semibold text-slate-400 transition-colors hover:border-[rgba(201,168,76,0.45)] hover:text-white"
                                         >
                                             {n} {vehicle === "tir" ? "TIR" : "kamyon"}
                                         </button>
                                     ))}
                                 </>
                             ) : (
-                                <span className="text-[10px] text-[var(--nx-text-muted)]">
+                                <span className="text-sm text-[var(--nx-text-muted)]">
                                     Levha seçilince araç kapasitesi görünür
                                 </span>
                             )}
                         </div>
                         {aracKarsiligi && (
-                            <p className="mt-1 text-[10px] font-semibold text-emerald-300" data-testid="arac-karsiligi">
+                            <p className="mt-1 text-sm font-semibold text-emerald-300" data-testid="arac-karsiligi">
                                 = {aracKarsiligi} (tam araç)
                             </p>
                         )}
@@ -814,7 +814,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                 </div>
 
                 {catalogNotes.length > 0 && (
-                    <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                    <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
                         {catalogNotes.map((n) => <p key={n}>{n}</p>)}
                     </div>
                 )}
@@ -836,12 +836,12 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                 ? "Önce levhayı seçin veya Malzeme'yi Taşyünü/EPS yapın — sarfiyat ve dübel tipi buna bağlı"
                                 : undefined
                     }
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(201,168,76,0.4)] bg-[rgba(201,168,76,0.12)] px-3 py-2 text-xs font-bold text-[var(--nx-gold)] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(201,168,76,0.4)] bg-[rgba(201,168,76,0.12)] px-3 py-2 text-sm font-bold text-[var(--nx-gold)] transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
                 >
                     <Layers className="h-3.5 w-3.5" />
                     Toz grubu paketi ekle
                 </button>
-                <span className="text-[11px] text-[var(--nx-text-muted)]">
+                <span className="text-sm text-[var(--nx-text-muted)]">
                     {tozMalzeme == null
                         ? "Malzeme belirsiz — levhayı seçin ya da Malzeme'yi Taşyünü/EPS yapın."
                         : `Yapıştırıcı, sıva, dübel, file, profil, astar ve kaplama tek seferde gelir (${tozMalzeme === "eps" ? "EPS" : "taşyünü"} sarfiyatı).`}
@@ -877,13 +877,13 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                 <div className="rounded-2xl border border-[rgba(92,98,108,0.24)] bg-[rgba(13,15,18,0.7)] p-4">
                     <label className="block">
                         <span className={label}>Teklif notu (PDF&apos;e girer)</span>
-                        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
+                        <textarea aria-label="Teklif notu (PDF'e girer)" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
                             className={`${control} w-full resize-none`} />
                     </label>
                 </div>
 
                 <div className="rounded-2xl border border-[rgba(201,168,76,0.28)] bg-[rgba(201,168,76,0.06)] p-4">
-                    <div className="space-y-2.5 text-sm">
+                    <div className="space-y-2.5 text-base">
                         <div className="flex items-center justify-between">
                             <span className="text-slate-300">
                                 {editor.discountPct > 0 ? "Liste toplamı" : "Ara toplam"}
@@ -900,9 +900,9 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                     onChange={(e) => editor.setDiscountPct(Math.min(100, Math.max(0, Number(e.target.value.replace(",", ".")) || 0)))}
                                     inputMode="decimal"
                                     aria-label="Toplu iskonto yüzdesi"
-                                    className="w-14 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-right text-sm tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
+                                    className="w-14 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-right text-base tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
                                 />
-                                <span className="text-xs text-slate-400">%</span>
+                                <span className="text-sm text-slate-400">%</span>
                                 <span className="w-24 text-right font-medium tabular-nums text-amber-300">
                                     {editor.totals.discountAmount > 0 ? `−${formatCurrency(editor.totals.discountAmount)}` : "—"}
                                 </span>
@@ -915,7 +915,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                 onChange={(e) => editor.setShippingCharge(Math.max(0, Number(e.target.value.replace(",", ".")) || 0))}
                                 inputMode="decimal"
                                 aria-label="Nakliye tutarı"
-                                className="w-32 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-right text-sm tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
+                                className="w-32 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-right text-base tabular-nums text-white outline-none focus:border-[rgba(201,168,76,0.5)]"
                             />
                         </div>
 
@@ -930,7 +930,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                 onChange={(e) => setShippingMode(e.target.value as typeof shippingMode)}
                                 aria-label="Belgede nakliye sunumu"
                                 data-testid="shipping-mode"
-                                className="w-52 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-[rgba(201,168,76,0.5)] disabled:opacity-50"
+                                className="w-52 rounded-lg border border-[rgba(92,98,108,0.3)] bg-[rgba(18,20,24,0.8)] px-2 py-1 text-base text-white outline-none [color-scheme:dark] focus:border-[rgba(201,168,76,0.5)] disabled:opacity-50"
                             >
                                 <option value="included_in_sale_price">Fiyata dahil</option>
                                 <option value="buyer_pays">Hariç — alıcıya ait</option>
@@ -938,7 +938,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                             </select>
                         </div>
                         {editor.shippingCharge > 0 && (
-                            <p className="text-[10px] text-[var(--nx-text-muted)]">
+                            <p className="text-sm text-[var(--nx-text-muted)]">
                                 Nakliye ayrı kalem olarak eklendi — belgede &ldquo;alıcıya ait&rdquo; yazar.
                             </p>
                         )}
@@ -958,11 +958,11 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                 {formatCurrency(editor.totals.totalPrice)}
                             </span>
                         </div>
-                        <p className="text-[11px] text-[var(--nx-text-muted)]">KDV dahil</p>
+                        <p className="text-sm text-[var(--nx-text-muted)]">KDV dahil</p>
                     </div>
 
                     {eksikler.length > 0 && (
-                        <div className="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[11px] text-amber-200"
+                        <div className="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200"
                             data-testid="manual-quote-missing">
                             <p className="font-semibold">Kaydetmek için:</p>
                             <ul className="mt-1 space-y-0.5">
@@ -973,7 +973,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
 
                     {sonuc.tip === "hata" && (
                         <div role="alert" data-testid="manual-quote-error"
-                            className="mt-4 rounded-lg border border-red-400/35 bg-red-400/10 px-3 py-2 text-xs text-red-200">
+                            className="mt-4 rounded-lg border border-red-400/35 bg-red-400/10 px-3 py-2 text-sm text-red-200">
                             <p className="flex items-start gap-1.5">
                                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                 <span>{sonuc.mesaj}</span>
@@ -987,11 +987,11 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                                         value={overrideReason}
                                         onChange={(e) => setOverrideReason(e.target.value)}
                                         aria-label="Kural aşımı gerekçesi"
-                                        className="w-full rounded-lg border border-amber-400/30 bg-[rgba(18,20,24,0.8)] px-2 py-1.5 text-xs text-white outline-none"
+                                        className="w-full rounded-lg border border-amber-400/30 bg-[rgba(18,20,24,0.8)] px-2 py-1.5 text-sm text-white outline-none"
                                     />
                                     <button type="button" disabled={overrideReason.trim().length < 3 || saving}
                                         onClick={() => void handleSave(true)}
-                                        className="mt-2 rounded-lg border border-amber-400/40 bg-amber-400/15 px-3 py-1.5 text-xs font-semibold text-amber-100 disabled:opacity-40">
+                                        className="mt-2 rounded-lg border border-amber-400/40 bg-amber-400/15 px-3 py-1.5 text-sm font-semibold text-amber-100 disabled:opacity-40">
                                         Gerekçeyle kaydet
                                     </button>
                                 </div>
@@ -1004,7 +1004,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                         disabled={!kaydedilebilir}
                         onClick={() => void handleSave(false)}
                         data-testid="manual-quote-save"
-                        className="mt-4 w-full rounded-xl bg-[var(--nx-gold)] px-4 py-2.5 text-sm font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="mt-4 w-full rounded-xl bg-[var(--nx-gold)] px-4 py-2.5 text-base font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {saving ? "Kaydediliyor…" : revize ? "Revizyonu kaydet" : "Teklifi kaydet"}
                     </button>

@@ -46,7 +46,7 @@ export function DiscountsTab() {
     return (
         <div className="admin-nexus-panel p-6">
             <h2 className="text-lg font-semibold text-white mb-1">İskonto Yönetimi</h2>
-            <p className="text-sm text-slate-400 mb-4">
+            <p className="text-base text-slate-400 mb-4">
                 Şehir bazlı nakliye ve grup iskonto oranları ({zones.length} şehir)
             </p>
 
@@ -56,7 +56,7 @@ export function DiscountsTab() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Şehir ara…"
-                    className="admin-nexus-input w-full max-w-xs px-3 py-2 text-sm"
+                    className="admin-nexus-input w-full max-w-xs px-3 py-2 text-base"
                 />
             </div>
 
@@ -64,29 +64,29 @@ export function DiscountsTab() {
                 <table className="admin-nexus-table min-w-full">
                     <thead>
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Şehir</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase" title="Taşyünü tam TIR iskontosu">TIR İsk.</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase" title="Taşyünü tam Kamyon iskontosu">Kamyon İsk.</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase" title="EPS + Toz grubu bölge iskontosu (İSK1)">EPS/Toz Bölge</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase" title="Optimix toz grubu iskontosu">Optimix Toz</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase" title="Optimix levha iskontosu">Optimix Levha</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 uppercase">Şehir</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 uppercase" title="Taşyünü tam TIR iskontosu">TIR İsk.</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 uppercase" title="Taşyünü tam Kamyon iskontosu">Kamyon İsk.</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 uppercase" title="EPS + Toz grubu bölge iskontosu (İSK1)">EPS/Toz Bölge</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 uppercase" title="Optimix toz grubu iskontosu">Optimix Toz</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 uppercase" title="Optimix levha iskontosu">Optimix Levha</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filtered.map((zone) => (
                             <tr key={zone.city_code}>
-                                <td className="px-4 py-3 text-sm text-white">{zone.city_name}</td>
-                                <td className="px-4 py-3 text-sm text-right tabular-nums text-slate-200">{zone.discount_tir}%</td>
-                                <td className="px-4 py-3 text-sm text-right tabular-nums text-slate-200">{zone.discount_kamyon}%</td>
-                                <td className="px-4 py-3 text-sm text-right tabular-nums text-slate-300">{zone.eps_toz_region_discount ?? 0}%</td>
-                                <td className="px-4 py-3 text-sm text-right tabular-nums text-slate-300">{zone.optimix_toz_discount}%</td>
-                                <td className="px-4 py-3 text-sm text-right tabular-nums text-slate-300">{zone.optimix_levha_discount}%</td>
+                                <td className="px-4 py-3 text-base text-white">{zone.city_name}</td>
+                                <td className="px-4 py-3 text-base text-right tabular-nums text-slate-200">{zone.discount_tir}%</td>
+                                <td className="px-4 py-3 text-base text-right tabular-nums text-slate-200">{zone.discount_kamyon}%</td>
+                                <td className="px-4 py-3 text-base text-right tabular-nums text-slate-300">{zone.eps_toz_region_discount ?? 0}%</td>
+                                <td className="px-4 py-3 text-base text-right tabular-nums text-slate-300">{zone.optimix_toz_discount}%</td>
+                                <td className="px-4 py-3 text-base text-right tabular-nums text-slate-300">{zone.optimix_levha_discount}%</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
                 {filtered.length === 0 && (
-                    <p className="text-sm text-[var(--nx-text-muted)] text-center py-6">
+                    <p className="text-base text-[var(--nx-text-muted)] text-center py-6">
                         “{query}” ile eşleşen şehir yok.
                     </p>
                 )}

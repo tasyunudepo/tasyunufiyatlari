@@ -36,10 +36,6 @@ export function AdminShell({ activeSection, onNavigate, children }: Props) {
 
     return (
         <div className="nx-shell">
-            <div className="nx-blobs">
-                <div className="nx-blob-mid" />
-            </div>
-
             <div
                 className="nx-sidebar-backdrop"
                 data-open={drawerOpen ? "true" : "false"}

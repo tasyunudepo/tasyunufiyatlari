@@ -5,6 +5,7 @@ import { requireAdminMutationAuth } from '@/lib/security/adminMutationAuth'
 import { createPdfCapabilityToken, assertPdfCapabilityConfigured } from '@/lib/security/pdfCapability'
 import { buildQuoteTotals, roundToKurus } from '@/lib/pricing/quoteTotals'
 import { validateMinimumOrder } from '@/lib/pricing/commercialRules'
+import { normalizePhoneDigits } from '@/lib/phone/normalize'
 import {
   manualQuoteSchema,
   discountedUnitPrice,
@@ -41,6 +42,9 @@ interface RevisionEntry {
   areaM2: number
   priceWithoutVat: number
   totalPrice: number
+  pricePerM2: number | null
+  shippingCost: number | null
+  shippingMode: string | null
   /** Önceki sürümün arşivdeki PDF'i; dosya storage'da kalır. */
   pdfStoragePath: string | null
 }
@@ -325,6 +329,10 @@ export async function PUT(req: NextRequest) {
   if (!auth.ok) return auth.response
 
   const body = await req.json().catch(() => null)
+  const expectedRevisionNo = (body as { expectedRevisionNo?: unknown } | null)?.expectedRevisionNo
+  if (expectedRevisionNo !== undefined && (!Number.isSafeInteger(expectedRevisionNo) || Number(expectedRevisionNo) < 0)) {
+    return NextResponse.json({ ok: false, error: 'Geçersiz revizyon numarası.' }, { status: 400 })
+  }
   const quoteId = Number((body as { quoteId?: unknown } | null)?.quoteId)
   if (!Number.isSafeInteger(quoteId) || quoteId <= 0) {
     return NextResponse.json(
@@ -345,7 +353,7 @@ export async function PUT(req: NextRequest) {
 
   const { data: existing, error: readError } = await supabase
     .from('quotes')
-    .select('id, request_type, quote_code, area_m2, price_without_vat, total_price, pdf_storage_path, package_items')
+    .select('id, request_type, quote_code, customer_phone, updated_at, area_m2, price_without_vat, total_price, price_per_m2, shipping_cost, pdf_storage_path, package_items')
     .eq('id', quoteId)
     .maybeSingle()
 
@@ -372,6 +380,15 @@ export async function PUT(req: NextRequest) {
     )
   }
 
+  // A quote's phone also drives its legacy customer binding. A revision must
+  // not silently move an explicitly linked project to a different customer.
+  const phoneBindingChanges = process.env.OFIS_WORKFLOW_ENABLED === '1' && normalizePhoneDigits(String(existing.customer_phone ?? '')) !== normalizePhoneDigits(d.customerPhone)
+  if (phoneBindingChanges) {
+    const { data: linked, error: linkError } = await supabase.from('quotes').select('project_id').eq('id', quoteId).maybeSingle()
+    if (linkError) return NextResponse.json({ ok: false, error: 'Proje bağlantısı doğrulanamadı.' }, { status: 503 })
+    if (linked?.project_id) return NextResponse.json({ ok: false, error: 'Bu teklifin müşteri bağı projede kullanılıyor. Ham numarayı koruyun; farklı iletişim numarasını proje dosyasında bu görüşme için kullanabilirsiniz.' }, { status: 409 })
+  }
+
   const warnings = await commercialWarnings(supabase, d)
   if (warnings.length > 0 && !d.overrideCommercialRules) {
     return overrideRequiredResponse(warnings)
@@ -379,9 +396,12 @@ export async function PUT(req: NextRequest) {
 
   const now = new Date()
   const oncekiManual = (existing.package_items as {
-    manual?: { createdBy?: string; revisions?: RevisionEntry[] }
+    manual?: { createdBy?: string; revisions?: RevisionEntry[]; shippingMode?: string }
   } | null)?.manual
   const oncekiRevizyonlar = Array.isArray(oncekiManual?.revisions) ? oncekiManual.revisions : []
+  if (expectedRevisionNo !== undefined && expectedRevisionNo !== oncekiRevizyonlar.length) {
+    return NextResponse.json({ ok: false, error: 'Teklif başka bir oturumda revize edildi. Girdilerinizi koruyun; güncel sürümü listeden yeniden açıp karşılaştırın.' }, { status: 409 })
+  }
   const revisions: RevisionEntry[] = [
     ...oncekiRevizyonlar,
     {
@@ -391,6 +411,9 @@ export async function PUT(req: NextRequest) {
       areaM2: Number(existing.area_m2 ?? 0),
       priceWithoutVat: Number(existing.price_without_vat ?? 0),
       totalPrice: Number(existing.total_price ?? 0),
+      pricePerM2: existing.price_per_m2 == null ? null : Number(existing.price_per_m2),
+      shippingCost: existing.shipping_cost == null ? null : Number(existing.shipping_cost),
+      shippingMode: oncekiManual?.shippingMode ?? null,
       pdfStoragePath: existing.pdf_storage_path ?? null,
     },
   ]
@@ -410,14 +433,30 @@ export async function PUT(req: NextRequest) {
     ...(d.overrideReason ? { admin_notes: `Kural aşımı: ${d.overrideReason}` } : {}),
   }
 
-  const { data: updated, error: updateError } = await supabase
+  let revisionUpdate = supabase
     .from('quotes')
     .update(updatePayload)
     .eq('id', quoteId)
     .eq('request_type', 'manual_quote')
+  // PostgreSQL rechecks these predicates after a concurrent row update.
+  // A successful append fills this previously absent array position. Filtering
+  // on it avoids putting an entire Excel quote into the PostgREST URL.
+  // updated_at also protects concurrent changes outside the revision path.
+  revisionUpdate = revisionUpdate.is(`package_items->manual->revisions->${oncekiRevizyonlar.length}`, null)
+  revisionUpdate = existing.updated_at == null
+    ? revisionUpdate.is('updated_at', null)
+    : revisionUpdate.eq('updated_at', existing.updated_at)
+  revisionUpdate = existing.pdf_storage_path == null
+    ? revisionUpdate.is('pdf_storage_path', null)
+    : revisionUpdate.eq('pdf_storage_path', existing.pdf_storage_path)
+  if (phoneBindingChanges) revisionUpdate = revisionUpdate.is('project_id', null)
+  const { data: updated, error: updateError } = await revisionUpdate
     .select('id, quote_code')
     .maybeSingle()
 
+  if (!updateError && !updated) {
+    return NextResponse.json({ ok: false, error: 'Teklif bu sırada değişti. Girdilerinizi koruyun; güncel sürümü listeden yeniden açıp karşılaştırın.' }, { status: 409 })
+  }
   if (updateError || !updated) {
     console.error('Teklif revize edilemedi:', updateError?.message ?? 'kayıt bulunamadı')
     return NextResponse.json(

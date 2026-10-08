@@ -1,0 +1,357 @@
+{
+  "phase": "baseline",
+  "errors": [],
+  "external": [],
+  "loadedFonts": [
+    {
+      "family": "Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Fallback",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "loaded"
+    },
+    {
+      "family": "Geist Mono Fallback",
+      "status": "error"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow",
+      "status": "unloaded"
+    },
+    {
+      "family": "Barlow Fallback",
+      "status": "unloaded"
+    },
+    {
+      "family": "__nextjs-Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "__nextjs-Geist Mono",
+      "status": "unloaded"
+    },
+    {
+      "family": "__nextjs-Geist",
+      "status": "unloaded"
+    },
+    {
+      "family": "__nextjs-Geist Mono",
+      "status": "unloaded"
+    }
+  ],
+  "css": {
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "sans": "",
+    "geist": "'Geist', 'Geist Fallback'"
+  },
+  "renderedFonts": {
+    "fonts": [
+      {
+        "familyName": "Noto Sans",
+        "postScriptName": "NotoSans-Regular",
+        "isCustomFont": false,
+        "glyphCount": 87
+      }
+    ]
+  },
+  "geometry": [
+    {
+      "width": 1440,
+      "scroll": 1440,
+      "client": 1440,
+      "clipped": []
+    },
+    {
+      "width": 768,
+      "scroll": 768,
+      "client": 768,
+      "clipped": []
+    },
+    {
+      "width": 375,
+      "scroll": 375,
+      "client": 375,
+      "clipped": [
+        {
+          "label": "DüşükNormalYüksekAcil",
+          "x": 319.40625,
+          "right": 419.40625,
+          "w": 100
+        },
+        {
+          "label": "Detay →",
+          "x": 439.40625,
+          "right": 521.25,
+          "w": 81.84375
+        },
+        {
+          "label": "",
+          "x": 541.25,
+          "right": 573.25,
+          "w": 32
+        },
+        {
+          "label": "DüşükNormalYüksekAcil",
+          "x": 319.40625,
+          "right": 419.40625,
+          "w": 100
+        },
+        {
+          "label": "Detay →",
+          "x": 439.40625,
+          "right": 521.25,
+          "w": 81.84375
+        },
+        {
+          "label": "",
+          "x": 541.25,
+          "right": 573.25,
+          "w": 32
+        },
+        {
+          "label": "DüşükNormalYüksekAcil",
+          "x": 319.40625,
+          "right": 419.40625,
+          "w": 100
+        },
+        {
+          "label": "Detay →",
+          "x": 439.40625,
+          "right": 521.25,
+          "w": 81.84375
+        },
+        {
+          "label": "",
+          "x": 541.25,
+          "right": 573.25,
+          "w": 32
+        },
+        {
+          "label": "DüşükNormalYüksekAcil",
+          "x": 319.40625,
+          "right": 419.40625,
+          "w": 100
+        },
+        {
+          "label": "Detay →",
+          "x": 439.40625,
+          "right": 521.25,
+          "w": 81.84375
+        },
+        {
+          "label": "",
+          "x": 541.25,
+          "right": 573.25,
+          "w": 32
+        },
+        {
+          "label": "DüşükNormalYüksekAcil",
+          "x": 319.40625,
+          "right": 419.40625,
+          "w": 100
+        },
+        {
+          "label": "Detay →",
+          "x": 439.40625,
+          "right": 521.25,
+          "w": 81.84375
+        },
+        {
+          "label": "",
+          "x": 541.25,
+          "right": 573.25,
+          "w": 32
+        },
+        {
+          "label": "DüşükNormalYüksekAcil",
+          "x": 319.40625,
+          "right": 419.40625,
+          "w": 100
+        },
+        {
+          "label": "Detay →",
+          "x": 439.40625,
+          "right": 521.25,
+          "w": 81.84375
+        },
+        {
+          "label": "",
+          "x": 541.25,
+          "right": 573.25,
+          "w": 32
+        }
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:3210/ofis",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791474287555",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/webpack.js?v=1791474287555",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/main-app.js?v=1791474287555",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app-pages-internals.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/layout.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/app/ofis/page.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/me",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/quotes",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/api/admin/dashboard-metrics",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/chunks/_app-pages-browser_node_modules_tanstack_query-devtools_build_DevtoolsComponent_7HGFFDPC_js.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/7d4881bb7e1bf84d-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/__nextjs_font/geist-latin.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/ofis?_rsc=PvU7qNoN0I5y05I7",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/d26213308d7d15fa.webpack.hot-update.json",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/app/layout.d26213308d7d15fa.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/webpack/webpack.d26213308d7d15fa.hot-update.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/css/app/layout.css?v=1791474293262",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/7d4881bb7e1bf84d-s.woff2",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3210/_next/static/media/22a5144ee8d83bca-s.woff2",
+      "method": "GET"
+    }
+  ]
+}

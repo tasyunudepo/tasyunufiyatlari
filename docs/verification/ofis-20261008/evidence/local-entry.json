@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": [
+    "Oturumsuz API kapalı",
+    "Yanlış Basic girişi kapalı",
+    "Doğrudan demo yönetici girişi",
+    "Doğrudan demo salt okunur girişi",
+    "Eski Basic bilgisi yerel yönetici oturumunu engellemez",
+    "Önbellekteki yönetici bilgisi seçili salt okunur rolü değiştirmez",
+    "Oturumsuz ve salt okunur yazma istekleri reddedildi",
+    "Şifresiz yerel giriş ve rol geçişleri",
+    "Eski Basic bilgisiyle tarayıcı girişi ve rol geçişleri"
+  ]
+}

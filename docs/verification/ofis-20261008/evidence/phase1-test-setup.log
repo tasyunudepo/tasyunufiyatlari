@@ -1,0 +1,31 @@
+ERROR:  column "quote_code" of relation "quotes" already exists
+node:internal/errors:999
+  const err = new Error(message);
+              ^
+
+Error: Command failed: psql -X -h /tmp/ofis-test-20261008/socket -p 55438 -U ofis_test_owner -d ofis_acceptance -qAt -v ON_ERROR_STOP=1
+ERROR:  column "quote_code" of relation "quotes" already exists
+
+    at genericNodeError (node:internal/errors:999:15)
+    at wrappedFn (node:internal/errors:544:14)
+    at checkExecSyncError (node:child_process:943:11)
+    at execFileSync (node:child_process:979:15)
+    at sql (file:///home/emrah/projeler/aktif/tasyunufiyatlari/.worktrees/ofis-redesign-20261008/scripts/ofis-test/db.mjs:8:9)
+    at apply (file:///home/emrah/projeler/aktif/tasyunufiyatlari/.worktrees/ofis-redesign-20261008/scripts/ofis-test/db.mjs:18:9)
+    at file:///home/emrah/projeler/aktif/tasyunufiyatlari/.worktrees/ofis-redesign-20261008/scripts/ofis-test/setup.mjs:9:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+    at async node:internal/modules/esm/loader:650:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5) {
+  status: 3,
+  signal: null,
+  output: [
+    null,
+    '',
+    'ERROR:  column "quote_code" of relation "quotes" already exists\n'
+  ],
+  pid: 3404597,
+  stdout: '',
+  stderr: 'ERROR:  column "quote_code" of relation "quotes" already exists\n'
+}
+
+Node.js v26.10.0

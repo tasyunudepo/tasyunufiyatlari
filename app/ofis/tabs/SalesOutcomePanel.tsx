@@ -41,9 +41,10 @@ interface SalesOutcomePanelProps {
     quote: SalesOutcomeQuote;
     controlClass: string;
     onSaved: () => void;
+    hideContact?: boolean;
 }
 
-export default function SalesOutcomePanel({ quote, controlClass, onSaved }: SalesOutcomePanelProps) {
+export default function SalesOutcomePanel({ quote, controlClass, onSaved, hideContact = false }: SalesOutcomePanelProps) {
     const { canMutate } = useAdminRole();
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -147,27 +148,27 @@ export default function SalesOutcomePanel({ quote, controlClass, onSaved }: Sale
         return (
             <div className="rounded-xl border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.05)] p-4" data-testid="sales-outcome-panel">
                 <h4 className="mb-3 font-semibold text-[var(--nx-gold)]">Satış Sonucu</h4>
-                <dl className="grid grid-cols-2 gap-3 text-sm">
+                <dl className="grid grid-cols-2 gap-3 text-base">
                     <div>
-                        <dt className="text-xs text-slate-400">Temas</dt>
+                        <dt className="text-sm text-slate-400">Teklifteki temas alanı</dt>
                         <dd className="text-white">
                             {quote.contact_attempted_at
                                 ? `${new Date(quote.contact_attempted_at).toLocaleString("tr-TR")}${quote.contact_successful === false ? " · ulaşılamadı" : ""}`
-                                : "Henüz temas kurulmadı"}
+                                : "Eski teklif alanında temas kaydı yok"}
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-xs text-slate-400">Takip tarihi</dt>
+                        <dt className="text-sm text-slate-400">Takip tarihi</dt>
                         <dd className="text-white">
                             {quote.follow_up_date ? new Date(quote.follow_up_date).toLocaleDateString("tr-TR") : "—"}
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-xs text-slate-400">İlgilenen kişi</dt>
+                        <dt className="text-sm text-slate-400">İlgilenen kişi</dt>
                         <dd className="text-white">{quote.quoted_by || "—"}</dd>
                     </div>
                     <div>
-                        <dt className="text-xs text-slate-400">Durum</dt>
+                        <dt className="text-sm text-slate-400">Durum</dt>
                         <dd className="text-white">
                             {quote.status === "completed"
                                 ? "Kazanıldı"
@@ -178,12 +179,12 @@ export default function SalesOutcomePanel({ quote, controlClass, onSaved }: Sale
                     </div>
                     {quote.admin_notes && (
                         <div className="col-span-2">
-                            <dt className="text-xs text-slate-400">Satış notu</dt>
+                            <dt className="text-sm text-slate-400">Satış notu</dt>
                             <dd className="whitespace-pre-wrap text-white">{quote.admin_notes}</dd>
                         </div>
                     )}
                 </dl>
-                <p className="mt-3 text-xs text-sky-200">Salt okunur hesap — bu alanlar değiştirilemez.</p>
+                <p className="mt-3 text-sm text-sky-200">Salt okunur hesap — bu alanlar değiştirilemez.</p>
             </div>
         );
     }
@@ -192,62 +193,63 @@ export default function SalesOutcomePanel({ quote, controlClass, onSaved }: Sale
         <div className="rounded-xl border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.05)] p-4" data-testid="sales-outcome-panel">
             <h4 className="mb-3 font-semibold text-[var(--nx-gold)]">Satış Sonucu</h4>
 
-            {/* Temas durumu */}
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+            <p className="mb-3 text-sm text-[var(--nx-text-muted)]">Aşağıdaki temas alanı teklifin eski özetidir. Görüşme geçmişi ve son girişim yukarıda ayrı gösterilir.</p>
+            {/* Proje akışında yeni atomik görüşme defteri kullanılır. */}
+            {!hideContact && <div className="mb-4 flex flex-wrap items-center gap-2 text-base">
                 {quote.contact_attempted_at ? (
-                    <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
+                    <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-200">
                         Temas: {new Date(quote.contact_attempted_at).toLocaleString("tr-TR")}
                         {firstContactHours != null && ` (kayıttan ${firstContactHours} saat sonra)`}
                         {quote.contact_successful === false && " · ulaşılamadı"}
                     </span>
                 ) : (
                     <>
-                        <span className="rounded-full border border-red-400/30 bg-red-400/10 px-3 py-1 text-xs text-red-200">
-                            Henüz temas kurulmadı
+                        <span className="rounded-full border border-red-400/30 bg-red-400/10 px-3 py-1 text-sm text-red-200">
+                            Eski teklif alanında temas kaydı yok
                         </span>
                         <button type="button" disabled={saving} onClick={() => handleContact(true)}
-                            className={`${controlClass} px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-400/10`}>
+                            className={`${controlClass} px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-400/10`}>
                             Ulaştım
                         </button>
                         <button type="button" disabled={saving} onClick={() => handleContact(false)}
-                            className={`${controlClass} px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-400/10`}>
+                            className={`${controlClass} px-3 py-1.5 text-sm font-semibold text-amber-300 hover:bg-amber-400/10`}>
                             Ulaşamadım
                         </button>
                     </>
                 )}
-            </div>
+            </div>}
 
             {/* Takip + satış alanları */}
-            <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
+            <div className="mb-4 grid grid-cols-2 gap-3 text-base">
                 <label className="block">
-                    <span className="text-xs text-slate-400">Takip tarihi</span>
+                    <span className="text-sm text-slate-400">Takip tarihi</span>
                     <input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)}
-                        className={`${controlClass} mt-1 w-full px-3 py-2 text-sm [color-scheme:dark]`} />
+                        className={`${controlClass} mt-1 w-full px-3 py-2 text-base [color-scheme:dark]`} />
                 </label>
                 <label className="block">
-                    <span className="text-xs text-slate-400">İlgilenen kişi</span>
+                    <span className="text-sm text-slate-400">İlgilenen kişi</span>
                     <input type="text" value={quotedBy} onChange={(e) => setQuotedBy(e.target.value)} placeholder="örn. Emrah"
-                        className={`${controlClass} mt-1 w-full px-3 py-2 text-sm`} />
+                        className={`${controlClass} mt-1 w-full px-3 py-2 text-base`} />
                 </label>
                 <label className="block">
-                    <span className="text-xs text-slate-400">Satışçı nihai fiyatı (KDV hariç ₺)</span>
+                    <span className="text-sm text-slate-400">Satışçı nihai fiyatı (KDV hariç ₺)</span>
                     <input type="text" inputMode="decimal" value={salesFinalPrice} onChange={(e) => setSalesFinalPrice(e.target.value)}
-                        className={`${controlClass} mt-1 w-full px-3 py-2 text-sm`} />
+                        className={`${controlClass} mt-1 w-full px-3 py-2 text-base`} />
                 </label>
                 <label className="col-span-2 block">
-                    <span className="text-xs text-slate-400">Satış notu</span>
+                    <span className="text-sm text-slate-400">Satış notu</span>
                     <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={2}
-                        className={`${controlClass} mt-1 w-full px-3 py-2 text-sm`} />
+                        className={`${controlClass} mt-1 w-full px-3 py-2 text-base`} />
                 </label>
             </div>
             <button type="button" disabled={saving} onClick={handleSaveFields}
-                className={`${controlClass} mb-5 px-4 py-2 text-xs font-semibold hover:bg-[rgba(255,255,255,0.06)]`}>
+                className={`${controlClass} mb-5 px-4 py-2 text-sm font-semibold hover:bg-[rgba(255,255,255,0.06)]`}>
                 {saving ? "Kaydediliyor…" : "Alanları kaydet"}
             </button>
 
             {/* Kapanış */}
             {isClosed ? (
-                <div className="rounded-lg border border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] p-3 text-sm">
+                <div className="rounded-lg border border-[rgba(92,98,108,0.24)] bg-[rgba(255,255,255,0.03)] p-3 text-base">
                     {quote.status === "completed" ? (
                         <p className="text-emerald-300">
                             ✓ Kazanıldı{quote.closed_at && ` · ${new Date(quote.closed_at).toLocaleDateString("tr-TR")}`}
@@ -264,21 +266,21 @@ export default function SalesOutcomePanel({ quote, controlClass, onSaved }: Sale
             ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-lg border border-emerald-400/25 bg-emerald-400/5 p-3">
-                        <p className="mb-2 text-xs font-semibold text-emerald-300">KAZANILDI olarak kapat</p>
+                        <p className="mb-2 text-sm font-semibold text-emerald-300">KAZANILDI olarak kapat</p>
                         <label className="block">
-                            <span className="text-xs text-slate-400">Brüt kâr (₺)</span>
+                            <span className="text-sm text-slate-400">Brüt kâr (₺)</span>
                             <input type="text" inputMode="decimal" value={grossProfit} onChange={(e) => setGrossProfit(e.target.value)}
-                                className={`${controlClass} mt-1 w-full px-3 py-2 text-sm`} />
+                                className={`${controlClass} mt-1 w-full px-3 py-2 text-base`} />
                         </label>
                         <button type="button" disabled={saving} onClick={handleWon}
-                            className="mt-2 w-full rounded-lg bg-emerald-500/90 px-3 py-2 text-xs font-bold text-black transition-colors hover:bg-emerald-400">
+                            className="mt-2 w-full rounded-lg bg-emerald-500/90 px-3 py-2 text-sm font-bold text-black transition-colors hover:bg-emerald-400">
                             Kazanıldı ✓
                         </button>
                     </div>
                     <div className="rounded-lg border border-red-400/25 bg-red-400/5 p-3">
-                        <p className="mb-2 text-xs font-semibold text-red-300">KAYBEDİLDİ olarak kapat</p>
+                        <p className="mb-2 text-sm font-semibold text-red-300">KAYBEDİLDİ olarak kapat</p>
                         <select value={lossCategory} onChange={(e) => setLossCategory(e.target.value)}
-                            className={`${controlClass} w-full px-3 py-2 text-sm [color-scheme:dark]`}>
+                            className={`${controlClass} w-full px-3 py-2 text-base [color-scheme:dark]`}>
                             <option value="">Kayıp nedeni seçin…</option>
                             {Object.entries(LOSS_CATEGORY_LABELS).map(([value, label]) => (
                                 <option key={value} value={value}>{label}</option>
@@ -286,16 +288,16 @@ export default function SalesOutcomePanel({ quote, controlClass, onSaved }: Sale
                         </select>
                         <input type="text" value={lossReason} onChange={(e) => setLossReason(e.target.value)}
                             placeholder="Kısa not (opsiyonel)"
-                            className={`${controlClass} mt-2 w-full px-3 py-2 text-sm`} />
+                            className={`${controlClass} mt-2 w-full px-3 py-2 text-base`} />
                         <button type="button" disabled={saving} onClick={handleLost}
-                            className="mt-2 w-full rounded-lg bg-red-500/80 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-red-400">
+                            className="mt-2 w-full rounded-lg bg-red-500/80 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-red-400">
                             Kaybedildi ✗
                         </button>
                     </div>
                 </div>
             )}
 
-            {error && <p className="mt-3 text-xs text-red-300">{error}</p>}
+            {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
         </div>
     );
 }

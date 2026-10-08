@@ -1,0 +1,25 @@
+{
+  "quoteId": 27,
+  "project": {
+    "ok": true,
+    "taskId": "9eef0145-6fe8-47b6-9a2b-2ea5a3571f0b",
+    "replayed": false,
+    "projectId": "114e324f-34a5-4328-8c76-3fb335d76ea6"
+  },
+  "followups": [
+    {
+      "ok": true,
+      "taskId": "d8455a3e-7954-40fb-93ea-2c91a66cd32b",
+      "replayed": false,
+      "projectId": "dfd0c9ef-252a-4302-abdc-8f8098fc745c"
+    },
+    {
+      "ok": true,
+      "taskId": "55231bc4-d027-4cb4-b23d-361822065fc9",
+      "replayed": false,
+      "projectId": "85427b77-de6f-4d2e-821e-ad196f42b894"
+    }
+  ],
+  "synthetic": true,
+  "productionWrites": 0
+}

@@ -1,0 +1,13 @@
+Yeni tabloların etkin ACL kontrolü geçti; işlem defteri SELECT/INSERT, eski tablo ACL’leri aynı.
+Alternatifler tek ilk temas işinde; tutar kayıtlı revizyondan gelir, istemci tutarı reddedilir, revize otomatik değer değiştirmez ve satış aşaması değişmez.
+8 eşzamanlı aynı işlem → tek görüşme, tek işlem ve tek görev geçişi; aynı anahtarla farklı içerik 409.
+Başarılı görüşmeden sonraki başarısız girişim önceki başarıyı ve ilk başarı tarihini korur.
+Journal ve görüşme INSERT sonrası görev UPDATE tetikleyicisi hata verdi: hiçbir kısmi kayıt kalmadı; aynı anahtarla tekrar deneme başarılı.
+Sunucu commit sonrası HTTP cevabı kesildi; tekrar deneme aynı görevi döndürdü ve yeni kayıt üretmedi.
+ERROR:  permission denied for table office_operations
+ERROR:  permission denied for table office_operations
+ERROR:  permission denied for table office_operations
+Anonim, bilinmeyen ve patron HTTP yazamaz; anon/authenticated RPC çağıramaz; service_role defteri UPDATE/DELETE/TRUNCATE edemez.
+ERROR:  Yeni iş verisi var: silerek geri alma reddedildi; uygulama bayrağını kapatın
+CONTEXT:  PL/pgSQL function inline_code_block line 11 at RAISE
+Tıklama/kopyalama görevi veya teması değiştirmez. Yeni veri varken ham rollback silmeyi reddeder; veri korunur.

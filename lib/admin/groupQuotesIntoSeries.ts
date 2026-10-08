@@ -46,7 +46,7 @@ export interface QuoteRow {
 }
 
 export interface QuoteSeries<T extends QuoteRow = QuoteRow> {
-  /** Liste içinde unique anahtar (React key) — telefon + ilk timestamp */
+  /** Liste içinde unique anahtar: telefon, ilk timestamp ve ilk teklif kimliği. */
   seriesKey: string;
   /** Telefonsuz seriler için 'no_phone' marker'ı */
   customerPhone: string;
@@ -245,7 +245,7 @@ function buildSeries<T extends QuoteRow>(phone: string, quotes: T[]): QuoteSerie
   const cityName = first.city_name ?? undefined;
   const materialType = first.material_type ?? undefined;
 
-  const seriesKey = `${phone}-${new Date(startedAt).getTime()}`;
+  const seriesKey = `${phone}-${new Date(startedAt).getTime()}-${first.id}`;
 
   return {
     seriesKey,

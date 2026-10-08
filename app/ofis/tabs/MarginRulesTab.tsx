@@ -91,7 +91,7 @@ export function MarginRulesTab() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Marj Kuralları</h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-base text-slate-400">
               Mantolama wizard&apos;ında uygulanan hacim-bazlı kâr marjı kademeleri ve
               tam-araç kuralı. Değişiklikler anında geçerli olur (sayfa yenilemesi gerekir).
             </p>
@@ -113,32 +113,32 @@ export function MarginRulesTab() {
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <h3 className="text-base font-semibold text-white">{mt.name}</h3>
-                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300">
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-sm font-medium uppercase tracking-wider text-amber-300">
                   {mt.slug}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {successId === mt.id && (
-                  <span className="text-xs font-medium text-emerald-400">✓ Kaydedildi</span>
+                  <span className="text-sm font-medium text-emerald-400">✓ Kaydedildi</span>
                 )}
                 {canMutate ? (
                   <button
                     type="button"
                     onClick={() => save(mt.id)}
                     disabled={!dirty || saving[mt.id]}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-sm font-semibold text-amber-100 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <Save className="h-3.5 w-3.5" />
                     {saving[mt.id] ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>
                 ) : (
-                  <span className="text-xs text-sky-200">Salt okunur</span>
+                  <span className="text-sm text-sky-200">Salt okunur</span>
                 )}
               </div>
             </div>
 
             {errors[mt.id] && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{errors[mt.id]}</span>
               </div>
@@ -152,7 +152,7 @@ export function MarginRulesTab() {
             {isEps && (
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <label className="mb-1.5 block text-sm font-medium uppercase tracking-wide text-slate-400">
                     Minimum Sipariş (m²)
                   </label>
                   <input
@@ -160,77 +160,77 @@ export function MarginRulesTab() {
                     min={0}
                     value={v('min_order_m2') ?? ''}
                     onChange={(e) => setField(mt.id, 'min_order_m2', e.target.value === '' ? null : Number(e.target.value))}
-                    className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                    className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                   />
-                  <p className="mt-1 text-[11px] text-[var(--nx-text-muted)]">Bu metrajın altındaki siparişlerde teklif alınmaz.</p>
+                  <p className="mt-1 text-sm text-[var(--nx-text-muted)]">Bu metrajın altındaki siparişlerde teklif alınmaz.</p>
                 </div>
 
                 <div className="rounded-lg border border-slate-700/50 bg-slate-900/30 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
                     Kademe 1 — düşük metraj
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1 block text-[11px] text-slate-400">Üst sınır (m²)</label>
+                      <label className="mb-1 block text-sm text-slate-400">Üst sınır (m²)</label>
                       <input
                         type="number"
                         value={v('tier1_max_m2') ?? ''}
                         onChange={(e) => setField(mt.id, 'tier1_max_m2', e.target.value === '' ? null : Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-[11px] text-slate-400">Marj (%)</label>
+                      <label className="mb-1 block text-sm text-slate-400">Marj (%)</label>
                       <input
                         type="number"
                         step="0.5"
                         value={v('tier1_margin_pct') ?? ''}
                         onChange={(e) => setField(mt.id, 'tier1_margin_pct', e.target.value === '' ? null : Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="rounded-lg border border-slate-700/50 bg-slate-900/30 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
                     Kademe 2 — orta metraj
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1 block text-[11px] text-slate-400">Üst sınır (m²)</label>
+                      <label className="mb-1 block text-sm text-slate-400">Üst sınır (m²)</label>
                       <input
                         type="number"
                         value={v('tier2_max_m2') ?? ''}
                         onChange={(e) => setField(mt.id, 'tier2_max_m2', e.target.value === '' ? null : Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-[11px] text-slate-400">Marj (%)</label>
+                      <label className="mb-1 block text-sm text-slate-400">Marj (%)</label>
                       <input
                         type="number"
                         step="0.5"
                         value={v('tier2_margin_pct') ?? ''}
                         onChange={(e) => setField(mt.id, 'tier2_margin_pct', e.target.value === '' ? null : Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="rounded-lg border border-slate-700/50 bg-slate-900/30 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
                     Kademe 3 — yüksek metraj (üst sınırsız)
                   </p>
                   <div>
-                    <label className="mb-1 block text-[11px] text-slate-400">Marj (%)</label>
+                    <label className="mb-1 block text-sm text-slate-400">Marj (%)</label>
                     <input
                       type="number"
                       step="0.5"
                       value={v('tier3_margin_pct') ?? ''}
                       onChange={(e) => setField(mt.id, 'tier3_margin_pct', e.target.value === '' ? null : Number(e.target.value))}
-                      className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                      className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -249,11 +249,11 @@ export function MarginRulesTab() {
                       className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-amber-500 focus:ring-amber-500"
                     />
                     <div>
-                      <p className="flex items-center gap-1.5 text-sm font-semibold text-white">
+                      <p className="flex items-center gap-1.5 text-base font-semibold text-white">
                         <Truck className="h-3.5 w-3.5 text-slate-400" />
                         Tam-araç kuralı aktif
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-400">
+                      <p className="mt-0.5 text-sm text-slate-400">
                         Açıkken yalnızca tam Kamyon, tam TIR ya da bunların kombinasyonları kabul edilir;
                         ara metrajlar wizard&apos;da bloklanır.
                       </p>
@@ -262,43 +262,43 @@ export function MarginRulesTab() {
                 </div>
 
                 <div className="rounded-lg border border-slate-700/50 bg-slate-900/30 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
                     Kâr Marjı (sabit, kademe yok)
                   </p>
                   <div>
-                    <label className="mb-1 block text-[11px] text-slate-400">Marj (%)</label>
+                    <label className="mb-1 block text-sm text-slate-400">Marj (%)</label>
                     <input
                       type="number"
                       step="0.5"
                       value={v('tier3_margin_pct') ?? ''}
                       onChange={(e) => setField(mt.id, 'tier3_margin_pct', e.target.value === '' ? null : Number(e.target.value))}
-                      className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                      className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="rounded-lg border border-slate-700/50 bg-slate-900/30 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
                     Büyük Metraj — Özel Teklif
                   </p>
                   <div className="space-y-3">
                     <div>
-                      <label className="mb-1 block text-[11px] text-slate-400">Eşik (m²)</label>
+                      <label className="mb-1 block text-sm text-slate-400">Eşik (m²)</label>
                       <input
                         type="number"
                         value={v('special_order_threshold_m2') ?? ''}
                         onChange={(e) => setField(mt.id, 'special_order_threshold_m2', e.target.value === '' ? null : Number(e.target.value))}
-                        className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
+                        className="w-32 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-base text-white tabular-nums focus:border-amber-500/60 focus:outline-none"
                         placeholder="örn. 10000"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-[11px] text-slate-400">Bilgi notu (UI rozeti + PDF)</label>
+                      <label className="mb-1 block text-sm text-slate-400">Bilgi notu (UI rozeti + PDF)</label>
                       <textarea
                         rows={4}
                         value={v('special_order_note') ?? ''}
                         onChange={(e) => setField(mt.id, 'special_order_note', e.target.value)}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-white focus:border-amber-500/60 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white focus:border-amber-500/60 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -307,7 +307,7 @@ export function MarginRulesTab() {
             )}
 
             {!isEps && !isTasyunu && (
-              <p className="text-sm text-[var(--nx-text-muted)]">Bu malzeme tipi için marj kuralı tanımlanmadı.</p>
+              <p className="text-base text-[var(--nx-text-muted)]">Bu malzeme tipi için marj kuralı tanımlanmadı.</p>
             )}
 
             </fieldset>
@@ -317,7 +317,7 @@ export function MarginRulesTab() {
 
       {items.length === 0 && (
         <div className="admin-nexus-panel p-6">
-          <p className="text-sm text-[var(--nx-text-muted)]">Malzeme tipi bulunamadı.</p>
+          <p className="text-base text-[var(--nx-text-muted)]">Malzeme tipi bulunamadı.</p>
         </div>
       )}
     </div>
