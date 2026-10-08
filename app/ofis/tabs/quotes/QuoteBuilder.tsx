@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     AlertTriangle,
@@ -9,6 +9,7 @@ import {
     Download,
     FileText,
     Layers,
+    PencilLine,
     Truck,
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ import {
 //   · marj kadranı çevrilir, tüm fiyatlar yeniden üretilir
 //   · kâr, site farkı ve paket artığı kaydetmeden önce görünür
 //   · var olan teklif çoğaltılır, metraj değişince miktarlar yeniden hesaplanır
+//   · ofis teklifi REVİZE edilir: aynı numarayla yerinde güncellenir
 //
 // Kayıt yolu public teklif akışından ayrıdır (submit_quote_guarded hız limiti
 // ve zorunlu KVKK rızası operatör akışıyla bağdaşmıyor).
@@ -73,6 +75,8 @@ type Sonuc =
         tip: "basarili";
         quoteId: number;
         quoteCode: string;
+        /** Yeni kayıt mı, var olan teklifin revizyonu mu. */
+        revize: boolean;
         /** Tarayıcıda üretilen PDF — kaydedilemese bile indirilebilir. */
         pdfBlobUrl: string | null;
         pdfFilename: string | null;
@@ -81,7 +85,13 @@ type Sonuc =
     }
     | { tip: "hata"; mesaj: string; uyarilar?: string[]; onayGerekli?: boolean };
 
-export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
+/** Listeden gelen yükleme isteği: teklifi revize et ya da çoğalt. */
+export interface QuoteBuilderSeed {
+    mode: "revize" | "cogalt";
+    source: DuplicateSource;
+}
+
+export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: QuoteBuilderSeed | null }) {
     const { canMutate } = useAdminRole();
     const { refresh } = useAdminQuotes();
     const queryClient = useQueryClient();
@@ -117,6 +127,8 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
     const [saving, setSaving] = useState(false);
     const [sonuc, setSonuc] = useState<Sonuc>({ tip: "yok" });
     const [overrideReason, setOverrideReason] = useState("");
+    // Revize kipi: doluysa kayıt yeni teklif açmaz, bu teklifi günceller.
+    const [revize, setRevize] = useState<{ quoteId: number; quoteCode: string } | null>(null);
 
     const areaNum = Number(areaM2.replace(",", ".")) || 0;
     const editor = useQuoteEditor(areaNum);
@@ -353,25 +365,62 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
         setSetDialogAcik(false);
     }
 
-    /** Var olan teklifi kalemleriyle yükler — "kopyala, metrajı değiştir". */
-    const handleDuplicate = useCallback(
-        (kaynak: DuplicateSource) => {
+    /**
+     * Var olan teklifi ekrana yükler — çoğaltma ve revize aynı yoldan geçer.
+     *
+     * Müşteri ve şehir de gelir (8 Ekim 2026 kullanıcı kararı): ilk hâli
+     * yalnız sepeti taşıyordu ve aynı müşteriye ikinci teklif yazarken ad,
+     * telefon ve şehir tek tek yeniden giriliyordu.
+     */
+    const yukle = useCallback(
+        (kaynak: DuplicateSource, mod: "revize" | "cogalt") => {
             editor.setLines(kaynak.lines);
             editor.setDiscountPct(kaynak.discountPct);
             editor.setShippingCharge(kaynak.shippingCharge);
             setMaterialType(kaynak.materialType);
-            if (kaynak.title) setTitle(kaynak.title);
-            if (kaynak.areaM2 > 0) setAreaM2(String(kaynak.areaM2).replace(".", ","));
+            setTitle(kaynak.title ?? "");
+            setNotes(kaynak.notes ?? "");
+            setAreaM2(kaynak.areaM2 > 0 ? String(kaynak.areaM2).replace(".", ",") : "");
+            setCustomerName(kaynak.customerName);
+            setCustomerPhone(kaynak.customerPhone);
+            setCustomerCompany(kaynak.customerCompany);
+            setCustomerEmail(kaynak.customerEmail);
+            if (kaynak.cityCode) setCityCode(kaynak.cityCode);
+            if (kaynak.consentChannel) setConsentChannel(kaynak.consentChannel);
+            if (kaynak.validityDays) setValidityDays(kaynak.validityDays);
+            if (kaynak.shippingMode) setShippingMode(kaynak.shippingMode);
+            setOverrideReason("");
+            setSonuc({ tip: "yok" });
+            // Yalnız ofis teklifi yerinde güncellenir; sitedeki sihirbazdan
+            // gelen kayıt müşterinin kendi talebidir, üstüne yazılmaz.
+            setRevize(
+                mod === "revize" && kaynak.quoteId != null && kaynak.requestType === "manual_quote"
+                    ? { quoteId: kaynak.quoteId, quoteCode: kaynak.quoteCode ?? `#${kaynak.quoteId}` }
+                    : null,
+            );
             setCogaltDialogAcik(false);
-            // Müşteri bilgisi BİLEREK taşınmaz — çoğaltılan şey sepet, kişi değil.
         },
         [editor],
     );
+
+    const handleDuplicate = useCallback(
+        (kaynak: DuplicateSource) => yukle(kaynak, "cogalt"),
+        [yukle],
+    );
+
+    // Listeden "Revize et" / "Çoğalt" ile gelindiyse teklif açılışta yüklenir.
+    const yuklenenSeed = useRef<QuoteBuilderSeed | null>(null);
+    useEffect(() => {
+        if (!seed || yuklenenSeed.current === seed) return;
+        yuklenenSeed.current = seed;
+        yukle(seed.source, seed.mode);
+    }, [seed, yukle]);
 
     async function handleSave(overrideOnay = false) {
         setSaving(true);
         setSonuc({ tip: "yok" });
 
+        const revizeHedefi = revize;
         const payload = {
             customerName: customerName.trim(),
             customerPhone: customerPhone.trim(),
@@ -414,10 +463,14 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
         };
 
         try {
+            // Revizede aynı uç PUT ile çağrılır: teklif numarası değişmez,
+            // kayıt yerinde güncellenir.
             const res = await fetch("/api/admin/quotes/manual", {
-                method: "POST",
+                method: revizeHedefi ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(
+                    revizeHedefi ? { ...payload, quoteId: revizeHedefi.quoteId } : payload,
+                ),
             });
             const json = await res.json().catch(() => null);
 
@@ -428,7 +481,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
             if (!res.ok || !json?.ok) {
                 setSonuc({
                     tip: "hata",
-                    mesaj: json?.error ?? `Teklif kaydedilemedi (HTTP ${res.status}).`,
+                    mesaj: json?.error ?? `Teklif ${revizeHedefi ? "revize edilemedi" : "kaydedilemedi"} (HTTP ${res.status}).`,
                 });
                 return;
             }
@@ -493,6 +546,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 tip: "basarili",
                 quoteId: json.quoteId,
                 quoteCode: json.quoteCode,
+                revize: revizeHedefi != null,
                 pdfBlobUrl,
                 pdfFilename,
                 pdfUyarisi,
@@ -510,6 +564,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
         setCustomerName(""); setCustomerPhone(""); setCustomerCompany(""); setCustomerEmail("");
         setTitle(""); setNotes(""); setAreaM2("");
         setOverrideReason("");
+        setRevize(null);
         setSonuc({ tip: "yok" });
     }
 
@@ -527,7 +582,9 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                 <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-300" />
                     <div>
-                        <h3 className="text-lg font-semibold text-white">Teklif kaydedildi</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                            {sonuc.revize ? "Teklif revize edildi" : "Teklif kaydedildi"}
+                        </h3>
                         <p className="mt-1 text-sm text-emerald-200">
                             Teklif no: <span className="font-mono">{sonuc.quoteCode}</span>
                         </p>
@@ -568,7 +625,9 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                         )}
 
                         <p className="mt-3 text-[11px] text-emerald-200/70">
-                            Teklif listede &ldquo;Ofis&rdquo; kanalı ve &ldquo;Teklif Verildi&rdquo; durumuyla görünür.
+                            {sonuc.revize
+                                ? "Teklif numarası aynı kaldı; listedeki kayıt ve PDF yeni hâliyle güncellendi."
+                                : <>Teklif listede &ldquo;Ofis&rdquo; kanalı ve &ldquo;Teklif Verildi&rdquo; durumuyla görünür.</>}
                         </p>
                     </div>
                 </div>
@@ -582,7 +641,9 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
             <div className="rounded-2xl border border-[rgba(92,98,108,0.24)] bg-[rgba(13,15,18,0.7)] p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <h3 className="text-base font-semibold text-white">Yeni Teklif</h3>
+                        <h3 className="text-base font-semibold text-white">
+                            {revize ? "Teklif Revizyonu" : "Yeni Teklif"}
+                        </h3>
                         <p className="mt-0.5 text-xs text-slate-400">
                             Fiyatlar şehir/araç iskontosu ve marj kuralıyla gelir; her kalem yine tek tek düzenlenebilir.
                         </p>
@@ -597,6 +658,29 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                         Teklifi çoğalt
                     </button>
                 </div>
+
+                {revize && (
+                    <div
+                        data-testid="revize-banner"
+                        className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-400/30 bg-sky-400/10 px-3 py-2"
+                    >
+                        <p className="flex items-center gap-2 text-xs text-sky-100">
+                            <PencilLine className="h-3.5 w-3.5 shrink-0" />
+                            <span>
+                                <span className="font-mono font-semibold">{revize.quoteCode}</span> revize ediliyor.
+                                Kaydedince aynı numarayla güncellenir, yeni teklif açılmaz.
+                            </span>
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setRevize(null)}
+                            data-testid="revize-cik"
+                            className="rounded-lg border border-sky-400/30 px-2.5 py-1 text-[11px] font-semibold text-sky-100 transition-colors hover:bg-sky-400/15"
+                        >
+                            Yeni teklif olarak kaydet
+                        </button>
+                    </div>
+                )}
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <label className="block">
@@ -922,7 +1006,7 @@ export function QuoteBuilder({ onSaved }: { onSaved?: () => void }) {
                         data-testid="manual-quote-save"
                         className="mt-4 w-full rounded-xl bg-[var(--nx-gold)] px-4 py-2.5 text-sm font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                        {saving ? "Kaydediliyor…" : "Teklifi kaydet"}
+                        {saving ? "Kaydediliyor…" : revize ? "Revizyonu kaydet" : "Teklifi kaydet"}
                     </button>
                 </div>
             </div>

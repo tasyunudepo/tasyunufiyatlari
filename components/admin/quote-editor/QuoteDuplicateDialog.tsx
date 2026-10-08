@@ -20,15 +20,39 @@ import type { TechnicalConsumptionUnit } from "@/lib/types";
 // karşılığıdır: sepet gelir, metraj değişince miktarlar kendiliğinden
 // yeniden hesaplanır (useQuoteEditor.rescaleQuantities).
 //
-// Müşteri bilgisi BİLEREK taşınmaz — çoğaltılan şey sepettir, kişi değil.
+// Müşteri ve şehir bilgisi DE taşınır (8 Ekim 2026 kullanıcı kararı). İlk
+// hâli yalnız sepeti getiriyordu; aynı müşteriye ikinci marka için teklif
+// yazarken ad, telefon ve şehir tek tek yeniden giriliyordu.
+
+export type QuoteShippingMode =
+  | "included_in_sale_price"
+  | "buyer_pays"
+  | "separate_quote_required";
+
+export type QuoteConsentChannel = "telefon" | "yuz_yuze" | "eposta" | "whatsapp";
 
 export interface DuplicateSource {
+  /** Kaynak teklifin kimliği — revizede hangi kaydın güncelleneceği. */
+  quoteId: number | null;
+  quoteCode: string | null;
+  /** `manual_quote` = ofis teklifi; yalnız o revize edilebilir. */
+  requestType: string | null;
   lines: EditorLine[];
   areaM2: number;
   title: string | null;
+  notes: string | null;
   discountPct: number;
   shippingCharge: number;
+  /** Kayıtta yoksa null — ekrandaki seçim korunur, uydurulmaz. */
+  shippingMode: QuoteShippingMode | null;
+  validityDays: number | null;
   materialType: "tasyunu" | "eps" | "karma";
+  customerName: string;
+  customerPhone: string;
+  customerCompany: string;
+  customerEmail: string;
+  cityCode: string;
+  consentChannel: QuoteConsentChannel | null;
 }
 
 interface KayitliKalem {
@@ -39,6 +63,7 @@ interface KayitliKalem {
   listUnitPrice?: number;
   lineDiscountPct?: number;
   isPlate?: boolean;
+  thicknessCm?: number | null;
   packageCount?: number | null;
   catalogKey?: string | null;
   kind?: string;
@@ -55,8 +80,21 @@ function toKind(raw: unknown): Kind {
   return KINDS.includes(raw as Kind) ? (raw as Kind) : "serbest";
 }
 
+/**
+ * Levha kalınlığı. Eski kayıtlarda satırda saklanmıyordu; katalog anahtarı
+ * (`levha-42-4`) ya da teklifin kendi kalınlık kolonu aynı bilgiyi taşır.
+ * Kalınlık kaybolursa toz grubunda dübel boyu yanlış seçilir.
+ */
+function levhaKalinligi(k: KayitliKalem, teklifKalinligi: number | null): number | null {
+  if (k.isPlate !== true) return null;
+  if (k.thicknessCm != null && Number(k.thicknessCm) > 0) return Number(k.thicknessCm);
+  const anahtardan = /^levha-\d+-(\d+(?:\.\d+)?)$/.exec(String(k.catalogKey ?? ""))?.[1];
+  if (anahtardan) return Number(anahtardan);
+  return teklifKalinligi != null && teklifKalinligi > 0 ? teklifKalinligi : null;
+}
+
 /** Kayıtlı `package_items` satırını editör satırına çevirir. */
-function kalemdenSatir(k: KayitliKalem): EditorLine | null {
+function kalemdenSatir(k: KayitliKalem, teklifKalinligi: number | null = null): EditorLine | null {
   const ad = String(k.name ?? "").trim();
   const miktar = Number(k.quantity ?? 0);
   if (!ad || !(miktar > 0)) return null;
@@ -74,12 +112,84 @@ function kalemdenSatir(k: KayitliKalem): EditorLine | null {
     unitPrice: Number(k.listUnitPrice ?? k.unitPrice ?? 0),
     lineDiscountPct: Number(k.lineDiscountPct ?? 0),
     isPlate: k.isPlate === true,
+    thicknessCm: levhaKalinligi(k, teklifKalinligi),
     packageCount: k.packageCount ?? null,
     suggestedUnitPrice: Number(k.listUnitPrice ?? k.unitPrice ?? 0) || null,
     netCost: k.netCost != null && k.netCost > 0 ? Number(k.netCost) : null,
     consumptionRate: k.consumptionRate != null ? Number(k.consumptionRate) : null,
     consumptionUnit: k.consumptionUnit ?? null,
     unitContent: k.unitContent != null ? Number(k.unitContent) : null,
+  };
+}
+
+const SHIPPING_MODES: QuoteShippingMode[] = [
+  "included_in_sale_price",
+  "buyer_pays",
+  "separate_quote_required",
+];
+const CONSENT_CHANNELS: QuoteConsentChannel[] = ["telefon", "yuz_yuze", "eposta", "whatsapp"];
+
+const duzMetin = (v: unknown): string => (v == null ? "" : String(v).trim());
+
+/**
+ * Başlıksız ofis teklifinin `package_name` kolonuna "Ofis teklifi" yazılır.
+ * Bu yer tutucu başlık diye geri yüklenirse PDF'te "Seçilen Sistem" satırı
+ * levha adı yerine "Ofis teklifi" çıkar (TE-2026-000241'de böyle oldu).
+ */
+function teklifBasligi(ham: string | null | undefined): string | null {
+  const baslik = duzMetin(ham);
+  return baslik && baslik.toLocaleLowerCase("tr-TR") !== "ofis teklifi" ? baslik : null;
+}
+
+/**
+ * Kayıtlı teklifi editörün yükleyebileceği kaynağa çevirir — çoğaltma ve
+ * revize aynı kaynağı kullanır. Kalemi olmayan teklif için null döner.
+ */
+export function quoteToDuplicateSource(teklif: Record<string, unknown>): DuplicateSource | null {
+  const pi = teklif.package_items as
+    | {
+        items?: KayitliKalem[];
+        manual?: {
+          discountPct?: number;
+          shippingCharge?: number;
+          shippingMode?: string | null;
+          validityDays?: number | null;
+          title?: string | null;
+          notes?: string | null;
+        };
+      }
+    | null;
+  const teklifKalinligi = Number(teklif.thickness_cm ?? 0) || null;
+  const satirlar = (pi?.items ?? [])
+    .map((k) => kalemdenSatir(k, teklifKalinligi))
+    .filter((s): s is EditorLine => s != null);
+  if (satirlar.length === 0) return null;
+
+  const malzeme = String(teklif.material_type ?? "karma");
+  const id = Number(teklif.id);
+  const nakliyeModu = pi?.manual?.shippingMode as QuoteShippingMode | undefined;
+  const kanal = teklif.consent_channel as QuoteConsentChannel | undefined;
+  const gecerlilik = Number(pi?.manual?.validityDays ?? 0);
+
+  return {
+    quoteId: Number.isSafeInteger(id) && id > 0 ? id : null,
+    quoteCode: duzMetin(teklif.quote_code) || null,
+    requestType: duzMetin(teklif.request_type) || null,
+    lines: satirlar,
+    areaM2: Number(teklif.area_m2 ?? 0),
+    title: teklifBasligi(pi?.manual?.title ?? (teklif.package_name as string | null)),
+    notes: pi?.manual?.notes ?? null,
+    discountPct: Number(pi?.manual?.discountPct ?? teklif.discount_percentage ?? 0),
+    shippingCharge: Number(pi?.manual?.shippingCharge ?? 0),
+    shippingMode: nakliyeModu && SHIPPING_MODES.includes(nakliyeModu) ? nakliyeModu : null,
+    validityDays: gecerlilik >= 1 && gecerlilik <= 90 ? Math.round(gecerlilik) : null,
+    materialType: malzeme === "tasyunu" || malzeme === "eps" ? malzeme : "karma",
+    customerName: duzMetin(teklif.customer_name),
+    customerPhone: duzMetin(teklif.customer_phone),
+    customerCompany: duzMetin(teklif.customer_company),
+    customerEmail: duzMetin(teklif.customer_email),
+    cityCode: duzMetin(teklif.city_code),
+    consentChannel: kanal && CONSENT_CHANNELS.includes(kanal) ? kanal : null,
   };
 }
 
@@ -124,24 +234,8 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
   if (!open || typeof document === "undefined") return null;
 
   function sec(teklif: Record<string, unknown>) {
-    const pi = teklif.package_items as
-      | { items?: KayitliKalem[]; manual?: { discountPct?: number; shippingCharge?: number; title?: string | null } }
-      | null;
-    const satirlar = (pi?.items ?? [])
-      .map(kalemdenSatir)
-      .filter((s): s is EditorLine => s != null);
-    if (satirlar.length === 0) return;
-
-    const malzeme = String(teklif.material_type ?? "karma");
-    onPick({
-      lines: satirlar,
-      areaM2: Number(teklif.area_m2 ?? 0),
-      title: pi?.manual?.title ?? (teklif.package_name as string | null) ?? null,
-      discountPct: Number(pi?.manual?.discountPct ?? teklif.discount_percentage ?? 0),
-      shippingCharge: Number(pi?.manual?.shippingCharge ?? 0),
-      materialType:
-        malzeme === "tasyunu" || malzeme === "eps" ? malzeme : "karma",
-    });
+    const kaynak = quoteToDuplicateSource(teklif);
+    if (kaynak) onPick(kaynak);
   }
 
   return createPortal(
@@ -160,8 +254,8 @@ export function QuoteDuplicateDialog({ open, onClose, onPick }: Props) {
           <div>
             <h3 className="text-base font-semibold text-white">Teklifi çoğalt</h3>
             <p className="mt-0.5 text-xs text-slate-400">
-              Kalemler gelir; metrajı değiştirdiğinizde sarfiyata bağlı miktarlar
-              kendiliğinden yeniden hesaplanır. Müşteri bilgisi taşınmaz.
+              Müşteri, şehir ve kalemler gelir; metrajı değiştirdiğinizde
+              sarfiyata bağlı miktarlar kendiliğinden yeniden hesaplanır.
             </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Kapat"

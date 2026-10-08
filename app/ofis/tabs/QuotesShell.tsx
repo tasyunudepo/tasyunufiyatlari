@@ -6,7 +6,7 @@ import { FilePlus2, List } from "lucide-react";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
 
 import { QuotesTab } from "./QuotesTab";
-import { QuoteBuilder } from "./quotes/QuoteBuilder";
+import { QuoteBuilder, type QuoteBuilderSeed } from "./quotes/QuoteBuilder";
 
 // Teklifler çatı sekmesi (Fiyatlandırma/Katalog ile aynı kalıp).
 //
@@ -23,6 +23,9 @@ type SubTabId = (typeof SUB_TABS)[number]["id"];
 export function QuotesShell() {
     const { canMutate } = useAdminRole();
     const [active, setActive] = useState<SubTabId>("liste");
+    // Listeden "Revize et" / "Çoğalt" ile açılan teklif. Düğme teklif
+    // satırında durur; ekran aynı teklif yazma ekranıdır.
+    const [seed, setSeed] = useState<QuoteBuilderSeed | null>(null);
 
     // Salt-okunur hesap teklif yazamaz; sekmeyi hiç göstermeyiz.
     const tabs = canMutate ? SUB_TABS : SUB_TABS.filter((t) => t.id !== "yeni");
@@ -48,11 +51,18 @@ export function QuotesShell() {
                 ))}
             </div>
 
-            {active === "liste" && <QuotesTab />}
+            {active === "liste" && (
+                <QuotesTab
+                    onOpenInBuilder={(yeniSeed) => {
+                        setSeed(yeniSeed);
+                        setActive("yeni");
+                    }}
+                />
+            )}
             {/* Kaydettikten sonra sekme DEĞİŞTİRİLMEZ: editör kendi başarı
                 ekranını gösterir (teklif kodu + PDF indirme). Otomatik listeye
                 atlamak operatörün PDF'i almasını engelliyordu. */}
-            {active === "yeni" && canMutate && <QuoteBuilder />}
+            {active === "yeni" && canMutate && <QuoteBuilder seed={seed} />}
         </div>
     );
 }

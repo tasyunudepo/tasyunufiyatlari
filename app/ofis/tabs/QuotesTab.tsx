@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Trash2, ChevronDown, Layers, Download } from "lucide-react";
+import { Trash2, ChevronDown, Layers, Download, PencilLine, Copy } from "lucide-react";
 import { formatCurrency, formatAmount } from "@/lib/admin/utils";
 import {
     groupQuotesIntoSeries,
@@ -13,6 +13,8 @@ import {
 import SalesOutcomePanel, { LOSS_CATEGORY_LABELS } from "./SalesOutcomePanel";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
 import { useAdminQuotes } from "@/lib/hooks/useAdminQuotes";
+import { quoteToDuplicateSource } from "@/components/admin/quote-editor/QuoteDuplicateDialog";
+import type { QuoteBuilderSeed } from "./quotes/QuoteBuilder";
 import { SIDDET_RENGI, bekleyisSuresi, sureGosterimi } from "@/lib/admin/formatDuration";
 import { buildQuotesCsvBlob, csvFileName, type CsvQuote } from "@/lib/admin/quotesCsv";
 
@@ -93,7 +95,12 @@ async function readMutationResult(res: Response): Promise<{ ok: true } | { ok: f
     };
 }
 
-export function QuotesTab() {
+export function QuotesTab({
+    onOpenInBuilder,
+}: {
+    /** Teklifi yazma ekranında açar: revize (yerinde güncelle) ya da çoğalt. */
+    onOpenInBuilder?: (seed: QuoteBuilderSeed) => void;
+} = {}) {
     const { canMutate, isReadOnly } = useAdminRole();
     const [actionError, setActionError] = useState<string | null>(null);
     // Veri artık react-query üzerinden gelir ve DashboardTab/ExperimentsTab
@@ -129,6 +136,23 @@ export function QuotesTab() {
     /** Mutasyon sonrası önbelleği geçersiz kıl — tam yeniden çekim değil. */
     function loadQuotes() {
         void refresh();
+    }
+
+    /** Teklifi yazma ekranında açar; kalemi olmayan kayıt açılamaz. */
+    function openInBuilder(quote: OfficeQuote, mode: QuoteBuilderSeed["mode"]) {
+        const source = quoteToDuplicateSource(quote as unknown as Record<string, unknown>);
+        if (!source) {
+            setActionError("Bu teklifin kalem kaydı yok; yazma ekranında açılamıyor.");
+            return;
+        }
+        setSelectedQuote(null);
+        onOpenInBuilder?.({ mode, source });
+    }
+
+    /** Kalemi olan teklif yazma ekranında açılabilir. */
+    function hasLineItems(quote: OfficeQuote): boolean {
+        const items = (quote as unknown as { package_items?: { items?: unknown[] } | null }).package_items?.items;
+        return Array.isArray(items) && items.length > 0;
     }
 
     async function deleteQuote(quoteId: number | string) {
@@ -896,6 +920,32 @@ export function QuotesTab() {
                                                                 PDF
                                                             </a>
                                                         )}
+                                                        {canMutate && onOpenInBuilder && hasLineItems(quote) && (
+                                                            <>
+                                                                {quote.request_type === "manual_quote" && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openInBuilder(quote, "revize")}
+                                                                        data-testid={`quote-revise-${quote.id}`}
+                                                                        title="Teklifi aynı numarayla düzenle"
+                                                                        className={`${ofisControl} inline-flex items-center gap-1.5 px-3 py-2 text-xs text-sky-200 hover:bg-sky-400/10 whitespace-nowrap`}
+                                                                    >
+                                                                        <PencilLine className="h-3.5 w-3.5" />
+                                                                        Revize et
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => openInBuilder(quote, "cogalt")}
+                                                                    data-testid={`quote-duplicate-${quote.id}`}
+                                                                    title="Müşteri ve kalemlerle yeni teklif aç"
+                                                                    className={`${ofisControl} inline-flex items-center gap-1.5 px-3 py-2 text-xs hover:bg-[rgba(255,255,255,0.06)] whitespace-nowrap`}
+                                                                >
+                                                                    <Copy className="h-3.5 w-3.5" />
+                                                                    Çoğalt
+                                                                </button>
+                                                            </>
+                                                        )}
                                                         <button onClick={() => setSelectedQuote(quote)}
                                                             className={`${ofisControl} border-[rgba(201,168,76,0.26)] bg-[rgba(201,168,76,0.10)] px-4 py-2 text-xs text-[var(--nx-gold)] hover:bg-[rgba(201,168,76,0.14)] whitespace-nowrap`}>
                                                             Detay →
@@ -953,6 +1003,30 @@ export function QuotesTab() {
                                         )}
                                     </h3>
                                         <p className="text-[var(--nx-text-soft)] text-sm">{new Date(selectedQuote.created_at).toLocaleString("tr-TR")}</p>
+                                    {canMutate && onOpenInBuilder && hasLineItems(selectedQuote) && (
+                                        <div className="flex gap-2 mt-3">
+                                            {selectedQuote.request_type === "manual_quote" && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openInBuilder(selectedQuote, "revize")}
+                                                    data-testid="quote-detail-revise"
+                                                    className={`${ofisControl} inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-sky-200 hover:bg-sky-400/10`}
+                                                >
+                                                    <PencilLine className="h-3.5 w-3.5" />
+                                                    Teklifi revize et
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => openInBuilder(selectedQuote, "cogalt")}
+                                                data-testid="quote-detail-duplicate"
+                                                className={`${ofisControl} inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold hover:bg-[rgba(255,255,255,0.06)]`}
+                                            >
+                                                <Copy className="h-3.5 w-3.5" />
+                                                Çoğalt
+                                            </button>
+                                        </div>
+                                    )}
                                     {(selectedQuote.pdf_storage_path || selectedQuote.pdf_url) && (
                                         <div className="flex gap-2 mt-3">
                                             <a

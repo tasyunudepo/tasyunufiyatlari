@@ -10,6 +10,7 @@ import {
   discountedUnitPrice,
   effectiveLineTotal,
   lineTotal,
+  type ManualQuoteInput,
 } from '@/lib/schemas/manualQuote.schema'
 
 export const dynamic = 'force-dynamic'
@@ -32,14 +33,28 @@ function buildManualQuoteCode(quoteId: number, now: Date): string {
   return `TE-${now.getFullYear()}-${String(quoteId).padStart(6, '0')}`
 }
 
-export async function POST(req: NextRequest) {
-  const auth = requireAdminMutationAuth(req)
-  if (!auth.ok) return auth.response
+/** Önceki sürümün izi — revizede eski tutar ve PDF kaybolmasın diye. */
+interface RevisionEntry {
+  no: number
+  at: string
+  by: string
+  areaM2: number
+  priceWithoutVat: number
+  totalPrice: number
+  /** Önceki sürümün arşivdeki PDF'i; dosya storage'da kalır. */
+  pdfStoragePath: string | null
+}
 
-  const body = await req.json().catch(() => null)
+type ParseResult =
+  | { ok: true; data: ManualQuoteInput }
+  | { ok: false; response: NextResponse }
+
+function parseBody(body: unknown): ParseResult {
   const parsed = manualQuoteSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
+  if (parsed.success) return { ok: true, data: parsed.data }
+  return {
+    ok: false,
+    response: NextResponse.json(
       {
         ok: false,
         error: 'Teklif verisi doğrulanamadı.',
@@ -49,35 +64,42 @@ export async function POST(req: NextRequest) {
         })),
       },
       { status: 400 },
-    )
+    ),
   }
+}
 
-  const d = parsed.data
-
-  // ── Sunucu tarafı para hesabı ──
-  // İskonto BİRİM FİYATLARA işlenir (27 Tem 2026 kararı); belgenin altına
-  // ayrı eksi satır yazılmaz. Böylece satır tutarlarının toplamı ara
-  // toplamı birebir verir.
+// ── Sunucu tarafı para hesabı ──
+// İskonto BİRİM FİYATLARA işlenir (27 Tem 2026 kararı); belgenin altına
+// ayrı eksi satır yazılmaz. Böylece satır tutarlarının toplamı ara
+// toplamı birebir verir.
+function computeTotals(d: ManualQuoteInput) {
   const listeToplami = roundToKurus(d.lines.reduce((sum, l) => sum + lineTotal(l), 0))
   const netToplam = roundToKurus(
     d.lines.reduce((sum, l) => sum + effectiveLineTotal(l, d.discountPct), 0),
   )
-  const totals = buildQuoteTotals(netToplam, d.shippingCharge)
+  return { listeToplami, totals: buildQuoteTotals(netToplam, d.shippingCharge) }
+}
 
-  if (Math.abs(totals.priceWithoutVat - d.expectedPriceWithoutVat) > TOLERANCE) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: `Toplam tutarsız — sunucu ${totals.priceWithoutVat.toFixed(2)} ₺ hesapladı, ekran ${d.expectedPriceWithoutVat.toFixed(2)} ₺ gönderdi. Sayfayı yenileyip tekrar deneyin.`,
-      },
-      { status: 409 },
-    )
-  }
+function totalMismatchResponse(
+  d: ManualQuoteInput,
+  totals: ReturnType<typeof buildQuoteTotals>,
+): NextResponse | null {
+  if (Math.abs(totals.priceWithoutVat - d.expectedPriceWithoutVat) <= TOLERANCE) return null
+  return NextResponse.json(
+    {
+      ok: false,
+      error: `Toplam tutarsız — sunucu ${totals.priceWithoutVat.toFixed(2)} ₺ hesapladı, ekran ${d.expectedPriceWithoutVat.toFixed(2)} ₺ gönderdi. Sayfayı yenileyip tekrar deneyin.`,
+    },
+    { status: 409 },
+  )
+}
 
-  // ── Ticari kural: engellemez, uyarır ──
+// ── Ticari kural: engellemez, uyarır ──
+async function commercialWarnings(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  d: ManualQuoteInput,
+): Promise<string[]> {
   const warnings: string[] = []
-  const supabase = createServerSupabaseClient()
-
   const { data: materialRow } = await supabase
     .from('material_types')
     .select('slug, min_order_m2')
@@ -92,19 +114,33 @@ export async function POST(req: NextRequest) {
       )
     }
   }
+  return warnings
+}
 
-  if (warnings.length > 0 && !d.overrideCommercialRules) {
-    return NextResponse.json(
-      { ok: false, error: 'Ticari kural uyarısı var.', warnings, needsOverride: true },
-      { status: 422 },
-    )
-  }
+function overrideRequiredResponse(warnings: string[]): NextResponse {
+  return NextResponse.json(
+    { ok: false, error: 'Ticari kural uyarısı var.', warnings, needsOverride: true },
+    { status: 422 },
+  )
+}
 
-  // ── quotes satırı ──
-  // NOT NULL kolonların hepsi doldurulmalı; levha içermeyen tekliflerde
-  // dürüst varsayılanlar kullanılır (uydurma değer yazılmaz, "—" konur).
+/**
+ * Teklifin içeriğini taşıyan kolonlar — yeni kayıtta da revizede de aynı.
+ *
+ * NOT NULL kolonların hepsi doldurulmalı; levha içermeyen tekliflerde
+ * dürüst varsayılanlar kullanılır (uydurma değer yazılmaz, "—" konur).
+ */
+function buildContentColumns(
+  d: ManualQuoteInput,
+  input: {
+    listeToplami: number
+    totals: ReturnType<typeof buildQuoteTotals>
+    createdBy: string
+    revisions?: RevisionEntry[]
+  },
+) {
+  const { listeToplami, totals } = input
   const plateLine = d.lines.find((l) => l.isPlate) ?? null
-  const now = new Date()
 
   const packageItems = {
     items: d.lines.map((l, i) => ({
@@ -121,6 +157,9 @@ export async function POST(req: NextRequest) {
       lineDiscountPct: l.lineDiscountPct,
       totalPrice: effectiveLineTotal(l, d.discountPct),
       isPlate: l.isPlate,
+      // Revizede dübel boyu seçimi kalınlığa bakar; kayıtta olmazsa
+      // yüklenen teklif kalınlığını kaybeder.
+      thicknessCm: l.thicknessCm ?? null,
       packageCount: l.packageCount ?? null,
       note: l.note ?? null,
       // Maliyet dayanağı — yalnız kayıtta. "Bu fiyatı neden verdik" ve
@@ -136,16 +175,21 @@ export async function POST(req: NextRequest) {
       discountPct: d.discountPct,
       listTotal: listeToplami,
       shippingCharge: d.shippingCharge,
+      // Nakliyenin belgedeki sunumu — revizede aynı seçimle açılsın diye.
+      shippingMode: d.shippingMode,
       validityDays: d.validityDays,
-      createdBy: auth.user,
+      createdBy: input.createdBy,
       // Teklifin üretildiği marj — 27 Tem 2026'da bu bilgi kayıtta
       // olmadığı için bir fiyatın kaynağı tersine mühendislikle bulundu.
       appliedMarginPct: d.appliedMarginPct ?? null,
       areaM2: d.areaM2,
+      ...(input.revisions && input.revisions.length > 0
+        ? { revisionNo: input.revisions.length, revisions: input.revisions }
+        : {}),
     },
   }
 
-  const insertPayload = {
+  return {
     customer_name: d.customerName,
     customer_email: d.customerEmail || '',
     customer_phone: d.customerPhone,
@@ -178,6 +222,48 @@ export async function POST(req: NextRequest) {
     vehicle_type: null,
 
     package_items: packageItems,
+    consent_channel: d.consentChannel,
+  }
+}
+
+/** PDF yükleme yetkisi — public akışla aynı capability mekanizması. */
+function issuePdfUploadCapability(quoteId: number, now: Date): string | null {
+  try {
+    assertPdfCapabilityConfigured()
+    return createPdfCapabilityToken({
+      quoteId,
+      action: 'upload',
+      expiresAt: Math.floor(now.getTime() / 1000) + PDF_UPLOAD_TTL_SECONDS,
+    })
+  } catch {
+    // PDF yükleme yapılandırılmamışsa teklif yine kaydedilmiş olur;
+    // operatör PDF'i elle indirebilir.
+    return null
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const auth = requireAdminMutationAuth(req)
+  if (!auth.ok) return auth.response
+
+  const body = await req.json().catch(() => null)
+  const parsed = parseBody(body)
+  if (!parsed.ok) return parsed.response
+  const d = parsed.data
+
+  const { listeToplami, totals } = computeTotals(d)
+  const mismatch = totalMismatchResponse(d, totals)
+  if (mismatch) return mismatch
+
+  const supabase = createServerSupabaseClient()
+  const warnings = await commercialWarnings(supabase, d)
+  if (warnings.length > 0 && !d.overrideCommercialRules) {
+    return overrideRequiredResponse(warnings)
+  }
+
+  const now = new Date()
+  const insertPayload = {
+    ...buildContentColumns(d, { listeToplami, totals, createdBy: auth.user }),
 
     request_type: 'manual_quote',
     source_channel: 'ofis',
@@ -188,7 +274,6 @@ export async function POST(req: NextRequest) {
     consent_timestamp: now.toISOString(),
     consent_version: 'kvkk-ofis-v1',
     consent_purpose: 'fiyat_teklifi_ve_iletisim',
-    consent_channel: d.consentChannel,
 
     quoted_by: auth.user,
     admin_notes: d.overrideReason ? `Kural aşımı: ${d.overrideReason}` : null,
@@ -213,21 +298,6 @@ export async function POST(req: NextRequest) {
   const quoteCode = buildManualQuoteCode(created.id, now)
   await supabase.from('quotes').update({ quote_code: quoteCode }).eq('id', created.id)
 
-  // PDF yükleme yetkisi — public akışla aynı capability mekanizması.
-  let pdfUploadCapability: string | null = null
-  try {
-    assertPdfCapabilityConfigured()
-    pdfUploadCapability = createPdfCapabilityToken({
-      quoteId: created.id,
-      action: 'upload',
-      expiresAt: Math.floor(now.getTime() / 1000) + PDF_UPLOAD_TTL_SECONDS,
-    })
-  } catch {
-    // PDF yükleme yapılandırılmamışsa teklif yine kaydedilmiş olur;
-    // operatör PDF'i elle indirebilir.
-    pdfUploadCapability = null
-  }
-
   return NextResponse.json(
     {
       ok: true,
@@ -235,8 +305,134 @@ export async function POST(req: NextRequest) {
       quoteCode,
       totals,
       warnings,
-      pdfUploadCapability,
+      pdfUploadCapability: issuePdfUploadCapability(created.id, now),
     },
     { status: 201 },
   )
+}
+
+// Teklif revizyonu — var olan ofis teklifini YERİNDE günceller.
+//
+// NEDEN: 8 Ekim 2026'da iki teklif yanlış metrajla (1.008 m²) kaydedildi.
+// Düzeltmenin tek yolu yeni teklif yazmaktı; müşteri aynı iş için iki ayrı
+// numara görüyor, liste de çöp kayıtla doluyordu. Revizede teklif numarası
+// DEĞİŞMEZ; önceki tutar, metraj ve PDF `manual.revisions` altında kalır.
+//
+// Yalnız ofis teklifleri (`manual_quote`) revize edilir. Sitedeki sihirbazdan
+// gelen kayıt müşterinin kendi talebidir; onun üstüne yazılmaz, çoğaltılır.
+export async function PUT(req: NextRequest) {
+  const auth = requireAdminMutationAuth(req)
+  if (!auth.ok) return auth.response
+
+  const body = await req.json().catch(() => null)
+  const quoteId = Number((body as { quoteId?: unknown } | null)?.quoteId)
+  if (!Number.isSafeInteger(quoteId) || quoteId <= 0) {
+    return NextResponse.json(
+      { ok: false, error: 'Geçersiz teklif kimliği.' },
+      { status: 400 },
+    )
+  }
+
+  const parsed = parseBody(body)
+  if (!parsed.ok) return parsed.response
+  const d = parsed.data
+
+  const { listeToplami, totals } = computeTotals(d)
+  const mismatch = totalMismatchResponse(d, totals)
+  if (mismatch) return mismatch
+
+  const supabase = createServerSupabaseClient()
+
+  const { data: existing, error: readError } = await supabase
+    .from('quotes')
+    .select('id, request_type, quote_code, area_m2, price_without_vat, total_price, pdf_storage_path, package_items')
+    .eq('id', quoteId)
+    .maybeSingle()
+
+  if (readError) {
+    console.error('Revize edilecek teklif okunamadı:', readError.message)
+    return NextResponse.json(
+      { ok: false, error: 'Teklif okunamadı.' },
+      { status: 500 },
+    )
+  }
+  if (!existing) {
+    return NextResponse.json(
+      { ok: false, error: 'Teklif bulunamadı.' },
+      { status: 404 },
+    )
+  }
+  if (existing.request_type !== 'manual_quote') {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Yalnız ofis teklifleri revize edilebilir. Bu kaydı çoğaltıp yeni teklif yazın.',
+      },
+      { status: 409 },
+    )
+  }
+
+  const warnings = await commercialWarnings(supabase, d)
+  if (warnings.length > 0 && !d.overrideCommercialRules) {
+    return overrideRequiredResponse(warnings)
+  }
+
+  const now = new Date()
+  const oncekiManual = (existing.package_items as {
+    manual?: { createdBy?: string; revisions?: RevisionEntry[] }
+  } | null)?.manual
+  const oncekiRevizyonlar = Array.isArray(oncekiManual?.revisions) ? oncekiManual.revisions : []
+  const revisions: RevisionEntry[] = [
+    ...oncekiRevizyonlar,
+    {
+      no: oncekiRevizyonlar.length + 1,
+      at: now.toISOString(),
+      by: auth.user,
+      areaM2: Number(existing.area_m2 ?? 0),
+      priceWithoutVat: Number(existing.price_without_vat ?? 0),
+      totalPrice: Number(existing.total_price ?? 0),
+      pdfStoragePath: existing.pdf_storage_path ?? null,
+    },
+  ]
+
+  const updatePayload = {
+    ...buildContentColumns(d, {
+      listeToplami,
+      totals,
+      createdBy: oncekiManual?.createdBy ?? auth.user,
+      revisions,
+    }),
+    updated_at: now.toISOString(),
+    // Yeni PDF bağlanabilsin diye arşiv yolu boşaltılır (upload-pdf üzerine
+    // yazmayı reddeder). Eski dosya silinmez; yolu revizyon kaydındadır.
+    pdf_storage_path: null,
+    pdf_url: null,
+    ...(d.overrideReason ? { admin_notes: `Kural aşımı: ${d.overrideReason}` } : {}),
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from('quotes')
+    .update(updatePayload)
+    .eq('id', quoteId)
+    .eq('request_type', 'manual_quote')
+    .select('id, quote_code')
+    .maybeSingle()
+
+  if (updateError || !updated) {
+    console.error('Teklif revize edilemedi:', updateError?.message ?? 'kayıt bulunamadı')
+    return NextResponse.json(
+      { ok: false, error: 'Teklif revize edilemedi.' },
+      { status: 500 },
+    )
+  }
+
+  return NextResponse.json({
+    ok: true,
+    quoteId: updated.id,
+    quoteCode: updated.quote_code ?? existing.quote_code,
+    revisionNo: revisions.length,
+    totals,
+    warnings,
+    pdfUploadCapability: issuePdfUploadCapability(updated.id, now),
+  })
 }
