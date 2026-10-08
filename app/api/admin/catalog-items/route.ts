@@ -13,6 +13,7 @@ import { joinBrandAndModel } from '@/lib/catalog/productLabel'
 import { computeBonusUnitSale } from '@/lib/pricing/bonus/sale'
 import { citySubRegionQuestion, type BonusSubRegionChoice } from '@/lib/pricing/bonus/subRegions'
 import { resolveAccessoryDiscounts } from '@/lib/pricing/accessoryDiscounts'
+import { capacityForPlate, type LogisticsCapacityRow } from '@/lib/quote/vehicleArea'
 
 export const dynamic = 'force-dynamic'
 
@@ -133,10 +134,20 @@ export async function GET(req: NextRequest) {
   const city = (zonesRes.data ?? []).find((z) => z.city_code === cityCode) ?? null
 
   // `logistics_capacity.thickness` MİLİMETRE tutulur (4 cm → 40).
-  const logisticsByMm = new Map<number, { lorry_capacity_m2: number; truck_capacity_m2: number }>(
+  const sayiYaDaNull = (v: unknown): number | null => {
+    const n = Number(v)
+    return v != null && Number.isFinite(n) ? n : null
+  }
+  const logisticsByMm = new Map<number, LogisticsCapacityRow>(
     (logisticsRes.data ?? []).map((l) => [
       Number(l.thickness),
-      { lorry_capacity_m2: Number(l.lorry_capacity_m2), truck_capacity_m2: Number(l.truck_capacity_m2) },
+      {
+        lorryPackages: sayiYaDaNull(l.lorry_capacity_packages),
+        truckPackages: sayiYaDaNull(l.truck_capacity_packages),
+        packageSizeM2: sayiYaDaNull(l.package_size_m2),
+        lorryM2: sayiYaDaNull(l.lorry_capacity_m2),
+        truckM2: sayiYaDaNull(l.truck_capacity_m2),
+      },
     ]),
   )
 
@@ -253,6 +264,10 @@ export async function GET(req: NextRequest) {
       const margin = resolveMargin(brand?.margin_pct, materialBySlug.get(materialSlug ?? '') ?? null)
       if (!margin) continue // marj çözülemiyorsa fiyat gösterme (fail-closed)
 
+      // Kapasite paket adedi × BU ürünün paket m²'si. Tablonun hazır m²
+      // sütunu taşyünü paketine göredir; EPS'te eksik metraj verir.
+      const capacity = capacityForPlate(logisticsByMm.get(thickness * 10), packageM2)
+
       items.push({
         key: `levha-${plate.id}-${thickness}`,
         kind: 'levha',
@@ -264,8 +279,8 @@ export async function GET(req: NextRequest) {
         unit: 'm²',
         unitContent: null,
         packageM2: packageM2 > 0 ? packageM2 : null,
-        truckM2: logisticsByMm.get(thickness * 10)?.truck_capacity_m2 ?? null,
-        lorryM2: logisticsByMm.get(thickness * 10)?.lorry_capacity_m2 ?? null,
+        truckM2: capacity.truckM2,
+        lorryM2: capacity.lorryM2,
         netCost,
         suggestedUnitPrice: applyMargin(netCost, margin.pct),
         marginPct: margin.pct,

@@ -14,6 +14,49 @@ export interface VehicleCapacity {
   lorryM2: number | null
 }
 
+/** `logistics_capacity` tablosunun bir kalınlık satırı. */
+export interface LogisticsCapacityRow {
+  lorryPackages: number | null
+  truckPackages: number | null
+  /** Tablonun genel (taşyünü) paket m²'si. */
+  packageSizeM2: number | null
+  lorryM2: number | null
+  truckM2: number | null
+}
+
+/**
+ * Bir levhanın tam araç kapasitesi.
+ *
+ * Tablodaki hazır m² sütunları TAŞYÜNÜ paketine göre yazılmıştır (4 cm:
+ * 280 paket × 3,6 m² = 1.008 m²). Araca sığan paket adedi malzemeden
+ * bağımsız, ama EPS 4 cm paketi 6 m² — aynı kamyon 1.680 m² taşır. Bu
+ * yüzden kapasite paket adedi × ÜRÜNÜN paket m²'si ile hesaplanır; sitedeki
+ * sihirbaz, ürün sayfası ve /api/quotes da aynı hesabı yapar.
+ *
+ * 8 Ekim 2026: ofis ekranı hazır sütunu okuduğu için sitede 1.680 m² teklif
+ * almış müşteriye "1 kamyon" 1.008 m² olarak hazırlandı.
+ */
+export function capacityForPlate(
+  row: LogisticsCapacityRow | null | undefined,
+  platePackageM2: number | null | undefined,
+): VehicleCapacity {
+  if (!row) return { truckM2: null, lorryM2: null }
+
+  const paketM2 =
+    platePackageM2 != null && platePackageM2 > 0 ? platePackageM2 : row.packageSizeM2
+  const hesapla = (paketAdedi: number | null, hazirM2: number | null): number | null => {
+    if (paketAdedi != null && paketAdedi > 0 && paketM2 != null && paketM2 > 0) {
+      return roundToKurus(paketAdedi * paketM2)
+    }
+    return hazirM2 != null && hazirM2 > 0 ? hazirM2 : null
+  }
+
+  return {
+    truckM2: hesapla(row.truckPackages, row.truckM2),
+    lorryM2: hesapla(row.lorryPackages, row.lorryM2),
+  }
+}
+
 /** Verilen araç sayılarının toplam metrajı. Kapasite yoksa null. */
 export function areaForVehicles(
   cap: VehicleCapacity,
