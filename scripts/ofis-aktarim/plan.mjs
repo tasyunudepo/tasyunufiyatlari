@@ -6,7 +6,7 @@
 // (9 Ekim 2026 kullanıcı kararı).
 //
 // KURALLAR
-//  · Yalnız son `days` günün kapanmamış teklifleri.
+//  · Yalnız son `days` takvim gününün kapanmamış teklifleri.
 //  · Aynı MÜŞTERİ KAYDININ (customer_id) teklifleri tek projedir; kayıt
 //    v24'te telefonun birebir eşleşmesiyle kurulur. Ad ya da telefon
 //    BENZERLİĞİYLE birleştirme yapılmaz; müşteri kaydı olmayan teklif tek
@@ -56,7 +56,10 @@ export function closingTime(calendar, now) {
  * @param {{ now: string, days?: number, defaultOwner: string, followUpTime?: string, defaultFollowUpAt?: string | null }} options
  */
 export function planSeed(quotes, { now, days = 14, defaultOwner, followUpTime = '09:00', defaultFollowUpAt = null }) {
-  const from = Date.parse(now) - days * 86400000
+  // Pencere takvim günüyle sayılır (İstanbul): "son 14 gün" 14 gün önceki günün
+  // başından başlar; o gün öğleden sonra gelen teklif saat farkıyla dışarıda kalmaz.
+  const fromDay = new Date(Date.parse(now) - days * 86400000).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  const from = Date.parse(`${fromDay}T00:00:00+03:00`)
   const skipped = { old: 0, closed: 0, linked: 0 }
   const byCustomer = new Map()
 

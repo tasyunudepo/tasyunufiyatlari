@@ -54,6 +54,17 @@ describe('ilk aktarım planı', () => {
     expect(plan.skipped).toMatchObject({ old: 1, closed: 2, linked: 1 })
   })
 
+  it('pencereyi takvim günüyle sayar: 14 gün önceki günün sabahı gelen teklif kapsamdadır', () => {
+    // NOW = 9 Ekim 13:47. 25 Eylül 09:00, saat hesabıyla 14 günden eskidir ama "son 14 gün"ün içindedir.
+    const plan = planSeed([
+      teklif(1, { created_at: '2026-09-25T09:00:00+03:00' }),
+      teklif(2, { created_at: '2026-09-24T23:59:00+03:00' }),
+    ], { now: NOW, defaultOwner: 'ofis' })
+    expect(plan.groups.map((g) => g.anchorQuoteId)).toEqual(['1'])
+    expect(plan.skipped.old).toBe(1)
+    expect(plan.from).toBe('2026-09-24T21:00:00.000Z')
+  })
+
   it('temas kaydı olan müşteride ilk temas işi açık bırakılmaz; söz verilen takip planlanır', () => {
     const plan = planSeed([
       teklif(1, { customer_id: 7, contact_attempted_at: '2026-10-05T21:00:00+03:00', contact_successful: true, follow_up_date: '2026-10-06', quoted_by: 'emrah' }),

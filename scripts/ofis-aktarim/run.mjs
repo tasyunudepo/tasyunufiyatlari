@@ -57,7 +57,7 @@ const ASAMA = { pending: 'bekliyor', contacted: 'görüşüldü', quoted: 'tekli
 const gunSaat = (iso) => new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 const isAdi = (g) => (!g.engaged ? 'ilk temas' : g.followUpAt ? 'takip ' + gunSaat(g.followUpAt) : 'takip (aktarım günü mesai sonu)')
 
-console.log(`${quotes.length} teklif okundu · son ${plan.days} gün (${plan.from.slice(0, 10)} ve sonrası)`)
+console.log(`${quotes.length} teklif okundu · son ${plan.days} gün (${new Date(plan.from).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })} ve sonrası)`)
 console.log(`kapsam dışı: ${plan.skipped.old} eski · ${plan.skipped.closed} kapanmış · zaten projede: ${plan.skipped.linked}`)
 const yeni = plan.groups.filter((g) => !g.existingProjectId)
 console.log(`açılacak proje: ${yeni.length} · projeye bağlanacak teklif: ${yeni.reduce((t, g) => t + 1 + g.linkQuoteIds.length, 0)} · projesi olan müşteriden yeni gelen teklif: ${plan.groups.filter((g) => g.existingProjectId).reduce((t, g) => t + g.linkQuoteIds.length, 0)}`)

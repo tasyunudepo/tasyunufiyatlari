@@ -1,6 +1,22 @@
 # Ofis paneli: canlıya geçiş hazırlığı
 
-Durum (9 Ekim 2026): **hazırlık tamam, hiçbir şey uygulanmadı.** Canlı veritabanına yazılmadı, push ve yayın yapılmadı. Uygulama Emrah'ın "uygula" sözünü bekliyor.
+Durum (9 Ekim 2026, 17:20): **uygulandı.** Emrah'ın "uygula" sözüyle şema canlıya işlendi, kod yayına alındı, ilk aktarım yapıldı. Ayrıntı: bölüm 0. Aşağıdaki bölümler hazırlık kaydı olarak duruyor.
+
+## 0. Uygulama kaydı (9 Ekim 2026)
+
+| Adım | Ne yapıldı | Doğrulama |
+|---|---|---|
+| Yedek | `~/yedekler/tasyunufiyatlari/2026-10-09-uygulama-oncesi/` (veritabanı dökümü + git paketi, 17:00) | Dökümde 133 teklif, 75 müşteri; `git bundle verify` geçti |
+| Şema | `01_ofis_tablolar.sql`, `02_ofis_islevler.sql` canlıya uygulandı | 3 tablo, 3 kolon, 2 işlev; `anon`/`authenticated` erişemiyor; 133 teklifin içerik özeti öncekiyle aynı |
+| Ayarlar | Vercel API anahtarı geçersiz çıktı; üç ayar `next.config.ts` içinde taşınıyor (Vercel'de aynı adla değişken tanımlanırsa o geçerli) | Canlı `/api/admin/office` takvimi ve sınırı döndürüyor |
+| Yayın | `main` → `2ff60cf`, push; Vercel yayını tamamladı | Site sayfaları 200; oturumsuz yazma 401, salt okunur hesap yazma 403; ölçüm denetimi yerelde ve canlıda GEÇTİ; metin kapısı 455 sayfada temiz |
+| İlk aktarım | `run.mjs --uygula` (canlı) | 8 proje, 15 teklif bağlandı, 8 proje değeri; 6 açık ilk temas, 2 açık takip, 2 iptal; ikinci koşu kayıt eklemedi |
+
+Ayarların değeri: mesai Pazartesi–Cumartesi 08:00–18:00 (`lib/business/info.ts` ile aynı); ilk temas hedefi 30 mesai dakikası (**geçici**, Emrah'ın kararı bekleniyor); eski kayıt sınırı 9 Ekim 2026 00:00.
+
+Tekliflerde değişen iki alan: bağlanan 15 teklifte `project_id` ve tetikleyicinin güncellediği `updated_at`. Yedekteki eski `updated_at` değerleri yerine konup `project_id` boşaltıldığında 133 teklifin özeti şema öncesiyle birebir aynı çıkıyor.
+
+Not: canlıda tarayıcıyla otomatik kontrol yaparken Vercel güvenlik duvarı HeadlessChrome kimliğini 403 ile engeller; normal tarayıcı kimliği gerekir.
 
 ## 1. Alınan yedekler
 
@@ -73,7 +89,7 @@ Seçenekler: `--gun 14` (pencere), `--sorumlu ad` (teklifte yazan kişi yoksa i�
 
 | Kural | Karşılığı |
 |---|---|
-| Hangi teklifler | Son 14 günde gelen, kapanmamış (tamamlandı/reddedildi olmayan), projeye bağlı olmayan |
+| Hangi teklifler | Son 14 takvim gününde gelen, kapanmamış (tamamlandı/reddedildi olmayan), projeye bağlı olmayan |
 | Proje | Aynı müşteri kaydının teklifleri tek proje. Müşteri kaydı telefonun birebir eşleşmesidir; ad ya da telefon benzerliğiyle birleştirme yok |
 | Proje değeri | En son verilen teklif (panelden değiştirilebilir) |
 | Proje aşaması | Müşterinin tekliflerindeki en ileri aşama |
