@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // One-off CommonJS CLI scripts (run with bare node, not bundled):
     "scripts/**/*.js",
+    // node --require ile yüklenen önizleme ön yükleyicileri (CommonJS olmak zorunda):
+    "scripts/**/*.cjs",
     "*.js",
   ]),
   {

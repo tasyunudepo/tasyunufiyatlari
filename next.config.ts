@@ -10,7 +10,27 @@ import { fileURLToPath } from "node:url";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const projectNodeModules = path.join(projectRoot, "node_modules");
 
+// Ofis iş akışı ayarları (gizli değil). Vercel'de aynı adla ortam değişkeni
+// tanımlıysa o geçerlidir; değilse buradaki değerler derlemeye girer.
+// 9 Ekim 2026: Vercel API anahtarı geçersiz olduğu için ayarlar depoda taşınıyor.
+//  · Mesai: lib/business/info.ts ile aynı (Pazartesi–Cumartesi 08:00–18:00).
+//  · firstContactMinutes GEÇİCİ: yeni talebe dönüş hedefi henüz kararlaştırılmadı.
+//  · Eski kayıt sınırı: geçiş günü; öncesindeki temassız teklifler günlük
+//    sayaca girmez, "İncelenecek eski kayıtlar"da durur.
+const officeEnv = {
+  OFIS_WORKFLOW_ENABLED: process.env.OFIS_WORKFLOW_ENABLED ?? "1",
+  OFIS_WORK_CALENDAR: process.env.OFIS_WORK_CALENDAR ?? JSON.stringify({
+    timeZone: "Europe/Istanbul",
+    weekdays: [1, 2, 3, 4, 5, 6],
+    opens: "08:00",
+    closes: "18:00",
+    firstContactMinutes: 30,
+  }),
+  OFIS_LEGACY_CUTOFF: process.env.OFIS_LEGACY_CUTOFF ?? "2026-10-09T00:00:00+03:00",
+};
+
 const nextConfig: NextConfig = {
+  env: officeEnv,
   // Telefon/tablet üzerinden aynı yerel ağdaki development sunucusuna
   // bağlanırken Next 16 HMR kaynağını varsayılan olarak cross-origin sayıyor.
   // Bu izin yalnız geliştirmede geçerlidir; production yapılandırmasına taşınmaz.
