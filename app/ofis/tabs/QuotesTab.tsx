@@ -96,7 +96,10 @@ async function readMutationResult(res: Response): Promise<{ ok: true } | { ok: f
 
 export function QuotesTab({
     onOpenInBuilder,
+    initialSearch = "",
 }: {
+    /** Üst çubuktaki aramadan gelen metin. */
+    initialSearch?: string;
     /** Teklifi yazma ekranında açar: revize (yerinde güncelle) ya da çoğalt. */
     onOpenInBuilder?: (seed: QuoteBuilderSeed) => void;
 } = {}) {
@@ -139,7 +142,7 @@ export function QuotesTab({
 
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [requestTypeFilter, setRequestTypeFilter] = useState<string>("all");
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
     // Seri açıklık state — varsayılan kapalı, çok teklifli serilerde toggle.
     // Tek teklifli seriler her zaman açık görünür.
     const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({});
@@ -434,19 +437,28 @@ export function QuotesTab({
                             : <span><strong>{formatCurrency(wonRevenue)}</strong> KDV hariç kayıtlı satış · {wonQuotes.filter(q=>q.sales_final_price==null).length} tutarı eksik</span>}
                     </p>
                 </div>
-                <button className="ofis-secondary" onClick={loadQuotes}>Yenile</button>
+                <div className="ofis-actions">
+                    {/* Audit E4: panelde hiç dışa aktarım yoktu. Filtrelenmiş
+                        liste indirilir — ekranda ne görüyorsa o iner. */}
+                    <button
+                        type="button"
+                        onClick={exportCsv}
+                        disabled={filteredQuotes.length === 0}
+                        data-testid="quotes-export-csv"
+                        title="Filtrelenmiş teklifleri CSV olarak indir"
+                        className="ofis-secondary"
+                    >
+                        <Download className="h-4 w-4" aria-hidden="true" />
+                        Dışa aktar ({filteredQuotes.length})
+                    </button>
+                    <button className="ofis-secondary" onClick={loadQuotes}>Yenile</button>
+                </div>
             </header>
 
             {/* Filtre çubuğu tam genişlikte, listenin ÜSTÜNDE durur. Dar sol
                 sütuna sıkışınca arama kutusu kesiliyor, ilk teklif ikinci
                 ekrana düşüyordu (9 Ekim 2026). */}
             <section className="ofis-sheet-bar" aria-label="Teklif filtreleri">
-                <div className="ofis-sheet-search">
-                    <span aria-hidden="true">⌕</span>
-                    <input type="text" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
-                        aria-label="Tekliflerde ara"
-                        placeholder="Müşteri, marka, şehir ya da teklif kodu" />
-                </div>
                 <select value={requestTypeFilter} onChange={(e) => { setRequestTypeFilter(e.target.value); resetPagination(); }}
                     aria-label="Talep türüne göre filtrele">
                     <option value="all">Tüm talep türleri</option>
@@ -461,37 +473,24 @@ export function QuotesTab({
                     <option value={30}>Son 30 gün</option>
                     <option value={90}>Son 90 gün</option>
                 </select>
-                {/* Audit E4: panelde hiç dışa aktarım yoktu. Filtrelenmiş
-                    liste indirilir — ekranda ne görüyorsa o iner. */}
-                <button
-                    type="button"
-                    onClick={exportCsv}
-                    disabled={filteredQuotes.length === 0}
-                    data-testid="quotes-export-csv"
-                    title="Filtrelenmiş teklifleri CSV olarak indir"
-                    className="ofis-secondary"
-                >
-                    <Download className="h-4 w-4" aria-hidden="true" />
-                    CSV ({filteredQuotes.length})
-                </button>
+                <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); resetPagination(); }}
+                    aria-label="Duruma göre filtrele">
+                    <option value="all">Tüm durumlar</option>
+                    <option value="pending">Bekliyor</option>
+                    <option value="contacted">İletişimde</option>
+                    <option value="quoted">Teklif Verildi</option>
+                    <option value="approved">Onaylandı</option>
+                    <option value="rejected">Reddedildi</option>
+                    <option value="completed">Tamamlandı</option>
+                    <option value="unknown">Durumu belirsiz</option>
+                </select>
+                <div className="ofis-sheet-search">
+                    <span aria-hidden="true">⌕</span>
+                    <input type="text" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); resetPagination(); }}
+                        aria-label="Tekliflerde ara"
+                        placeholder="Tabloda ara: müşteri, marka, şehir, teklif kodu" />
+                </div>
             </section>
-            <div className="ofis-filter-row ofis-status-row" aria-label="Duruma göre filtrele">
-                {[
-                    { value: "all", label: "Tümü" },
-                    { value: "pending", label: "Bekliyor" },
-                    { value: "contacted", label: "İletişimde" },
-                    { value: "quoted", label: "Teklif Verildi" },
-                    { value: "approved", label: "Onaylandı" },
-                    { value: "rejected", label: "Reddedildi" },
-                    { value: "completed", label: "Tamamlandı" },
-                    { value: "unknown", label: "Durumu belirsiz" },
-                ].map((f) => (
-                    <button key={f.value} type="button" className="ofis-filter" aria-pressed={statusFilter === f.value}
-                        onClick={() => { setStatusFilter(f.value); resetPagination(); }}>
-                        {f.label}
-                    </button>
-                ))}
-            </div>
             <div className="ofis-saved-views">
                     <label><span className="ofis-helper">Görünüm adı</span><input aria-label="Görünüm adı" value={viewName} onChange={e=>setViewName(e.target.value)} maxLength={60}/></label>
                     <button className="ofis-secondary" disabled={!viewName.trim()} onClick={()=>{const view={name:viewName.trim(),search:searchTerm,status:statusFilter,request:requestTypeFilter,days:dateRangeDays};try{const old=JSON.parse(localStorage.getItem('ofis-quote-views')??'[]');const next=[...(Array.isArray(old)?old:[]).filter(v=>v.name!==view.name),view].slice(-10);localStorage.setItem('ofis-quote-views',JSON.stringify(next));setSavedViews(next);setViewName('')}catch{setActionError('Görünüm bu tarayıcıya kaydedilemedi.')}}}>Görünümü kaydet</button>

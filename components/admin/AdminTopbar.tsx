@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Home, User, LogOut, Eye, Menu, X } from "lucide-react";
+import { Home, User, LogOut, Eye, Menu, X, Plus, Search } from "lucide-react";
 import { SECTION_LABELS } from "./AdminSidebar";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
 import { READ_ONLY_HINT } from "@/lib/admin/roles";
@@ -11,14 +11,18 @@ interface Props {
     activeSection: string;
     drawerOpen?: boolean;
     onToggleDrawer?: () => void;
+    /** Arama Teklifler listesini bu metinle açar. */
+    onSearch?: (term: string) => void;
+    onNewQuote?: () => void;
 }
 
-export function AdminTopbar({ activeSection, drawerOpen = false, onToggleDrawer }: Props) {
+export function AdminTopbar({ activeSection, drawerOpen = false, onToggleDrawer, onSearch, onNewQuote }: Props) {
+    const [term, setTerm] = useState("");
     const [time, setTime] = useState("");
     const [date, setDate] = useState("");
     // Kimlik/rol tek kaynaktan (useAdminRole) gelir; eski yerel fetch
     // kaldırıldı — aynı isteği hem topbar hem sekmeler atıyordu.
-    const { user: authUser, isReadOnly } = useAdminRole();
+    const { user: authUser, isReadOnly, canMutate } = useAdminRole();
 
     useEffect(() => {
         const tick = () => {
@@ -67,6 +71,22 @@ export function AdminTopbar({ activeSection, drawerOpen = false, onToggleDrawer 
                 </span>
             </div>
 
+            {onSearch && (
+                <form
+                    role="search"
+                    className="ofis-top-search"
+                    onSubmit={(e) => { e.preventDefault(); onSearch(term.trim()); }}
+                >
+                    <Search className="h-4 w-4" aria-hidden="true" />
+                    <input
+                        value={term}
+                        onChange={(e) => setTerm(e.target.value)}
+                        aria-label="Müşteri, teklif veya ürün ara"
+                        placeholder="Müşteri, teklif veya ürün ara"
+                    />
+                </form>
+            )}
+
             {/* Right: time + actions */}
             <div className="ml-auto flex items-center gap-1 sm:gap-3">
                 {/* Salt-okunur hesap uyarısı: patron mutasyon kontrollerini hiç
@@ -81,7 +101,13 @@ export function AdminTopbar({ activeSection, drawerOpen = false, onToggleDrawer 
                         Salt okunur
                     </span>
                 )}
-                <div className="hidden sm:flex flex-col items-end leading-none">
+                {onNewQuote && canMutate && (
+                    <button type="button" onClick={onNewQuote} className="ofis-primary ofis-top-new" aria-label="Yeni teklif yaz">
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        <span>Yeni teklif</span>
+                    </button>
+                )}
+                <div className="hidden xl:flex flex-col items-end leading-none">
                     <span className="tabular-nums text-sm text-[var(--nx-gold)] tracking-wider">{time}</span>
                     <span className="tabular-nums text-sm text-[var(--nx-text-muted)] mt-0.5">{date}</span>
                 </div>

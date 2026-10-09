@@ -7,10 +7,12 @@ import { AdminTopbar } from "./AdminTopbar";
 interface Props {
     activeSection: string;
     onNavigate: (id: string) => void;
+    onSearch?: (term: string) => void;
+    onNewQuote?: () => void;
     children: ReactNode;
 }
 
-export function AdminShell({ activeSection, onNavigate, children }: Props) {
+export function AdminShell({ activeSection, onNavigate, onSearch, onNewQuote, children }: Props) {
     // Kenar çubuğu <1024px'te çekmece olur (audit E1/V1: eskiden inline
     // marginLeft:240px sabitti ve hiçbir medya sorgusu yoktu; 375px'te
     // içeriğe 135px kalıyordu). Masaüstünde bu durum yok sayılır —
@@ -54,6 +56,8 @@ export function AdminShell({ activeSection, onNavigate, children }: Props) {
                     activeSection={activeSection}
                     drawerOpen={drawerOpen}
                     onToggleDrawer={() => setDrawerOpen((v) => !v)}
+                    onSearch={onSearch}
+                    onNewQuote={onNewQuote}
                 />
                 <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6 min-w-0 animate-nx-fade-in">
                     <div className="max-w-[1280px] mx-auto w-full">

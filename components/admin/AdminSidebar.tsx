@@ -2,6 +2,7 @@
 
 import {
     LayoutDashboard, FileText, BarChart2, Sliders, Package, Flame, FlaskConical,
+    Users, Boxes, StickyNote, ListChecks, LineChart, Settings,
 } from "lucide-react";
 
 // Menü TEK kaynaktır: Topbar başlıkları da buradan türetilir (audit:
@@ -17,8 +18,19 @@ export const NAV_ITEMS = [
     { id: "catalog",     label: "Katalog",          Icon: Package },
 ] as const;
 
+// Hızlı erişim: altı ana bölüm aynen durur; bunlar gerçek kayıt gösteren ek
+// görünümlere ve var olan bölümlere kısa yoldur. `target` doluysa o ana
+// bölüme götürür (Ürünler → Katalog, Raporlar → Analiz).
+export const QUICK_ITEMS = [
+    { id: "customers", label: "Müşteriler",    Icon: Users },
+    { id: "products",  label: "Ürünler",       Icon: Boxes,     target: "catalog" },
+    { id: "notes",     label: "Proje Notları", Icon: StickyNote },
+    { id: "tasks",     label: "Görevler",      Icon: ListChecks },
+    { id: "reports",   label: "Raporlar",      Icon: LineChart, target: "analytics" },
+] as const;
+
 export const SECTION_LABELS: Record<string, string> = Object.fromEntries(
-    NAV_ITEMS.map((item) => [item.id, item.label]),
+    [...NAV_ITEMS, ...QUICK_ITEMS, { id: "settings", label: "Ayarlar" }].map((item) => [item.id, item.label]),
 );
 
 interface Props {
@@ -67,6 +79,35 @@ export function AdminSidebar({ active, onNavigate, open = false }: Props) {
                         )}
                     </button>
                 ))}
+
+                <p className="px-3 mt-5 mb-2 text-sm uppercase tracking-[0.2em] text-[var(--nx-text-muted)]">
+                    Hızlı erişim
+                </p>
+                {QUICK_ITEMS.map(({ id, label, Icon, ...rest }) => {
+                    const target = "target" in rest ? rest.target : id;
+                    return (
+                        <button
+                            key={id}
+                            onClick={() => onNavigate(target)}
+                            aria-current={active === id ? "page" : undefined}
+                            className={`nx-nav-item w-full text-left ${active === id ? "active" : ""}`}
+                        >
+                            <Icon className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">{label}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <div className="px-3 pb-2">
+                <button
+                    onClick={() => onNavigate("settings")}
+                    aria-current={active === "settings" ? "page" : undefined}
+                    className={`nx-nav-item w-full text-left ${active === "settings" ? "active" : ""}`}
+                >
+                    <Settings className="w-4 h-4 flex-shrink-0" />
+                    <span className="flex-1">Ayarlar</span>
+                </button>
             </div>
 
             {/* Sürüm bilgisi (eski sahte "Sistem Durumu" ışıklarının yerine —

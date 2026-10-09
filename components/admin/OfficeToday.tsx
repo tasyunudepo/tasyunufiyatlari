@@ -6,8 +6,11 @@ import {dailyTasks,opportunitySummary,oldReviewQuotes,projectContact} from '@/li
 import {formatGecikme} from '@/lib/admin/formatDuration';
 import {istanbulDate} from '@/lib/admin/officeCalendar';
 import {formatCurrency} from '@/lib/admin/utils';
+import {useAdminQuotes} from '@/lib/hooks/useAdminQuotes';
 import {OfficeProjectPanel} from './OfficeProjectPanel';
-export function OfficeToday(){
+import {OfficeOverviewSections} from './OfficeOverviewSections';
+export function OfficeToday({onNavigate}:{onNavigate?:(section:string)=>void}={}){
+ const adminQuotes=useAdminQuotes();
  const selectionRef=useRef<HTMLElement|null>(null);
  const query=useOffice();const [group,setGroup]=useState<'all'|'initial'|'overdue'|'today'>('all');
  // openPhone: satırdaki "Telefon" düğmesi dosyayı numara açık hâlde getirir.
@@ -54,7 +57,7 @@ export function OfficeToday(){
     </button>)}
    <div className="ofis-kpi" data-tone="success">
     <span className="ofis-kpi-icon" aria-hidden="true"><CheckCircle2 size={24}/></span>
-    <span className="ofis-kpi-text"><span>Bugün tamamlanan</span> <strong>{daily.done.length}</strong><small>{daily.total} işten</small></span>
+    <span className="ofis-kpi-text"><span>Tamamlanan</span> <strong>{daily.done.length}</strong><small>bugün, {daily.total} işten</small></span>
    </div>
   </div>
   <div className="ofis-workspace">
@@ -89,5 +92,6 @@ export function OfficeToday(){
    </div>
    <aside ref={selectionRef} tabIndex={-1} className="ofis-selection" aria-label="Seçili iş">{effective?<OfficeProjectPanel key={effective.quoteId+'-'+effective.taskId+'-'+(effective.openPhone??0)} quoteId={effective.quoteId} taskId={effective.taskId} openPhone={Boolean(effective.openPhone)}/>:<section className="ofis-panel ofis-empty"><h2>Bir iş seçin</h2><p>Görüşme, mesaj ve sonraki adımı burada yönetin.</p></section>}</aside>
   </div>
+  <OfficeOverviewSections data={data} quotes={adminQuotes.quotes as never} selectedQuoteId={effective?.quoteId} onNavigate={onNavigate}/>
  </div>;
 }

@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": [
+    "Beş alt bölüm görünür; ekip planı 8 satır = günlük toplam 10; kaynak toplamı 11 proje ile eşit.",
+    "Hızlı erişim: Müşteriler (13 kayıt), Proje Notları, Görevler, Ayarlar açılır; Ürünler Katalog'a, Raporlar Analiz'e götürür.",
+    "Üst çubuk araması Teklifler listesini aranan metinle açar; \"+ Yeni teklif\" teklif yazma ekranını açar.",
+    "Durum açılır seçicisi: \"Teklif Verildi\" 11 satır, hepsi o durumda.",
+    "375×844: ilk iş satırı 413–632 px arasında, ilk ekranda tam görünür; yatay taşma yok."
+  ],
+  "errors": [],
+  "views": [
+    "overview-1440",
+    "overview-375"
+  ]
+}

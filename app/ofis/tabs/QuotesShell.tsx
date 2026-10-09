@@ -20,9 +20,9 @@ const SUB_TABS = [
 
 type SubTabId = (typeof SUB_TABS)[number]["id"];
 
-export function QuotesShell() {
+export function QuotesShell({ initialView = "liste", initialSearch = "" }: { initialView?: SubTabId; initialSearch?: string } = {}) {
     const { canMutate } = useAdminRole();
-    const [active, setActive] = useState<SubTabId>("liste");
+    const [active, setActive] = useState<SubTabId>(initialView);
     // Listeden "Revize et" / "Çoğalt" ile açılan teklif. Düğme teklif
     // satırında durur; ekran aynı teklif yazma ekranıdır.
     const [seed, setSeed] = useState<QuoteBuilderSeed | null>(null);
@@ -53,6 +53,7 @@ export function QuotesShell() {
 
             {active === "liste" && (
                 <QuotesTab
+                    initialSearch={initialSearch}
                     onOpenInBuilder={(yeniSeed) => {
                         setSeed(yeniSeed);
                         setActive("yeni");
