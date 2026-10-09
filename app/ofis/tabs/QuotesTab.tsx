@@ -515,7 +515,7 @@ export function QuotesTab({
                         {multiQuoteSeriesCount > 0 && ` · ${multiQuoteSeriesCount} çoklu seri`}
                     </p>
                 </div>
-                <div className="ofis-sheet-columns" aria-hidden="true"><span>Müşteri</span><span>Ürün</span><span>Tutar · KDV dahil</span><span>Durum · temas</span></div>
+                <div className="ofis-sheet-columns" aria-hidden="true"><span>Tarih · teklif no</span><span>Müşteri</span><span>Ürün · marka</span><span>Miktar</span><span>Birim fiyat (KDV hariç)</span><span>Tutar (KDV dahil)</span><span>Durum · temas</span></div>
                 <div>
                     {filteredSeries.length === 0 ? (
                         <div className="ofis-empty px-5">Seçili filtrelerde teklif talebi bulunmuyor.</div>
@@ -571,21 +571,27 @@ export function QuotesTab({
                                             <div key={quote.id} data-testid={`quote-row-${quote.id}`} className="ofis-quote-row" data-selected={selectedQuote?.id === quote.id}>
                                                 {/* Satırın tamamı tek ana eylemdir: teklifi sağdaki föyde açar. */}
                                                 <button type="button" onClick={() => selectQuote(quote)} className="ofis-quote-main" aria-label={`${quote.customer_name}: Detay`}>
-                                                    <strong className="ofis-q-name">{quote.customer_name}</strong>
-                                                    <span className="ofis-q-product">
-                                                        {quote.brand_name || "Marka yok"} · {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm} cm · {quote.area_m2} m² · {quote.city_name || "—"}
-                                                    </span>
-                                                    <strong className="ofis-q-amount">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</strong>
                                                     <span className="ofis-helper ofis-q-date">{new Date(quote.created_at).toLocaleDateString("tr-TR")}</span>
-                                                    <span className="ofis-q-state">
-                                                        <span className="ofis-status">{quoteStatusLabel(quote.status)}</span>
-                                                        <span className="ofis-helper" data-testid={`quote-contact-${quote.id}`}>{contactLabel(quote.id)}</span>
-                                                    </span>
                                                     <span className="ofis-helper ofis-q-code">
-                                                        {quote.quote_code ? `${quote.quote_code} · ` : ""}
-                                                        {quote.request_type === "manual_quote" ? "Ofis teklifi" : quote.request_type === "pdf_quote" ? "PDF" : quote.request_type === "whatsapp_order" ? "WhatsApp" : "Diğer"}
-                                                        {priorityKey !== "normal" ? ` · Öncelik: ${urgencyLabel[priorityKey] ?? priorityKey}` : ""}
-                                                        {quote.status === "completed" && quote.gross_profit != null ? ` · kâr ${Number(quote.gross_profit).toLocaleString("tr-TR")} ₺` : ""}
+                                                        {quote.quote_code ? <span className="font-mono">{quote.quote_code}</span> : null}
+                                                        {quote.quote_code ? " · " : ""}
+                                                        {quote.request_type === "manual_quote" ? "Ofis" : quote.request_type === "pdf_quote" ? "PDF" : quote.request_type === "whatsapp_order" ? "WhatsApp" : "Diğer"}
+                                                        {priorityKey !== "normal" ? ` · ${urgencyLabel[priorityKey] ?? priorityKey}` : ""}
+                                                    </span>
+                                                    <span className="ofis-q-name">
+                                                        <strong>{quote.customer_name}</strong>
+                                                        <span className="ofis-helper">{quote.city_name || "—"}</span>
+                                                    </span>
+                                                    <span className="ofis-q-product">
+                                                        {quote.material_type === "tasyunu" ? "Taşyünü" : "EPS"} {quote.thickness_cm} cm · {quote.brand_name || "Marka yok"}
+                                                    </span>
+                                                    <span className="ofis-q-qty">{Number(quote.area_m2 ?? 0).toLocaleString("tr-TR")} m²</span>
+                                                    <span className="ofis-q-unit">{(quote.price_per_m2 ?? 0).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</span>
+                                                    <strong className="ofis-q-amount">{(quote.total_price ?? 0).toLocaleString("tr-TR")} ₺</strong>
+                                                    <span className="ofis-q-state">
+                                                        <span className="ofis-status" data-status={quote.status ?? "unknown"}>{quoteStatusLabel(quote.status)}</span>
+                                                        <span className="ofis-helper" data-testid={`quote-contact-${quote.id}`}>{contactLabel(quote.id)}</span>
+                                                        {quote.status === "completed" && quote.gross_profit != null ? <span className="ofis-helper">kâr {Number(quote.gross_profit).toLocaleString("tr-TR")} ₺</span> : null}
                                                     </span>
                                                 </button>
                                                 <QuoteMoreActions compact name={quote.customer_name ?? "Teklif"}>

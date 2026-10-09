@@ -2,30 +2,31 @@
    The compatibility rules adapt the existing six sections until their later
    layout phases. Business calculations, API routes and status enums stay intact. */
 .ofis-surface {
-  --ofis-border-hover: #949d96;
-  --ofis-nav-border: #edc6b4;
-  --ofis-brand-bg: #e8ece7;
+  --ofis-border-hover: #9aa7ba;
+  --ofis-nav-border: #c5d4f8;
+  --ofis-brand-bg: #e6ecf7;
   --ofis-warning-text: #70430b;
   --ofis-warning-bg: #fff3d9;
   --ofis-danger-bg: #fff0ee;
   --ofis-success-bg: #e9f3ec;
   --ofis-info-bg: #eaf1f7;
   --ofis-purple-bg: #f2edf8;
-  --ofis-table-head: #eef0ed;
-  --ofis-control-active: #e9ede8;
+  --ofis-table-head: #f1f4f9;
+  --ofis-control-active: #edf2fd;
   --ofis-placeholder: #58616c;
-  --ofis-accent-hover: #a33509;
-  --ofis-layer-shadow: #14181f1f;
-  --ofis-nav-bg: #fff1ea;
+  --ofis-accent-hover: #173fb0;
+  --ofis-layer-shadow: #0f1b331f;
+  --ofis-nav-bg: #e9effd;
   --ofis-type-heading-small: 19px;
   --ofis-type-heading-medium: 26px;
   --ofis-type-display: 40px;
-  --ofis-bg: #f3f4f2;
+  --ofis-bg: #f3f6fb;
   --ofis-surface: #fff;
-  --ofis-text: #14181f;
-  --ofis-muted: #4a5261;
-  --ofis-border: #d5d9d4;
-  --ofis-accent: #c2410c;
+  --ofis-text: #0f1b33;
+  --ofis-muted: #46546a;
+  --ofis-border: #dbe2ec;
+  --ofis-accent: #1f4fd8;
+  --ofis-danger: #b42318;
   --ofis-whatsapp: #1e7a46;
   --font-sans: var(--font-ofis-sans);
   --font-mono: var(--font-ofis-mono);
@@ -33,7 +34,7 @@
   --nx-bg-2: var(--ofis-bg);
   --nx-card: var(--ofis-surface);
   --nx-border: var(--ofis-border);
-  --nx-border-accent: #b3bab4;
+  --nx-border-accent: #b3bfd0;
   /* Old gold aliases become neutral; accent is assigned by action semantics. */
   --nx-gold: var(--ofis-text);
   --nx-copper: #697d8c;
@@ -56,7 +57,7 @@
   --admin-card: var(--ofis-surface);
   --admin-card-2: var(--ofis-bg);
   --admin-border: var(--ofis-border);
-  --admin-border-strong: #b3bab4;
+  --admin-border-strong: #b3bfd0;
   --admin-text: var(--ofis-text);
   --admin-text-soft: var(--ofis-muted);
   --admin-text-muted: var(--ofis-muted);
@@ -68,7 +69,7 @@
   --admin-glow: none;
   background: var(--ofis-bg);
   color: var(--ofis-text);
-  font-family: var(--font-ofis-sans), var(--font-barlow), sans-serif;
+  font-family: var(--font-ofis-sans), sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color-scheme: light;
@@ -201,11 +202,14 @@
 .ofis-surface .ofis-day-counts > div { display: grid; gap: 4px; padding: 20px 16px; }
 .ofis-surface .ofis-day-counts > div + div { border-left: 1px solid var(--ofis-border); }
 .ofis-surface .ofis-day-counts strong { font-size: var(--ofis-type-display); font-variant-numeric: tabular-nums; }
-.ofis-surface .ofis-workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(340px,380px); gap: 20px; align-items: start; }
+.ofis-surface .ofis-workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(340px,372px); gap: 20px; align-items: start; }
 .ofis-surface .ofis-queue { display: grid; gap: 20px; min-width: 0; }
 .ofis-surface .ofis-selection { min-width: 0; position: sticky; top: 20px; }
 .ofis-surface .ofis-project-panel { display: grid; gap: 16px; }
-.ofis-surface .ofis-project-panel h2 { line-height: 1.25; }
+.ofis-surface .ofis-project-panel h2 { font-size: var(--ofis-type-heading-small); line-height: 1.3; }
+.ofis-surface .ofis-card-need { margin-top: 8px; }
+.ofis-surface .ofis-card-value { display: grid; gap: 2px; padding-block: 12px; border-block: 1px solid var(--ofis-border); }
+.ofis-surface .ofis-card-value strong { font-size: var(--ofis-type-heading-medium); font-weight: 700; font-variant-numeric: tabular-nums; }
 .ofis-surface .ofis-project-panel label { display: grid; gap: 6px; margin-block: 12px; min-width: 0; }
 .ofis-surface .ofis-project-panel input, .ofis-surface .ofis-project-panel select, .ofis-surface .ofis-project-panel textarea { display: block; width: 100%; min-width: 0; border: 1px solid var(--ofis-border); border-radius: 8px; padding: 10px 12px; font-size: 16px; background: var(--ofis-surface); color: var(--ofis-text); }
 .ofis-surface .ofis-project-panel fieldset { min-width: 0; border: 0; padding: 0; }
@@ -226,42 +230,48 @@
 .ofis-surface .ofis-filter { background: var(--ofis-surface); }
 .ofis-surface .ofis-filter[aria-pressed='true'] { border-color: var(--ofis-text); color: var(--ofis-surface); background: var(--ofis-text); font-weight: 600; }
 .ofis-surface .ofis-today-head { align-items: center; }
+.ofis-surface .ofis-today-head h1 { margin-block: 2px 4px; }
 .ofis-surface .ofis-day-line { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 4px; color: var(--ofis-muted); }
 .ofis-surface .ofis-day-line strong { color: var(--ofis-text); font-weight: 700; }
-.ofis-surface .ofis-day-progress { height: 8px; max-width: 480px; margin-top: 12px; border-radius: 8px; background: var(--ofis-border); overflow: hidden; }
-.ofis-surface .ofis-day-progress span { display: block; height: 100%; background: var(--ofis-whatsapp); }
+.ofis-surface .ofis-kpis { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+.ofis-surface .ofis-kpi { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 16px; min-height: 96px; padding: 16px 20px; text-align: left; background: var(--ofis-surface); border: 1px solid var(--ofis-border); border-radius: 10px; }
+.ofis-surface button.ofis-kpi:hover { border-color: var(--ofis-border-hover); }
+.ofis-surface .ofis-kpi[aria-pressed='true'] { border-color: var(--ofis-accent); box-shadow: inset 0 0 0 1px var(--ofis-accent); background: var(--ofis-control-active); }
+.ofis-surface .ofis-kpi-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 10px; color: var(--ofis-accent); background: var(--ofis-info-bg); }
+.ofis-surface .ofis-kpi[data-tone='danger'] .ofis-kpi-icon { color: var(--ofis-danger); background: var(--ofis-danger-bg); }
+.ofis-surface .ofis-kpi[data-tone='success'] .ofis-kpi-icon { color: var(--nx-green); background: var(--ofis-success-bg); }
+.ofis-surface .ofis-kpi-text { display: grid; min-width: 0; }
+.ofis-surface .ofis-kpi-text strong { font-size: var(--ofis-type-heading-medium); font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.ofis-surface .ofis-kpi-text small { font-size: 14px; color: var(--ofis-muted); }
+.ofis-surface .ofis-section-heading { align-items: center; }
 .ofis-surface .ofis-section-heading h2 { font-size: var(--ofis-type-heading-small); }
 .ofis-surface .ofis-queue > .ofis-panel { padding: 20px; }
-.ofis-surface .ofis-queue .ofis-filter-row { margin-block: 12px; }
-/* İş satırı tek bant: rozet · müşteri/ürün · tutar · eylem. */
-.ofis-surface .ofis-task-list { container-type: inline-size; }
-.ofis-surface .ofis-task-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 8px; border-top: 1px solid var(--ofis-border); }
-.ofis-surface .ofis-task-row[data-selected='true'] { background: var(--ofis-control-active); box-shadow: inset 3px 0 0 var(--ofis-text); }
-.ofis-surface .ofis-task-main { display: grid; grid-template-columns: 116px minmax(0,1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 4px; text-align: left; border-radius: 8px; }
-.ofis-surface .ofis-task-content { display: grid; gap: 2px; min-width: 0; }
-.ofis-surface .ofis-task-content strong { font-size: var(--ofis-type-heading-small); font-weight: 700; line-height: 1.3; }
-.ofis-surface .ofis-task-content > span { overflow-wrap: anywhere; }
-.ofis-surface .ofis-task-value { display: grid; justify-items: end; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ofis-surface .ofis-task-value small { font-weight: 400; }
-.ofis-surface .ofis-task-actions { display: flex; gap: 8px; }
-.ofis-surface .ofis-due { display: grid; justify-items: center; align-self: center; text-align: center; font-size: 14px; line-height: 1.3; padding: 8px; border-radius: 8px; color: var(--ofis-muted); background: var(--ofis-bg); }
-.ofis-surface .ofis-due strong { font-size: 16px; font-weight: 700; color: var(--ofis-text); white-space: nowrap; }
-.ofis-surface .ofis-due.is-late { color: var(--ofis-surface); background: var(--ofis-accent); }
-.ofis-surface .ofis-due.is-late strong { color: var(--ofis-surface); }
-@container (max-width: 640px) {
- .ofis-surface .ofis-task-row { grid-template-columns: minmax(0,1fr); }
- .ofis-surface .ofis-task-actions { padding-left: 132px; padding-bottom: 4px; }
+.ofis-surface .ofis-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 12px; border-radius: 8px; color: var(--ofis-accent); font-weight: 600; text-align: left; }
+.ofis-surface .ofis-link:hover { background: var(--ofis-control-active); }
+.ofis-surface .ofis-link[aria-pressed='true'] { color: var(--ofis-muted); }
+/* "Önce ilgilen" tablosu: Müşteri · İhtiyaç · Bekleme · Sonraki adım. */
+.ofis-surface .ofis-first { container-type: inline-size; padding-bottom: 20px; }
+.ofis-surface .ofis-task-columns, .ofis-surface .ofis-task-main { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1.1fr) minmax(0,1.25fr); gap: 16px; }
+.ofis-surface .ofis-task-columns { grid-template-columns: minmax(0,1.05fr) minmax(0,1.1fr) minmax(0,1.25fr) 164px; margin-top: 12px; padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--ofis-muted); background: var(--ofis-table-head); border: 1px solid var(--ofis-border); border-radius: 8px 8px 0 0; }
+.ofis-surface .ofis-task-row { display: grid; grid-template-columns: minmax(0,1fr) 180px; align-items: center; border: 1px solid var(--ofis-border); border-top: 0; }
+.ofis-surface .ofis-task-row[data-selected='true'] { background: var(--ofis-control-active); box-shadow: inset 0 0 0 2px var(--ofis-accent); border-radius: 4px; }
+.ofis-surface .ofis-task-main { align-items: center; width: 100%; min-height: 72px; padding: 10px 16px; text-align: left; }
+.ofis-surface .ofis-t-cell { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.ofis-surface .ofis-t-cell strong { font-weight: 700; }
+.ofis-surface .ofis-late { color: var(--ofis-danger); }
+.ofis-surface .ofis-t-next { justify-content: space-between; margin-right: 8px; }
+@container (max-width: 700px) {
+ .ofis-surface .ofis-task-columns { display: none; }
+ .ofis-surface .ofis-task-row { grid-template-columns: minmax(0,1fr); border-top: 1px solid var(--ofis-border); margin-top: 8px; border-radius: 8px; }
+ .ofis-surface .ofis-task-main { grid-template-columns: minmax(0,1fr); gap: 8px; }
+ .ofis-surface .ofis-t-next { margin: 0 8px 8px; justify-content: flex-start; }
 }
-@container (max-width: 460px) {
- .ofis-surface .ofis-task-main { grid-template-columns: minmax(0,1fr) auto; }
- .ofis-surface .ofis-due { grid-column: 1 / -1; justify-self: start; grid-auto-flow: column; gap: 6px; align-items: baseline; }
- .ofis-surface .ofis-task-actions { padding-left: 4px; }
- .ofis-surface .ofis-task-actions > * { flex: 1; }
-}
+@media(max-width:899px) { .ofis-surface .ofis-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; } }
+@media(max-width:479px) { .ofis-surface .ofis-kpi { grid-template-columns: minmax(0,1fr); gap: 8px; padding: 12px; } .ofis-surface .ofis-kpi-icon { display: none; } }
 .ofis-surface .ofis-incoming { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 8px 16px; align-items: center; width: 100%; min-height: 56px; text-align: left; padding: 8px 12px; border-top: 1px solid var(--ofis-border); }
-.ofis-surface .ofis-incoming[aria-pressed='true'] { background: var(--ofis-control-active); box-shadow: inset 3px 0 0 var(--ofis-text); }
+.ofis-surface .ofis-incoming[aria-pressed='true'] { background: var(--ofis-control-active); box-shadow: inset 0 0 0 2px var(--ofis-accent); }
 .ofis-surface .ofis-incoming > span { color: var(--ofis-muted); }
-.ofis-surface .ofis-incoming .ofis-incoming-go { color: var(--ofis-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.ofis-surface .ofis-incoming .ofis-incoming-go { color: var(--ofis-accent); font-weight: 600; }
 .ofis-surface .ofis-queue h2 { font-size: var(--ofis-type-heading-small); }
 .ofis-surface .ofis-footnote { max-width: 80ch; }
 .ofis-surface .ofis-empty { padding-block: 32px; }
@@ -306,30 +316,42 @@
 .ofis-surface .ofis-sheet-list-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 16px 20px 12px; }
 .ofis-surface .ofis-sheet-list-head h2 { font-size: var(--ofis-type-heading-small); }
 .ofis-surface .ofis-sheet-columns { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; padding: 8px 76px 8px 20px; font-size: 14px; color: var(--ofis-muted); background: var(--ofis-table-head); border-block: 1px solid var(--ofis-border); }
-.ofis-surface .ofis-sheet-columns > :is(:nth-child(2), :nth-child(4)) { display: none; }
-.ofis-surface .ofis-sheet-columns > :nth-child(3) { text-align: right; }
+.ofis-surface .ofis-sheet-columns > * { display: none; }
+.ofis-surface .ofis-sheet-columns > :is(:nth-child(2), :nth-child(6)) { display: block; }
+.ofis-surface .ofis-sheet-columns > :nth-child(6) { text-align: right; }
 .ofis-surface .ofis-quote-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 4px; padding: 4px 12px 4px 8px; border-bottom: 1px solid var(--ofis-border); }
-.ofis-surface .ofis-quote-row[data-selected='true'] { background: var(--ofis-control-active); box-shadow: inset 3px 0 0 var(--ofis-text); }
-/* Satır hücreleri adlı alanlara oturur: dar listede dört kısa satır,
-   geniş listede (teklif seçili değilken) dört sütun. */
-.ofis-surface .ofis-quote-main { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'name amount' 'product date' 'state state' 'code code'; align-items: baseline; gap: 2px 16px; width: 100%; min-height: 72px; padding: 8px 12px; text-align: left; border-radius: 8px; }
+.ofis-surface .ofis-quote-row[data-selected='true'] { background: var(--ofis-control-active); box-shadow: inset 0 0 0 2px var(--ofis-accent); }
+/* Satır hücreleri adlı alanlara oturur: dar listede dört kısa satır, geniş
+   listede Tarih · Müşteri · Ürün · Miktar · Birim fiyat · Tutar · Durum. */
+.ofis-surface .ofis-quote-main { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'name amount' 'product qty' 'state state' 'code date'; align-items: baseline; gap: 2px 16px; width: 100%; min-height: 72px; padding: 8px 12px; text-align: left; border-radius: 8px; }
 .ofis-surface .ofis-quote-row:not([data-selected='true']) .ofis-quote-main:hover { background: var(--ofis-bg); }
 .ofis-surface .ofis-quote-main > * { min-width: 0; overflow-wrap: anywhere; }
-.ofis-surface .ofis-q-name { grid-area: name; font-weight: 700; }
+.ofis-surface .ofis-q-name { grid-area: name; display: grid; }
+.ofis-surface .ofis-q-name strong { font-weight: 700; }
 .ofis-surface .ofis-q-product { grid-area: product; }
+.ofis-surface .ofis-q-qty { grid-area: qty; justify-self: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ofis-surface .ofis-q-unit { grid-area: unit; display: none; justify-self: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ofis-surface .ofis-q-amount { grid-area: amount; justify-self: end; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ofis-surface .ofis-q-date { grid-area: date; justify-self: end; white-space: nowrap; }
 .ofis-surface .ofis-q-code { grid-area: code; }
 .ofis-surface .ofis-q-state { grid-area: state; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-block: 4px 2px; }
 .ofis-surface .ofis-q-state .ofis-status { margin-top: 0; }
+.ofis-surface .ofis-status[data-status] { border-radius: 999px; padding: 2px 10px; font-weight: 600; border-color: transparent; color: var(--ofis-muted); background: var(--ofis-table-head); }
+.ofis-surface .ofis-status[data-status='pending'] { color: #1d3fa6; background: var(--ofis-info-bg); }
+.ofis-surface .ofis-status[data-status='contacted'], .ofis-surface .ofis-status[data-status='quoted'] { color: var(--ofis-warning-text); background: var(--ofis-warning-bg); }
+.ofis-surface .ofis-status[data-status='approved'], .ofis-surface .ofis-status[data-status='completed'] { color: var(--nx-green); background: var(--ofis-success-bg); }
+.ofis-surface .ofis-status[data-status='rejected'] { color: var(--nx-red); background: var(--ofis-danger-bg); }
 .ofis-surface .ofis-quote-who { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
 .ofis-surface .ofis-quote-who strong, .ofis-surface .ofis-quote-sum strong { font-weight: 700; }
 .ofis-surface .ofis-quote-sum { display: grid; justify-items: end; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ofis-surface .ofis-quote-sum small { font-size: 14px; color: var(--ofis-muted); }
-@container (min-width: 760px) {
- .ofis-surface .ofis-sheet-columns, .ofis-surface .ofis-quote-main { grid-template-columns: minmax(200px,1.1fr) minmax(220px,1.4fr) 150px minmax(190px,0.9fr); column-gap: 20px; }
- .ofis-surface .ofis-sheet-columns > :is(:nth-child(2), :nth-child(4)) { display: block; }
- .ofis-surface .ofis-quote-main { grid-template-areas: 'name product amount state' 'code product date state'; align-items: center; min-height: 64px; }
+@container (min-width: 1000px) {
+ .ofis-surface .ofis-sheet-columns, .ofis-surface .ofis-quote-main { grid-template-columns: 176px minmax(120px,1.15fr) minmax(140px,1.2fr) 88px 108px 124px minmax(160px,1fr); column-gap: 12px; }
+ .ofis-surface .ofis-sheet-columns > * { display: block; }
+ .ofis-surface .ofis-sheet-columns > :is(:nth-child(4), :nth-child(5), :nth-child(6)) { text-align: right; }
+ .ofis-surface .ofis-quote-main { grid-template-areas: 'date name product qty unit amount state' 'code name product qty unit amount state'; align-items: center; min-height: 64px; }
+ .ofis-surface .ofis-q-unit { display: block; }
+ .ofis-surface .ofis-q-date { justify-self: start; }
  .ofis-surface .ofis-q-state { display: grid; justify-items: start; gap: 2px; margin-block: 0; }
 }
 .ofis-surface .ofis-series-head { display: grid; grid-template-columns: auto minmax(0,1fr) auto auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 20px; text-align: left; background: var(--ofis-bg); border-bottom: 1px solid var(--ofis-border); }

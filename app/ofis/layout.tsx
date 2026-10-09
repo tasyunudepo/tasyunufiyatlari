@@ -1,14 +1,19 @@
 import localFont from 'next/font/local'
 import './ofis.css'
 
-// Tam değişken font dosyaları Türkçe glifleri içerir; dış font isteği yoktur.
+// Operasyon Masası yönünün fontu: IBM Plex Sans (gövde ve fiyat) ve IBM Plex
+// Mono (teklif kodu gibi teknik kimlikler). Dosyalar yereldir, Türkçe harfleri
+// ve ₺ işaretini içerir; dış font isteği yoktur.
 const officeSans = localFont({
-  src: '../../public/fonts/ofis/AtkinsonHyperlegibleNext-Variable.ttf',
-  variable: '--font-ofis-sans', weight: '200 800', display: 'swap',
+  src: '../../public/fonts/ofis/IBMPlexSans-Variable.ttf',
+  variable: '--font-ofis-sans', weight: '100 700', display: 'swap',
 })
 const officeMono = localFont({
-  src: '../../public/fonts/ofis/AtkinsonHyperlegibleMono-Variable.ttf',
-  variable: '--font-ofis-mono', weight: '200 800', display: 'swap',
+  src: [
+    { path: '../../public/fonts/ofis/IBMPlexMono-Regular.ttf', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/ofis/IBMPlexMono-SemiBold.ttf', weight: '600', style: 'normal' },
+  ],
+  variable: '--font-ofis-mono', display: 'swap',
 })
 
 // Bu server component, /ofis rotasını force-dynamic yapar.

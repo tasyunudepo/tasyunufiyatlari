@@ -72,7 +72,8 @@ function ProjectRecord({data,project,quote,taskId,openPhone}:{data:OfficeData;pr
   setDue(istanbulDate(base)+'T'+data.calendar.opens);
  }
  return <section className="ofis-panel ofis-project-panel" data-testid="office-project-panel" aria-label="Proje dosyası">
-  <div><p className="ofis-eyebrow">PROJE DOSYASI</p><h2>{project.name}</h2><p className="ofis-muted">{quote.quote_code??quote.id} · {quote.customer_name}</p></div>
+  <div><h2>{project.name}</h2><p className="ofis-muted"><span className="font-mono">{quote.quote_code??quote.id}</span> · {quote.customer_name}</p><p className="ofis-card-need">{quote.material_type==='eps'?'EPS':'Taşyünü'} · {quote.thickness_cm} cm · {Number(quote.area_m2).toLocaleString('tr-TR')} m² · {quote.city_name}</p></div>
+  <div className="ofis-card-value"><span className="ofis-helper">Proje değeri (KDV hariç)</span><strong>{project.valuation_net_amount===null?'Tutar seçilmedi':formatCurrency(project.valuation_net_amount)}</strong></div>
   <dl className="ofis-facts"><div><dt>Satış aşaması · proje</dt><dd>{QUOTE_STATUS_LABELS[project.status as keyof typeof QUOTE_STATUS_LABELS]??'Durumu belirsiz'}</dd></div><div><dt>Temas durumu</dt><dd data-testid="project-contact-state">{contact.label}</dd></div><div><dt>Son girişim</dt><dd>{contact.latest?`${INTERACTION_RESULT_LABELS[contact.latest.outcome??'']??'Sonuç belirsiz'} · ${date(contact.latest.occurredAt)}`:'Girişim kaydı yok'}</dd></div><div><dt>Kayıtlı en eski başarı</dt><dd>{contact.firstRecordedSuccessAt?date(contact.firstRecordedSuccessAt):contact.hasSuccess?'Eski kayıtta var; tarih bilinmiyor':'Başarı kaydı yok'}</dd></div></dl>
   <div className="ofis-next-step"><strong>{task?task.kind==='initial_contact'?'Sıradaki iş: ilk temas':'Sıradaki iş: takip':'Görüşme sonucu veya sonraki adımı kaydedin'}</strong>{task&&<p>{date(task.due_at)} · {task.owner}</p>}<p className="ofis-helper">Görev, sonucu kaydedince tamamlanır.</p></div>
   <div className="ofis-actions">
