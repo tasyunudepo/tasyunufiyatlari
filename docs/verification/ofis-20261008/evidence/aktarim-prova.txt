@@ -1,0 +1,50 @@
+=== 1. temiz koşu
+30 teklif okundu · son 14 gün (2026-09-25 ve sonrası)
+kapsam dışı: 0 eski · 0 kapanmış · zaten projede: 0
+açılacak proje: 13 · projeye bağlanacak teklif: 30 · projesi olan müşteriden yeni gelen teklif: 0
+ilk temas işi: 5 · kayıtlı tarihe takip: 1 · aktarım gününe takip (temas kaydı ya da ofis teklifi var, tarih yok): 7
+✓ Örnek Eski Kayıt · İstanbul · teklif verildi · ilk temas
+✓ Örnek Sahil Yapı · İstanbul · teklif verildi · ilk temas
+✓ Örnek Kuzey Yapı · İstanbul · teklif verildi · ilk temas
+✓ Örnek Ada Cephe · İstanbul · teklif verildi · ilk temas
+✓ Örnek Çınar Proje · İstanbul · teklif verildi · ilk temas
+✓ Kıyas old 1791488500951 · İstanbul · teklif verildi · takip 07/10 09:00
+✓ Kıyas new 1791488515732 · İstanbul · teklif verildi · takip 09/10 18:00
+✓ Kıyas old 1791488357546 · İstanbul · teklif verildi · takip 09/10 18:00
+✓ Kıyas old 1791488421857 · İstanbul · teklif verildi · takip 09/10 18:00
+✓ Test Kuzey Yapı alternatif · İstanbul · teklif verildi · takip 09/10 18:00
+✓ Faz 4 Örnek 1791539687023 · İstanbul · teklif verildi · takip 09/10 18:00
+✓ Eşzamanlı revizyon kabulü · İstanbul · teklif verildi · takip 09/10 18:00
+✓ Kıyas new 1791488515732 form · İstanbul · teklif verildi · takip 09/10 18:00
+Aktarım tamam.
+13 proje açıldı · 17 teklif bağlandı · 13 proje değeri seçildi · 13 proje aşaması işlendi
+açılan ilk temas işi: 5 · planlanan takip: 8 · zaten görüşüldüğü için kapatılan ilk temas işi: 8 · olduğu gibi bırakılan mevcut proje: 0
+bağlı teklif | 30
+değeri seçili proje | 13
+görüşme kaydı (projeye bağlı) | 0
+iş: followup / open | 8
+iş: initial_contact / cancelled | 8
+iş: initial_contact / open | 5
+işlem: followup_scheduled | 8
+işlem: outcome_recorded | 13
+işlem: project_created | 13
+işlem: project_linked | 17
+işlem: task_cancelled | 8
+işlem: valuation_selected | 13
+proje | 13
+=== 2. ikinci koşu
+Yazılacak kayıt kalmamış: aktarım daha önce tamamlanmış.
+0 proje açıldı · 0 teklif bağlandı · 0 proje değeri seçildi · 0 proje aşaması işlendi
+açılan ilk temas işi: 0 · planlanan takip: 0 · zaten görüşüldüğü için kapatılan ilk temas işi: 0 · olduğu gibi bırakılan mevcut proje: 8
+SONUÇ: ikinci koşu kayıt eklemedi
+=== 3. kesinti taraması (1..71. işlemden sonra süreç öldürülür, sonra yeniden koşulur)
+SONUÇ: kesinti noktası 71 · temiz koşuyla aynı: 71 · farklı: 0 
+=== 4. operatörün çalışmaya başladığı proje + aynı müşteriden yeni teklif
+açılacak proje: 0 · projeye bağlanacak teklif: 0 · projesi olan müşteriden yeni gelen teklif: 1
+→ Örnek Ada Cephe · İstanbul: 1 yeni teklif var; proje üzerinde çalışılmış, bağlama operatöre bırakıldı
+Yazılacak kayıt kalmamış: aktarım daha önce tamamlanmış.
+0 proje açıldı · 0 teklif bağlandı · 0 proje değeri seçildi · 0 proje aşaması işlendi
+açılan ilk temas işi: 0 · planlanan takip: 0 · zaten görüşüldüğü için kapatılan ilk temas işi: 0 · olduğu gibi bırakılan mevcut proje: 9
+SONUÇ: projeye dokunulmadı; yeni teklifin bağlanması operatöre bırakıldı (değer | aşama | iş | teklif: 33000.00 | quoted | 1 | 1)
+=== geri yükleme
+SONUÇ: veritabanı prova öncesi hâlinde (teklif 30 bağlı 14 proje 11 iş 23 işlem 89)

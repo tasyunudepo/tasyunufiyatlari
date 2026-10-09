@@ -53,7 +53,49 @@ Sıra önemlidir: yeni kod, tablolar ve bayrak olmadan yayına girerse Genel Bak
 2. Canlı veritabanına `01_ofis_tablolar.sql`, ardından `02_ofis_islevler.sql`. Yol: `npx supabase db query --linked` (salt okunur sorguyla erişim doğrulandı).
 3. Vercel'e üç ortam değişkeni: `OFIS_WORKFLOW_ENABLED=1`, `OFIS_WORK_CALENDAR` (mesai takvimi), `OFIS_LEGACY_CUTOFF` (eski kayıt sınırı).
 4. Dalı main'e birleştir ve push et; Vercel yayına alır.
-5. Canlıda kontrol: Genel Bakış açılıyor, teklif listesi ve yeni teklif çalışıyor, salt okunur hesap yazamıyor.
+5. İlk aktarım (bölüm 4a): son günlerin açık tekliflerini projeye çevirir; iş sırası ilk gün dolu açılır.
+6. Canlıda kontrol: Genel Bakış açılıyor ve aktarılan işler sırada, teklif listesi ve yeni teklif çalışıyor, salt okunur hesap yazamıyor.
+
+## 4a. İlk aktarım
+
+Neden: taşımadan hemen sonra 0 proje ve 0 iş vardır; mevcut teklifler kendiliğinden işe dönüşmez. Bu adım bir kereye mahsus son 14 günün açık tekliflerini projeye çevirir (Emrah'ın 9 Ekim 2026 kararı).
+
+Betik veritabanına doğrudan yazmaz; panelde elle yapılan işlemin aynısını panelin kendi uçlarına sırayla gönderir (`scripts/ofis-aktarim/run.mjs`, kurallar `plan.mjs`).
+
+```bash
+# 1) Kuru çalışma: yalnız okur, planı tablo olarak yazar
+OFIS_AKTARIM_USER=… OFIS_AKTARIM_PASSWORD=… node scripts/ofis-aktarim/run.mjs --taban https://www.tasyunufiyatlari.com
+# 2) Uygulama
+OFIS_AKTARIM_USER=… OFIS_AKTARIM_PASSWORD=… node scripts/ofis-aktarim/run.mjs --taban https://www.tasyunufiyatlari.com --uygula
+```
+
+Seçenekler: `--gun 14` (pencere), `--sorumlu ad` (teklifte yazan kişi yoksa işin sorumlusu; varsayılan giriş yapan kullanıcı).
+
+| Kural | Karşılığı |
+|---|---|
+| Hangi teklifler | Son 14 günde gelen, kapanmamış (tamamlandı/reddedildi olmayan), projeye bağlı olmayan |
+| Proje | Aynı müşteri kaydının teklifleri tek proje. Müşteri kaydı telefonun birebir eşleşmesidir; ad ya da telefon benzerliğiyle birleştirme yok |
+| Proje değeri | En son verilen teklif (panelden değiştirilebilir) |
+| Proje aşaması | Müşterinin tekliflerindeki en ileri aşama |
+| Sorumlu | Teklifi yazan kişi; yoksa `--sorumlu` |
+| Temas kaydı yok, ofis teklifi yazılmamış | İlk temas işi; hedef = ilk geliş + mesai takvimindeki ilk temas süresi (eski talepte gecikmiş görünür) |
+| Kayıtlı takip tarihi var | O güne 09:00 takip işi |
+| Temas kaydı var ya da ofis elle teklif yazmış, tarih yok | Aktarım gününün mesai sonuna takip işi. Ofisin teklif yazdığı müşteriyle zaten görüşülmüştür; "ilk temas gecikti" yanlış alarm olurdu |
+| Görüşme kaydı | Uydurulmaz. Kendiliğinden açılan ilk temas işi "İlk aktarım: …" nedeniyle iptal edilir; o günün "iptal" sayacında görünür |
+| Yeniden koşma | Güvenli: işlem anahtarları sabit, aynı kayıt ikinci kez yazılmaz; yarıda kalan aktarım tamamlanır |
+| Üzerinde çalışılmış proje | Dokunulmaz; o müşterinin sonradan gelen teklifini bağlamak operatörün kararıdır |
+
+Canlı tekliflerle kuru çalışma (9 Ekim 2026, yalnız okuma): 133 teklifin 15'i kapsamda → 8 proje; 6 ilk temas işi, 1 kayıtlı tarihe takip, 1 aktarım gününe takip. Pencere 30 gün olsaydı 34 teklif → 19 proje.
+
+Prova (`bash scripts/ofis-aktarim/prova.sh`, yerel sentetik veritabanı; kanıt `evidence/aktarim-prova.txt`):
+
+| Sınanan | Sonuç |
+|---|---|
+| Temiz koşu | 30 teklif → 13 proje; 5 ilk temas, 8 takip; 13 proje değeri ve aşaması |
+| İkinci koşu | Kayıt eklenmedi, durum aynı |
+| Kesinti: 71 işlemin her birinden sonra süreç öldürülüp yeniden koşuldu | 71 noktanın 71'inde son durum temiz koşuyla birebir aynı |
+| Operatörün görüşme kaydettiği proje + aynı müşteriden yeni teklif | Projeye dokunulmadı; teklif bağlanmadı, operatöre bırakıldı |
+| Prova sonrası | Veritabanı yedekten geri yüklendi, sayılar prova öncesiyle aynı |
 
 ## 5. Geri dönüş
 
@@ -61,12 +103,13 @@ Sıra önemlidir: yeni kod, tablolar ve bayrak olmadan yayına girerse Genel Bak
 |---|---|
 | Adım 2'den sonra, kod yayına girmeden | `99_geri_al.sql`; şema eski hâline döner (provada doğrulandı) |
 | Kod yayındayken sorun | Vercel'de bir önceki yayına dön (commit `716f6bd`); eski kod yeni tabloları kullanmaz, boş kolonlar zarar vermez |
+| İlk aktarımdan sonra | Açılan projeler kalır (proje silme işlemi yoktur). Yanlış açılan proje panelden kapatılır; hepsinden vazgeçilecekse veritabanı dökümünden dönülür |
 | Ekip yeni tabloları kullanmaya başladıktan sonra | Şema silinmez (geri alma dosyası bunu reddeder). `OFIS_WORKFLOW_ENABLED` kapatılır, veri korunur |
 | En kötü durum | Veritabanı dökümünden geri yükleme. Yedekten sonra girilen kayıtlar kaybolur; bu yüzden yedek adım 1'de tazelenir |
 
 ## 6. Emrah'tan beklenenler
 
-- **"Uygula" sözü** (adım 2–4 bu söz olmadan yapılmaz).
+- **"Uygula" sözü** (adım 2–5 bu söz olmadan yapılmaz).
 - **Mesai takvimi ve ilk temas hedefi:** çalışma günleri, saatler ve yeni talebe kaç mesai dakikasında dönülmesi gerektiği. Önizlemedeki "hafta içi 09:00–18:00, 30 dakika" yalnız örnektir.
 - **Eski kayıt sınırı:** hangi tarihten önceki temassız teklifler günlük sayaca girmeyip "İncelenecek eski kayıtlar"a düşsün (öneri: geçiş günü).
 - **Vercel erişimi:** ortam değişkenlerini eklemek için panelden giriş ya da yeni erişim anahtarı.
