@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { inflateSync } from 'node:zlib'
 
 import { expect, test, type Page } from '@playwright/test'
 
@@ -8,6 +9,9 @@ import { expect, test, type Page } from '@playwright/test'
 // ve teslim kartı yine görünür; mevcut akış testleri bunu yakalamaz.
 // Bu test indirilen dosyanın kendisine bakar: sayfa görüntüsü, ayrı basılan
 // karekod ve tıklanır bağlantı alanları yedek PDF'te yoktur.
+//
+// Sayfa resim olduğu için yazı seçilemez; görünmez metin katmanı IBAN'ı
+// kopyalanır, belgeyi aranır yapar. Katmanın varlığı da burada korunur.
 
 const PRODUCT_PATH = '/urunler/tasyunu-levha/dalmacyali-sw035-tasyunu'
 
@@ -60,12 +64,32 @@ async function downloadQuotePdf(page: Page, trigger: () => Promise<void>): Promi
   return (await readFile(path)).toString('latin1')
 }
 
+/** Sıkıştırılmış sayfa içeriklerini açıp görünmez yazılan kelimeleri sayar. */
+function textLayer(pdf: string) {
+  let words = 0
+  let invisible = false
+  let compressedContent = false
+  for (const match of pdf.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)) {
+    let content: string
+    try {
+      content = inflateSync(Buffer.from(match[1], 'latin1')).toString('latin1')
+    } catch {
+      continue // görüntü akışı ya da sıkıştırılmamış içerik
+    }
+    compressedContent = true
+    words += (content.match(/ Tj/g) ?? []).length
+    if (/\b3 Tr\b/.test(content)) invisible = true
+  }
+  return { words, invisible, compressedContent, embeddedFont: pdf.includes('/FontFile2') }
+}
+
 function inspect(pdf: string) {
   const uris = [...pdf.matchAll(/\/URI \(([^)]*)\)/g)].map((m) => m[1])
   return {
     pages: (pdf.match(/\/Type \/Page[^s]/g) ?? []).length,
     images: (pdf.match(/\/Subtype \/Image/g) ?? []).length,
     uris,
+    text: textLayer(pdf),
   }
 }
 
@@ -102,6 +126,12 @@ test.describe('teklif PDF\'i zengin şablonla üretilir', () => {
     expect(pdf.pages).toBeGreaterThanOrEqual(1)
     expect(pdf.pages).toBeLessThanOrEqual(3)
     expect(pdf.images).toBe(pdf.pages + 1)
+    // Görünmez metin katmanı: sekiz kalemli teklifte birkaç yüz kelime.
+    expect(pdf.text.embeddedFont).toBe(true)
+    // İndirilen kopyada sayfa içerikleri sıkıştırılmış olmalı (jsPDF ikinci yazımda filtreyi düşürüyordu).
+    expect(pdf.text.compressedContent).toBe(true)
+    expect(pdf.text.invisible).toBe(true)
+    expect(pdf.text.words).toBeGreaterThan(250)
     // Sipariş düğmesi, karekod kutusu ve son satırdaki bağlantı WhatsApp'a gider.
     expect(pdf.uris.filter((uri) => uri.startsWith('https://wa.me/905435186988')).length).toBeGreaterThanOrEqual(3)
     expect(pdf.uris.some((uri) => uri.startsWith('tel:+905435186988'))).toBe(true)
@@ -132,6 +162,8 @@ test.describe('teklif PDF\'i zengin şablonla üretilir', () => {
     expect(renderErrors).toEqual([])
     expect(pdf.pages).toBe(1)
     expect(pdf.images).toBe(2)
+    expect(pdf.text.invisible).toBe(true)
+    expect(pdf.text.words).toBeGreaterThan(120)
     expect(pdf.uris.filter((uri) => uri.startsWith('https://wa.me/905435186988')).length).toBeGreaterThanOrEqual(2)
     expect(pdf.uris.filter((uri) => uri.includes('utm_content=pdf')).length).toBe(2)
   })

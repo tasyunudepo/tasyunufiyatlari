@@ -4,6 +4,7 @@ import { toPdfRect } from '@/lib/pdf/portfolioSection';
 import { buildQrOrderLink, buildQuoteDocument } from '@/lib/pdf/quoteDocument';
 import { QUOTE_DOCUMENT_CSS, SHEET_WIDTH_PX } from '@/lib/pdf/quoteDocumentStyles';
 import { paginateQuoteDocument } from '@/lib/pdf/quotePagination';
+import { addInvisibleTextLayer, loadTextLayerFont, registerTextLayerFont } from '@/lib/pdf/textLayer';
 import type { ShippingMode } from '@/lib/pricing/commercialRules';
 import { formatTechnicalConsumption } from '@/lib/quote/technicalConsumption';
 import type { TechnicalConsumptionUnit } from '@/lib/types';
@@ -227,6 +228,17 @@ async function loadDocumentFonts(root: HTMLElement): Promise<void> {
     ]);
 }
 
+/**
+ * jsPDF, görüntü akışını yazarken sıkıştırma filtresini belgenin ortak
+ * listesinden çıkarır. Belge iki kez yazıldığı için (depoya giden kopya ve
+ * indirilen dosya) ikinci yazımda sayfa içerikleri sıkıştırılmaz; metin
+ * katmanıyla dosya ~100 KB büyür. Filtre her yazımdan önce geri konur.
+ */
+function restoreStreamCompression(doc: jsPDF): void {
+    const filters = (doc.internal as unknown as { getFilters?: () => string[] }).getFilters?.();
+    if (Array.isArray(filters) && !filters.includes('FlateEncode')) filters.push('FlateEncode');
+}
+
 export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResult> {
     if (typeof window === 'undefined' || typeof document === 'undefined') {
         return { blobUrl: '', blob: new Blob(), filename: '' };
@@ -277,6 +289,12 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const mmPerPx = pageWidth / SHEET_WIDTH_PX;
+
+        // Sayfa resim olduğu için yazı seçilemez; görünmez metin katmanı
+        // IBAN'ı kopyalanır, belgeyi aranır yapar. Yazı tipi gelmezse
+        // belge katmansız üretilir.
+        const textFont = await loadTextLayerFont();
+        if (textFont) registerTextLayerFont(doc, textFont);
         // Uzun ofis tekliflerinde dosya boyutu yükleme sınırını (5 MB) aşmasın.
         const scale = pages.length > 4 ? 1.5 : 2;
 
@@ -298,6 +316,14 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
 
             const origin = page.getBoundingClientRect();
 
+            if (textFont) {
+                try {
+                    addInvisibleTextLayer(doc, page, origin, mmPerPx);
+                } catch (error) {
+                    console.warn('PDF metin katmanı yazılamadı:', error);
+                }
+            }
+
             page.querySelectorAll<HTMLElement>('img[data-pdf-qr]').forEach((element) => {
                 const area = toPdfRect(element.getBoundingClientRect(), origin, mmPerPx);
                 doc.addImage(qrDataUrl, 'PNG', area.x, area.y, area.w, area.h, 'quote-qr', 'FAST');
@@ -313,8 +339,10 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
         }
 
         const filename = buildSafeFileName(data);
+        restoreStreamCompression(doc);
         const blob = doc.output('blob') as Blob;
         const blobUrl = URL.createObjectURL(blob);
+        restoreStreamCompression(doc);
         doc.save(filename);
         return { blobUrl, blob, filename };
     } catch (error) {

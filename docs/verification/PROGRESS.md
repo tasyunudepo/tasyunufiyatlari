@@ -1533,3 +1533,21 @@ Dört örnek döküm gönderildi (sihirbaz seti, tek kalem, ofis listesi + ayrı
 - Ofis tarayıcı testleri (12 adet) 9 Ekim yeniden tasarımından beri eski; bu işte güncellenmedi. Ofis PDF'i ayrı betikle doğrulandı.
 - Yayından önce ölçüm bekçisi yerelde ve canlıda koşulacak.
 
+
+## 13 Ekim 2026 · Görünmez metin katmanı (teklif PDF'i ve Sipariş Onay Formu)
+
+Emrah yayından sonra sordu: belge neden hâlâ resim, IBAN neden kopyalanmıyor. Sebep üretim yolu: PDF müşterinin tarayıcısında sayfa görüntüsü olarak üretiliyor; 13 Ekim'deki iş şablonu değiştirdi, yolu değil. Gerçek metinli üretim sunucuda tarayıcı çalıştırmayı gerektiriyor ve ayrı deneme olarak duruyor.
+
+Aradaki açığı kapatan çözüm: görüntünün üstüne her kelimeyi kendi yerine **görünmez** yazan metin katmanı (`lib/pdf/textLayer.ts`). Görüntü değişmez; metin seçilir, kopyalanır, aranır. Yazı tipi Noto Sans Regular'dan Türkçe harfleri ve ₺ işaretini taşıyan 21 KB'lık alt küme (`public/fonts/teklif-metin-katmani.ttf`); gelmezse belge katmansız üretilir.
+
+Yolda bulunan: jsPDF, görüntü akışını yazarken sıkıştırma filtresini belgenin ortak listesinden çıkarıyor. Teklif iki kez yazıldığı için (depoya giden kopya, indirilen dosya) indirilen kopyada sayfa içerikleri sıkıştırılmıyordu; katmanla dosya ~100 KB büyüdü. Filtre her yazımdan önce geri konuyor.
+
+| Kontrol (yerel üretim derlemesi) | Sonuç |
+|---|---|
+| `vitest run` + `tsc --noEmit` + ESLint (değişen dosyalar) | 95 dosya / 909 test; hata yok |
+| Tarayıcı testleri (PDF, teklif akışları, portföy) | 19/19; PDF testi artık gömülü yazı tipini, görünmez yazımı, kelime sayısını ve sıkıştırmayı da arıyor |
+| Tam ifade araması, kelime aralarıyla (`pdftotext`) | Sihirbaz, ürün sayfası (masaüstü ve telefon), ofis 26 kalem: iki IBAN, hesap sahibi, hazırlayan, kapsam ve bayilik cümleleri 6/6. Sipariş Onay Formu: iki IBAN, unvan, teklif numarası, havale notu |
+| Dosya boyutu | Sihirbaz 636 → 664 KB; ürün sayfası 400 → 420 KB; ofis 26 kalem 928 → 964 KB; Onay Formu 200 KB |
+| Gömülü yazı tipi | CID TrueType, Unicode eşlemeli; Type 3 yok |
+
+Sınır: yazının görüntüsü hâlâ resim (192 dpi); yakınlaştırınca gerçek metin kadar keskin değil. Seçim vurgusu kelime kutularına oturur, harf harf birebir değildir.

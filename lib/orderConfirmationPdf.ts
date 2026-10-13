@@ -5,6 +5,7 @@ import {
     orderConfirmationFileName,
     type OrderConfirmationInput,
 } from '@/lib/pdf/orderConfirmation';
+import { addInvisibleTextLayer, loadTextLayerFont, registerTextLayerFont } from '@/lib/pdf/textLayer';
 
 // Sipariş Onay Formu'nu tarayıcıda tek sayfalık PDF olarak üretir.
 // Teklif PDF'iyle aynı yöntem: HTML kabı → html2canvas → jsPDF.
@@ -65,6 +66,18 @@ export async function generateOrderConfirmationPDF(input: OrderConfirmationInput
         }
 
         doc.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, width, height, undefined, 'FAST');
+
+        // Havale anındaki belge: IBAN kopyalanabilsin diye görünmez metin katmanı.
+        const textFont = await loadTextLayerFont();
+        if (textFont) {
+            try {
+                registerTextLayerFont(doc, textFont);
+                const origin = container.getBoundingClientRect();
+                addInvisibleTextLayer(doc, container, origin, width / origin.width);
+            } catch (error) {
+                console.warn('PDF metin katmanı yazılamadı:', error);
+            }
+        }
         doc.save(orderConfirmationFileName(input.quoteCode));
     } finally {
         container.remove();
