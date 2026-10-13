@@ -1386,3 +1386,68 @@ Panelden de düzenlenebilir: Fiyatlandırma › Marj Kuralları.
 | Kabul / ziyaretçi metni | `verify:acceptance` ve `verify:visitor-copy` geçti |
 | Optimix mobil kontrast | WCAG AA altında metin yok |
 | Görsel kontrol | 1440 ve 390 px tam sayfa; yatay taşma ve kırık düzen yok |
+
+---
+
+## 13 Ekim 2026 · Çapraz satış ve güven belgesi paketi
+
+Karar kaynağı: `reports/capraz-satis-seo-geo-2026-10-09/yuvarlak-masa.md` (Emrah, Fable, Astra, Opus). Plan ve kabul kriterleri: `PLAN-capraz-satis-paketi-2026-10-13.md`. Dal: `feat/capraz-satis-paketi`.
+
+- **Teklif PDF'i:** banka bölümüne hesap sahibi unvanı eklendi; web satırı "Teklif" ve "Kurumsal" etiketleriyle iki adres taşıyor. Vergi dairesi, vergi numarası ve MERSİS alanları `lib/business/info.ts` içinde boş tanımlı; boşken basılmıyor.
+- **Alçı ve alçıpan bloğu:** üç SW035 sayfasında (5, 8, 10 cm) sunucu HTML'inde; hesap sonucunun altında, teklif teslim kartında ve PDF'te. Kapsam ve fiyat satırları tek dosyada: `lib/portfolio/offers.ts`. Fiyatlar alçı ve alçıpan sitelerinin yayındaki listesinden 13 Ekim 2026'da okundu; aylık fiyat güncellemesinde elle yenilenir.
+- **Satış kanalları:** ana sayfa alt satırı ve `/hakkimizda#kanallar` (alçı, alçıpan, gazbeton). Footer'a "Satış Kanalları" ve "Kiralık Jeneratör" bağlantıları.
+- **Kiralık Jeneratör:** `/kiralik-jenerator` sayfası; ayrı işletme olduğu sayfada yazılı. Ürün ve teklif ekranlarında yok.
+- **Sipariş Onay Formu:** ofiste teklif ayrıntısından üretilir (`lib/pdf/orderConfirmation.ts`). Çok araca tam oturan teklifte formun yalnız 1. aracı onayladığı yazılır.
+
+### PDF yerleşim kararı
+
+Alçı ve alçıpan bölümü önce sayfanın altına tam genişlikte bir bant olarak kondu; tek sayfaya sığdırma ölçeği 0,90'dan 0,79'a düştü (teklifin bütün yazısı küçüldü). Bölüm sağ sütunda karekodun altındaki boşluğa taşındı; ölçek 0,82. Eklenen satırların (hesap sahibi, ikinci web satırı, bölüm) bedeli sekiz kalemli set teklifinde yaklaşık %8 küçülme.
+
+### "1. araç" tutarı
+
+Teklifin toplamından metraj oranıyla ayrılır: teklifte tek bir m² fiyatı vardır, ilk araç da o fiyattan ödenir. Araç tam oturmuyorsa ya da kayıtta kapasite alanı yoksa (ofisten elle yazılan teklifler) satır basılmaz.
+
+### Editör turu (kırmızı kalem, GPT-6 Astra) ve hükümler
+
+Yazar: jeneratör sayfası GPT-6 Astra; kısa arayüz metinleri yuvarlak masada kararlaştırılan ifadeler.
+
+| # | Bulgu | Önem | Hüküm | Gerekçe ve yapılan |
+|---|---|---|---|---|
+| 1 | Onay formunda imza üç aracı mı, yalnız ilk aracı mı kesinleştiriyor belli değil | KRİTİK | ONAY | Tablo satırı "Plan toplamı, 3 TIR" oldu; kutu "Bu formla onaylanan: 1. araç…" diye başlıyor; kalan araçlar için ayrı form düzenleneceği yazıyor |
+| 2 | "Ulaştığı iş günü üreticiye sipariş olarak girilir": saat sınırı olmayan gün taahhüdü, özne hatası | KRİTİK | ONAY | "Ödemeniz ulaştığında siparişiniz üreticiye girilir." Gün ya da saat sözü yok |
+| 3 | "Havale ekranında … unvanı görmelisiniz": bankanın ekran davranışı varsayılıyor | ORTA | ONAY | "Havale yaparken alıcı unvanının ve IBAN'ın yukarıdakilerle aynı olduğunu kontrol edin." |
+| 4 | 172,49 × 750 = 129.367,50; kartta 129.366 yazıyor (1,50 ₺ fark) | ORTA, ikinci turda KÜÇÜK | KISMEN ONAY | Rakamlar değişmedi: ikisi de alçı sitesinin yayındaki listesinden. Sıra değişti: önce TIR toplamı, torba fiyatı onun açılımı ("1 TIR 129.366 ₺" · "750 torba · torbası 172,49 ₺"). Bölme tutuyor (129.366 / 750 = 172,488) |
+| 5 | Torba ağırlığı yazmıyor | ORTA | ONAY | Ürün satırı "Alçıtek Toro makine sıva alçısı (35 kg)" |
+| 6–7 | Jeneratör sayfası ve satış kanalları | — | — | Editör itiraz etmedi |
+
+İkinci tur (düzeltilen cümleler ve alçı panel mesajındaki yeni satır): yalnız 4. bulgu yinelendi; diğer cümlelere itiraz yok.
+
+### Diğer depolar
+
+`reports/capraz-satis-seo-geo-2026-10-09/uygulama/DIGER-DEPOLAR.md`. Özet: GCR'de yeni olaylar yok sayılanlara eklendi (veritabanına yazılmadı); alçı panel mesajına taşyünü satırı ayrı çalışma ağacında hazır; gazbeton deposunda açık çalışma olduğu için dokunulmadı, iki hazır parça dosyada. Yuvarlak masadaki iki GCR tespiti (`Whatsapp_Siparis`, WhatsApp/form birleşmesi) hata çıkmadı; gerekçeleri aynı dosyada.
+
+### Niyet sorusu
+
+`/kiralik-jenerator`, `SalesIntentGate` dışında bırakıldı. İlk kez gelen ziyaretçiye taşyünü satış niyeti sorulup "proje" seçilince ana sayfaya yönlendiriliyordu; jeneratör arayan ziyaretçi için yanlış kapı.
+
+### Son kanıt (13 Ekim 2026, yerel üretim derlemesi)
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` + `tsc --noEmit` | 91 dosya / 845 test geçti; tip hatası yok |
+| ESLint (depo kaynakları) | 0 hata. `npm run verify:full` içindeki çıplak `eslint`, `.worktrees/ofis-redesign-20261008/.next/dev` altındaki derleme dosyalarını da taradığı için 794 hata veriyor; bu işten bağımsız |
+| `next build` | Geçti |
+| Yeni tarayıcı testi (`portfolio-offers.spec.ts`) | 11/11 |
+| Tam Playwright (tek işçi) | 85 geçti, 14 kaldı. Kalanların hepsi bu işin dokunmadığı eski testler: 12'si ofis (9 Ekim yeniden tasarımından önce yazılmış; "Yeni Teklif" düğmesi artık iki öğeyle eşleşiyor), 2'si Bonus (aradıkları metin 2 Eylül'de koddan çıkmış) |
+| Ölçüm bekçisi (kuru mod; `/`, SW035 10 cm, `/kiralik-jenerator`, `/hakkimizda`) | GEÇTİ; `portfolio_offer_view` GA4'e çıkıyor, CSP ihlali 0 |
+| `copy-gate` (`.next/server/app`, 456 HTML) | Temiz |
+| `verify:visitor-copy` | Geçti |
+| `verify:acceptance` | `tests/e2e/pdp-product-information.spec.ts` kilitle uyuşmuyor; dosya 2 Eylül'de (`c6ed7fc`) değişmiş, kilit 1 Eylül'den. Bu işte o dosyaya dokunulmadı |
+| Görsel | Örnek teklif PDF'i, Sipariş Onay Formu (ofisten gerçek bir teklifle, salt-okunur hesap), ürün sayfası bloğu, hesap sonucu, teslim kartı, jeneratör sayfası, satış kanalları, footer: 390 ve 1280 px, konsol hatası 0 |
+
+### Açık kalanlar
+
+- Vergi kimlik numarası ve MERSİS (Emrah getirecek; alanlar hazır).
+- Hesap sahibi satırı `BUSINESS_INFO.legalName` ile basılıyor; IBAN'lar başka bir unvana aitse düzeltilmeli.
+- Ölçümü etkileyen yayın tarihi (yeni olaylar, yeni yüzeyler) canlıya çıkışta hafızaya yazılacak.
+

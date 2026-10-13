@@ -46,6 +46,21 @@ bonus_gosterildi → karsilastirma_acildi → bonus_secildi → fiyat_goruldu
 | karsilastirma_acildi | `Karsilastirma_Acildi` | surface, urun_sayisi, result_session_id |
 | bonus_secildi | `Bonus_Karsilastirmadan_Secildi` | onceki_marka, fark_tl (işaretli), result_session_id |
 
+### Kardeş satış kanalı olayları (13 Ekim 2026)
+
+Alçı, alçıpan ve gazbeton sitelerine giden bağlantıların ölçümü. **Temas değildir**, satış zincirine girmez; GCR'de yok sayılanlar listesindedir (`TASYUNU_IGNORE_PATTERNS`). Kaynak: `lib/analytics/portfolioOffers.ts`, bağlantı ve UTM kuralı: `lib/portfolio/offers.ts`.
+
+| GA4 olayı | Ne zaman | Parametreler |
+|---|---|---|
+| `portfolio_offer_view` | Blok en az %35 göründüğünde, sayfa yüklemesi ve yerleşim başına bir kez | placement |
+| `portfolio_offer_click` | Bağlantıya her tıklamada | offer (alci/alcipan/gazbeton), placement, target_host |
+
+`placement` değerleri: `pdp`, `hesap_sonucu`, `teklif_teslim`, `anasayfa`, `hakkimizda`. PDF'teki bağlantı olay gönderemez; hedef sitede `utm_content=pdf` ile okunur.
+
+Hedef sitede okuma: statik yüzeylerden (ürün sayfası, ana sayfa, hakkımızda) gelen ziyaret `tasyunufiyatlari.com / referral` kaynağıyla; hesap sonucu, teklif teslimi ve PDF'ten gelen ziyaret `utm_source=tasyunufiyatlari.com`, `utm_medium=referral`, `utm_campaign=portfoy`, `utm_content=<yerleşim>` ile görünür.
+
+Karne ayda bir, iki ayrı tablo: (1) hedef üç sayfanın Search Console satırı, tamamlanmış 28 günlük dönemlerle; (2) görünüm, tık, hedefte temas ve satış, gerçek sayılarla. İlk aylarda tık tek haneli kalır; beklenen budur.
+
 ### Satış sonucu adımları (DB — v22, GA4 değil)
 
 | Zincir adımı | Kayıt | Alan |
