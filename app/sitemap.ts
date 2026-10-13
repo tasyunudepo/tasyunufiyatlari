@@ -17,6 +17,7 @@ const STATIC_PATHS = [
   { path: '/tasyunu-yogunluk/150-kg-m3', priority: 0.8, changeFrequency: 'weekly' as const },
   { path: '/hakkimizda',         priority: 0.7,  changeFrequency: 'monthly' as const },
   { path: '/iletisim',           priority: 0.7,  changeFrequency: 'monthly' as const },
+  { path: '/kiralik-jenerator',  priority: 0.4,  changeFrequency: 'monthly' as const },
   { path: '/kvkk',               priority: 0.3,  changeFrequency: 'yearly' as const },
   { path: '/cerez-politikasi',   priority: 0.3,  changeFrequency: 'yearly' as const },
   { path: '/kullanim-kosullari', priority: 0.3,  changeFrequency: 'yearly' as const },

@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { BUSINESS_INFO } from '@/lib/business/info';
+import { buildAccountIdentityRows, getSellerIdentity } from '@/lib/pdf/sellerIdentity';
+import { buildPortfolioPdfItems, toPdfRect } from '@/lib/pdf/portfolioSection';
 import {
     getShippingPresentation,
     type ShippingMode,
@@ -231,11 +233,15 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
         };
 
         // SELLER bilgileri — telefon ve adres BUSINESS_INFO'dan tek kaynaktan.
+        // Teklifin alındığı site ile kurumsal site ayrı etiketle basılır;
+        // müşteri havale anında hangi adresin ne olduğunu belgede görür.
+        const sellerIdentity = getSellerIdentity();
         const SELLER = {
-            name: BUSINESS_INFO.legalName.toLocaleUpperCase('tr-TR'),
+            name: sellerIdentity.legalName,
             address: `${BUSINESS_INFO.address.streetAddress} ${BUSINESS_INFO.address.addressLocality} / ${BUSINESS_INFO.address.addressRegion}`,
             phones: BUSINESS_INFO.phone.display,
-            website: 'www.ozeryapiinsaat.com',
+            quoteSite: sellerIdentity.quoteSite,
+            corporateSite: sellerIdentity.corporateSite,
         };
 
         // Bankaları sadeleştir (Sadece ilk 2'sini gösterelim, kalabalık yapmasın)
@@ -333,6 +339,28 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
       `
         ).join('');
 
+        // 3. Hesap sahibi kimliği (banka satırlarının üstünde)
+        const accountIdentityRows = buildAccountIdentityRows(sellerIdentity).map(
+            (row) => `
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:9px;border-bottom:1px solid ${COLORS.border};padding:4px 0;">
+            <span style="font-weight:700;white-space:nowrap;">${escapeHtml(row.label)}:</span>
+            <span style="color:${COLORS.slate900};font-weight:600;text-align:right;">${escapeHtml(row.value)}</span>
+        </div>
+      `
+        ).join('');
+
+        // 4. Kardeş satış kanalları (sayfa resim olarak basıldığı için
+        // bağlantı alanları aşağıda doc.link ile ayrıca işaretlenir)
+        const portfolioItems = buildPortfolioPdfItems().map(
+            (item) => `
+        <div data-pdf-link="${escapeHtml(item.href)}" style="margin-top:5px;">
+            <div style="font-size:9.5px;color:${COLORS.slate900};"><b>${escapeHtml(item.title)}:</b> ${escapeHtml(item.priceLine)}</div>
+            <div style="font-size:8px;color:${COLORS.slate500};line-height:1.3;">${escapeHtml(item.terms)}</div>
+            <div style="font-size:9px;font-weight:700;color:${COLORS.orange600};text-decoration:underline;">${escapeHtml(item.linkLabel)}</div>
+        </div>
+      `
+        ).join('');
+
         container.innerHTML = `
       <!-- Header Area - Clean UI -->
       <div style="margin-bottom:24px;">
@@ -346,8 +374,11 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
                 <div style="font-weight:700;color:${COLORS.slate900};margin-bottom:2px;">${SELLER.name}</div>
                 <div>${SELLER.address}</div>
                 <div style="margin-top:2px;">
-                  <span style="font-weight:600;">Tel:</span> ${SELLER.phones} | 
-                  <span style="font-weight:600;">Web:</span> ${SELLER.website}
+                  <span style="font-weight:600;">Tel:</span> ${SELLER.phones}
+                </div>
+                <div>
+                  <span style="font-weight:600;">Teklif:</span> ${SELLER.quoteSite} |
+                  <span style="font-weight:600;">Kurumsal:</span> ${SELLER.corporateSite}
                 </div>
              </div>
         </div>
@@ -453,6 +484,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             <div style="margin-bottom:16px;">
                 <h4 style="font-size:11px;font-weight:700;margin:0 0 6px 0;color:${COLORS.slate900};">BANKA HESAP BİLGİLERİ</h4>
                 <div style="border:1px solid ${COLORS.border};border-radius:6px;padding:8px;background:#f8fafc;">
+                    ${accountIdentityRows}
                     ${bankRows}
                 </div>
             </div>
@@ -533,6 +565,13 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
                 </div>
                 <img src="${qrDataUrl}" style="width:64px;height:64px;border:2px solid ${COLORS.slate900};border-radius:8px;padding:2px;" />
             </div>
+
+            <!-- Kardeş satış kanalları: sol sütun daha uzun olduğu için bu
+                 alan sayfayı uzatmadan sağ sütunun boşluğuna oturur. -->
+            <div style="margin-top:14px;padding:8px 10px;border:1px solid ${COLORS.border};border-radius:6px;background:#f8fafc;">
+                <div style="font-size:10.5px;font-weight:700;color:${COLORS.slate900};">Alçı ve alçıpan da lazım mı?</div>
+                ${portfolioItems}
+            </div>
         </div>
 
       </div>
@@ -543,8 +582,9 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
         <div style="font-size:9px;color:${COLORS.slate700};text-align:center;margin-bottom:12px;">
           <span style="font-weight:700;color:${COLORS.slate900};">${SELLER.name}</span> | 
           ${SELLER.address} | 
-          ${SELLER.phones} | 
-          ${SELLER.website}
+          ${SELLER.phones} |
+          <span style="font-weight:600;">Teklif:</span> ${SELLER.quoteSite} |
+          <span style="font-weight:600;">Kurumsal:</span> ${SELLER.corporateSite}
         </div>
 
         <!-- Trust Badges: Tedarikçi Logoları (Grayscale + Opacity) -->
@@ -607,6 +647,16 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
             }
 
             doc.addImage(imgData, 'JPEG', 0, 0, finalWidth, finalHeight, undefined, 'FAST');
+
+            // Sayfa tek bir resim olduğu için bağlantılar ayrıca işaretlenir.
+            const containerRect = container.getBoundingClientRect();
+            const mmPerPx = finalWidth / containerRect.width;
+            container.querySelectorAll<HTMLElement>('[data-pdf-link]').forEach((element) => {
+                const url = element.dataset.pdfLink;
+                if (!url) return;
+                const area = toPdfRect(element.getBoundingClientRect(), containerRect, mmPerPx);
+                doc.link(area.x, area.y, area.w, area.h, { url });
+            });
 
             const filename = buildSafeFileName(data);
             const blob = doc.output('blob') as Blob;

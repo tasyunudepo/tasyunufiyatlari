@@ -20,6 +20,9 @@ const EXCLUDED_PREFIXES = [
   '/kullanim-kosullari',
   '/tasyunu-karsilastir',
   '/tasyunu-yogunluk',
+  // Ayrı bir işletmeye yönlendiren bilgi sayfası; taşyünü satış niyeti
+  // sorusu jeneratör arayan ziyaretçiyi ana sayfaya çekmemeli.
+  '/kiralik-jenerator',
   // Kategori ve ürün detayları zaten kendi karar/teklif akışını kurar.
   // Zorunlu modal ürün incelemesini kesmemeli; yalnız /urunler hub'ında
   // ilk niyet ayrımı olarak kalır.

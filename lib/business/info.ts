@@ -16,6 +16,14 @@ export const BUSINESS_INFO = {
   legalName: 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
   brandName: 'Taşyünü Fiyatları',
   url: 'https://www.tasyunufiyatlari.com',
+  // Aynı şirketin kurumsal sitesi — teklif belgesinde "Kurumsal" etiketiyle basılır.
+  corporateUrl: 'https://www.ozeryapiinsaat.com',
+
+  // Vergi ve sicil bilgileri. Boşken belgelere basılmaz; değer gelince
+  // doldurmak yeterli (lib/pdf/sellerIdentity.ts).
+  taxOffice:    '' as string,
+  taxNumber:    '' as string,
+  mersisNumber: '' as string,
 
   // İletişim kanalları
   phone: {

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { GENERATOR_PAGE_PATH } from '@/lib/portfolio/offers';
 
 type Tone = 'dark' | 'warm';
 
@@ -21,6 +22,7 @@ const GROUPS = [
     eyebrow: 'Kurumsal',
     links: [
       { href: '/hakkimizda', label: 'Hakkımızda' },
+      { href: '/hakkimizda#kanallar', label: 'Satış Kanalları' },
       { href: '/iletisim', label: 'Görüşme Noktası' },
       { href: '/marka/dalmacyali', label: 'Markalar' },
     ],
@@ -109,6 +111,16 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
           </p>
           <p className={`${copyText} text-xs`}>
             Fabrika çıkışlı satış · Tuzla görüşme noktası
+            {' · '}
+            {/* Ayrı bir işletmenin sayfasına giden tek bağlantı; ürün ve
+                teklif ekranlarında yer almaz (yuvarlak masa, 13 Ekim 2026). */}
+            <Link
+              href={GENERATOR_PAGE_PATH}
+              prefetch={false}
+              className={`${linkText} transition-colors`}
+            >
+              Kiralık Jeneratör
+            </Link>
           </p>
         </div>
       </div>

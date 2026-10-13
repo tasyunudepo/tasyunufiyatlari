@@ -20,6 +20,7 @@ import {
 } from "@/lib/notifyWizardEvent";
 import { notifyWhatsappIntent } from "@/lib/notifyWhatsappIntent";
 import HomepageCalculationResult from "@/components/home/HomepageCalculationResult";
+import MaterialOffers from "@/components/portfolio/MaterialOffers";
 import { citySubRegionQuestion, type BonusSubRegionChoice } from "@/lib/pricing/bonus/subRegions";
 import { buildBonusPlateOrder } from "@/lib/pricing/bonus/packageAssembly";
 import { buildPlateItemName } from "@/lib/catalog/productLabel";
@@ -2458,6 +2459,10 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                 onWhatsApp={(pkg) => handleGetQuote(pkg, 'result_summary')}
                                 onPdf={(pkg) => handleOpenPdfOffer(pkg, 'result_summary')}
                             />
+                            {/* Fiyatı gören müşteriye aynı projenin diğer malzemeleri. */}
+                            <div className="mt-5 rounded-[24px] border border-[#d6d0c2] bg-[#fbf9f3] px-4 py-5 sm:px-7 sm:py-7">
+                                <MaterialOffers placement="hesap_sonucu" tone="warm" emphasis="strong" />
+                            </div>
                         </div>
                     )}
                 </>

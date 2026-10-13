@@ -2,6 +2,7 @@
 
 import DealerBrandStrip from "@/components/home/DealerBrandStrip";
 import OperationVideo from "@/components/home/OperationVideo";
+import SalesChannels from "@/components/portfolio/SalesChannels";
 import SiteFooter from "@/components/shared/SiteFooter";
 import SiteHeader from "@/components/shared/SiteHeader";
 import WizardCalculator from "@/components/wizard/WizardCalculator";
@@ -137,6 +138,12 @@ export default function Home() {
                 </p>
               </details>
             ))}
+          </div>
+        </section>
+
+        <section className="border-t border-[#d6d0c2]" aria-label="ÖzerGrup satış kanalları">
+          <div className="mx-auto max-w-[900px] px-4 py-8 sm:px-6">
+            <SalesChannels placement="anasayfa" variant="line" />
           </div>
         </section>
       </main>

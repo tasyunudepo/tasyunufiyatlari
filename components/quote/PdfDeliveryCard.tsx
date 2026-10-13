@@ -1,5 +1,6 @@
 'use client'
 
+import MaterialOffers from '@/components/portfolio/MaterialOffers'
 import { notifyContactUnlocked } from '@/lib/analytics/leadQualification'
 
 interface PdfDeliveryCardProps {
@@ -26,7 +27,7 @@ export function PdfDeliveryCard({
       aria-modal="true"
       aria-label="PDF teklifiniz hazır"
     >
-      <div className="w-full max-w-lg rounded-2xl border border-green-700/40 bg-fe-bg p-6 shadow-2xl">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-green-700/40 bg-fe-bg p-6 shadow-2xl">
         <div className="mb-4 flex items-start gap-3">
           <span className="text-xl leading-none" aria-hidden="true">
             ✓
@@ -77,6 +78,12 @@ export function PdfDeliveryCard({
         >
           Kapat
         </button>
+
+        {/* Teklifini alan müşteriye aynı projenin diğer malzemeleri.
+            Kapat düğmesi yerinde kalır; blok onun altında görünür. */}
+        <div className="mt-5 border-t border-fe-border pt-5">
+          <MaterialOffers placement="teklif_teslim" tone="dark" emphasis="strong" compact />
+        </div>
       </div>
     </div>
   )

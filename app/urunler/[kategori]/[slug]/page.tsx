@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import ProductImage     from '@/components/catalog/ProductImage';
 import ThicknessSelector from '@/components/catalog/ThicknessSelector';
 import ProductPricePanel from '@/components/catalog/ProductPricePanel';
+import MaterialOffers from '@/components/portfolio/MaterialOffers';
+import { showsMaterialOffers } from '@/lib/portfolio/offers';
 import MobileProductHero from '@/components/catalog/MobileProductHero';
 import ProductCategoryContext from '@/components/catalog/ProductCategoryContext';
 import { ProductInteractiveProvider } from '@/components/catalog/ProductInteractiveContext';
@@ -648,6 +650,16 @@ export async function ProductDetailPage({
         </ProductInteractiveProvider>
         </ErrorBoundaryWrapper>
       </div>
+      )}
+
+      {/* Kardeş satış kanalları — sunucu HTML'inde, fiyat ve teklif
+          bloğundan sonra. Kapsam lib/portfolio/offers.ts içindeki listede. */}
+      {showsMaterialOffers(slug, isValidThickness ? selectedThicknessValue : null) && (
+        <div className="border-t border-hub-rule bg-hub-cream">
+          <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
+            <MaterialOffers placement="pdp" tone="warm" emphasis="calm" />
+          </div>
+        </div>
       )}
 
       <SiteFooter />

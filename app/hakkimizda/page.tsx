@@ -5,6 +5,7 @@ import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 import Eyebrow from '@/components/shared/Eyebrow';
 import RevealOnScroll from '@/components/shared/RevealOnScroll';
+import SalesChannels from '@/components/portfolio/SalesChannels';
 import { Handshake, Truck, Medal, ArrowRight } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
@@ -105,6 +106,22 @@ export default function HakkimizdaPage() {
               ))}
             </div>
           </RevealOnScroll>
+        </section>
+
+        {/* SATIŞ KANALLARI — footer'daki "Satış Kanalları" bağlantısının hedefi */}
+        <section id="kanallar" className="scroll-mt-24 border-b border-hub-rule bg-hub-cream">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-20">
+            <div className="max-w-2xl mb-10">
+              <Eyebrow tone="warm" className="mb-5">Satış Kanalları</Eyebrow>
+              <h2 className="font-heading font-bold text-hub-ink tracking-tight leading-[1.1] text-3xl sm:text-4xl mb-4">
+                ÖzerGrup&rsquo;un diğer malzeme siteleri
+              </h2>
+              <p className="text-hub-ink-2 text-base sm:text-lg leading-relaxed">
+                Alçı, alçıpan ve gazbeton kendi sitesinde fiyatlanır; hepsinde aynı satış ekibiyle görüşürsünüz.
+              </p>
+            </div>
+            <SalesChannels placement="hakkimizda" variant="list" />
+          </div>
         </section>
 
         {/* CTA BAND */}
