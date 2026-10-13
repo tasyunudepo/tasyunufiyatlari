@@ -1509,6 +1509,23 @@ Karar kaydı: `reports/teklif-formu-cro-2026-10-13/pdf-yuvarlak-masasi.md` (Emra
 | `copy-gate` (456 HTML) ve `verify:visitor-copy` | Temiz |
 | Görsel | `reports/teklif-formu-cro-2026-10-13/depoya-islenen/` altındaki sayfa görüntüleri tek tek incelendi |
 
+### Editör turu (kırmızı kalem, GPT-6 Astra) ve hükümler
+
+Dört örnek döküm gönderildi (sihirbaz seti, tek kalem, ofis listesi + ayrı nakliye kalemi, nakliye alıcıya ait). Döküm kısaltılmış kalem listesiyle hazırlandı; ilk dört bulgu bu kısaltmadan doğdu.
+
+| # | Bulgu | Hüküm | Gerekçe |
+|---|---|---|---|
+| 1–3 | Satır tutarlarının toplamı ara toplamla uyuşmuyor (KRİTİK) | RED | Editöre giden örnekte sekiz kalemden üçü vardı, toplamlar ise sekiz kalemin toplamıydı. Gerçek teklifte sekiz satırın toplamı 769.097,03 ₺, ara toplamla aynı (canlıdan üretilen PDF'te doğrulandı) |
+| 4 | "3 kalem komple mantolama seti" tamlık izlenimi veriyor | RED | Aynı kısaltma. Gerçek belge "8 kalem komple mantolama seti" yazıyor; sitenin kendi başlığı |
+| 5 | Nakliye alıcıya aitken ya da görüşmede netleşecekken süreç "ürün şantiyeye teslim edilir" diyor | USTA TEYİDİ | Önceki şablon da her durumda "ürünler şantiyeye teslimdir" yazıyordu; davranış değişmedi. Emrah'a soruldu |
+| 6 | "Fabrika teyidi gerekir" neyi kapsıyor belli değil | RED | Cümle örnek için yazılmış doldurma metniydi; gerçek not hesap sonucundan gelir |
+| 7 | Başlık "levha fiyat teklifi", alçı/alçıpan notu "mantolama teklifinin toplamına dahil değildir" | ONAY | "Bu teklifin toplamına dahil değildir." yapıldı; her kapsamda doğru |
+| 8 | "5cm", "25kg" yazımında boşluk yok | RED | Katalogdaki ürün adları ve teklif kaydındaki sistem adı; belgede veriyi değiştirmiyoruz. Katalog temizliği ayrı iş |
+
+### Yayın
+
+13 Ekim 2026, 20:26 TSİ: `e10768c..806f320` ana dala gönderildi (Emrah: "push et canlıya çıksın"); 20:29'da canlıda. Ölçüm bekçisi yerelde ve canlıda GEÇTİ (kuru mod). Canlı siteden, ölçüm istekleri kesilmiş ve kayıt uçları sahte yanıtlıyken üç akışta PDF üretildi: sihirbaz 2 sayfa 636 KB, ürün sayfası 1 sayfa 400 KB (masaüstü ve telefon); 12 ve 8 bağlantı alanı; karekod sayfa görüntüsünden çözüldü.
+
 ### Açık kalanlar
 
 - Karekodun kâğıttan telefonla okutulması denenmedi (fiziksel deneme).

@@ -317,7 +317,7 @@ export function buildQuoteDocument(data: PDFQuoteData, options: QuoteDocumentOpt
       + `<p>${escapeHtml(item.priceTerms)}${single ? '' : ` · Liste: ${escapeHtml(item.listDate)}`}</p>`
       + `<span class="tq-cross-link" data-pdf-link="${escapeHtml(item.href)}"><b>${escapeHtml(item.cta)}</b><small>${escapeHtml(item.linkLabel)}</small></span></div>`)
     .join('')
-  const cross = block('cross', `<div class="tq-section-head"><h2>Alçı ve alçıpan da lazım mı?</h2><span>Ayrı malzeme teklifleri</span></div><div class="tq-cross-grid">${offers}</div><p class="tq-cross-note">Mantolama teklifinin toplamına dahil değildir.</p>`)
+  const cross = block('cross', `<div class="tq-section-head"><h2>Alçı ve alçıpan da lazım mı?</h2><span>Ayrı malzeme teklifleri</span></div><div class="tq-cross-grid">${offers}</div><p class="tq-cross-note">Bu teklifin toplamına dahil değildir.</p>`)
 
   const contactLine = block('contact', `<span>${escapeHtml(customer)} · ${ref}</span><b data-pdf-link="${wa}">Sipariş için WhatsApp’tan yazın</b>`)
 

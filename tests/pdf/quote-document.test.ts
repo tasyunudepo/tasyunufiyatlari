@@ -398,7 +398,10 @@ describe('teklif PDF\'i: alçı ve alçıpan bölümü', () => {
     expect(text(cross)).toContain('Alçı ve alçıpan da lazım mı?')
     expect(text(cross)).toContain('1 TIR 129.366 ₺')
     expect(text(cross)).toContain('alcifiyatlari.com/urun-kategori/makina-alcisi')
-    expect(text(cross)).toContain('Mantolama teklifinin toplamına dahil değildir.')
+    // Editör bulgusu (13 Ekim 2026): başlığı "levha" ya da "fiyat" teklifi olan belgede
+    // "mantolama teklifi" demek aynı belgeyi iki adla anmak olur.
+    expect(text(cross)).toContain('Bu teklifin toplamına dahil değildir.')
+    expect(text(cross)).not.toContain('Mantolama teklifinin')
     const links = [...cross.matchAll(/data-pdf-link="([^"]+)"/gu)].map((m) => m[1].replaceAll('&amp;', '&'))
     expect(links).toHaveLength(2)
     for (const link of links) expect(new URL(link).searchParams.get('utm_content')).toBe('pdf')
