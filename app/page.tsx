@@ -1,12 +1,17 @@
 "use client";
 
+import { Phone, WhatsappLogo } from "@phosphor-icons/react";
+
 import DealerBrandStrip from "@/components/home/DealerBrandStrip";
 import OperationVideo from "@/components/home/OperationVideo";
 import SalesChannels from "@/components/portfolio/SalesChannels";
 import SiteFooter from "@/components/shared/SiteFooter";
+import PhoneCallLink from "@/components/shared/PhoneCallLink";
 import SiteHeader from "@/components/shared/SiteHeader";
+import WhatsappLink from "@/components/shared/WhatsappLink";
 import WizardCalculator from "@/components/wizard/WizardCalculator";
-import { BUSINESS_INFO } from "@/lib/business/info";
+import { BUSINESS_INFO, TEL_URL, WHATSAPP_URL } from "@/lib/business/info";
+import { ICON_WEIGHT } from "@/lib/design/tokens";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 import { buildHowToNode } from "@/lib/seo/buildHowTo";
 import { buildCalculationServiceNode, buildShippingServiceNode } from "@/lib/seo/buildService";
@@ -109,6 +114,25 @@ export default function Home() {
                     <span><strong className="font-semibold text-[#25241f]">Satış ve sevkiyat:</strong> ÖzerGrup</span>
                   </span>
                   <DealerBrandStrip />
+                </div>
+                {/* Tıklanabilir iletişim (Emrah kararı, 13 Ekim 2026): telefon ve WhatsApp ana sayfada açık. */}
+                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm" data-testid="home-contact">
+                  <PhoneCallLink
+                    href={TEL_URL}
+                    source="anasayfa_hero"
+                    className="inline-flex min-h-11 items-center gap-2 font-semibold text-[#25241f] underline decoration-[#9a7528]/60 underline-offset-4 transition hover:decoration-[#9a7528]"
+                  >
+                    <Phone size={18} weight={ICON_WEIGHT} aria-hidden />
+                    {BUSINESS_INFO.phone.display}
+                  </PhoneCallLink>
+                  <WhatsappLink
+                    href={WHATSAPP_URL}
+                    source="anasayfa_hero"
+                    className="inline-flex min-h-11 items-center gap-2 font-semibold text-[#25241f] underline decoration-[#9a7528]/60 underline-offset-4 transition hover:decoration-[#9a7528]"
+                  >
+                    <WhatsappLogo size={18} weight="fill" className="text-[#128c4a]" aria-hidden />
+                    WhatsApp&apos;tan yazın
+                  </WhatsappLink>
                 </div>
               </div>
 

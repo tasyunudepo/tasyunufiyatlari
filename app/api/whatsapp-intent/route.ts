@@ -36,6 +36,7 @@ const ALLOWED_SOURCES: WhatsappSource[] = [
   'wizard_result_card',
   'footer_link',
   'iletisim_card',
+  'anasayfa_hero',
   'depomuz_cta',
   'product_detail_cta',
   'product_detail_summary',

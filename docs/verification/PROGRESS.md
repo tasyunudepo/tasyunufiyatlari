@@ -1551,3 +1551,44 @@ Yolda bulunan: jsPDF, görüntü akışını yazarken sıkıştırma filtresini 
 | Gömülü yazı tipi | CID TrueType, Unicode eşlemeli; Type 3 yok |
 
 Sınır: yazının görüntüsü hâlâ resim (192 dpi); yakınlaştırınca gerçek metin kadar keskin değil. Seçim vurgusu kelime kutularına oturur, harf harf birebir değildir.
+
+
+## 14 Ekim 2026 · Ana sayfa ve iletişim sayfasında telefon ve WhatsApp yeniden açıldı
+
+Emrah (13 Ekim 2026 gece): "tasyunufiyatlari için tıklanabilir iletişim bilgileri olsun, hadi bir daha deneyelim. Ayrıca iletişim sayfasında da telefon ve WhatsApp bilgileri olsun." 19 Ağustos 2026'da proje ölçekli lead kapısıyla (`PLAN-1-TIR-LEAD-GATE-2026-08-19.md`) herkese açık telefon ve WhatsApp kapatılmıştı; bu karar iki sayfada geri alındı. Kapı üst menüde, alt bilgide, katalog/ürün sayfalarında ve hesaplayıcıda sürüyor (istenmedi).
+
+### Ne değişti
+
+| Yer | Değişiklik |
+|---|---|
+| Ana sayfa, üst bölüm | "Satış ve sevkiyat: ÖzerGrup" satırının altına tıklanabilir telefon (0 543 518 69 88) ve "WhatsApp'tan yazın". Kaynak etiketi `anasayfa_hero` (ölçüm ve WhatsApp bildirimi "Ana sayfa üst bölüm" der) |
+| İletişim sayfası | Telefon kartı (numara, "Hemen Ara", Pzt–Cmt 08:00–18:00) ve WhatsApp kartı ("Yazışmayı Başlat"): 19 Ağustos'tan önce yayında olan kartlar, sohbet önizlemesi olmadan. "İletişim kanalı, teklif kaydı tamamlandığında otomatik olarak açılır." notu kalktı; sayfa açıklaması telefon ve WhatsApp'ı söylüyor |
+| İlk ziyaret penceresi | "Proje ölçekli satış" penceresi iletişim sayfasında açılmıyor: kartların üstünü örtüp bağlantıları tıklanamaz bırakıyordu (ölçüm bekçisi "atlandı" diye yakaladı). Katalogda (`/urunler`) aynen sürüyor |
+
+### Sözleşme testi değişikliği (gerekçe)
+
+`tests/contracts/public-contact-gate.test.ts` iki sayfada `tel:` / `wa.me` / `PhoneCallLink` bulunmasını yasaklıyordu (AC-009). Kabul ölçütünün kendisi sahibinin kararıyla değişti: `app/page.tsx` ve `app/iletisim/page.tsx` yasak listesinden çıktı ve kendi sözleşmesini aldı (bağlantılar ölçümlü bileşenden geçer, elle yazılmış ölçümsüz adres yok, "teklif kaydından sonra açılır" cümlesi yok). Öteki altı dosya için yasak aynen duruyor. Bu dosya kabul kilidinde değil.
+
+### Editör turu (kırmızı kalem, GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm | Gerekçe |
+|---|---|---|---|
+| 1 | İletişim, WhatsApp kartı: "teklif koşulu" tekil ve belirsiz (KÜÇÜK) | RED | Cümle 19 Ağustos'tan önce yayında olan, Emrah'ın kendi malzemesi; olduğu gibi kullanıldı |
+
+Editörün genel hükmü: "metinler yayına layık; teknik doğruluk, satış sınırı, hukuki/ticari risk ve iç tutarlılık başlıklarında itirazım yok."
+
+### Kanıt (14 Ekim 2026, yerel üretim derlemesi)
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` + `tsc --noEmit` + ESLint (değişen dosyalar) | 95 dosya / 911 test; hata yok |
+| Tarayıcı testleri: yeni `public-contact-links.spec.ts` (3) + `homepage-conversion` (9) + `lead-qualification-gate` (6) | 18/18. Yeni testler: bağlantı görünür, adres doğru, tıklamada `Telefon_Aramalari` / `Whatsapp_Yazanlar` ve `/api/whatsapp-intent` doğru kaynakla; ilk ziyarette iletişim sayfasında pencere açılmıyor |
+| Üretim derlemesi + metin kapıları | Derleme başarılı; `verify:visitor-copy` geçti; copy-gate 456 HTML temiz |
+| Ölçüm bekçisi (kuru, gerçek alan adıyla yerel) | GEÇTİ: ana sayfada telefon ve WhatsApp, iletişimde numara, "Hemen Ara" ve "Yazışmayı Başlat" basışları olayını gönderiyor; deneme sırasında WhatsApp bildirimi gitmedi |
+| Ekran görüntüsü (masaüstü 1440, telefon 390) | İki sayfa incelendi; console hatası yok |
+
+`npm run verify:release` ilk adımda (kabul kilidi) duruyor: `tests/e2e/pdp-product-information.spec.ts` 2 Eylül'de (`c6ed7fc`) değişmiş, kilidi güncellenmemiş. Bu işle ilgisi yok; kilide dokunulmadı, kalan adımlar tek tek koşuldu (veritabanı koruması ve bağımlılık taraması bu işin kapsamında değil, koşulmadı).
+
+### Ölçüm notu
+
+Herkese açık telefon ve WhatsApp bu yayınla yeniden başladı: 19 Ağustos–yayın anı arasında ana sayfa ve iletişim sayfasından `Telefon_Aramalari` / `Whatsapp_Yazanlar` gelemezdi. Sonraki artış talep artışı değil, kanalın açılmasıdır.
