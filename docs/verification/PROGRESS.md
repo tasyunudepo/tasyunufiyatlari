@@ -1592,3 +1592,16 @@ Editörün genel hükmü: "metinler yayına layık; teknik doğruluk, satış s�
 ### Ölçüm notu
 
 Herkese açık telefon ve WhatsApp bu yayınla yeniden başladı: 19 Ağustos–yayın anı arasında ana sayfa ve iletişim sayfasından `Telefon_Aramalari` / `Whatsapp_Yazanlar` gelemezdi. Sonraki artış talep artışı değil, kanalın açılmasıdır.
+
+### Yayın (14 Ekim 2026, 01.28)
+
+`4a334fd` ana dala gönderildi; Vercel gönderimden yaklaşık dört dakika sonra kendiliğinden yayımladı (ilk görülme 01.28). `npm run deploy:prod` denendi, "bu hesaba erişiminiz yok" diye durdu: `.env.local`'daki Vercel anahtarı takıma erişemiyor; yayın için gerekmedi.
+
+| Canlı kontrol | Sonuç |
+|---|---|
+| Ölçüm bekçisi (kuru), `/` ve `/iletisim` | GEÇTİ: beş bağlantının hepsi olayını gönderiyor (`Telefon_Aramalari`, `Whatsapp_Yazanlar`) |
+| Panel kuralıyla "bir basış = tam bir temas" (GCR `tek-temas.mts`) | 6 denemede 6 tek, çift 0, eksik 0. Ürün sayfalarında bağlantı yok (kapı orada sürüyor) |
+| Ekran görüntüsü, masaüstü ve telefon | İki sayfada bölümler yerinde; iletişim sayfasında ilk ziyaret penceresi açılmıyor; console hatası yok |
+| Deneme kaçağı (GA4 anlık rapor, son 15 dk) | Temas olayı yok |
+
+**Ölçüm kırılması: 14 Ekim 2026, 01.28.** Bu andan sonra ana sayfa ve iletişim sayfasından telefon ve WhatsApp teması gelebilir.
