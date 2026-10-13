@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Trash2, ChevronDown, Layers, Download, PencilLine, Copy } from "lucide-react";
+import { Trash2, ChevronDown, Layers, Download, PencilLine, Copy, FileCheck } from "lucide-react";
 import { OfficeProjectPanel } from '@/components/admin/OfficeProjectPanel';
 import { QuoteTechnicalSummary } from '@/components/admin/QuoteTechnicalSummary';
 import { useOfficeMobile } from '@/lib/hooks/useOfficeMobile';
@@ -174,6 +174,20 @@ export function QuotesTab({
     }
 
     /** Kalemi olan teklif yazma ekranında açılabilir. */
+    // Sipariş Onay Formu: teklif kabul edilince müşteriye verilen tek sayfalık
+    // belge. Kayıttaki alanlardan tarayıcıda üretilir; sunucuya yazmaz.
+    async function downloadOrderConfirmation(quote: OfficeQuote) {
+        try {
+            const [{ generateOrderConfirmationPDF }, { orderInputFromQuote }] = await Promise.all([
+                import("@/lib/orderConfirmationPdf"),
+                import("@/lib/pdf/orderConfirmation"),
+            ]);
+            await generateOrderConfirmationPDF(orderInputFromQuote(quote));
+        } catch {
+            setActionError("Sipariş onay formu üretilemedi.");
+        }
+    }
+
     function hasLineItems(quote: OfficeQuote): boolean {
         const items = (quote as unknown as { package_items?: { items?: unknown[] } | null }).package_items?.items;
         return Array.isArray(items) && items.length > 0;
@@ -733,6 +747,20 @@ export function QuotesTab({
                                             >
                                                 <Copy className="h-3.5 w-3.5" />
                                                 Çoğalt
+                                            </button>
+                                        </div>
+                                    )}
+                                    {Number(selectedQuote.total_price) > 0 && Number(selectedQuote.area_m2) > 0 && (
+                                        <div className="ofis-actions mt-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => downloadOrderConfirmation(selectedQuote)}
+                                                data-testid="quote-detail-order-confirmation"
+                                                className="ofis-secondary"
+                                                title="Teklif kabul edilince müşteriye verilen tek sayfalık belge"
+                                            >
+                                                <FileCheck className="h-3.5 w-3.5" />
+                                                Sipariş onay formu
                                             </button>
                                         </div>
                                     )}
