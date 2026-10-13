@@ -13,14 +13,19 @@ import { BRAND_INFO, type BrandSlug } from '@/lib/business/info';
 import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 
+// seoTitle / seoDescription: arama sonucunda görünen başlık ve açıklama; verilmezse
+// "<marka> Ürünleri" ve sayfadaki tanıtım cümlesi kullanılır.
 export const BRAND_MAP: Record<
   string,
-  { id: number; displayName: string; description: string }
+  { id: number; displayName: string; description: string; seoTitle?: string; seoDescription?: string }
 > = {
   'dalmacyali': {
     id: 1,
     displayName: 'Dalmaçyalı',
     description: 'Dalmaçyalı taşyünü ve EPS ısı yalıtım levhaları, sistem aksesuarları.',
+    seoTitle: 'Dalmaçyalı Fiyat Listesi: Taşyünü ve EPS Levha',
+    seoDescription:
+      'Dalmaçyalı taşyünü ve EPS levha fiyat listesi. Kalınlık ve teslim iline göre tam kamyon veya TIR teslim fiyatını hesaplayın.',
   },
   'filli-boya': {
     id: 2, // DB'de "Expert" kaydı = Fawori Expert
@@ -63,8 +68,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const info = BRAND_MAP[brand];
   if (!info) return {};
   return buildMetadata({
-    title: `${info.displayName} Ürünleri`,
-    description: info.description,
+    title: info.seoTitle ?? `${info.displayName} Ürünleri`,
+    description: info.seoDescription ?? info.description,
     path: `/marka/${brand}`,
   });
 }

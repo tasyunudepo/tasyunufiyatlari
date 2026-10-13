@@ -1605,3 +1605,30 @@ Herkese açık telefon ve WhatsApp bu yayınla yeniden başladı: 19 Ağustos–
 | Deneme kaçağı (GA4 anlık rapor, son 15 dk) | Temas olayı yok |
 
 **Ölçüm kırılması: 14 Ekim 2026, 01.28.** Bu andan sonra ana sayfa ve iletişim sayfasından telefon ve WhatsApp teması gelebilir.
+
+
+## 14 Ekim 2026 · Dalmaçyalı marka sayfası: başlık ve açıklama "fiyat listesi" niyetine göre
+
+GCR kartı #8f2ad0 (Emrah onayı 14 Ekim 2026). Kanıt (Google arama, 5 Eylül–3 Ekim): `/marka/dalmacyali` "dalmaçyalı" aramasında 9,6. sırada 783 kez göründü, hiç tıklanmadı; "dalmaçyalı fiyat listesi" aramasında 1,8. sıradan 12. sıraya geriledi (gösterim 39 → 3). Canlıdaki başlıkta "fiyat" geçmiyordu.
+
+| | Önce | Sonra |
+|---|---|---|
+| Başlık | Dalmaçyalı Ürünleri \| Taşyünü Fiyatları | Dalmaçyalı Fiyat Listesi: Taşyünü ve EPS Levha \| Taşyünü Fiyatları |
+| Açıklama | Dalmaçyalı taşyünü ve EPS ısı yalıtım levhaları, sistem aksesuarları. | Dalmaçyalı taşyünü ve EPS levha fiyat listesi. Kalınlık ve teslim iline göre tam kamyon veya TIR teslim fiyatını hesaplayın. |
+
+Sayfada görünen H1 ("Dalmaçyalı") ve altındaki tanıtım cümlesi değişmedi; öteki dört markanın başlığı ve açıklaması aynı. `BRAND_MAP`'e isteğe bağlı `seoTitle` / `seoDescription` alanı eklendi (`app/marka/[brand]/page.tsx`).
+
+**Geri alma ölçütü (kart):** "dalmaçyalı fiyat listesi" aramasında sitenin en iyi sırası 1,1'den gerilerse (bu aramada `/urunler/eps-levha/dalmacyali-ideal-carbon-eps/10-cm` 1,1. sırada) ya da bu sayfa "dalmaçyalı" aramasında 9,6'dan geriye düşerse eski başlık ve açıklama döner (iki alanı silmek yeter).
+
+### Editör turu (kırmızı kalem, GPT-6 Astra) ve hüküm
+
+İki metin için bulgu yok ("yayınlanmasına editoryal itirazım yok"). Hüküm gerekmedi.
+
+### Kanıt (14 Ekim 2026)
+
+| Kontrol | Sonuç |
+|---|---|
+| Yeni `tests/contracts/brand-page-metadata.test.ts` (4 test) | Değişiklikten önce kırmızı (başlık "Dalmaçyalı Ürünleri"), sonra yeşil |
+| `vitest run` + `tsc --noEmit` + ESLint (değişen dosyalar) | 96 dosya / 915 test; hata yok |
+| Üretim derlemesi + metin kapıları | Derleme başarılı; derlenen sayfada başlık 66, açıklama 124 karakter, canonical aynı; `verify:visitor-copy` geçti; copy-gate 456 HTML temiz |
+| Ölçüm bekçisi (kuru, gerçek alan adıyla yerel), `/marka/dalmacyali` ve `/` | GEÇTİ (bu sayfada telefon/WhatsApp bağlantısı yok; kapı orada sürüyor) |
