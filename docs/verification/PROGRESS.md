@@ -1632,3 +1632,7 @@ Sayfada görünen H1 ("Dalmaçyalı") ve altındaki tanıtım cümlesi değişme
 | `vitest run` + `tsc --noEmit` + ESLint (değişen dosyalar) | 96 dosya / 915 test; hata yok |
 | Üretim derlemesi + metin kapıları | Derleme başarılı; derlenen sayfada başlık 66, açıklama 124 karakter, canonical aynı; `verify:visitor-copy` geçti; copy-gate 456 HTML temiz |
 | Ölçüm bekçisi (kuru, gerçek alan adıyla yerel), `/marka/dalmacyali` ve `/` | GEÇTİ (bu sayfada telefon/WhatsApp bağlantısı yok; kapı orada sürüyor) |
+
+### Yayın (14 Ekim 2026, 01.38)
+
+`14748b8` ana dala gönderildi, Vercel kendiliğinden yayımladı. Canlıda `/marka/dalmacyali`: yeni başlık ve açıklama görünüyor, H1 ve canonical aynı; `/marka/tekno` başlığı değişmedi; ana sayfa ve iletişim sayfası 200, ana sayfadaki telefon ve WhatsApp bölümü yerinde. GCR'de iş kapandı, Google tıklama deneyi açıldı (taban 15 Eylül–13 Ekim).
