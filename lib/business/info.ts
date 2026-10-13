@@ -25,10 +25,10 @@ export const BUSINESS_INFO = {
   taxNumber:    '' as string,
   mersisNumber: '' as string,
 
-  // Teklifi hazırlayan kişi. Boşken belgelerde "Satış ekibi" ve şirket
-  // telefonu basılır; ad gelince doldurmak yeterli.
+  // Teklifi hazırlayan kişi (Emrah, 13 Ekim 2026). Telefon boş bırakılır:
+  // sitedeki hat (`phone.display`) kullanılır, tek kaynak orasıdır.
   salesContact: {
-    name:  '' as string,
+    name:  'Emrah Gümüşsoy' as string,
     phone: '' as string,
   },
 

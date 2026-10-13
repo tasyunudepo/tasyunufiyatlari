@@ -95,4 +95,12 @@ describe('teklifi hazırlayan', () => {
   it('telefon her durumda doludur', () => {
     expect(getQuoteContact().phone.length).toBeGreaterThan(0)
   })
+
+  it('hazırlayan Emrah Gümüşsoy, telefon sitedeki hat', () => {
+    expect(getQuoteContact()).toEqual({
+      name: 'Emrah Gümüşsoy',
+      phone: BUSINESS_INFO.phone.display,
+      isPerson: true,
+    })
+  })
 })
