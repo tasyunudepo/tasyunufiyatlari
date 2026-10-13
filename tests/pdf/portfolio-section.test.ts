@@ -13,7 +13,7 @@ describe('teklif PDF\'inde alçı ve alçıpan bölümü', () => {
     expect(items[0].priceLine).toBe('1 TIR 129.366 ₺ · 750 torba · torbası 172,49 ₺')
     expect(items[1].priceLine).toContain('₺/m²')
     for (const item of items) {
-      expect(item.terms).toMatch(/KDV (dâhil|hariç)/u)
+      expect(item.terms).toMatch(/KDV (dahil|hariç)/u)
       expect(item.terms).toContain('Liste tarihi')
     }
     expect(items[0].linkLabel).toBe('alcifiyatlari.com/urun-kategori/makina-alcisi')
@@ -44,18 +44,23 @@ describe('teklif PDF\'inde alçı ve alçıpan bölümü', () => {
 })
 
 describe('PDF şablonu bağlantıları tıklanır yapar', () => {
+  // Şablon 13 Ekim 2026'da lib/pdf/quoteDocument.ts'e taşındı; resme çevirme
+  // ve bağlantı alanlarının işaretlenmesi lib/pdfGenerator.ts'te kaldı.
   const pdfSource = readFileSync(resolve(process.cwd(), 'lib/pdfGenerator.ts'), 'utf8')
+  const documentSource = readFileSync(resolve(process.cwd(), 'lib/pdf/quoteDocument.ts'), 'utf8')
 
   it('AC-206: bölüm şablonda yer alır ve bağlantı alanları işaretlenir', () => {
-    expect(pdfSource).toContain('Alçı ve alçıpan da lazım mı?')
-    expect(pdfSource).toContain('data-pdf-link="')
+    expect(documentSource).toContain('Alçı ve alçıpan da lazım mı?')
+    expect(documentSource).toContain('data-pdf-link="')
     expect(pdfSource).toMatch(/querySelectorAll<HTMLElement>\('\[data-pdf-link\]'\)/u)
     expect(pdfSource).toContain('doc.link(')
   })
 
   it('bölüm fiyat kutusunun ve kalem tablosunun dışındadır', () => {
-    const section = pdfSource.indexOf('Alçı ve alçıpan da lazım mı?')
-    expect(section).toBeGreaterThan(pdfSource.indexOf('ÖDENECEK GENEL TOPLAM'))
-    expect(section).toBeLessThan(pdfSource.indexOf('Trust Badges: Tedarikçi Logoları'))
+    // Akış sırası: … döküm, toplam, eylem, süreç, ödeme, bayilik, ALÇI VE ALÇIPAN, iletişim.
+    const flow = documentSource.slice(documentSource.lastIndexOf('const flow = single'))
+    expect(flow.indexOf('cross')).toBeGreaterThan(flow.indexOf('table'))
+    expect(flow.indexOf('cross, contactLine')).toBeGreaterThan(flow.indexOf('totals'))
+    expect(flow.indexOf('cross, contactLine')).toBeGreaterThan(flow.indexOf('trust'))
   })
 })

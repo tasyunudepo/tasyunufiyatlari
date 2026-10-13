@@ -67,7 +67,7 @@ test.describe('ürün sayfasında alçı ve alçıpan bloğu', () => {
     await expect(block).toContainText('(35 kg)')
     await expect(block).toContainText('59,77 ₺/m²')
     await expect(block).toContainText('KDV hariç')
-    await expect(block).toContainText('nakliye ve KDV dâhil')
+    await expect(block).toContainText('nakliye ve KDV dahil')
     await expect(block).toContainText('Liste tarihi')
 
     const cta = page.getByRole('button', { name: /PDF teklifimi hazırla|Teklifimi hazırla/ }).first()

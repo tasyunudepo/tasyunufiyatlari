@@ -60,23 +60,25 @@ describe('PDF satıcı kimliği', () => {
 })
 
 describe('PDF şablonu satıcı kimliğini tek kaynaktan basar', () => {
-  const pdfSource = readFileSync(resolve(process.cwd(), 'lib/pdfGenerator.ts'), 'utf8')
+  // Şablon 13 Ekim 2026'da lib/pdf/quoteDocument.ts'e taşındı.
+  const pdfSource = readFileSync(resolve(process.cwd(), 'lib/pdf/quoteDocument.ts'), 'utf8')
 
   it('banka bölümü hesap sahibi satırlarını çizer', () => {
     expect(pdfSource).toContain('buildAccountIdentityRows(')
     const bankBlock = pdfSource.slice(
-      pdfSource.indexOf('BANKA HESAP BİLGİLERİ</h4>'),
-      pdfSource.indexOf('TEKLİF REFERANS NOTU'),
+      pdfSource.indexOf("const payment = block('payment'"),
+      pdfSource.indexOf("const trust = block('trust'"),
     )
-    expect(bankBlock).toContain('${accountIdentityRows}')
-    expect(bankBlock.indexOf('${accountIdentityRows}')).toBeLessThan(bankBlock.indexOf('${bankRows}'))
+    expect(bankBlock).toContain('${accountRows}')
+    expect(bankBlock.indexOf('${accountRows}')).toBeLessThan(bankBlock.indexOf('${bankRows}'))
   })
 
   it('web adresi etiketsiz tek satır olarak basılmaz', () => {
     expect(pdfSource).not.toContain("website: 'www.ozeryapiinsaat.com'")
     expect(pdfSource).not.toContain('${SELLER.website}')
-    expect(pdfSource.match(/Teklif:<\/span> \$\{SELLER\.quoteSite\}/g)?.length).toBe(2)
-    expect(pdfSource.match(/Kurumsal:<\/span> \$\{SELLER\.corporateSite\}/g)?.length).toBe(2)
+    // Her sayfanın altında iki site ayrı etiketle durur.
+    expect(pdfSource).toContain('Teklif: ${escapeHtml(seller.quoteSite)}')
+    expect(pdfSource).toContain('Kurumsal: ${escapeHtml(seller.corporateSite)}')
   })
 })
 

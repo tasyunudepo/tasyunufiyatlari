@@ -93,8 +93,8 @@ describe('AC-303: "1. araç" hesabı', () => {
     const body = text({ ...BASE, areaM2: 1045.44 * 3, totalPrice: 2645099.25, priceWithoutVat: null, vatAmount: null })
     // Editör bulgusu (13 Ekim 2026): imzanın neyi kesinleştirdiği açık olmalı.
     // Tablo planın tamamını, kutu bu formla onaylanan aracı gösterir.
-    expect(body).toContain('Bu formla onaylanan: 1. araç (TIR, 1.045,44 m²) · 881.699,75 ₺ KDV dâhil')
-    expect(body).toContain('Plan toplamı, 3 TIR (KDV dâhil) 2.645.099,25 ₺')
+    expect(body).toContain('Bu formla onaylanan: 1. araç (TIR, 1.045,44 m²) · 881.699,75 ₺ KDV dahil')
+    expect(body).toContain('Plan toplamı, 3 TIR (KDV dahil) 2.645.099,25 ₺')
     expect(body).not.toContain('Genel toplam')
     expect(body).toContain('Kalan araçlar için ayrı onay formu düzenlenir')
     expect(body).toContain('her aracın tutarı kendi onayında ödenir')
@@ -105,7 +105,7 @@ describe('AC-303: "1. araç" hesabı', () => {
   it('belgede tek araçlı siparişte basılmaz', () => {
     const single = text(BASE)
     expect(single).not.toContain('1. araç')
-    expect(single).toContain('Genel toplam (KDV dâhil) 881.699,75 ₺')
+    expect(single).toContain('Genel toplam (KDV dahil) 881.699,75 ₺')
     expect(single).toContain('Bu formu onaylarsınız; ödeme tek seferde alınır.')
   })
 })

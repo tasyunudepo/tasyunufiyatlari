@@ -5,15 +5,15 @@ interface M2PriceSource {
   pricePerM2: number
   /** KDV hariç ara toplam. */
   priceWithoutVat: number
-  /** KDV dâhil genel toplam. */
+  /** KDV dahil genel toplam. */
   grandTotal: number
 }
 
 /**
- * Belgede "KDV hariç" diye basılan m² fiyatı. "KDV dâhil" satırı bu
+ * Belgede "KDV hariç" diye basılan m² fiyatı. "KDV dahil" satırı bu
  * tabanın 1,2 katıdır; bu yüzden yedek hesap da KDV HARİÇ olmalıdır.
  *
- * Eski yedek `grandTotal / metraj` idi: KDV dâhil değeri taban alıp
+ * Eski yedek `grandTotal / metraj` idi: KDV dahil değeri taban alıp
  * üstüne bir kez daha KDV ekliyordu.
  */
 export function resolveNetM2Price(data: M2PriceSource, areaM2: number): number {

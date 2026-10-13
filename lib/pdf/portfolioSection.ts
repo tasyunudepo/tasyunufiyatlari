@@ -11,6 +11,13 @@ export interface PortfolioPdfItem {
   linkLabel: string
   /** Tıklanınca açılan, kaynağı etiketli adres. */
   href: string
+  /** Kartta ayrı satırlara basılan parçalar. */
+  amount: string
+  product: string
+  vehicle: string
+  priceTerms: string
+  listDate: string
+  cta: string
 }
 
 export function buildPortfolioPdfItems(): PortfolioPdfItem[] {
@@ -26,6 +33,12 @@ export function buildPortfolioPdfItems(): PortfolioPdfItem[] {
       terms: price ? `${price.product} · ${price.terms} · Liste tarihi ${price.listDate}` : '',
       linkLabel: `${target.hostname}${target.pathname.replace(/\/$/u, '')}`,
       href: offerHref(key, 'pdf'),
+      amount: price?.amount ?? '',
+      product: price?.product ?? '',
+      vehicle: price?.vehicle ?? '',
+      priceTerms: price?.terms ?? '',
+      listDate: price?.listDate ?? '',
+      cta: offer.cta,
     }
   })
 }

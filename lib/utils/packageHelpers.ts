@@ -1,12 +1,12 @@
 import type { CalculatedPackage } from '@/lib/types';
-import { formatValidUntil, offerValidUntil } from '@/lib/quote/validity';
+import { lastValidDay } from '@/lib/quote/validity';
 
 /**
  * Site teklifinin geçerli olduğu son gün ("09.10.2026").
  * 13 Ekim 2026'ya kadar bu fonksiyon teklifin üretildiği anı döndürüyordu.
  */
 export const getOfferValidityDate = (now: Date = new Date()): string =>
-    formatValidUntil(offerValidUntil(now));
+    lastValidDay(now);
 
 /**
  * Gamification: Doluluk oranına göre renk

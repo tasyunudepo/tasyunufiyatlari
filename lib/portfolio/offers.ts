@@ -58,14 +58,14 @@ export const PORTFOLIO_OFFERS: Record<OfferKey, PortfolioOffer> = {
     url: 'https://alcifiyatlari.com/urun-kategori/makina-alcisi/',
     domainLabel: 'alcifiyatlari.com',
     channelAnchor: 'Makine alçısı fiyatları',
-    channelLine: 'Makine, saten ve perlitli alçıda TIR bazında nakliye dâhil fiyat.',
+    channelLine: 'Makine, saten ve perlitli alçıda TIR bazında nakliye dahil fiyat.',
     price: {
       product: 'Alçıtek Toro makine sıva alçısı (35 kg)',
       // Önce TIR toplamı: torba fiyatı toplamdan türetilip yuvarlanmıştır
       // (129.366 / 750 = 172,488). Ters sırada yazılınca çarpım 1,50 ₺ şaşar.
       amount: '1 TIR 129.366 ₺',
       vehicle: '750 torba · torbası 172,49 ₺',
-      terms: 'İstanbul Pendik teslim, nakliye ve KDV dâhil',
+      terms: 'İstanbul Pendik teslim, nakliye ve KDV dahil',
       listDate: '13 Ekim 2026',
     },
   },

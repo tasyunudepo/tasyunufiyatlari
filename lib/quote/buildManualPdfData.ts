@@ -2,7 +2,8 @@ import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import { discountedUnitPrice, effectiveLineTotal } from '@/lib/schemas/manualQuote.schema'
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
-import { formatValidUntil, offerValidUntil } from '@/lib/quote/validity'
+import { SHIPPING_LINE_DESCRIPTION } from '@/lib/pdf/quoteDocument'
+import { lastValidDay } from '@/lib/quote/validity'
 import type { TechnicalConsumptionUnit } from '@/lib/types'
 
 // Elle yazılan teklifi PDF sözleşmesine çevirir.
@@ -56,7 +57,7 @@ export interface ManualPdfInput {
 }
 
 function formatValidityDate(days: number, now: Date): string {
-  return formatValidUntil(offerValidUntil(now, days))
+  return lastValidDay(now, days)
 }
 
 export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDFQuoteData {
@@ -82,7 +83,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
 
   if (input.shippingCharge > 0) {
     items.push({
-      description: 'Nakliye',
+      description: SHIPPING_LINE_DESCRIPTION,
       quantity: 1,
       unit: 'kalem',
       consumptionRate: 0,

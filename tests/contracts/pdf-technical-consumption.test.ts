@@ -17,6 +17,9 @@ function source(path: string) {
 describe('teklif PDF teknik sarfiyat sözleşmesi', () => {
   const wizardSource = source('components/wizard/WizardCalculator.tsx')
   const pdfSource = source('lib/pdfGenerator.ts')
+  // Şablon 13 Ekim 2026'da lib/pdf/quoteDocument.ts'e taşındı; sarfiyat ayrı
+  // sütun yerine ürün adının altında, birimiyle yazılıyor.
+  const documentSource = source('lib/pdf/quoteDocument.ts')
 
   it('ambalaj adedini metraja bölüp teknik sarfiyat gibi göstermez', () => {
     expect(wizardSource).not.toContain('it.quantity / metrajNumber')
@@ -29,10 +32,10 @@ describe('teklif PDF teknik sarfiyat sözleşmesi', () => {
     expect(wizardSource).toContain('technicalConsumptionUnitForSlug(accType.slug)')
   })
 
-  it('PDF sütunu değeri birimiyle birlikte açıkça gösterir', () => {
-    expect(pdfSource).toContain('M² SARFİYATI')
-    expect(pdfSource).not.toContain('>SARFİYAT</th>')
-    expect(pdfSource).toContain(
+  it('PDF değeri birimiyle birlikte açıkça gösterir', () => {
+    expect(documentSource).toContain('m² sarfiyatı: ')
+    expect(documentSource).not.toContain('>SARFİYAT</th>')
+    expect(documentSource).toContain(
       'formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit)',
     )
     expect(pdfSource).toContain(

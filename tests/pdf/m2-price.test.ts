@@ -7,8 +7,8 @@ import { resolveNetM2Price } from '@/lib/pdf/m2Price'
 
 // Gizli hata (13 Ekim 2026, iki bağımsız incelemede doğrulandı):
 // m² fiyatı boş gelirse şablon yedek olarak `grandTotal / metraj` alıyordu.
-// `grandTotal` KDV DÂHİL olduğu için bu değer "KDV hariç" diye basılıyor,
-// "KDV dâhil" satırında da üstüne bir kez daha %20 ekleniyordu.
+// `grandTotal` KDV DAHİL olduğu için bu değer "KDV hariç" diye basılıyor,
+// "KDV dahil" satırında da üstüne bir kez daha %20 ekleniyordu.
 //
 // Rakamlar gerçek bir tekliften: TE-2026-000238, 1.040 m²,
 // ara toplam 470.877,08 ₺, genel toplam 565.052,50 ₺.
@@ -24,9 +24,9 @@ describe('PDF m² fiyatı (KDV hariç taban)', () => {
   it('m² fiyatı boşsa KDV HARİÇ ara toplamdan hesaplar', () => {
     const price = resolveNetM2Price({ pricePerM2: 0, priceWithoutVat: NET, grandTotal: GROSS }, AREA)
     expect(price).toBeCloseTo(452.77, 2)
-    // Eski hatalı sonuç: 565.052,50 / 1.040 = 543,32 (KDV dâhil değer "hariç" diye basılırdı).
+    // Eski hatalı sonuç: 565.052,50 / 1.040 = 543,32 (KDV dahil değer "hariç" diye basılırdı).
     expect(price).not.toBeCloseTo(543.32, 2)
-    // "KDV dâhil" satırı bu tabanın 1,2 katıdır: 543,32 olmalı, 651,98 değil.
+    // "KDV dahil" satırı bu tabanın 1,2 katıdır: 543,32 olmalı, 651,98 değil.
     expect(price * 1.2).toBeCloseTo(543.32, 1)
   })
 
@@ -40,7 +40,7 @@ describe('PDF m² fiyatı (KDV hariç taban)', () => {
   })
 
   it('şablon yedek hesabı bu fonksiyondan alır', () => {
-    const pdfSource = readFileSync(resolve(process.cwd(), 'lib/pdfGenerator.ts'), 'utf8')
+    const pdfSource = readFileSync(resolve(process.cwd(), 'lib/pdf/quoteDocument.ts'), 'utf8')
     expect(pdfSource).toContain('const calculatedM2Price = resolveNetM2Price(data, metrajValue)')
     expect(pdfSource).not.toContain('data.grandTotal / metrajValue')
   })

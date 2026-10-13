@@ -1,4 +1,5 @@
 import { BUSINESS_INFO } from '@/lib/business/info'
+import { ORDER_PROCESS_TEXT, SELLER_BANK_ACCOUNTS } from '@/lib/pdf/orderProcess'
 import { buildAccountIdentityRows, getSellerIdentity, type IdentityRow } from '@/lib/pdf/sellerIdentity'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
 import { fitVehicles, type VehicleCapacity } from '@/lib/quote/vehicleArea'
@@ -17,11 +18,7 @@ import { fitVehicles, type VehicleCapacity } from '@/lib/quote/vehicleArea'
 // Belgeye maliyet, marj ya da iskonto oranı gibi iç alanlar yazılmaz.
 // ============================================================
 
-/** Ödeme alınan hesaplar — teklif PDF'i ile aynı liste. */
-export const SELLER_BANK_ACCOUNTS = [
-  { bank: 'KUVEYTTÜRK', iban: 'TR22 0020 5000 0947 0027 8000 01' },
-  { bank: 'VAKIFBANK', iban: 'TR54 0001 5001 5800 7223 2324 14' },
-] as const
+export { SELLER_BANK_ACCOUNTS }
 
 export interface OrderReference {
   /** Referans kişinin adı. */
@@ -40,7 +37,7 @@ export interface OrderConfirmationInput {
   /** Ürün ya da paket adı, kalınlıkla birlikte. */
   productLabel: string
   areaM2: number
-  /** KDV dâhil genel toplam. */
+  /** KDV dahil genel toplam. */
   totalPrice: number
   priceWithoutVat?: number | null
   vatAmount?: number | null
@@ -55,7 +52,7 @@ export interface FirstVehicle {
   label: 'TIR' | 'kamyon'
   /** İlk aracın taşıdığı metraj. */
   areaM2: number
-  /** İlk aracın KDV dâhil tutarı. */
+  /** İlk aracın KDV dahil tutarı. */
   amount: number
   /** Siparişin toplam araç sayısı. */
   vehicleCount: number
@@ -242,7 +239,7 @@ export function buildOrderConfirmationModel(input: OrderConfirmationInput): Orde
   // aracı gösterir; müşteri hangi tutarı onayladığını ikisini karıştırmadan
   // görmelidir (editör bulgusu, 13 Ekim 2026).
   orderRows.push({
-    label: first ? `Plan toplamı, ${first.planLabel} (KDV dâhil)` : 'Genel toplam (KDV dâhil)',
+    label: first ? `Plan toplamı, ${first.planLabel} (KDV dahil)` : 'Genel toplam (KDV dahil)',
     value: fmtMoney(input.totalPrice),
   })
 
@@ -257,13 +254,13 @@ export function buildOrderConfirmationModel(input: OrderConfirmationInput): Orde
     orderRows,
     firstVehicle: first
       ? {
-          headline: `Bu formla onaylanan: 1. araç (${first.label}, ${fmtArea(first.areaM2)}) · ${fmtMoney(first.amount)} KDV dâhil`,
+          headline: `Bu formla onaylanan: 1. araç (${first.label}, ${fmtArea(first.areaM2)}) · ${fmtMoney(first.amount)} KDV dahil`,
           note: `Sipariş ${first.planLabel} olarak planlanır. Kalan araçlar için ayrı onay formu düzenlenir; her aracın tutarı kendi onayında ödenir.`,
         }
       : null,
     accountRows: buildAccountIdentityRows(identity),
     bankRows: SELLER_BANK_ACCOUNTS.map((account) => ({ label: account.bank, value: account.iban })),
-    accountNote: 'Havale yaparken alıcı unvanının ve IBAN\'ın yukarıdakilerle aynı olduğunu kontrol edin.',
+    accountNote: ORDER_PROCESS_TEXT.accountCheck,
     manufacturerLines: [
       'ÖzerGrup, Filli Boya ve Bonus yetkili bayisidir. Bayiliği üreticinin müşteri hattından teyit edebilirsiniz.',
       'Ödemeniz ulaştığında siparişiniz üreticiye girilir. Üreticinin sipariş teyidi size iletilir.',
@@ -275,10 +272,10 @@ export function buildOrderConfirmationModel(input: OrderConfirmationInput): Orde
           ? '1. aracı onaylarsınız; o aracın tutarı tek seferde alınır.'
           : 'Bu formu onaylarsınız; ödeme tek seferde alınır.',
       },
-      { title: 'Üretici siparişi', detail: 'Siparişiniz üreticiye girilir, sipariş teyidi size iletilir.' },
-      { title: 'Sevkiyat planı', detail: 'Yükleme tarihi fabrika uygunluğuna göre bildirilir.' },
-      { title: 'Yükleme', detail: 'Araç fabrikadan yola çıktığında bilgi verilir.' },
-      { title: 'Teslim', detail: 'Ürün şantiyeye teslim edilir; indirme alıcıya aittir.' },
+      { title: 'Üretici siparişi', detail: ORDER_PROCESS_TEXT.manufacturerOrder },
+      { title: 'Sevkiyat planı', detail: ORDER_PROCESS_TEXT.shippingPlan },
+      { title: 'Yükleme', detail: ORDER_PROCESS_TEXT.dispatch },
+      { title: 'Teslim', detail: ORDER_PROCESS_TEXT.delivery },
     ],
     meetingPointLine: isIstanbul(input.cityName)
       ? `Teslim iliniz İstanbul olduğu için siparişi Tuzla görüşme noktasında yüz yüze kesinleştirebilirsiniz: ${BUSINESS_INFO.address.streetAddress}, ${BUSINESS_INFO.address.addressLocality}.`
@@ -286,7 +283,7 @@ export function buildOrderConfirmationModel(input: OrderConfirmationInput): Orde
     reference: input.reference ?? null,
     paymentLine: first
       ? 'Onaylanan aracın tutarı sipariş onayında tek seferde alınır.'
-      : 'Ödeme sipariş onayında tek seferde alınır.',
+      : ORDER_PROCESS_TEXT.paymentRule,
   }
 }
 

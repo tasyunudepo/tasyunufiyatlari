@@ -1451,3 +1451,68 @@ Yazar: jeneratör sayfası GPT-6 Astra; kısa arayüz metinleri yuvarlak masada 
 - Hesap sahibi satırı `BUSINESS_INFO.legalName` ile basılıyor; IBAN'lar başka bir unvana aitse düzeltilmeli.
 - Ölçümü etkileyen yayın tarihi (yeni olaylar, yeni yüzeyler) canlıya çıkışta hafızaya yazılacak.
 
+## 13 Ekim 2026 · Teklif PDF şablonu (yuvarlak masa kararı)
+
+Karar kaydı: `reports/teklif-formu-cro-2026-10-13/pdf-yuvarlak-masasi.md` (Emrah, Astra, Opus). Dal: `feat/teklif-sablonu`; canlıya çıkış Emrah'ın sözünü bekler.
+
+### Ne değişti
+
+| Konu | Önce | Şimdi |
+|---|---|---|
+| Fiyat kutusu | Toplam Metraj büyük, altında KDV dahil ve hariç m² fiyatı (24 Temmuz kararı) | Dört rakam üstte eşit ağırlıkta: toplam fiyat, toplam metraj, m² fiyatı KDV dahil, m² fiyatı KDV hariç (Emrah, 13 Ekim) |
+| Renk ve üst bölüm | Lacivert ve altın | Alçı teklif şablonundan uyarlanan yeşil dizilim, kapsam kutucukları, üç sütunlu kart |
+| Sıra | Tek sayfa: kutu, tablo, banka ve notlar yan yana | Önce döküm ve toplam, sonra eylem; süreç, ödeme, bayilik ve alçı/alçıpan ardından |
+| Sayfa | Tek uzun görüntü A4'e küçültülüyordu | Her sayfa ayrı görüntü; sığmayan blok sonraki sayfaya geçer, hiçbir şey küçülmez |
+| Geçerlilik | Basılmıyordu | "Fiyatlar … günü sonuna kadar geçerlidir"; kaynak dışarıya an değil son geçerli günü verir |
+| Hazırlayan | Yoktu | "Teklifi hazırlayan: Emrah Gümüşsoy · 0 543 518 69 88" |
+| Karekod | Sayfa görüntüsünün içinde, düğmeyle aynı uzun mesaj | Ayrı keskin görüntü; yalnız teklif numarasını taşıyan kısa mesaj |
+| Kalkanlar | "Teklif referans notu" kutusu, müşteri onayı imza alanı, gri logo şeridi | İmza Sipariş Onay Formu'nda; logolar bayilik bloğunda renkli |
+
+Şablon `lib/pdfGenerator.ts` içinden üç dosyaya ayrıldı: `lib/pdf/quoteDocument.ts` (bloklar ve metinler, tarayıcısız test edilir), `lib/pdf/quotePagination.ts` (sayfalama), `lib/pdf/quoteDocumentStyles.ts` (stil; her kural `.tq` kökünün altında). Süreç ve ödeme cümleleri ile banka hesapları `lib/pdf/orderProcess.ts` içinde; Sipariş Onay Formu aynı kaynağı kullanıyor ve çıktısı değişmedi.
+
+### Kilitli test değişikliği: `tests/contracts/pdf-screen-consistency.test.ts`
+
+- **Neden yanlıştı:** Test, 24 Temmuz düzenini ("Toplam Metraj üstte ve büyük", iki m² satırı aynı `font-size`) `lib/pdfGenerator.ts` kaynak metninde arıyordu. Düzen kararı değişti ve şablon başka dosyaya taşındı.
+- **Kanıt:** Emrah'ın 13 Ekim kararı, yuvarlak masa dosyasında: "1-Toplam Fiyat 2-Toplam Metraj 3-m2 fiyatı kdv dahil 4-m2 fiyatı kdv hariç … üstte eşit ağırlıkta olsun."
+- **Korunan sözleşme (değişmedi):** KDV dahil m² fiyatı ekran kartıyla aynı tabandan (`calculatedM2Price * 1.2`), KDV hariç değer çıplak tabandan; taban tek fonksiyondan (`resolveNetM2Price`); negatif birim fiyat "paket içeriği" sayılmaz; paket sayısı yokken "(0 PKT)" yazılmaz.
+- **Yeni beklenen davranış:** Dört rakam bu sırayla, aynı sınıfla ve tek yazı boyutuyla basılır. Davranış testleri `tests/pdf/quote-document.test.ts` içinde (39 test).
+- Kilit yalnız bu dosya için yenilendi. `tests/e2e/pdp-product-information.spec.ts` uyuşmazlığı eskiden beri duruyor; bu işte dokunulmadı.
+
+### Bulunan ve düzeltilen
+
+| Bulgu | Nasıl görüldü | Düzeltme |
+|---|---|---|
+| Bütün yazı birkaç piksel aşağı kayıyordu; başlık alt satıra biniyordu | İlk gerçek çıktının görüntüsü | html2canvas taban çizgisini gövdeye eklediği 1 px'lik resimle ölçüyor; sitenin sıfırlama stili o resmi blok yapıyor. Üretim süresince ölçüm resmi satır içi tutuluyor |
+| Kelime araları düzensiz, tarihlerde nokta kayboluyordu | Aynı çıktı, 192 dpi kesit | `text-rendering: geometricPrecision` (yerleşim 1 katta, çizim 2 katta) |
+| Gerçek teklifte karekod çok sık: WhatsApp mesajı 468 karakter, modül başına yaklaşık 0,23 mm | Sihirbaz PDF'inden çözülen kod | Karekod kısa bağlantıyı taşır: 49 modül, 0,44 mm. Düğmedeki ayrıntılı mesaj aynı |
+| Ofis teklifinde nakliye ayrı kalemken "alıcıya ait, toplama dahil değil" yazacaktı | Şablonu ofis verisiyle okurken | Nakliye satırı varsa "Nakliye dökümde ayrı kalem olarak yer alır."; kalem sayısına girmez |
+| Zengin şablon çökerse düz yedek PDF'e düşülüyor ve teslim kartı yine görünüyor; mevcut testler bunu yakalamıyor | Akış testlerini okurken | `tests/e2e/quote-pdf-document.spec.ts`: indirilen dosyada sayfa görüntüsü, karekod ve bağlantı alanları aranır |
+| Belgelerde "dâhil" ve "dahil" karışıktı (Onay Formu ve portföy metinleri "dâhil", site 122 yerde "dahil") | Şablonu yazarken sayım | Yedi yerde "dahil" yapıldı; depoda tek biçim |
+
+### Örnekten bilinçli farklar
+
+- "Ambalaj ve teknik bilgiler" bloğu yok: teklif verisinde ürün sayfası adresi taşınmıyor. Sarfiyat, ürün adının altında birimiyle yazılı.
+- Hesap sahibi satırı büyük harfli unvanla (Sipariş Onay Formu ve banka ekranıyla aynı).
+- Gerçek sihirbaz teklifi ilk sayfaya eylem kutusuyla birlikte sığıyor (ürün ve tablo sütunları genişletildi). Firma adı iki satır tutan 9 kalemli ofis teklifinde eylem kutusu ikinci sayfanın başına iniyor; kural gereği yazı küçültülmedi.
+
+### Son kanıt (13 Ekim 2026, yerel üretim derlemesi)
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` + `tsc --noEmit` | 94 dosya / 902 test geçti; tip hatası yok |
+| ESLint (değişen dosyalar) | 0 hata |
+| `next build` | Geçti |
+| Tarayıcı testleri (tek işçi): yeni PDF testi, teklif akışları, fiyat tutarlılığı, portföy, ürün sayfası sipariş masası, ana sayfa, pencere odağı | 43/43 |
+| Gerçek akışlardan PDF (kayıt uçları sahte yanıtla) | Sihirbaz 8 kalem: 2 sayfa, 636 KB. Ürün sayfası tek kalem: 1 sayfa, 400 KB; 390 px telefon görünümünde aynı çıktı. Ofis 26 kalem + nakliye satırı: 3 sayfa, 928 KB. Üretim 0,4–0,8 sn, konsol hatası 0 |
+| Bağlantı alanları (sihirbaz PDF'i) | 12 adet: WhatsApp 3, telefon 3, iki site 2'şer, alçı ve alçıpan |
+| Karekod | PDF sayfa görüntüsünden çözüldü (150, 300, 600 dpi): aynı hat, aynı teklif numarası |
+| `copy-gate` (456 HTML) ve `verify:visitor-copy` | Temiz |
+| Görsel | `reports/teklif-formu-cro-2026-10-13/depoya-islenen/` altındaki sayfa görüntüleri tek tek incelendi |
+
+### Açık kalanlar
+
+- Karekodun kâğıttan telefonla okutulması denenmedi (fiziksel deneme).
+- Belge resim yoluyla üretiliyor: IBAN kopyalanmaz, belgede arama olmaz. Gerçek metinli üretim yolu ayrı iş.
+- Ofis tarayıcı testleri (12 adet) 9 Ekim yeniden tasarımından beri eski; bu işte güncellenmedi. Ofis PDF'i ayrı betikle doğrulandı.
+- Yayından önce ölçüm bekçisi yerelde ve canlıda koşulacak.
+

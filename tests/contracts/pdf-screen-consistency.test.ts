@@ -10,8 +10,19 @@ function source(file: string): string {
 /**
  * Ekran ↔ PDF fiyat tabanı sözleşmesi (karar: 2026-07-23).
  * Müşteri wizard'daki 3 paket kartında KDV DAHİL m² fiyatı görür;
- * PDF'in büyük rakamı da aynı tabanda olmalıdır. Ayrışma güveni bozar
- * ("ekranda 869, PDF'te 724" şikâyeti).
+ * PDF'in KDV dahil m² fiyatı da aynı tabanda olmalıdır. Ayrışma güveni
+ * bozar ("ekranda 869, PDF'te 724" şikâyeti).
+ *
+ * Kutu düzeni iki kez değişti; korunan asıl sözleşme aynıdır:
+ *   - 24 Temmuz 2026 (Emrah): Toplam Metraj büyük ve üstte, KDV dahil/hariç
+ *     m² fiyatları altta eşit boyutta.
+ *   - 13 Ekim 2026 (Emrah, yuvarlak masa): dört rakam üstte EŞİT ağırlıkta:
+ *     toplam fiyat, toplam metraj, m² fiyatı KDV dahil, m² fiyatı KDV hariç.
+ *     24 Temmuz düzeninin yerine geçer.
+ *     Karar kaydı: reports/teklif-formu-cro-2026-10-13/pdf-yuvarlak-masasi.md
+ *
+ * Şablon lib/pdfGenerator.ts'ten lib/pdf/quoteDocument.ts'e taşındı;
+ * davranış testleri tests/pdf/quote-document.test.ts içindedir.
  */
 describe('PDF hero ↔ ekran paket kartı fiyat tabanı', () => {
   it('ekran kartının büyük rakamı KDV dahildir', () => {
@@ -21,32 +32,34 @@ describe('PDF hero ↔ ekran paket kartı fiyat tabanı', () => {
     expect(heroBlock).toContain('m2PriceWithVat')
   })
 
-  // Kutu düzeni 24 Temmuz'da değişti (Emrah kararı): Toplam Metraj
-  // büyük ve üstte, KDV dahil/hariç m² fiyatları altta EŞİT boyutta.
-  // Korunan asıl sözleşme aynı: KDV DAHİL değeri ekran kartıyla aynı
-  // tabandan (calculatedM2Price × 1,2), KDV hariç değeri çıplak tabandan.
-  it('PDF kutusunda Toplam Metraj üstte ve KDV satırlarından önce gelir', () => {
-    const pdf = source('lib/pdfGenerator.ts')
-    const box = pdf.slice(pdf.indexOf('Toplam Metraj'), pdf.indexOf('<!-- Tablo -->'))
-    expect(box.indexOf('KDV DAHİL')).toBeGreaterThan(0)
-    expect(box.indexOf('KDV hariç')).toBeGreaterThan(box.indexOf('KDV DAHİL'))
+  const pdf = source('lib/pdf/quoteDocument.ts')
+  const hero = pdf.slice(pdf.indexOf("const hero = block('hero'"), pdf.indexOf("const info = block('info'"))
+
+  it('PDF üst bölümünde dört rakam bu sırayla durur', () => {
+    const order = ['TOPLAM FİYAT', 'TOPLAM METRAJ', 'KDV DAHİL', 'KDV HARİÇ'].map((label) => hero.indexOf(label))
+    expect(order.every((index) => index > 0)).toBe(true)
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
   })
 
   it('PDF KDV DAHİL değeri ekranla aynı tabandadır ve etiketlidir', () => {
-    const pdf = source('lib/pdfGenerator.ts')
-    const box = pdf.slice(pdf.indexOf('Toplam Metraj'), pdf.indexOf('<!-- Tablo -->'))
-    expect(box).toContain('calculatedM2Price * 1.2')
-    expect(box).toMatch(/KDV DAHİL[\s\S]{0,300}fmtMoney\(calculatedM2Price \* 1\.2\)/)
+    expect(hero).toContain('calculatedM2Price * 1.2')
+    expect(hero).toMatch(/KDV DAHİL[\s\S]{0,120}m2Value\(calculatedM2Price \* 1\.2\)/)
   })
 
-  it('PDF KDV hariç değeri ayrı, etiketli ve KDV dahil ile EŞİT boyutta satırdadır', () => {
-    const pdf = source('lib/pdfGenerator.ts')
-    const box = pdf.slice(pdf.indexOf('Toplam Metraj'), pdf.indexOf('<!-- Tablo -->'))
-    expect(box).toMatch(/KDV hariç[\s\S]{0,300}fmtMoney\(calculatedM2Price\)/)
-    // Eşit boyut sözleşmesi: iki değer satırı aynı font-size'ı kullanır.
-    const sizes = [...box.matchAll(/font-size:(\d+)px[^>]*font-feature-settings:'tnum';">\$\{escapeHtml\(fmtMoney\(calculatedM2Price/g)].map((m) => m[1])
-    expect(sizes.length).toBe(2)
-    expect(sizes[0]).toBe(sizes[1])
+  it('PDF KDV hariç değeri ayrı ve etiketlidir', () => {
+    expect(hero).toMatch(/KDV HARİÇ[\s\S]{0,120}m2Value\(calculatedM2Price\)/)
+  })
+
+  it('dört rakam EŞİT boyuttadır: aynı sınıf, tek yazı boyutu', () => {
+    expect(hero.match(/class="tq-metric-value"/g)?.length).toBe(4)
+    const styles = source('lib/pdf/quoteDocumentStyles.ts')
+    const sizes = [...styles.matchAll(/\.tq-metric-value\{font-size:(\d+)px/g)].map((m) => m[1])
+    expect(sizes.length).toBe(1)
+  })
+
+  it('m² fiyatı tabanı tek fonksiyondan gelir; KDV iki kez eklenmez', () => {
+    expect(pdf).toContain('const calculatedM2Price = resolveNetM2Price(data, metrajValue)')
+    expect(pdf).not.toContain('data.grandTotal / metrajValue')
   })
 
   it('heroLabel varyantları KDV ibaresi taşımaz (KDV etiketi değerlerin yanındadır)', () => {
@@ -61,17 +74,17 @@ describe('PDF hero ↔ ekran paket kartı fiyat tabanı', () => {
 
 // ── Ofis teklifi: negatif kalem satırı (27 Temmuz 2026) ──
 //
-// Elle yazılan teklifte toplu alım iskontosu, PDF şablonuna dokunmadan
-// NEGATİF bir kalem satırı olarak basılıyor (alcifiyatlari teklif
-// düzenindeki "Toplu alım iskontosu (%3)" satırının karşılığı).
+// Elle yazılan teklifte toplu alım iskontosu NEGATİF bir kalem satırı
+// olarak basılabilir (alcifiyatlari teklif düzenindeki "Toplu alım
+// iskontosu (%3)" satırının karşılığı).
 //
 // Eski kontrol `it.unitPrice < 0.01` idi ve negatifi de kapsıyordu:
-// iskonto satırı tutar yerine "📦 Paket İçeriği" gösteriyor, TUTAR
-// sütununa "-" basıyordu. Müşteriye giden belgede iskonto görünmüyordu.
+// iskonto satırı tutar yerine "paket içeriği" gösteriyor, TUTAR sütununa
+// "-" basıyordu. Müşteriye giden belgede iskonto görünmüyordu.
 describe('PDF kalem satırı — negatif tutar ve paket sayısı', () => {
-  const pdfSource = source('lib/pdfGenerator.ts')
+  const pdfSource = source('lib/pdf/quoteDocument.ts')
 
-  it('negatif birim fiyat "Paket İçeriği" sayılmaz', () => {
+  it('negatif birim fiyat "paket içeriği" sayılmaz', () => {
     expect(pdfSource).toContain('it.unitPrice >= 0 && it.unitPrice < 0.01')
     // Eski hatalı kontrol geri gelmemeli.
     expect(pdfSource).not.toMatch(/it\.unitPrice === 0 \|\| it\.unitPrice < 0\.01/)

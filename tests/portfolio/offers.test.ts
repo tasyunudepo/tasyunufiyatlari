@@ -45,7 +45,7 @@ describe('kardeş satış kanalı bağlantıları', () => {
       const price = PORTFOLIO_OFFERS[key].price
       expect(price, key).toBeDefined()
       expect(price?.amount).toMatch(/\d ₺/u)
-      expect(price?.terms).toMatch(/KDV (dâhil|hariç)/u)
+      expect(price?.terms).toMatch(/KDV (dahil|hariç)/u)
       expect(price?.listDate).toMatch(/^\d{1,2} \p{L}+ \d{4}$/u)
     }
   })
