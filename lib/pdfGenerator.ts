@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { BUSINESS_INFO } from '@/lib/business/info';
 import { buildAccountIdentityRows, getSellerIdentity } from '@/lib/pdf/sellerIdentity';
 import { buildPortfolioPdfItems, toPdfRect } from '@/lib/pdf/portfolioSection';
+import { resolveNetM2Price } from '@/lib/pdf/m2Price';
 import {
     getShippingPresentation,
     type ShippingMode,
@@ -263,8 +264,8 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
         const shippingMode: ShippingMode = data.shippingMode
             ?? (data.isShippingIncluded ? 'included_in_sale_price' : 'buyer_pays');
         const shippingPresentation = getShippingPresentation(shippingMode);
-        // M2 Fiyatını data'dan alalım yoksa hesaplayalım
-        const calculatedM2Price = data.pricePerM2 > 0 ? data.pricePerM2 : (metrajValue > 0 ? data.grandTotal / metrajValue : 0);
+        // m² fiyatı (KDV hariç taban): veride yoksa KDV HARİÇ ara toplamdan hesaplanır.
+        const calculatedM2Price = resolveNetM2Price(data, metrajValue);
 
         const fmtMoney = (v: number) => `${v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
         const fmtQty = (v: number) => v.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });

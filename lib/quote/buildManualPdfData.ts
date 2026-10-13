@@ -2,6 +2,7 @@ import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import { discountedUnitPrice, effectiveLineTotal } from '@/lib/schemas/manualQuote.schema'
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
+import { formatValidUntil, offerValidUntil } from '@/lib/quote/validity'
 import type { TechnicalConsumptionUnit } from '@/lib/types'
 
 // Elle yazılan teklifi PDF sözleşmesine çevirir.
@@ -55,8 +56,7 @@ export interface ManualPdfInput {
 }
 
 function formatValidityDate(days: number, now: Date): string {
-  const d = new Date(now.getTime() + days * 24 * 60 * 60 * 1000)
-  return d.toLocaleDateString('tr-TR')
+  return formatValidUntil(offerValidUntil(now, days))
 }
 
 export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDFQuoteData {

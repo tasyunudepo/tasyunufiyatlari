@@ -15,6 +15,28 @@ export interface SellerIdentity {
   mersisNumber: string
 }
 
+export interface QuoteContact {
+  /** Teklifi hazırlayan kişi; ad tanımlı değilse "Satış ekibi". */
+  name: string
+  phone: string
+  /** Gerçek bir kişi adı mı, yoksa genel ekip etiketi mi. */
+  isPerson: boolean
+}
+
+/**
+ * Tekliflerde "Teklifi hazırlayan" satırı. Kişi adı yokken satır boş
+ * kalmaz; ekip etiketi ve şirket hattı basılır.
+ */
+export function getQuoteContact(): QuoteContact {
+  const name = BUSINESS_INFO.salesContact.name.trim()
+  const phone = BUSINESS_INFO.salesContact.phone.trim()
+  return {
+    name: name || 'Satış ekibi',
+    phone: phone || BUSINESS_INFO.phone.display,
+    isPerson: name.length > 0,
+  }
+}
+
 export interface IdentityRow {
   label: string
   value: string

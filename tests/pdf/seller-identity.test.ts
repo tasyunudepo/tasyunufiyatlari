@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { BUSINESS_INFO } from '@/lib/business/info'
 import {
   buildAccountIdentityRows,
+  getQuoteContact,
   getSellerIdentity,
   type SellerIdentity,
 } from '@/lib/pdf/sellerIdentity'
@@ -76,5 +77,22 @@ describe('PDF şablonu satıcı kimliğini tek kaynaktan basar', () => {
     expect(pdfSource).not.toContain('${SELLER.website}')
     expect(pdfSource.match(/Teklif:<\/span> \$\{SELLER\.quoteSite\}/g)?.length).toBe(2)
     expect(pdfSource.match(/Kurumsal:<\/span> \$\{SELLER\.corporateSite\}/g)?.length).toBe(2)
+  })
+})
+
+describe('teklifi hazırlayan', () => {
+  // Emrah kararı (13 Ekim 2026): teklifte hazırlayanın adı yazsın. Ad
+  // tanımlanana kadar satır boş kalmaz.
+  it('kişi adı tanımlı değilken ekip etiketi ve şirket hattı basılır', () => {
+    const contact = getQuoteContact()
+    if (BUSINESS_INFO.salesContact.name.trim()) {
+      expect(contact).toMatchObject({ name: BUSINESS_INFO.salesContact.name.trim(), isPerson: true })
+    } else {
+      expect(contact).toEqual({ name: 'Satış ekibi', phone: BUSINESS_INFO.phone.display, isPerson: false })
+    }
+  })
+
+  it('telefon her durumda doludur', () => {
+    expect(getQuoteContact().phone.length).toBeGreaterThan(0)
   })
 })

@@ -14,6 +14,7 @@ import { formatBrandProductName, formatBrandName } from '@/lib/brandFormat';
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp';
 import { buildQuoteSurfacePricing } from '@/lib/pricing/quoteTotals';
 import { createClientIdempotencyKey } from '@/lib/utils/clientIdempotencyKey';
+import { getOfferValidityDate } from '@/lib/utils/packageHelpers';
 import { readCatalogJourneyId } from '@/lib/analytics/catalogJourney';
 import { getCategoryEntryContext } from '@/lib/catalog/category-entry-context';
 
@@ -150,7 +151,7 @@ export default function SingleProductQuoteButton({
         priceWithoutVat:    totalKdvHaric,
         vatAmount,
         refCode,
-        validityDate:       new Date().toLocaleString('tr-TR'),
+        validityDate:       getOfferValidityDate(),
         whatsappOrderLink:  buildWhatsAppLink(message),
         customerCompany:    formData.customerCompany || '',
         relatedPerson:      formData.relatedPerson,

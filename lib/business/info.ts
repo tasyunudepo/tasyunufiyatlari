@@ -25,6 +25,13 @@ export const BUSINESS_INFO = {
   taxNumber:    '' as string,
   mersisNumber: '' as string,
 
+  // Teklifi hazırlayan kişi. Boşken belgelerde "Satış ekibi" ve şirket
+  // telefonu basılır; ad gelince doldurmak yeterli.
+  salesContact: {
+    name:  '' as string,
+    phone: '' as string,
+  },
+
   // İletişim kanalları
   phone: {
     display:  '0 543 518 69 88',  // UI'da gösterilen format

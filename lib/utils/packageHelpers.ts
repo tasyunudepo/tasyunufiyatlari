@@ -1,18 +1,12 @@
 import type { CalculatedPackage } from '@/lib/types';
+import { formatValidUntil, offerValidUntil } from '@/lib/quote/validity';
 
 /**
- * Teklif kayıt tarihi (eski API adı korunuyor).
+ * Site teklifinin geçerli olduğu son gün ("09.10.2026").
+ * 13 Ekim 2026'ya kadar bu fonksiyon teklifin üretildiği anı döndürüyordu.
  */
-export const getOfferValidityDate = (): string => {
-    const date = new Date();
-    return date.toLocaleString('tr-TR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
+export const getOfferValidityDate = (now: Date = new Date()): string =>
+    formatValidUntil(offerValidUntil(now));
 
 /**
  * Gamification: Doluluk oranına göre renk
