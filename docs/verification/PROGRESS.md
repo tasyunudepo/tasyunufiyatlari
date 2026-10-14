@@ -1726,3 +1726,47 @@ Google'da sıralanan sayfa yerinde kaldı (B yolu, ayrı 10 cm sayfası, seçilm
 | Derleme + metin kapıları | Başarılı; copy-gate 456 HTML temiz; `verify:visitor-copy` geçti; derlenen SW035 10 cm HTML'inde kutu var |
 | Ölçüm bekçisi (kuru, yerel üretim) | GEÇTİ: ürün sayfası ve `?kalinlik=10&entry=pdp_kalinlik` karşılaştırma sayfası (Karsilastirma_Acildi gidiyor) |
 | Ekran görüntüsü (telefon, masaüstü) | Kutu sayfa yolu altında; karşılaştırmada "10 cm" seçili ve SW035 işaretli; sayfa hatası yok |
+
+
+## 14 Ekim 2026 · Karşılaştırma Merkezi tek tabloya ve açık zemine geçti; ana fiyat 1 kamyon
+
+Emrah'ın isteği: sayfanın bağımsız UX/CRO denetimi (blind-web-audit + conversion-lab + ui-ux-pro-max), sonra kendi fikirleri: iki liste tek olsun, açıktan koyuya geçiş kalksın, basma notları tek satır, yangın (hepsi A1) ve kalınlık sütunu gereksiz, en iyi değerler yeşil, m² fiyatı ve 1 kamyon (en az sipariş) tutarı görünsün. Taslak (A: ürünler satırda / B: ürünler sütunda) sonrası seçimi: **A, açık tema**.
+
+Denetimin ölçtüğü sorun: fiyat ve şehir/kalınlık seçimi telefonda ≈4,5 ekran aşağıdaydı (3.626 px); 8 ürün iki ayrı listedeydi; fiyat yalnız TIR m² fiyatıydı, en az sipariş (1 tam kamyon) sayfada yoktu.
+
+| Yer | Ne yapıldı |
+|---|---|
+| `ComparisonCenter.tsx` | Tek tablo (masaüstü, ≥1024 px) / tek kart listesi (telefon, tablet). Sıra: seçim (şehir, bölge, kalınlık) → başlık + koşul satırı + sıralama → tablo → dipnotlar. Sütunlar: Ürün (marka / model) · Yoğunluk (sözlü beyan *) · Isı iletkenliği (düşük olan iyi) · Dik çekme · Basma (yüksek olan iyi) · m² fiyatı (1 kamyon; altında TIR) · En az sipariş (1 kamyonun tutarı ve m²'si) · "Komple set hesapla →". Yangın ve kalınlık aralığı sütunu kalktı; "8 levhanın hepsi A1 (yanmaz)" dipnotta. Föy notları (kalınlığa göre, NPD, CS sınıfı, 30 mm notu) açılır "Föy notları ve kaynak tarihleri" kutusunda; sözlü beyan etiketi hücrede yıldız + ekran okuyucu metni, dipnotta açık metin |
+| Fiyat hesabı | Eski: TIR iskontosu + 1.000 m² kâr kademesi, tek fiyat. Yeni (`lib/compare/vehiclePrices.ts`): ürün sayfasındaki `calcPrice` ile aynı — kamyon iskontosu, aracın kendi metrajı (paket adedi × paket m², `logistics_capacity`), o metrajın kâr kademesi; ikinci iskonto önce kalınlık satırından. Bonus: bölge fiyatı tek (araç tipine göre değişmez), metraj `/api/bonus-price` `kamyonM2`/`tirM2`. Örnek İstanbul 10 cm SW035: eski 624,45 → yeni 654,92 ₺/m² (ürün sayfasındaki 1 Kamyon fiyatı) |
+| Yeşil işaret (`lib/compare/technicalValues.ts`) | Sütunda en iyi değer, üretici beyanına göre; aralıkta temkinli uç (λ üst, dayanım alt). Yoğunluk işaretlenmez. Fiyatta en düşük 1 kamyon m² fiyatı. Renk tek başına değil: ✓ simgesi + "(en iyi değer)" ekran okuyucu metni |
+| Sıralama | Genel sayfada varsayılan "Fiyat" (ucuzdan), ayrıca "Isı iletkenliği", "Basma dayanımı"; 150 sayfasında varsayılan "150'likler önce" (kilitli karar 3 korunur). Bu kalınlıkta fiyatı olmayan ürün sona iner. Yeni GA4 olayı `Karsilastirma_Siralandi` (`sort_key`, `thickness_cm` + yolculuk alanları), yalnız tıklamada |
+| İki sayfa kabuğu | `bg-hub-warm` + ürün sayfasıyla aynı başlık/altbilgi; "En az sipariş: 1 tam kamyon" şeridi (`remember={false}`: oturumdaki eski seçimi okumaz; alt satır "Her üründe 1 kamyonun m²’si ve tutarı yazar."); giriş metni kısaldı. 150 sayfasının "daha iyi ısı yalıtımı iddiası değildir" cümlesi korundu |
+
+### Editör turu (GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | 3 cm seçilebiliyor; föyün "30 mm için değer farklılaşabilir" notu hücrede görünmüyor (KRİTİK) | KISMEN ONAY: 30 mm değeri föyde yok, yeni rakam yazılmaz (RED); 3 cm seçiliyken notu olan basma hücrelerinin altında "3 cm'de değer farklılaşabilir (föy)" görünür (ONAY) |
+| 2 | "1 kamyon fiyatı" etiketi araç toplamı gibi okunuyor (ORTA) | ONAY: kartta "m² fiyatı (1 kamyon)", koşul satırında "m² fiyatı 1 kamyon siparişinde", girişte "1 kamyon siparişindeki m² fiyatı" |
+| 3 | Yeşil "en iyi değer" kesin üstünlük gibi okunabilir (ORTA) | ONAY: dipnot "üretici beyanına göre o sütundaki en iyi değerdir" |
+| 4 | Telefonda ısı iletkenliği birimi yok (KÜÇÜK) | ONAY: "(W/mK, düşük iyi)" |
+| 5 | "Fiyat bekleniyor" / "Fiyatı yeniden deneyin" belirsiz (KÜÇÜK) | ONAY: "Fiyat yükleniyor" / "Yeniden deneme gerekli" |
+| 6 | Asgari sipariş ve nakliye koşulu | İtiraz yok |
+
+### Test değişikliği (`tests/e2e/karsilastirma.spec.ts`, kilitli değil)
+
+Onaylanan tasarım değişikliği yüzünden seçiciler ve metinler güncellendi (iki ayrı liste → tek tablo/kart; `comparison-technical-*` / `comparison-price-*` → `comparison-table` / `comparison-row-*` / `comparison-cards` / `comparison-card-*`; "Teknik karşılaştırma" başlığı → "Aynı koşulda fiyat ve teknik değerler"; yangın/kalınlık satırı → A1 dipnotu). Davranış kabullerinin hiçbiri silinmedi ya da gevşetilmedi: canlı fiyat, kalınlıkla yeniden hesap, hata/yeniden deneme, 150 sırası, sözlü beyan etiketi, taşmazlık (320–1023 px + 1024'te tablo kutusu), hesaplayıcıya şehir/yaka/kalınlık/model taşıma ve teklif atfı. Eklenenler: fiyat sırası, en az sipariş sütunu, en iyi değer işareti, sıralama + olay, 3 cm föy notu, **ürün sayfasındaki 1 Kamyon fiyatıyla eşitlik** (SW035 10 cm).
+
+### Kanıt (14 Ekim 2026)
+
+| Kontrol | Sonuç |
+|---|---|
+| `tests/compare/*` (yeni) + `vitest run` | Geçti; 925 birim/sözleşme testi |
+| `karsilastirma.spec.ts` (10) + karşılaştırmaya dokunan `comparison-thickness-shortcut`, `tasyunu-category`, `bonus-challenge`, `minimum-order` | 29/29 geçti; SW035 10 cm İstanbul ürün sayfası 1 Kamyon = karşılaştırma 654,92 ₺/m² |
+| `tsc`, `eslint` (değişen dosyalar) | Temiz |
+| Derleme + metin kapıları | Başarılı; copy-gate 456 HTML temiz; `verify:visitor-copy` geçti |
+| Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı) | GEÇTİ: genel, `?entry=pdp_kalinlik&kalinlik=10&focus=SW035`, 150 sayfası; `Karsilastirma_Acildi` + `page_view` gidiyor, CSP ihlali yok |
+| Kontrast (`audit-contrast.mjs`, iki sayfa) | AA altında metin yok |
+| Ekran (375 / 820 / 1024 / 1280 / 1440) + üretim konsolu | Taşma yok (1024'te tablo kutuya sığıyor); 8 fiyatın hepsi görünür; sayfa hatası yok |
+| `verify:release` | 1–5 geçti; 6. adım (bağımlılık taraması: Next.js 16.3.3 kritik, sharp ve source-map-js yüksek) önceden var, Emrah onayı bekleyen ayrı iş; 7 ve 9 elle geçti |
+| Tüm tarayıcı testleri (112) | 99 geçti, 13 kaldı — hepsi bu işten önce bozuk ve dokunulmayan yerlerde: 12'si ofis paneli (9 Ekim `5369023` ofis yenilemesi "Yeni teklif yaz" düğmesi ekledi, testler 8 Ekim'de kalmış), 1'i Bonus F 150 ürün sayfası ("föyü beyanına göre" metni 1 Eylül ürün sayfası yenilemesinden beri yok). Ayrı iş |

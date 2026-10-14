@@ -557,3 +557,14 @@ export function notifyComparisonCtaClick(p: ComparisonJourneyPayload & {
 }): void {
   emit(GA_EVENT_COMPARISON_CTA_CLICK, { ...p });
 }
+
+// Tek tablo düzeninde sıralama değişimi (14 Ekim 2026): ziyaretçi fiyata mı teknik değere mi bakıyor.
+const GA_EVENT_COMPARISON_SORTED = 'Karsilastirma_Siralandi';
+export type ComparisonSortKey = 'fiyat' | 'isi_iletkenligi' | 'basma' | 'onerilen';
+
+export function notifyComparisonSorted(p: ComparisonJourneyPayload & {
+  sort_key: ComparisonSortKey;
+  thickness_cm: number;
+}): void {
+  emit(GA_EVENT_COMPARISON_SORTED, { ...p });
+}

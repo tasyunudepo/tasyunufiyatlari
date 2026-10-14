@@ -13,7 +13,17 @@ import {
   type MinimumOrderSelection,
 } from '@/lib/sales/minimumOrder'
 
-export default function MinimumOrderBanner() {
+interface Props {
+  /** false: oturumda kalan son seçim okunmaz (karşılaştırma sayfası kendi kalınlığını gösterir). */
+  remember?: boolean
+  /** Seçim yokken alt satır. */
+  fallbackDetail?: string
+}
+
+export default function MinimumOrderBanner({
+  remember = true,
+  fallbackDetail = 'Paket, adet ve düşük metrajlı taleplere destek veremiyoruz.',
+}: Props = {}) {
   const [selection, setSelection] = useState<MinimumOrderSelection | null>(null)
   // Şerit başlığın hemen altına yapışır; başlık yüksekliği ekran genişliğine göre değiştiği için ölçülür.
   const [headerHeight, setHeaderHeight] = useState<number | null>(null)
@@ -29,17 +39,19 @@ export default function MinimumOrderBanner() {
 
   useEffect(() => {
     // Oturumdaki son seçim sunucu çıktısından sonra okunur (hydration farkı olmasın).
-    const restore = window.setTimeout(() => setSelection(readMinimumOrder()), 0)
+    const restore = window.setTimeout(() => {
+      if (remember) setSelection(readMinimumOrder())
+    }, 0)
     const onChange = (event: Event) => {
       const detail = (event as CustomEvent<MinimumOrderSelection>).detail
-      if (detail) setSelection(detail)
+      if (detail && remember) setSelection(detail)
     }
     window.addEventListener(MINIMUM_ORDER_EVENT, onChange)
     return () => {
       window.clearTimeout(restore)
       window.removeEventListener(MINIMUM_ORDER_EVENT, onChange)
     }
-  }, [])
+  }, [remember])
 
   return (
     <div
@@ -58,7 +70,7 @@ export default function MinimumOrderBanner() {
           <span className="mt-0.5 block text-[13px] font-semibold sm:text-sm" data-testid="minimum-order-banner-detail">
             {selection
               ? `${selection.label}: en az ${formatMinimumM2(selection.minimumM2)} m²`
-              : 'Paket, adet ve düşük metrajlı taleplere destek veremiyoruz.'}
+              : fallbackDetail}
           </span>
         </p>
       </div>
