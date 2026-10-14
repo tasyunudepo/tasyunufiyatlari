@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +30,7 @@ import {
 } from "@/lib/compare/technicalValues";
 import { takeComparisonEntry, type ComparisonEntry } from "@/lib/compare/entry";
 import { formatThicknessSegment } from "@/lib/catalog/thickness-url";
+import { isDensity100To110, isDensity120Class } from "@/lib/compare/hubs";
 import { useWizardStore } from "@/lib/store/wizardStore";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import {
@@ -132,7 +133,7 @@ function readFocusedModel(stored: ComparisonEntry | null): string | null {
 
 interface ComparisonCenterProps {
   /** genel / yogunluk_150: seçimli sayfa · kalinlik / yogunluk_150_kalinlik: hub (kalınlık adreste sabit) */
-  variant: "genel" | "yogunluk_150" | "kalinlik" | "yogunluk_150_kalinlik";
+  variant: "genel" | "yogunluk_150" | "kalinlik" | "yogunluk_150_kalinlik" | "yogunluk_120";
   /** Hub: kalınlık sabittir; kalınlık düğmeleri kardeş hub'lara bağlantıdır. */
   fixedThicknessCm?: number;
   /** Hub: kalınlık → kardeş hub adresi (yalnız var olan hub'lar). */
@@ -160,6 +161,8 @@ interface Row {
   slug: string | null;
   brand: string;
   model: string;
+  /** 120 görünümünde 100–110 levhalar "alt" grubundadır (alternatif). */
+  group: "main" | "alt";
 }
 
 // Üst satır marka, alt satır model: "Dalmaçyalı Stonewool SW035" → Dalmaçyalı / Stonewool SW035.
@@ -187,6 +190,9 @@ function compareNullable(a: number | null, b: number | null, direction: 1 | -1):
 function sortRows(rows: Row[], key: ComparisonSortKey): Row[] {
   if (key === "onerilen") return rows;
   return [...rows].sort((a, b) => {
+    // Alternatif grubu her sıralamada ana grubun altında kalır.
+    const group = Number(a.group === "alt") - Number(b.group === "alt");
+    if (group !== 0) return group;
     // Bu kalınlıkta fiyatı olmayan ürün, hangi sırada olursa olsun en alta iner.
     const missing = Number(a.cell.status === "unavailable") - Number(b.cell.status === "unavailable");
     if (missing !== 0) return missing;
@@ -242,6 +248,10 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
   const isHub = fixedThicknessCm != null;
   const profiles = useMemo(() => {
     const all = getComparisonProfiles();
+    if (variant === "yogunluk_120") {
+      // 120 görünümü (Emrah, 14 Ekim 2026): 120–125 sınıfı önce; 100–110 (sözlü beyan) "alternatif" olarak altta.
+      return [...all.filter(isDensity120Class), ...all.filter(isDensity100To110)];
+    }
     if (variant !== "yogunluk_150" && variant !== "yogunluk_150_kalinlik") return all;
     // 150 görünümü yalnız föy beyanlı 150'likleri gösterir (Emrah, 14 Ekim 2026: "150 sayfasında diğer
     // ürünler olmamalı"; önceki karar 3'te öteki beş ürün bağlam olarak alttaydı).
@@ -476,6 +486,7 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
     isFocused: focusedProfile?.productKey === p.productKey,
     slug: slugFor(p),
     ...splitName(p),
+    group: variant === "yogunluk_120" && isDensity100To110(p) ? "alt" : "main",
   }));
   const best = bestTechnicalValues(
     rows.map((r) => ({ key: r.profile.productKey, lambda: r.lambda, tensile: r.tensile, compressive: r.compressive })),
@@ -483,6 +494,8 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
   const knownPrices = rows.map((r) => kamyonUnit(r.cell)).filter((v): v is number => v !== null);
   const bestPrice = knownPrices.length > 0 ? Math.min(...knownPrices) : null;
   const sortedRows = sortRows(rows, sortKey);
+  const altStartsAt = sortedRows.findIndex((row) => row.group === "alt");
+  const altTitle = "Alternatif · 100–110 yoğunluk (üretici sözlü beyanı)";
   const sortOptions: ComparisonSortKey[] = ["fiyat", "isi_iletkenligi", "basma"];
 
   const conditionLine = zone
@@ -729,8 +742,15 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
 
         {/* ─── Telefon ve tablet: kartlar ─── */}
         <ul className="space-y-3 lg:hidden" data-testid="comparison-cards" role="list">
-          {sortedRows.map((row) => (
-            <li key={row.profile.productKey}>
+          {sortedRows.map((row, rowIndex) => (
+            <Fragment key={row.profile.productKey}>
+            {rowIndex === altStartsAt && (
+              <li data-testid="comparison-alt-heading" className="pt-3">
+                <h3 className="font-heading text-base font-bold text-hub-ink">{altTitle}</h3>
+                <p className="text-xs text-hub-muted">120 yoğunluk şartını karşılamaz; aynı mantolama işinde kullanılan levhalar.</p>
+              </li>
+            )}
+            <li>
               <article
                 aria-labelledby={`kart-${row.profile.productKey}`}
                 data-testid={`comparison-card-${row.profile.productKey}`}
@@ -809,6 +829,7 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
                 </div>
               </article>
             </li>
+            </Fragment>
           ))}
         </ul>
 
@@ -849,9 +870,18 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
               </tr>
             </thead>
             <tbody>
-              {sortedRows.map((row) => {
+              {sortedRows.map((row, rowIndex) => {
                 const cell = row.cell;
                 return (
+                  <Fragment key={row.profile.productKey}>
+                  {rowIndex === altStartsAt && (
+                    <tr data-testid="comparison-alt-heading" className="border-b border-hub-rule bg-hub-card-2">
+                      <th colSpan={8} scope="rowgroup" className="px-3 py-2.5 text-left">
+                        <span className="font-heading text-sm font-bold text-hub-ink">{altTitle}</span>
+                        <span className="ml-2 text-xs font-normal text-hub-muted">120 yoğunluk şartını karşılamaz; aynı mantolama işinde kullanılan levhalar.</span>
+                      </th>
+                    </tr>
+                  )}
                   <tr
                     key={row.profile.productKey}
                     data-testid={`comparison-row-${row.profile.productKey}`}
@@ -904,6 +934,7 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
                     </td>
                     <td className="py-3 pl-2 pr-3 text-right">{cta(row, false)}</td>
                   </tr>
+                  </Fragment>
                 );
               })}
             </tbody>

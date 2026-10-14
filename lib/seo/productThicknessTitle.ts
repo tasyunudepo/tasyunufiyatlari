@@ -32,3 +32,22 @@ export function productThicknessTitle(input: Input): string {
     : ''
   return `${name} ${input.thicknessCm} cm ${density}Taş Yünü Fiyatı - ${input.monthYear}`
 }
+
+/** Veritabanındaki meta başlık bazen site adını içeriyor; kök şablon ("%s | Taşyünü Fiyatları") yeniden ekler. */
+export function stripSiteSuffix(title: string | null | undefined): string | null {
+  if (!title) return null
+  return title.replace(/(\s*[|–—-]\s*Taşyünü Fiyatları)+\s*$/u, '').trim() || null
+}
+
+/**
+ * Ürün sayfası başlık/açıklama düzeltmeleri (veritabanına dokunmadan).
+ * 14 Ekim 2026 (Emrah): rabitz telli şilte "rulo taşyünü şilte" diye aranıyor (3 ayda 671 gösterim
+ * "rulo taşyünü fiyatları"); fiyat fabrikadan teklif ile verilir, endüstriyel kullanım.
+ */
+export const PRODUCT_META_OVERRIDES: Readonly<Record<string, { title: string; description: string }>> = {
+  'bonus-endustriyel-silte-tasyunu': {
+    title: 'Rulo Taşyünü Şilte (Rabitz Telli) Fiyatı — Bonus Endüstriyel Şilte',
+    description:
+      'Rabitz telli rulo taşyünü şilte: Bonus Endüstriyel Şilte 650, 700, 720 ve 750 (80–125 kg/m³). Kazan, tesisat ve egzoz boruları, bacalar ve çelik konstrüksiyon yalıtımı için; fiyat fabrikadan teklif ile verilir.',
+  },
+}

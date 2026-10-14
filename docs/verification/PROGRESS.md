@@ -1831,3 +1831,40 @@ Emrah'ın Search Console tespiti ("10 cm 150 yoğunluk arayan tüm 150'likleri a
 | Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): 10 cm hub, 150/5 cm hub, HD150 10 cm, kategori, iletişim | GEÇTİ |
 | İç bağlantı taraması (23 sayfa, 128 farklı iç bağlantı) | Hepsi 200 |
 | Ekran (1440, 1280, 375) | Taşma yok, sayfa hatası yok |
+
+
+## 14 Ekim 2026 · Hub planı Faz 4 — 120 yoğunluk sayfası, ana sayfa fiyat tablosu, rulo taşyünü şilte
+
+| Yer | Ne yapıldı |
+|---|---|
+| `/tasyunu-yogunluk/120-kg-m3` (yeni) | Emrah: "120 yoğunluk diye açılır, alternatif gösterilir". 120 sınıfı (`isDensity120Class`: 150'lik değil, beyan üst değeri ≥120): Bonus F 120 (föy 120 ±%10), Expert LD125 (föy ≥125), Dalmaçyalı SW035 (sözlü 110–120). Altında "Alternatif · 100–110 yoğunluk (üretici sözlü beyanı)" grubu: Optimix TR7.5, Expert Premium; her sıralamada altta kalır. Başlık "120 Yoğunluk Taş Yünü Fiyatları - {ay yıl} \| 120'lik Mantolama Levhaları"; 5 cm fiyat fotoğrafı; kalınlık hub bandı. Site haritası, altbilgi, kategori ve kalınlık hub'larından bağlantı |
+| Ana sayfa | "{ay yıl} taşyünü m² fiyatları" tablosu (hesaplayıcının altında): 9 kalınlık × en düşük 1 kamyon m² fiyatı + 150 yoğunlukta en düşük; satır kalınlık hub'ına, 150 hücresi 150/kalınlık hub'ına gider; fiyat sunucu HTML'inde. Ana sayfa gövdesi değişmeden `components/home/HomePageClient.tsx`'e taşındı (dosya baştan beri bütünüyle "use client" idi); `app/page.tsx` yalnız tabloyu derleme anında hesaplar |
+| Rabitz telli şilte | Emrah: "rulo taşyünü şilte başlığı; teklif ile kalacak". Kodda başlık/açıklama düzeltmesi (veritabanına dokunmadan): "Rulo Taşyünü Şilte (Rabitz Telli) Fiyatı — Bonus Endüstriyel Şilte"; açıklamada "fiyat fabrikadan teklif ile verilir". Ürün zaten Endüstriyel grubunda |
+| Başlık tekrarı | Veritabanı meta başlığında "\| Taşyünü Fiyatları" olan ürünlerde site adı iki kez yazıyordu (kök şablon yeniden ekliyor); `stripSiteSuffix` temizler |
+
+Ertelenen (onaylı planda vardı): **mantolama** ve **çatı** kullanım hub'ları. Mantolama aramaları ("taşyünü mantolama m² fiyatı" 469) ana sayfaya gidiyor ve ana sayfa zaten komple set hesaplıyor; ayrı sayfa ana sayfayla yarışır. Çatı levhaları karşılaştırma profillerinde yok (basma dayanımı odaklı ayrı teknik set gerekir); 3 ayda 279 gösterim.
+
+### Editör turu (GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | "120–125 kg/m³ sınıfı" beyanlara uymuyor (SW035 110–120, LD125 ≥125) (KRİTİK) | ONAY: "120 yoğunluk sınıfı"; aralık iddiası kalktı, ürün beyanları ayrı ayrı yazılı |
+| 2 | "Isı yalıtımını ısı iletkenliği gösterir" kalınlık koşulu eksik (KRİTİK) | ONAY: "aynı kalınlıkta …" (120, 150, 150/kalınlık) |
+| 3 | Alternatif grubu 120 şartını karşılıyor gibi okunabilir (ORTA) | ONAY: "120 yoğunluk şartını karşılamaz; aynı mantolama işinde kullanılan levhalar" |
+| 4 | Ana sayfa "en düşük" piyasa iddiası gibi (ORTA) | ONAY: "Sitede karşılaştırılan … levhalar arasında" |
+| 5–6 | Şilte başlığı, altbilgi bandı | İtiraz yok |
+
+### Test değişikliği
+
+`customer-promises.test.ts` ve `public-contact-gate.test.ts` (kilitli değil): ana sayfa metnini okudukları dosya `app/page.tsx` → `components/home/HomePageClient.tsx` (gövde taşındı; beklentiler aynı). Yeni: 120 sıralaması ve alternatif grubu, ana sayfa tablosu, şilte başlığı (`hub-pages.spec.ts`), `stripSiteSuffix` ve şilte birim testleri.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` | 941 geçti |
+| `hub-pages.spec.ts` (8) + karşılaştırma, en az sipariş, kısa yol, Bonus, portföy | Geçti |
+| Tüm tarayıcı testleri (122) | 109 geçti; kalan 13 bu işten önce bozuk (12 ofis, 1 Bonus F 150 ürün sayfası) |
+| Derleme + copy-gate + `verify:visitor-copy` + kabul kilidi | 475 HTML temiz; kapı geçti; 13 dosya kilit geçti |
+| Ölçüm bekçisi (kuru, yerel üretim): ana sayfa, 120, şilte | GEÇTİ |
+| Ekran (1440, 1280, 375) | Taşma yok, sayfa hatası yok |

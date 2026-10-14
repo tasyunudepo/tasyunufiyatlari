@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import ProductCard from '@/components/catalog/ProductCard';
 import TasyunuCategoryExperience from '@/components/catalog/TasyunuCategoryExperience';
 import HubLinkBand from '@/components/compare/HubLinkBand';
-import { DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
+import { DENSITY_120_PATH, DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
 import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
@@ -90,7 +90,7 @@ export default async function KategoriPage({ params }: Props) {
           <HubLinkBand
             groups={[
               { title: 'Kalınlığa göre mantolama taşyünü fiyatları', links: HUB_THICKNESSES.map((t) => ({ label: `${t} cm taş yünü fiyatları`, href: thicknessHubPath(t) })) },
-              { title: 'Yoğunluğa göre', links: [{ label: '150 yoğunluk taş yünü fiyatları', href: DENSITY_150_PATH }] },
+              { title: 'Yoğunluğa göre', links: [{ label: '150 yoğunluk taş yünü fiyatları', href: DENSITY_150_PATH }, { label: '120 yoğunluk taş yünü fiyatları', href: DENSITY_120_PATH }] },
             ]}
           />
         </div>

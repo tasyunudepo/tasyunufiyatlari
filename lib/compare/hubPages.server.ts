@@ -7,6 +7,7 @@ import { formatMonthYear } from '@/lib/seo/monthYear'
 import { getComparisonSnapshots } from './snapshot.server'
 import {
   COMPARISON_PATH,
+  DENSITY_120_PATH,
   DENSITY_150_PATH,
   HUB_THICKNESSES,
   MIN_PRODUCTS_PER_DENSITY_HUB,
@@ -91,6 +92,7 @@ export async function getThicknessHubData(thicknessCm: number): Promise<HubPageD
             ? [{ label: `${thicknessCm} cm 150 yoğunluk taş yünü fiyatları`, href: density150HubPath(thicknessCm) }]
             : []),
           { label: '150 yoğunluk taş yünü fiyatları', href: DENSITY_150_PATH },
+          { label: '120 yoğunluk taş yünü fiyatları', href: DENSITY_120_PATH },
           { label: 'Bütün kalınlıklar ve şehirler: karşılaştırma', href: COMPARISON_PATH },
         ],
       },

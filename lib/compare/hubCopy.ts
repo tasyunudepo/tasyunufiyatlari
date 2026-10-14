@@ -155,7 +155,7 @@ export function density150HubCopy(f: HubFacts, monthYear: string, cityLabel: str
     summary:
       `Föy beyanıyla 150 kg/m³ olan ${n} levha ${t} cm'de yan yana: ${names}.`
       + (range ? ` 1 kamyon siparişinde m² fiyatı ${range} (${cityLabel} teslim, KDV hariç).` : '')
-      + ' 150 yoğunluk daha iyi ısı yalıtımı iddiası değildir: ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi); yoğunluk, dik çekme ve basma dayanımıyla birlikte okunur.',
+      + ' 150 yoğunluk daha iyi ısı yalıtımı iddiası değildir: aynı kalınlıkta ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi); yoğunluk, dik çekme ve basma dayanımıyla birlikte okunur.',
     faq: [
       {
         q: `${t} cm 150 yoğunluk taş yünü m² fiyatı ne kadar?`,

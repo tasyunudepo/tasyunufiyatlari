@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 const root = process.cwd()
 const publicSalesFiles = [
   'app/page.tsx',
+  'components/home/HomePageClient.tsx',
   'components/shared/SiteHeader.tsx',
   'components/shared/SiteFooter.tsx',
   'components/urunler-hub/TrustStrip.tsx',
@@ -61,7 +62,8 @@ describe('herkese açık satış iletişim kapısı', () => {
   })
 
   it('ana sayfa en az sipariş şeridini gösterir', () => {
-    expect(read('app/page.tsx')).toContain('<MinimumOrderBanner />')
+    // 14 Ekim 2026: ana sayfa gövdesi HomePageClient'ta.
+    expect(read('components/home/HomePageClient.tsx')).toContain('<MinimumOrderBanner />')
   })
 
   it('danışmanlık vaadiyle kararsız talep toplamaz', () => {

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { GENERATOR_PAGE_PATH } from '@/lib/portfolio/offers';
-import { COMPARISON_PATH, DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
+import { COMPARISON_PATH, DENSITY_120_PATH, DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
 
 type Tone = 'dark' | 'warm';
 
@@ -120,6 +120,11 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
             <li>
               <Link href={DENSITY_150_PATH} prefetch={false} className={`${linkText} text-sm transition-colors`}>
                 150 yoğunluk taş yünü
+              </Link>
+            </li>
+            <li>
+              <Link href={DENSITY_120_PATH} prefetch={false} className={`${linkText} text-sm transition-colors`}>
+                120 yoğunluk taş yünü
               </Link>
             </li>
             <li>

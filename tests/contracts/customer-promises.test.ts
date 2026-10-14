@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
 const PROMISE_FILES = [
+  // 14 Ekim 2026: ana sayfa gövdesi HomePageClient'a taşındı (app/page.tsx fiyat tablosunu hesaplayıp ona verir).
+  'components/home/HomePageClient.tsx',
   'app/page.tsx',
   'app/iletisim/page.tsx',
   'app/hakkimizda/page.tsx',
@@ -57,13 +59,13 @@ describe('ziyaretçiye verilen ticari vaatler', () => {
   })
 
   it('tek seferde ödeme kuralını açıkça söyler', () => {
-    expect(sources.find(({ file }) => file === 'app/page.tsx')?.content).toMatch(
+    expect(sources.find(({ file }) => file === 'components/home/HomePageClient.tsx')?.content).toMatch(
       /ödeme[^.!?]{0,100}sipariş\s+onayında[^.!?]{0,100}tek\s+seferde/iu,
     )
   })
 
   it('nakliye dahil koşulunu tam araç ve uygun EPS setiyle sınırlar', () => {
-    const home = sources.find(({ file }) => file === 'app/page.tsx')?.content ?? ''
+    const home = sources.find(({ file }) => file === 'components/home/HomePageClient.tsx')?.content ?? ''
 
     expect(home).toMatch(/tam\s+(?:kamyon|araç)[^.!?]{0,120}nakliye[^.!?]{0,80}fiyata\s+dahil/iu)
     expect(home).toMatch(/uygun\s+EPS\s+set[^.!?]{0,120}nakliye[^.!?]{0,80}fiyata\s+dahil/iu)

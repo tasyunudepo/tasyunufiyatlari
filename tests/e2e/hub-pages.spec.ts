@@ -96,3 +96,43 @@ test.describe('150 yoğunluk + kalınlık hub\'ı', () => {
     expect(d150).toContain('href="/tasyunu-yogunluk/150-kg-m3/10-cm"')
   })
 })
+
+test.describe('120 yoğunluk sayfası ve ana sayfa fiyat tablosu (Faz 4)', () => {
+  test('120: 120–125 sınıfı önce, 100–110 levhalar "alternatif" başlığının altında', async ({ page }) => {
+    await page.goto('/tasyunu-yogunluk/120-kg-m3')
+    await expect(page).toHaveTitle(/^120 Yoğunluk Taş Yünü Fiyatları - /u)
+    await expect(page.getByRole('heading', { level: 1, name: '120 yoğunluk taş yünü fiyatları' })).toBeVisible()
+    const table = page.getByTestId('comparison-table')
+    const order = await table.locator('tbody tr').evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute('data-product-key') ?? (row.getAttribute('data-testid') === 'comparison-alt-heading' ? 'ALT' : '?')),
+    )
+    expect(order).toHaveLength(6)
+    const alt = order.indexOf('ALT')
+    expect(alt).toBe(3)
+    expect(order.slice(0, alt).sort()).toEqual(['bonus-premium-f-120', 'dalmacyali-sw035', 'expert-ld125'])
+    expect(order.slice(alt + 1).sort()).toEqual(['expert-tasyunu-premium', 'fawori-optimix-tr75'])
+    await expect(table.getByTestId('comparison-alt-heading')).toContainText('Alternatif · 100–110 yoğunluk')
+    // Sıralama değişse de alternatifler altta kalır.
+    await page.getByTestId('comparison-pricing').getByRole('button', { name: 'Isı iletkenliği', exact: true }).click()
+    const afterSort = await table.locator('tbody tr').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-testid')))
+    expect(afterSort.indexOf('comparison-alt-heading')).toBe(3)
+  })
+
+  test('ana sayfa: kalınlık başına en düşük m² fiyatı, satır kalınlık hub\'ına gider', async ({ page, request }) => {
+    const html = await (await request.get('/')).text()
+    expect(html).toContain('data-testid="home-price-table"')
+    expect(html).toContain('href="/tasyunu-fiyatlari/10-cm"')
+    await page.goto('/')
+    const table = page.getByTestId('home-price-table')
+    await expect(table.getByRole('heading', { level: 2 })).toContainText('taşyünü m² fiyatları')
+    await expect(table.locator('tbody tr')).toHaveCount(9)
+    await expect(table.getByRole('link', { name: '10 cm taş yünü', exact: true })).toHaveAttribute('href', '/tasyunu-fiyatlari/10-cm')
+    await expect(table.locator('tbody tr').first()).toContainText('₺/m²')
+  })
+
+  test('rabitz telli şilte "Rulo Taşyünü Şilte" başlığıyla', async ({ page }) => {
+    const response = await page.goto('/urunler/tasyunu-levha/bonus-endustriyel-silte-tasyunu')
+    test.skip(response?.status() === 404, 'Şilte sayfası yok')
+    await expect(page).toHaveTitle('Rulo Taşyünü Şilte (Rabitz Telli) Fiyatı — Bonus Endüstriyel Şilte | Taşyünü Fiyatları')
+  })
+})

@@ -17,7 +17,7 @@ import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { formatMonthYear } from '@/lib/seo/monthYear';
-import { productThicknessTitle } from '@/lib/seo/productThicknessTitle';
+import { PRODUCT_META_OVERRIDES, productThicknessTitle, stripSiteSuffix } from '@/lib/seo/productThicknessTitle';
 import { getComparisonProfiles } from '@/lib/technical-profiles';
 import { density150HubPath, isDensity150 } from '@/lib/compare/hubs';
 import { getDensity150HubThicknesses } from '@/lib/compare/hubPages.server';
@@ -262,10 +262,16 @@ export async function generateProductMetadata({
       ? buildThicknessMeta({ product, kategori, thickness })
       : null;
 
+  const override = !supportsThickness ? PRODUCT_META_OVERRIDES[product.slug] : undefined;
   return buildMetadata({
-    title: thicknessMeta?.title ?? product.meta_title ?? `${product.name} ${KATEGORI_LABELS[kategori] ?? product.category.name} Fiyatları`,
+    title:
+      thicknessMeta?.title ??
+      override?.title ??
+      stripSiteSuffix(product.meta_title) ??
+      `${product.name} ${KATEGORI_LABELS[kategori] ?? product.category.name} Fiyatları`,
     description:
       thicknessMeta?.description ??
+      override?.description ??
       product.meta_description ??
       product.catalog_description ??
       `${product.brand.name} ${product.name} ürün detayları, fiyat ve teklif.`,

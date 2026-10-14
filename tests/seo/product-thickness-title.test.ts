@@ -29,3 +29,19 @@ describe('ürün kalınlık başlığı', () => {
       .toBe('10 cm EPS Fiyatları - Ekim 2026 | Dalmaçyalı Ideal Carbon')
   })
 })
+
+describe('ürün meta başlığı düzeltmeleri', () => {
+  it('veritabanı başlığındaki site adı tekrarı kalkar', async () => {
+    const { stripSiteSuffix } = await import('@/lib/seo/productThicknessTitle')
+    expect(stripSiteSuffix('Bonus Endüstriyel Şilte — Rabitz Telli | Taşyünü Fiyatları')).toBe('Bonus Endüstriyel Şilte — Rabitz Telli')
+    expect(stripSiteSuffix('Optimix TR7.5 Taşyünü Levha Fiyatları')).toBe('Optimix TR7.5 Taşyünü Levha Fiyatları')
+    expect(stripSiteSuffix(null)).toBeNull()
+  })
+
+  it('rabitz telli şilte "Rulo Taşyünü Şilte" başlığıyla, teklif ile', async () => {
+    const { PRODUCT_META_OVERRIDES } = await import('@/lib/seo/productThicknessTitle')
+    const silte = PRODUCT_META_OVERRIDES['bonus-endustriyel-silte-tasyunu']
+    expect(silte.title).toMatch(/^Rulo Taşyünü Şilte/u)
+    expect(silte.description).toContain('teklif ile')
+  })
+})

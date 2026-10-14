@@ -44,7 +44,7 @@ export default async function Yogunluk150Page() {
             <p className="mt-2 max-w-3xl text-sm leading-6 text-hub-ink-2 sm:text-[15px] sm:leading-7">
               Föy beyanıyla 150 kg/m³ sınıfındaki üç mantolama levhası yan yana: Bonus Premium
               F 150, F 150 Pro ve Expert HD150. 150 yoğunluk daha iyi ısı yalıtımı iddiası
-              değildir: ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi); yoğunluk, dik
+              değildir: aynı kalınlıkta ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi); yoğunluk, dik
               çekme ve basma dayanımıyla birlikte okunur. &quot;Pro&quot; adı tek başına üstünlük
               anlamına gelmez. Öteki yoğunluklar için{' '}
               <Link href="/tasyunu-karsilastir" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
