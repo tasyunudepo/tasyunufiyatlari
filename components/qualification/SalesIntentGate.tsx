@@ -27,6 +27,9 @@ const EXCLUDED_PREFIXES = [
   // Zorunlu modal ürün incelemesini kesmemeli; yalnız /urunler hub'ında
   // ilk niyet ayrımı olarak kalır.
   '/urunler/',
+  // İletişim sayfası en az sipariş (1 tam kamyon) sorusunu kendi telefon/WhatsApp penceresinde
+  // sorar (14 Ekim 2026); giriş penceresi kartları örtüp aynı soruyu iki kez sordurmasın.
+  '/iletisim',
 ]
 
 export default function SalesIntentGate() {

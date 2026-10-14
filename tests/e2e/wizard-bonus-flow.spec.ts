@@ -25,7 +25,13 @@ test.describe('Bonus harman paket teklifi', () => {
     await expect(tirSuggestion).toBeVisible()
 
     const calculateButton = calculator.getByRole('button', { name: 'Fiyatımı Hesapla' })
-    await expect(calculateButton).toBeDisabled()
+    // 14 Ekim 2026 (Emrah kararı): kamyondan az metrajda düğme kapalı durmaz; basınca en az sipariş
+    // penceresi açılır ve hesap yapılmaz (önce: düğme kapalıydı).
+    await calculateButton.click()
+    const minimumDialog = page.getByTestId('minimum-order-dialog')
+    await expect(minimumDialog).toContainText('en az sipariş 1 tam kamyondur')
+    await minimumDialog.getByRole('button', { name: 'Vazgeç' }).click()
+    await expect(page.getByTestId('homepage-calculation-result')).toHaveCount(0)
     await tirSuggestion.click()
     await expect(calculateButton).toBeEnabled()
     await calculateButton.click()

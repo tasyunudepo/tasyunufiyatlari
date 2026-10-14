@@ -38,6 +38,7 @@ import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
 import { formatLocalizedM2Input, parseLocalizedM2Input } from "@/lib/catalog/m2Input";
 import { createComparisonSessionId } from "@/lib/analytics/pdpJourney";
+import { publishMinimumOrder } from "@/lib/sales/minimumOrder";
 
 export type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
 
@@ -286,6 +287,17 @@ export default function ProductPricePanel({
       return () => window.clearTimeout(syncPrefill);
     }
   }, [lorryM2]);
+
+  // En az sipariş = bu ürün ve kalınlıkta 1 tam kamyon (14 Ekim 2026). İletişim sayfasındaki
+  // "siparişiniz en az 1 kamyon mu?" penceresi, ziyaretçinin baktığı son ürünün metrajını buradan söyler.
+  useEffect(() => {
+    if (lorryM2 === null || !activeThickness) return;
+    publishMinimumOrder({
+      label: `${product.name} · ${activeThickness} cm`,
+      thicknessCm: activeThickness,
+      minimumM2: lorryM2,
+    });
+  }, [lorryM2, activeThickness, product.name]);
 
   // Geçerlilik kontrolü direkt neededM2 üzerinden (anlık kırmızı border için)
   const inputInvalid = neededM2 !== "" && (() => {

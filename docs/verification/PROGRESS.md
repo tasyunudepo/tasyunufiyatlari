@@ -1651,3 +1651,36 @@ Emrah (14 Ekim 2026, ~13.40): "taşyünündeki telefon WhatsApp'ı kaldır, 25 m
 | Yerel üretimde iki sayfa | `tel:` / `wa.me` bağlantısı 0; ölçüm bekçisi GEÇTİ (page_view gidiyor) |
 
 **Ölçüm notu:** herkese açık kanal yalnız 14 Ekim 01.28 – 13.47 arasında açıktı (kapanış canlıda 13.47'de görüldü, `2a15a76`). Bu aralıktaki telefon/WhatsApp temasları kanalın açık olmasındandır; GCR'de #4aa186 için açılan deney geçersizdir.
+
+
+## 14 Ekim 2026 öğleden sonra · En az sipariş = 1 tam kamyon; iletişim sayfasında pencereden geçen telefon ve WhatsApp
+
+Emrah (14 Ekim 2026): "minimum m² şu kadardır diye dev, belirgin yazmalı, sticky kalmalı; arama tuşuna basınca 'lütfen vaktimizi almayalım, minimum ihtiyaç şu kadar m²' diyen pencere açılsın", "iletişim sayfasında telefon yazmasa hepten güven kaybı", "az alacağımız yer kullanıcının seçtiği veya geldiği ürünün kalınlığındaki minimum kamyon olmalı", "stok takibi yapamıyorum" → plan onaylandı.
+
+| # | Yer | Ne yapıldı |
+|---|---|---|
+| 1 | Veri (Supabase) | Dalmaçyalı SW035'te Tuzla stoğu (4 cm 800, 5 cm 1.200 m²) ve "minimum 300 m²" kapatıldı (`plates.id=27`: `stock_tuzla=0`, `minimum_order_type='none'`; `plate_prices` 496/497 `stock_tuzla=0`). Yedek: GCR `data/backups/tasyunu/sw035-once-2026-10-14T14-11.json`. Sonrasında stoklu ürün 0, minimum yazılı ürün 0 |
+| 2 | Ana sayfa | `MinimumOrderBanner`: başlığın altına yapışık şerit "En az sipariş: 1 tam kamyon" + seçime göre "{ürün} · {kalınlık} cm: en az {m²} m²". Başlık yüksekliği ölçülür (telefon 45, masaüstü 65 piksel) |
+| 3 | Hesaplayıcı (ana sayfa) | Kamyondan az metrajda "Fiyatımı Hesapla" artık kapalı değil; basınca "Lütfen vaktimizi almayalım" penceresi açılır, "{m²} m² ile hesapla" metrajı 1 kamyona çeker. En az metraj, metraj doğrulamasıyla aynı formül: `max(material.min_order_m2, effectiveLogistics.lorry_capacity_m2)` |
+| 4 | İletişim sayfası | Sağdaki boş alana dev blok "En az sipariş · 1 tam kamyon" + kalınlık tablosu (`logistics_capacity`, derlemede okunur). Telefon numarası yazılı ama bağlantı değil; "Hemen Ara" ve "Yazışmayı Başlat" `GuardedContactLink` ile önce "Siparişiniz en az 1 tam kamyon mu?" diye sorar. "Hayır, daha az" → arama, ölçüm ve WhatsApp bildirimi yok. Ziyaretçi bir ürün sayfasına ya da hesaplayıcıya baktıysa pencere o ürünün metrajını söyler (`sessionStorage`). İlk ziyaret penceresi bu sayfada açılmaz |
+| 5 | Ölçüm | Yeni olaylar `Minimum_Kamyon_Soruldu` {surface, minimum_m2} ve `Minimum_Kamyon_Cevap` {surface, answer: evet / az / kamyonla_hesapla / vazgecti}. İletişim sayfasında `Telefon_Aramalari` / `Whatsapp_Yazanlar` yalnız "Evet"ten sonra gider |
+
+**Sözleşme ve test değişiklikleri (gerekçe: sahibinin 14 Ekim öğle kararı kabul ölçütünü değiştirdi):** `public-contact-gate.test.ts` — iletişim sayfası doğrudan bağlantı yasağından çıkıp kendi sözleşmesini aldı (yalnız `GuardedContactLink`, numara bağlantı değil, en az sipariş bloğu var); ana sayfa için yasak sürüyor ve şerit zorunlu. `wizard-bonus-flow.spec.ts` ve `bonus-challenge.spec.ts`: "kamyondan az metrajda düğme kapalı" beklentisi "düğme pencere açar, hesap yapılmaz" oldu; "İstanbul'da yaka seçilmeden hesap yok" kontrolü korunuyor. Yeni: `tests/contracts/minimum-order.test.ts` (3), `tests/e2e/minimum-order.spec.ts` (5).
+
+### Editör turu (GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | "EPS'de paket büyük olduğu için 1 kamyon daha fazla m² taşır" dayanaksız (KRİTİK) | Kısmen ONAY: dayanağı sitenin kapasite hesabı (araca sığan paket adedi aynı, EPS paketi büyük; `lib/quote/vehicleArea.ts`), cümle netleştirildi: "EPS'de paket metrajı daha büyük olduğundan aynı kamyon daha fazla m² taşır." |
+| 2 | "Projeniz en az 1 tam kamyon mu?" — büyük projesi olup 25 m² eksiği olan da "evet" der (ORTA) | ONAY: "Siparişiniz en az 1 tam kamyon mu?" |
+| 3 | Şerit, hesaplayıcı penceresi, arama sonucu açıklaması | İtiraz yok |
+
+### Kanıt (14 Ekim 2026)
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` + `tsc --noEmit` + ESLint (değişen ve yeni dosyalar) | 97 dosya / 919 test; hata yok |
+| Tarayıcı testleri | `minimum-order` 5/5; ilgili eski testler (ana sayfa dönüşümü, giriş penceresi, Bonus akışı, yaka seçimi, pencere odağı) geçti. **Önceden kırık, bu işle ilgisiz:** `bonus-challenge` "Filli PDP Bonus alternatifi" ve `portfolio-offers` AC-208, değişiklik öncesi kodun ayrı kopyasında da aynı şekilde kırık; `quote-pdf-document` "tek kalemli teklif" bir kez kırıldı, tekrarda geçti |
+| Üretim derlemesi + metin kapıları | Başarılı; copy-gate 456 HTML temiz; `verify:visitor-copy` geçti |
+| Ölçüm bekçisi (kuru, gerçek alan adıyla yerel) | GEÇTİ: "Hemen Ara" → `Minimum_Kamyon_Soruldu` → onay → `Minimum_Kamyon_Cevap` + `Telefon_Aramalari`; WhatsApp aynı; sitenin kendi WhatsApp bildirimi denemede gönderilmedi |
+| Ekran görüntüsü (telefon 390, masaüstü 1440) | Şerit başlığa yapışık ve kaydırınca yerinde; hesaplayıcı penceresi, iletişim bloğu, telefon/WhatsApp penceresi ve ret ekranı incelendi; sayfa hatası yok |

@@ -28,9 +28,15 @@ test.describe('Bonus ve karşılaştırma yüzeyleri', () => {
     await amountInput.fill('500')
 
     const calculateButton = calculator.getByRole('button', { name: 'Fiyatımı Hesapla' })
+    // 14 Ekim 2026 (Emrah kararı): kamyondan az metrajda düğme en az sipariş penceresini açar, hesap yapmaz.
+    await calculateButton.click()
+    const minimumDialog = page.getByTestId('minimum-order-dialog')
+    await expect(minimumDialog).toContainText('en az sipariş 1 tam kamyondur')
+    await minimumDialog.getByRole('button', { name: 'Vazgeç' }).click()
+    await calculator.getByRole('button', { name: /1 Kamyon ·/ }).click()
+    // İstanbul'da yaka seçilmeden hesap yapılmaz (metraj artık tam araç).
     await expect(calculateButton).toBeDisabled()
     await calculator.getByRole('button', { name: 'Avrupa Yakası' }).click()
-    await calculator.getByRole('button', { name: /1 Kamyon ·/ }).click()
     await expect(calculateButton).toBeEnabled()
     await calculateButton.click()
 

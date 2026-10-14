@@ -69,3 +69,22 @@ export function notifyLeadRejected(
 export function notifyContactUnlocked(params: Record<string, unknown> = {}): void {
   emit('Iletisim_Kilidi_Acildi', params)
 }
+
+// En az sipariş (1 tam kamyon) penceresi — 14 Ekim 2026.
+// surface: iletisim_telefon | iletisim_whatsapp | hesaplayici
+// answer : evet (en az 1 kamyon) | az (daha az) | kamyonla_hesapla | vazgecti
+// Telefon_Aramalari / Whatsapp_Yazanlar iletişim sayfasında yalnız "evet"ten sonra gider.
+export type MinimumOrderSurface = 'iletisim_telefon' | 'iletisim_whatsapp' | 'hesaplayici'
+export type MinimumOrderAnswer = 'evet' | 'az' | 'kamyonla_hesapla' | 'vazgecti'
+
+export function notifyMinimumOrderShown(surface: MinimumOrderSurface, minimumM2: number | null): void {
+  emit('Minimum_Kamyon_Soruldu', { surface, minimum_m2: minimumM2 ?? undefined })
+}
+
+export function notifyMinimumOrderAnswer(
+  surface: MinimumOrderSurface,
+  answer: MinimumOrderAnswer,
+  minimumM2: number | null,
+): void {
+  emit('Minimum_Kamyon_Cevap', { surface, answer, minimum_m2: minimumM2 ?? undefined })
+}

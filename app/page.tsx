@@ -6,6 +6,7 @@ import SalesChannels from "@/components/portfolio/SalesChannels";
 import SiteFooter from "@/components/shared/SiteFooter";
 import SiteHeader from "@/components/shared/SiteHeader";
 import WizardCalculator from "@/components/wizard/WizardCalculator";
+import MinimumOrderBanner from "@/components/sales/MinimumOrderBanner";
 import { BUSINESS_INFO } from "@/lib/business/info";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 import { buildHowToNode } from "@/lib/seo/buildHowTo";
@@ -88,6 +89,8 @@ export default function Home() {
       />
 
       <SiteHeader tone="dark" minimal />
+      {/* En az sipariş şeridi: sayfa kaydıkça başlığın altında kalır (Emrah kararı, 14 Ekim 2026). */}
+      <MinimumOrderBanner />
 
       <main>
         <section className="overflow-hidden border-b border-[#d6d0c2]">

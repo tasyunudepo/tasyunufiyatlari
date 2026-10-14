@@ -51,6 +51,9 @@ import {
     resolveVehicleTypeFromPackages,
 } from "@/lib/pricing/commercialRules";
 import { useWizardStore, type WizardEntrySurface } from "@/lib/store/wizardStore";
+import MinimumOrderDialog from "@/components/sales/MinimumOrderDialog";
+import { notifyMinimumOrderAnswer, notifyMinimumOrderShown } from "@/lib/analytics/leadQualification";
+import { publishMinimumOrder, type MinimumOrderSelection } from "@/lib/sales/minimumOrder";
 import { filterMantolamaWizardModels, isMantolamaWizardModel } from "@/lib/wizard/eligibility";
 import type { PdfOfferFormData } from "@/lib/schemas/pdfOffer.schema";
 import type {
@@ -536,6 +539,26 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         && Number(option.brandId) === Number(selectedBrandId)
         && option.model === selectedModel,
     );
+
+    // En az sipariş = bu ürün ve kalınlıkta 1 tam kamyon (Emrah kararı, 14 Ekim 2026). Metraj
+    // doğrulamasıyla aynı formül; ana sayfa şeridi ve iletişim sayfasındaki pencere bu sayıyı okur.
+    const homepageMinimumOrder = useMemo<MinimumOrderSelection | null>(() => {
+        if (variant !== "homepage" || !selectedHomepageProduct || !effectiveLogistics) return null;
+        const matType = materialTypes.find(m => m.slug === selectedMalzeme);
+        const minimumM2 = Math.max(matType?.min_order_m2 ?? 0, effectiveLogistics.lorry_capacity_m2 ?? 0);
+        if (!(minimumM2 > 0)) return null;
+        return {
+            label: `${selectedHomepageProduct.label} · ${selectedKalinlik} cm`,
+            thicknessCm: Number(selectedKalinlik),
+            minimumM2,
+        };
+    }, [variant, selectedHomepageProduct, effectiveLogistics, materialTypes, selectedMalzeme, selectedKalinlik]);
+
+    useEffect(() => {
+        if (homepageMinimumOrder) publishMinimumOrder(homepageMinimumOrder);
+    }, [homepageMinimumOrder]);
+
+    const [minimumDialogOpen, setMinimumDialogOpen] = useState(false);
 
     const homepageThicknessOptions = useMemo(
         () => (selectedHomepageProduct?.thicknessOptions ?? [])
@@ -1161,6 +1184,12 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         }
         return { isValid: true };
     }, [metraj, selectedMalzeme, materialTypes, effectiveLogistics]);
+
+    // Kamyondan az metrajla "Fiyatımı Hesapla" kapalı kalmaz: basınca en az sipariş penceresi açılır.
+    const homepageBelowMinimum = variant === "homepage"
+        && !metrajValidation.isValid
+        && metrajValidation.kind === "min_order"
+        && homepageMinimumOrder !== null;
 
     useEffect(() => {
         if (metrajValidation.isValid) {
@@ -2266,6 +2295,11 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                         <form
                             onSubmit={(event) => {
                                 event.preventDefault();
+                                if (homepageBelowMinimum && homepageMinimumOrder) {
+                                    setMinimumDialogOpen(true);
+                                    notifyMinimumOrderShown("hesaplayici", homepageMinimumOrder.minimumM2);
+                                    return;
+                                }
                                 if (isStepValid() && !isLoading) void handleShowPrices();
                             }}
                             className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.02fr_1.38fr_0.72fr_0.82fr_auto] lg:items-end"
@@ -2369,7 +2403,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
 
                             <button
                                 type="submit"
-                                disabled={isLoading || !isStepValid()}
+                                disabled={isLoading || (!isStepValid() && !homepageBelowMinimum)}
                                 className={`h-14 min-w-[176px] rounded-xl px-5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45 ${
                                     hasSuccessfulCalculation
                                         ? "border border-[#9a7528] bg-transparent text-[#6d531b] hover:bg-[#f6efd9] focus-visible:ring-[#9a7528]"
@@ -2379,6 +2413,24 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                 {isLoading ? "Hesaplanıyor…" : hasSuccessfulCalculation ? "Hesabı Güncelle" : "Fiyatımı Hesapla"}
                             </button>
                         </form>
+
+                        {homepageMinimumOrder && (
+                            <MinimumOrderDialog
+                                open={minimumDialogOpen}
+                                mode="calculator"
+                                selection={homepageMinimumOrder}
+                                onClose={() => {
+                                    notifyMinimumOrderAnswer("hesaplayici", "vazgecti", homepageMinimumOrder.minimumM2);
+                                    setMinimumDialogOpen(false);
+                                }}
+                                onUseMinimum={() => {
+                                    notifyMinimumOrderAnswer("hesaplayici", "kamyonla_hesapla", homepageMinimumOrder.minimumM2);
+                                    setMetraj(formatVehicleAreaInput(homepageMinimumOrder.minimumM2));
+                                    invalidateHomepageResult();
+                                    setMinimumDialogOpen(false);
+                                }}
+                            />
+                        )}
 
                         {selectedSubRegion && isBonusSelected && (
                             <fieldset className="mt-4 border-t border-[#e1ddd4] pt-4">
