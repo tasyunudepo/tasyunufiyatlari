@@ -364,6 +364,7 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
             // Bonus bölge fiyatı araç tipine göre değişmez; kamyon/TIR metrajı Bonus'un kendi kaydından gelir.
             const prices = bonusVehiclePrices(
               json.salePricePerM2,
+              Number(json.packageM2),
               typeof json.kamyonM2 === "number" ? json.kamyonM2 : null,
               typeof json.tirM2 === "number" ? json.tirM2 : null,
             );

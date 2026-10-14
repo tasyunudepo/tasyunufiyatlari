@@ -9,6 +9,7 @@
 import { computeFullTruckPlateUnitPrice } from '@/lib/pricing/plateUnitPrice'
 import { resolveMarginPctStrict, type MarginRuleInput } from '@/lib/pricing/margin'
 import type { BonusSubRegionChoice } from '@/lib/pricing/bonus/subRegions'
+import { buildBonusPlateOrder } from '@/lib/pricing/bonus/packageAssembly'
 
 export interface VehiclePrice {
   /** Aracın taşıdığı metraj, m² (0,1'e yuvarlı — ürün sayfasıyla aynı). */
@@ -62,10 +63,17 @@ export function plateVehiclePrices(input: PlateVehicleInput): VehiclePrices {
   }
 }
 
-/** Bonus: bölge fiyatı tek m² fiyatıdır (araç tipine göre değişmez); kapasite Bonus'un kendi kaydından gelir. */
-export function bonusVehiclePrices(unit: number, kamyonM2: number | null, tirM2: number | null): VehiclePrices {
-  const make = (m2: number | null): VehiclePrice | null =>
-    m2 !== null && Number.isFinite(m2) && m2 > 0 ? { m2: roundM2(m2), unit, total: Math.round(unit * roundM2(m2)) } : null
+/**
+ * Bonus: bölge fiyatı tek m² fiyatıdır (araç tipine göre değişmez); kapasite Bonus'un kendi kaydından gelir.
+ * Metraj ve tutar ürün sayfasıyla aynı fonksiyondan: araç kapasitesi paket adedine oturtulur (paket × paket m²),
+ * tutar kuruşa (buildBonusPlateOrder). Örn. F 150 5 cm: 967,7 m² kayıt → 336 × 2,88 = 967,68 m², 358.070,63 ₺.
+ */
+export function bonusVehiclePrices(unit: number, packageM2: number, kamyonM2: number | null, tirM2: number | null): VehiclePrices {
+  const make = (m2: number | null): VehiclePrice | null => {
+    if (m2 === null || !Number.isFinite(m2) || m2 <= 0) return null
+    const order = buildBonusPlateOrder({ salePricePerM2: unit, packageM2 }, m2)
+    return order ? { m2: order.orderM2, unit, total: order.totalExVat } : null
+  }
   return { kamyon: make(kamyonM2), tir: make(tirM2) }
 }
 

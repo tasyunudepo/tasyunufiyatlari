@@ -35,11 +35,14 @@ describe('1 kamyon ve 1 TIR fiyatı', () => {
     expect(plateVehiclePrices({ ...input, marginRule: null })).toEqual({ kamyon: null, tir: null })
   })
 
-  it('Bonus: tek bölge fiyatı, kendi kamyon ve TIR metrajı', () => {
-    expect(bonusVehiclePrices(603.98, 483.84, 887.04)).toEqual({
-      kamyon: { m2: 483.8, unit: 603.98, total: Math.round(603.98 * 483.8) },
-      tir: { m2: 887, unit: 603.98, total: Math.round(603.98 * 887) },
+  it('Bonus: tek bölge fiyatı, kendi kamyon ve TIR metrajı; metraj ve tutar ürün sayfasıyla aynı (paket katı, kuruşa)', () => {
+    // 14 Ekim 2026: önce kayıttaki 967,7 m² 0,1'e yuvarlanıp çarpılıyordu (F 150 5 cm: tablo 358.078 ₺,
+    // ürün sayfası 336 paket × 2,88 m² = 967,68 m² → 358.070,63 ₺).
+    expect(bonusVehiclePrices(370.03, 2.88, 967.7, null).kamyon).toEqual({ m2: 967.68, unit: 370.03, total: 358070.63 })
+    expect(bonusVehiclePrices(603.98, 1.44, 483.84, 887.04)).toEqual({
+      kamyon: { m2: 483.84, unit: 603.98, total: 292229.68 },
+      tir: { m2: 887.04, unit: 603.98, total: 535754.42 },
     })
-    expect(bonusVehiclePrices(603.98, null, 887).kamyon).toBeNull()
+    expect(bonusVehiclePrices(603.98, 1.44, null, 887).kamyon).toBeNull()
   })
 })

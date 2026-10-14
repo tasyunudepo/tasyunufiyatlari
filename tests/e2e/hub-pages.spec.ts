@@ -136,3 +136,51 @@ test.describe('120 yoğunluk sayfası ve ana sayfa fiyat tablosu (Faz 4)', () =>
     await expect(page).toHaveTitle('Rulo Taşyünü Şilte (Rabitz Telli) Fiyatı — Bonus Endüstriyel Şilte | Taşyünü Fiyatları')
   })
 })
+
+test.describe('Merchant Center beslemesi ve ürün sayfası KDV dahil tutarı', () => {
+  const priceOf = (xml: string, id: string) => {
+    const item = xml.split('<item>').find((chunk) => chunk.includes(`<g:id>${id}</g:id>`))
+    return item?.match(/<g:price>([\d.]+) TRY<\/g:price>/u)?.[1] ?? null
+  }
+  const tr = (value: string, decimals: number) =>
+    Number(value).toLocaleString('tr-TR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+
+  test('SW035 10 cm: beslemedeki fiyat ürün sayfasındaki 1 Kamyon "KDV dahil" tutarı', async ({ page, request }) => {
+    const xml = await (await request.get('/google-merchant-feed.xml')).text()
+    expect(xml).toContain('xmlns:g="http://base.google.com/ns/1.0"')
+    const price = priceOf(xml, 'dalmacyali-sw035-10cm-kamyon')
+    expect(price).not.toBeNull()
+    await page.goto('/urunler/tasyunu-levha/dalmacyali-sw035-tasyunu/10-cm')
+    const lorry = page.getByTestId('pdp-commercial-vehicle-card').filter({ hasText: '1 Kamyon' }).first()
+    await expect(lorry.getByTestId('pdp-vehicle-total-kdv-dahil')).toHaveText(`KDV dahil ${tr(price!, 0)} ₺`, { timeout: 20_000 })
+  })
+
+  test('Bonus F 150 5 cm: beslemedeki fiyat sipariş masasındaki 1 Kamyon "KDV dahil" tutarı', async ({ page, request }) => {
+    const xml = await (await request.get('/google-merchant-feed.xml')).text()
+    const price = priceOf(xml, 'bonus-premium-f-150-5cm-kamyon')
+    expect(price).not.toBeNull()
+    await page.goto('/urunler/tasyunu-levha/bonus-f-150-tasyunu/5-cm')
+    await expect(page.getByTestId('pdp-plan-total-kdv-dahil').first()).toHaveText(`KDV dahil ${tr(price!, 2)} ₺`, { timeout: 20_000 })
+  })
+})
+
+test.describe('Merchant Center için iade politikası ve logolar', () => {
+  test('iade sayfası girişsiz açılır, Türkçe ve her sayfanın altbilgisinden bağlanır', async ({ page, request }) => {
+    const response = await request.get('/iade-ve-iptal')
+    expect(response.status()).toBe(200)
+    await page.goto('/iade-ve-iptal')
+    await expect(page.getByRole('heading', { level: 1, name: 'İade, İptal ve Geri Ödeme Koşulları' })).toBeVisible()
+    await expect(page.getByTestId('return-policy-summary')).toContainText('Sevkiyattan sonra iade')
+    await expect(page.locator('a[href^="tel:"]')).toHaveCount(0)
+    await page.goto('/urunler/tasyunu-levha')
+    await expect(page.locator('footer').getByRole('link', { name: 'İade ve İptal' })).toHaveAttribute('href', '/iade-ve-iptal')
+  })
+
+  test('logo dosyaları Merchant Center ölçülerinde', async ({ request }) => {
+    for (const path of ['/images/merchant/tasyunu-fiyatlari-kare-500.png', '/images/merchant/tasyunu-fiyatlari-dikdortgen-1200x600.png']) {
+      const r = await request.get(path)
+      expect(r.status()).toBe(200)
+      expect(r.headers()['content-type']).toContain('image/png')
+    }
+  })
+})

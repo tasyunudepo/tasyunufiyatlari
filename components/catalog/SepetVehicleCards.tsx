@@ -12,6 +12,7 @@
 import { memo } from "react";
 import Image from "next/image";
 import { Minus, Plus } from "lucide-react";
+import { withVat } from "@/lib/pricing/vat";
 
 function fmt(v: number, d = 2) {
   return v.toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -187,6 +188,10 @@ function AracKarti({
                 </p>
                 <p className="mt-1 text-xs font-semibold text-[#625a4f]">
                   Araç toplamı · KDV hariç
+                </p>
+                {/* KDV dahil karşılık (14 Ekim 2026): Merchant Center beslemesindeki fiyatla aynı hesap (lib/compare/merchantFeed). */}
+                <p data-testid="pdp-vehicle-total-kdv-dahil" className="mt-0.5 text-xs tabular-nums text-[#625a4f]">
+                  KDV dahil {fmt(withVat(vehicleTotal), 0)} ₺
                 </p>
                 <div className="mt-2 flex items-end justify-between gap-2">
                   <p className="max-w-[18ch] text-xs leading-4 text-[#625a4f]">

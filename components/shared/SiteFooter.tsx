@@ -41,6 +41,7 @@ const GROUPS = [
       { href: '/kvkk', label: 'KVKK Aydınlatma' },
       { href: '/cerez-politikasi', label: 'Çerez Politikası' },
       { href: '/kullanim-kosullari', label: 'Kullanım Koşulları' },
+      { href: '/iade-ve-iptal', label: 'İade ve İptal' },
     ],
   },
 ];

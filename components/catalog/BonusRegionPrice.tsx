@@ -23,6 +23,8 @@ import {
 import { getCategoryEntryContext } from "@/lib/catalog/category-entry-context";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
+import { withVat } from "@/lib/pricing/vat";
+import { roundToKurus } from "@/lib/pricing/quoteTotals";
 
 // ============================================================
 // Bonus PDP canlı bölge fiyatı (Faz 2)
@@ -677,7 +679,11 @@ export default function BonusRegionPrice({
                           </span>
                           <span className="mt-1 block text-xs text-[#aaa296]">{fmt(order.orderM2, 2)} m²</span>
                           <span className="mt-1.5 block text-sm font-bold tabular-nums text-[#e2c57e]">
-                            {fmt(order.totalExVat)} ₺
+                            {fmt(order.totalExVat)} ₺ <span className="text-[11px] font-normal text-[#aaa296]">KDV hariç</span>
+                          </span>
+                          {/* KDV dahil karşılık (14 Ekim 2026): Merchant Center beslemesiyle aynı hesap. */}
+                          <span data-testid="pdp-plan-total-kdv-dahil" className="mt-0.5 block text-[11px] tabular-nums text-[#aaa296]">
+                            KDV dahil {fmt(roundToKurus(withVat(order.totalExVat)))} ₺
                           </span>
                         </>
                       );
@@ -1060,7 +1066,7 @@ export default function BonusRegionPrice({
                   </>
                 )}
                 <p className="px-2 text-[10px] leading-snug text-fe-muted">
-                  Levha toplamı · KDV hariç · nakliye fiyata dahil
+                  Levha toplamı · KDV hariç · nakliye fiyata dahil · 1 Kamyon KDV dahil {fmt(roundToKurus(withVat(kamyon.totalExVat)))} ₺
                 </p>
 
                 {/* PDF teklif — seçili tam-araç planıyla (Expert paritesi) */}

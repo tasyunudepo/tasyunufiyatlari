@@ -1873,3 +1873,37 @@ Ertelenen (onaylı planda vardı): **mantolama** ve **çatı** kullanım hub'lar
 ## 14 Ekim 2026 · Gemi & Marin grubundan "marin sertifikalı" ifadesi kaldırıldı
 
 Emrah: "bu yıl almamışlar, marin sertifikası yok; notu kaldırsan yeter". İddia yalnız `lib/catalog/sections.ts` Gemi & Marin açıklamasındaydı (kategori sayfasında grup seçilince görünür); Bonus Marin ürün sayfasında ve veritabanı metinlerinde sertifika ifadesi yok (canlı tarama). Yeni açıklama: "Tersane ve gemi uygulamaları için taşyünü levha ve şilte serisi; makine dairesi, boru ve baca sarımları." Kilit: `tests/catalog/marin-claim.test.ts`. Kategori tarayıcı testleri 7/7, copy-gate 475 HTML temiz.
+
+
+## 14 Ekim 2026 · Site dışı plan 1–3: Merchant Center beslemesi, KDV dahil tutar, iade sayfası, logolar
+
+Emrah: "hepsini onaylıyorum başla"; Merchant Center hesabı ve İşletme Profili var.
+
+| Yer | Ne yapıldı |
+|---|---|
+| Ürün sayfası kamyon kartı | "KDV dahil {tutar} ₺" satırı (`pdp-vehicle-total-kdv-dahil`, TL'ye yuvarlı) — Merchant Center Türkiye'de KDV dahil fiyat ister ve sayfadaki fiyatla aynı olmasını şart koşar |
+| Bonus sipariş masası kartı | Toplamın yanına "KDV hariç", altına "KDV dahil {tutar} ₺" (`pdp-plan-total-kdv-dahil`, kuruşa); kompakt satırlarda da |
+| Bonus tablo tutarı | Karşılaştırma ve hub tablolarındaki Bonus metrajı/tutarı ürün sayfasının `buildBonusPlateOrder` hesabına bağlandı (kayıttaki 967,7 m² → 336 paket × 2,88 = 967,68 m²; F 150 5 cm 358.078 → **358.070,63 ₺**, ürün sayfasıyla aynı) |
+| `/google-merchant-feed.xml` (yeni) | RSS 2.0 + `g:`; 68 kalem (8 mantolama levhası × fiyatlı kalınlıklar); satış birimi 1 kamyon; fiyat 1 kamyonun KDV dahil tutarı (ürün sayfasındaki satırla aynı formül, `kamyonPriceWithVat`); `unit_pricing_measure` = kamyon m²; görsel, marka, `identifier_exists: no`, kargo TR 0 (tam kamyonda nakliye dahil); İstanbul Avrupa Yakası koşulu. Adres "/feed" ile başlamaz (robots.txt "/feed" önekini kapatıyor) |
+| `/iade-ve-iptal` (yeni) | İade, iptal ve geri ödeme koşulları — Kullanım Koşulları 5. maddeyle aynı kural (sevkiyat öncesi kesintisiz iptal ve tam geri ödeme, sevkiyat sonrası iade yok, üretici hatasında inceleme) + talep yolu + satıcı bilgileri; altbilgi "Yasal", Kullanım Koşulları ve site haritasından bağlantı; satış niyeti penceresi bu sayfada açılmaz |
+| Logolar | `public/images/merchant/tasyunu-fiyatlari-kare-500.png` (500×500) ve `…-dikdortgen-1200x600.png` (1200×600) — site simgesi + "TAŞYÜNÜ FİYATLARI" yazısı, sitenin renkleriyle |
+
+### Editör turu (GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | Geri ödemenin zamanı yazmıyor (ORTA) | KISMEN ONAY: gün sayısı uydurulmadı; "iptal onaylandığında … başlatılır; hesaba yansıma süresi bankaya göre değişir" |
+| 2 | Üretici hatası bildiriminde "makul süre" belirsiz (ORTA) | RED: işletmenin yayındaki beyanı (Kullanım Koşulları); gün sayısı Emrah'a soruldu |
+| 3 | Yürürlük tarihi/adres boş (ORTA) | RED: editöre aktarım kaybı; derlenen sayfada "14 Ekim 2026" ve adres dolu |
+| 4 | Bonus kartında ilk tutarda "KDV hariç" yok (ORTA) | ONAY |
+| 5 | Alışveriş başlığı ve açıklaması | İtiraz yok |
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` (yeni: `merchant-feed.test.ts`; Bonus araç tutarı testi ürün sayfası hesabına güncellendi) | 947 geçti |
+| `hub-pages.spec.ts` (besleme = ürün sayfası KDV dahil: SW035 10 cm, Bonus F 150 5 cm; iade sayfası; logolar) + teklif akışları + Bonus | Geçti; yalnız önceden bozuk `catalog-bonus-pdp` ("föyü beyanına göre") kaldı |
+| Besleme XML çözümleme | 68 kalem, hepsinde görsel; markalar Bonus 26, Expert 25, Dalmaçyalı 9, Fawori 8 |
+| Derleme + copy-gate + `verify:visitor-copy` + kabul kilidi | 476 HTML temiz; geçti; 13 dosya |
+| Ölçüm bekçisi (kuru, yerel üretim): SW035 10 cm, Bonus F 150 5 cm, iade | GEÇTİ |

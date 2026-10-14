@@ -71,6 +71,9 @@ scripts/generated/wp-images-clean-webp/
 
 # WordPress export XMLs (large)
 *.xml
+# Merchant Center beslemesinin adres klasörü (14 Ekim 2026): klasör adı .xml ile bitiyor ama kod içeriyor.
+!app/google-merchant-feed.xml/
+!app/google-merchant-feed.xml/route.ts
 
 # Local screenshots
 Screenshot_*.png

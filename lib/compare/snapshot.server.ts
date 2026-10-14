@@ -71,7 +71,7 @@ export async function getComparisonSnapshots(
           subChoice,
           brandMarginPct: brandRes.data?.margin_pct ?? null,
         })
-        const vehicle = sale.ok ? bonusVehiclePrices(sale.salePricePerM2, sale.kamyonM2 ?? null, sale.tirM2 ?? null) : null
+        const vehicle = sale.ok ? bonusVehiclePrices(sale.salePricePerM2, sale.packageM2, sale.kamyonM2 ?? null, sale.tirM2 ?? null) : null
         prices[profile.productKey] = vehicle?.kamyon ? vehicle : null
       } else {
         prices[profile.productKey] = platePricesForModel(data, profile.modelShortName, thicknessCm)

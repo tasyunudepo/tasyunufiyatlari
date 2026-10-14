@@ -18,6 +18,7 @@ const EXCLUDED_PREFIXES = [
   '/kvkk',
   '/cerez-politikasi',
   '/kullanim-kosullari',
+  '/iade-ve-iptal',
   '/tasyunu-karsilastir',
   '/tasyunu-yogunluk',
   // Kalınlık hub'ları karşılaştırma sayfasıyla aynı karar yüzeyidir (14 Ekim 2026).

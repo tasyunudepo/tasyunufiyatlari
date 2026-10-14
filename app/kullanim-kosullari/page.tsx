@@ -125,6 +125,10 @@ export default function KullanimKosullariPage() {
                 bazlı denetim sonrası uygun çözüm önerilir. Bu kapsam üretici garantisine tabidir ve
                 yukarıdaki iade kuralından bağımsız değerlendirilir.
               </p>
+              <p>
+                Ayrıntı ve geri ödeme için{' '}
+                <Link href="/iade-ve-iptal" className="text-hub-gold underline hover:text-hub-gold/80">İade, İptal ve Geri Ödeme Koşulları</Link>.
+              </p>
             </Block>
 
             <Block title="6. Sorumluluk Sınırı">

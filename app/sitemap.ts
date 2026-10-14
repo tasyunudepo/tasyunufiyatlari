@@ -24,6 +24,7 @@ const STATIC_PATHS = [
   { path: '/kvkk',               priority: 0.3,  changeFrequency: 'yearly' as const },
   { path: '/cerez-politikasi',   priority: 0.3,  changeFrequency: 'yearly' as const },
   { path: '/kullanim-kosullari', priority: 0.3,  changeFrequency: 'yearly' as const },
+  { path: '/iade-ve-iptal',      priority: 0.3,  changeFrequency: 'yearly' as const },
 ];
 
 // Marka detay sayfaları — BRAND_MAP ile aynı slug listesi
