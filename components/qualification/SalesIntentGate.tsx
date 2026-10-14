@@ -20,9 +20,6 @@ const EXCLUDED_PREFIXES = [
   '/kullanim-kosullari',
   '/tasyunu-karsilastir',
   '/tasyunu-yogunluk',
-  // İletişim sayfası doğrudan telefon ve WhatsApp sunar (Emrah kararı, 13 Ekim 2026); zorunlu pencere kartların
-  // üstünü örtüp bu yolu kesmemeli.
-  '/iletisim',
   // Ayrı bir işletmeye yönlendiren bilgi sayfası; taşyünü satış niyeti
   // sorusu jeneratör arayan ziyaretçiyi ana sayfaya çekmemeli.
   '/kiralik-jenerator',

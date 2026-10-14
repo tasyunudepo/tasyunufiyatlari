@@ -11,7 +11,6 @@ export type WhatsappSource =
   | 'wizard_result_card'    // Wizard sonuç paket kartı WhatsApp CTA
   | 'footer_link'           // SiteFooter "WhatsApp Destek" link
   | 'iletisim_card'         // /iletisim sayfası WhatsApp kartı
-  | 'anasayfa_hero'         // ana sayfa üst bölüm "WhatsApp'tan yazın" (13 Eki 2026)
   | 'depomuz_cta'           // /depomuz "WhatsApp ile yazışın"
   | 'product_detail_cta'    // ürün detay sayfası WhatsApp CTA
   | 'product_detail_summary' // ürün detay karar özeti WhatsApp CTA
@@ -27,7 +26,6 @@ export type PhoneSource =
   | 'wizard_result_phone'   // Wizard sonuç ekranı telefon CTA
   | 'product_detail_phone'  // ürün detay sayfası telefon CTA
   | 'iletisim_phone'        // /iletisim telefon kartı / "Hemen Ara"
-  | 'anasayfa_hero'         // ana sayfa üst bölüm telefon numarası (13 Eki 2026)
   | 'depomuz_phone'         // /depomuz telefon link
   | 'kvkk_phone'            // /kvkk başvuru kartı telefon
   | 'site_general';
@@ -84,7 +82,6 @@ export const WHATSAPP_SOURCE_LABEL: Record<WhatsappSource, string> = {
   wizard_result_card:    'Wizard sonuç paket kartı',
   footer_link:           'Footer linki',
   iletisim_card:         'İletişim sayfası kartı',
-  anasayfa_hero:         'Ana sayfa üst bölüm',
   depomuz_cta:           'Depomuz sayfası',
   product_detail_cta:    'Ürün detay sayfası',
   product_detail_summary:'Ürün detay karar özeti',
@@ -100,7 +97,6 @@ export const PHONE_SOURCE_LABEL: Record<PhoneSource, string> = {
   wizard_result_phone:   'Wizard sonuç telefon',
   product_detail_phone:  'Ürün detay telefon',
   iletisim_phone:        'İletişim sayfası',
-  anasayfa_hero:         'Ana sayfa üst bölüm',
   depomuz_phone:         'Depomuz sayfası',
   kvkk_phone:            'KVKK sayfası',
   site_general:          'Site geneli',
