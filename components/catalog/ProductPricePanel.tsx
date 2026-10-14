@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import ComparisonLink from "@/components/compare/ComparisonLink";
+import { HUB_THICKNESSES, thicknessHubPath } from "@/lib/compare/hubs";
 import { supabase } from "@/lib/supabase";
 import { ArrowRight, ChevronDown, Layers, MapPin, Package } from "lucide-react";
 import {
@@ -908,8 +909,11 @@ export default function ProductPricePanel({
           product.material_type === "tasyunu" &&
           modelScope === "sivali_dis_cephe_mantolama" && (
           <ComparisonLink
+            // 14 Ekim 2026: seçili kalınlığın hub'ına ("10 cm taş yünü fiyatları") gider.
+            href={activeThickness && (HUB_THICKNESSES as readonly number[]).includes(activeThickness) ? thicknessHubPath(activeThickness) : undefined}
             entry="pdp"
             thicknessCm={activeThickness ?? null}
+            focus={product.model ?? null}
             onClick={() => {
               const comparisonSessionId = createComparisonSessionId();
               window.sessionStorage.setItem('pdp_comparison_session_id', comparisonSessionId);
@@ -926,7 +930,8 @@ export default function ProductPricePanel({
             }}
             className="mt-4 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-fe-border bg-fe-surface/60 px-3 py-2.5 text-left text-sm font-semibold text-fe-text transition-colors hover:border-brand-500/50 hover:text-brand-300"
           >
-            <span>Diğer taşyünü levhalarla karşılaştır</span>
+            {/* Kilitli kabul (pdp-product-information.spec): bağlantı adı "Diğer taşyünü levhalarla karşılaştır" ile başlar. */}
+            <span>{activeThickness ? `Diğer taşyünü levhalarla karşılaştır: ${activeThickness} cm taş yünü fiyatları` : "Diğer taşyünü levhalarla karşılaştır"}</span>
             <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
           </ComparisonLink>
         )}

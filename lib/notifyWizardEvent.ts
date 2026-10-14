@@ -536,7 +536,8 @@ export type ComparisonEntryPlacement =
   | 'unknown';
 
 interface ComparisonJourneyPayload {
-  surface: 'genel' | 'yogunluk_150';
+  // 14 Ekim 2026: kalınlık ve 150/kalınlık hub sayfaları ayrı yüzey olarak sayılır.
+  surface: 'genel' | 'yogunluk_150' | 'kalinlik' | 'yogunluk_150_kalinlik';
   entry_placement: ComparisonEntryPlacement;
   comparison_session_id: string;
   catalog_journey_id?: string | null;

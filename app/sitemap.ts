@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
+import { HUB_THICKNESSES, density150HubPath, thicknessHubPath } from '@/lib/compare/hubs';
+import { getDensity150HubThicknesses } from '@/lib/compare/hubPages.server';
 
 const BASE_URL = 'https://www.tasyunufiyatlari.com';
 
@@ -41,6 +43,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: s.changeFrequency,
       priority: s.priority,
     });
+  }
+
+  // 1b) Hub sayfaları: kalınlık ve 150/kalınlık (14 Ekim 2026)
+  for (const t of HUB_THICKNESSES) {
+    entries.push({ url: `${BASE_URL}${thicknessHubPath(t)}`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 });
+  }
+  try {
+    for (const t of await getDensity150HubThicknesses()) {
+      entries.push({ url: `${BASE_URL}${density150HubPath(t)}`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 });
+    }
+  } catch {
+    // Fiyat verisi okunamazsa 150/kalınlık hub'ları bu derlemede haritaya girmez (sayfaları da üretilmez).
   }
 
   // 2) Kategori sayfaları (/urunler/[kategori])

@@ -1799,3 +1799,35 @@ Emrah'ın Search Console tespiti ("10 cm 150 yoğunluk arayan tüm 150'likleri a
 | `verify-acceptance-lock` | 13 dosya geçti |
 | Derleme + copy-gate + `verify:visitor-copy` | Başarılı; 456 HTML temiz; derlenen HTML'de `tasyunu-karsilastir?` kalmadı |
 | Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): `/`, karşılaştırma, 150, kategori, SW035 10 cm | GEÇTİ; CSP ihlali yok |
+
+
+## 14 Ekim 2026 · Hub planı Faz 2–3 — kalınlık ve 150/kalınlık hub'ları, iç bağlantılar, ürün başlıkları
+
+| Yer | Ne yapıldı |
+|---|---|
+| Kalınlık hub'ları `/tasyunu-fiyatlari/{3,4,5,6,7,8,10,12,15}-cm` | Başlık "{N} cm Taş Yünü Fiyatları - {ay yıl} \| {n} Levha Yan Yana", H1 "{N} cm taş yünü fiyatları"; 8 mantolama levhası; özet + 4 soru-cevap (m² fiyatı, 1 kamyon kaç m², en az sipariş, nakliye); ürün sayfası / öteki kalınlık / yoğunluk bağlantı grupları; BreadcrumbList + ItemList |
+| 150/kalınlık hub'ları `/tasyunu-yogunluk/150-kg-m3/{N}-cm` | Yalnız föy beyanlı 150'likler; en az iki 150'liğin fiyatı olan kalınlıkta açılır (bugün 9'u da) |
+| Fiyat sunucu HTML'inde (`lib/compare/snapshot.server.ts`) | Derleme anında İstanbul / Avrupa Yakası / 1 kamyon fiyatı; Filli ve öteki markalar `platePricesForModel` (tablonun ve ürün sayfasının hesabı), Bonus `computeBonusUnitSale` → yalnız `salePricePerM2`, `kamyonM2`, `tirM2`. Tablo açılınca canlı veriyle yeniden hesaplar. Genel ve 150 sayfası da 5 cm fotoğrafıyla açılır |
+| Karşılaştırma bileşeni | Hub kipi: kalınlık sabit, kalınlık düğmeleri kardeş hub bağlantısı (`aria-current`); ürün adı o kalınlığın ürün sayfasına gider; kartta "Ürünü gör" + "Komple set hesapla"; olay yüzeyi `kalinlik` / `yogunluk_150_kalinlik` |
+| İç bağlantılar | Ürün sayfası kutusu → o kalınlığın hub'ı ("Dilerseniz diğer {N} cm taşyünü levhalarla kıyaslayın"); 150'lik üründe "150 yoğunluk · {N} cm 150 yoğunluk taş yünü fiyatları"; fiyat paneli bağlantısı → kalınlık hub'ı ("Diğer taşyünü levhalarla karşılaştır: {N} cm taş yünü fiyatları" — kilitli kabul metni korunur); altbilgide her sayfada hub bandı; kategori sayfasında ve genel/150 sayfasında hub bantları; site haritasına 18 hub |
+| Ürün başlıkları (`lib/seo/productThicknessTitle.ts`) | Taşyünü ürün kalınlık sayfası ürün adıyla başlar: "Expert HD150 10 cm 150 Yoğunluk Taş Yünü Fiyatı - {ay yıl}" (föy 120/150 ise yoğunluk). **SW035 eski başlıkta** (sitenin tıklamalarının %38'i; hub'lar Google'a girince değişecek — Faz 5). EPS kapsam dışı |
+| Satış penceresi | `/tasyunu-fiyatlari` karşılaştırma gibi istisna |
+
+### Editör turu (GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | "En uygunu …" teknik üstünlük gibi okunuyor (ORTA) | ONAY: "m² fiyatı en düşük olan …" |
+| 2 | 150 cümlesi ısı yalıtımında hangi değere bakılacağını söylemiyor (KÜÇÜK) | ONAY: "ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi)" — hub özeti ve 150 sayfası |
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` (yeni: `hub-copy`, `product-thickness-title`, fotoğraf sızıntı koruması) | 939 geçti |
+| Yeni `hub-pages.spec.ts` (5) + karşılaştırma, kısa yol, ürün sayfası bilgileri (kilitli) | Geçti; kilitli dosyaya dokunulmadı, bağlantı yazısı kilitli kabule uyduruldu |
+| Tüm tarayıcı testleri (119) | 105 geçti; kalan 13'ü bu işten önce bozuk (12 ofis, 1 Bonus F 150 ürün sayfası), 1'i (kilitli bağlantı adı) düzeltilip yeniden geçti |
+| Derleme + copy-gate + `verify:visitor-copy` | 474 HTML temiz |
+| Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): 10 cm hub, 150/5 cm hub, HD150 10 cm, kategori, iletişim | GEÇTİ |
+| İç bağlantı taraması (23 sayfa, 128 farklı iç bağlantı) | Hepsi 200 |
+| Ekran (1440, 1280, 375) | Taşma yok, sayfa hatası yok |

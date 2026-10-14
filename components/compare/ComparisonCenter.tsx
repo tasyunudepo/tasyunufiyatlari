@@ -14,7 +14,13 @@ import {
   type BonusSubRegionChoice,
 } from "@/lib/pricing/bonus/subRegions";
 import { defaultSubChoice } from "@/components/catalog/BonusRegionPrice";
-import { bonusVehiclePrices, plateVehiclePrices, type VehiclePrices } from "@/lib/compare/vehiclePrices";
+import {
+  bonusVehiclePrices,
+  platePricesForModel,
+  type ComparisonSnapshot,
+  type LogisticsRow,
+  type VehiclePrices,
+} from "@/lib/compare/vehiclePrices";
 import {
   bestTechnicalValues,
   isBest,
@@ -23,6 +29,7 @@ import {
   type ParsedValue,
 } from "@/lib/compare/technicalValues";
 import { takeComparisonEntry, type ComparisonEntry } from "@/lib/compare/entry";
+import { formatThicknessSegment } from "@/lib/catalog/thickness-url";
 import { useWizardStore } from "@/lib/store/wizardStore";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import {
@@ -124,7 +131,14 @@ function readFocusedModel(stored: ComparisonEntry | null): string | null {
 }
 
 interface ComparisonCenterProps {
-  variant: "genel" | "yogunluk_150";
+  /** genel / yogunluk_150: seçimli sayfa · kalinlik / yogunluk_150_kalinlik: hub (kalınlık adreste sabit) */
+  variant: "genel" | "yogunluk_150" | "kalinlik" | "yogunluk_150_kalinlik";
+  /** Hub: kalınlık sabittir; kalınlık düğmeleri kardeş hub'lara bağlantıdır. */
+  fixedThicknessCm?: number;
+  /** Hub: kalınlık → kardeş hub adresi (yalnız var olan hub'lar). */
+  thicknessLinks?: Record<number, string>;
+  /** Hub: derleme anı fiyatları — Google sunucu HTML'inde fiyatı görür; tarayıcı canlı veriyle yeniler. */
+  snapshot?: ComparisonSnapshot;
 }
 
 type PriceCell =
@@ -132,14 +146,6 @@ type PriceCell =
   | { status: "ok"; prices: VehiclePrices }
   | { status: "unavailable" }
   | { status: "error" };
-
-interface LogisticsRow {
-  /** milimetre (5 cm → 50) */
-  thickness: number;
-  lorry_capacity_packages: number | null;
-  truck_capacity_packages: number | null;
-  package_size_m2: number | null;
-}
 
 interface Row {
   profile: ComparisonProfile;
@@ -232,10 +238,11 @@ const chipClass = (selected: boolean) =>
       : "border-hub-rule bg-white text-hub-ink-2 hover:border-hub-gold/60"
   }`;
 
-export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
+export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessLinks, snapshot }: ComparisonCenterProps) {
+  const isHub = fixedThicknessCm != null;
   const profiles = useMemo(() => {
     const all = getComparisonProfiles();
-    if (variant !== "yogunluk_150") return all;
+    if (variant !== "yogunluk_150" && variant !== "yogunluk_150_kalinlik") return all;
     // 150 görünümü yalnız föy beyanlı 150'likleri gösterir (Emrah, 14 Ekim 2026: "150 sayfasında diğer
     // ürünler olmamalı"; önceki karar 3'te öteki beş ürün bağlam olarak alttaydı).
     return all.filter((p) => p.density.sourceType === "datasheet" && p.density.minKgM3 >= 150);
@@ -248,7 +255,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const [logistics, setLogistics] = useState<LogisticsRow[]>([]);
   const [cityCode, setCityCode] = useState<number>(34);
   const [subChoice, setSubChoice] = useState<BonusSubRegionChoice | null>(() => defaultSubChoice(34));
-  const [thicknessCm, setThicknessCm] = useState<number>(5);
+  const [thicknessCm, setThicknessCm] = useState<number>(fixedThicknessCm ?? 5);
   const [sortKey, setSortKey] = useState<ComparisonSortKey>("fiyat");
   const [bonusPrices, setBonusPrices] = useState<Record<string, PriceCell>>({});
   const [comparisonDataError, setComparisonDataError] = useState(false);
@@ -275,7 +282,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     const focusTimer = window.setTimeout(() => {
       setFocusedModel(readFocusedModel(stored));
       const initialThickness = readInitialThickness(stored);
-      if (initialThickness !== null) setThicknessCm(initialThickness);
+      if (initialThickness !== null && !isHub) setThicknessCm(initialThickness);
     }, 0);
     notifyComparisonOpened({
       surface: variant,
@@ -370,6 +377,15 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const subInfo = citySubRegionQuestion(cityCode);
   const dataReady = plates.length > 0 && zones.length > 0 && logistics.length > 0;
 
+  // Hub: canlı veri gelene kadar derleme anı fiyatı gösterilir (yalnız fotoğrafın koşulunda).
+  function cellFor(profile: TechnicalProfile): PriceCell {
+    const cell = priceCellFor(profile);
+    if (cell.status !== "loading" || !snapshot) return cell;
+    if (cityCode !== snapshot.cityCode || subChoice !== snapshot.subChoice || thicknessCm !== snapshot.thicknessCm) return cell;
+    const known = snapshot.prices[profile.productKey];
+    return known ? { status: "ok", prices: known } : { status: "unavailable" };
+  }
+
   function priceCellFor(profile: TechnicalProfile): PriceCell {
     if (profile.brandName === "Bonus") {
       if (subInfo && !subChoice) return { status: "unavailable" };
@@ -377,30 +393,12 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     }
     if (comparisonDataError) return { status: "error" };
     if (!dataReady || !zone || !tasyunuRule) return { status: "loading" };
-    const plate = plates.find(
-      (pl) => pl.short_name === profile.modelShortName && pl.brand_id != null,
+    const prices = platePricesForModel(
+      { plates, platePrices, zone, marginRule: tasyunuRule, logistics },
+      profile.modelShortName,
+      thicknessCm,
     );
-    if (!plate) return { status: "unavailable" };
-    const pp = platePrices.find(
-      (row) => row.plate_id === plate.id && row.thickness === thicknessCm,
-    );
-    if (!pp) return { status: "unavailable" };
-    // Ürün sayfasıyla aynı: paket m² önce kalınlık satırından, yoksa lojistik kaydından; araç metrajı
-    // paket adedi × paket m²; kâr kademesi o aracın metrajıyla seçilir.
-    const lc = logistics.find((row) => row.thickness === thicknessCm * 10) ?? null;
-    if (!lc) return { status: "unavailable" };
-    const prices = plateVehiclePrices({
-      basePrice: Number(pp.base_price),
-      isKdvIncluded: pp.is_kdv_included ?? false,
-      packageM2: Number(pp.package_m2 ?? lc.package_size_m2 ?? 0),
-      discount2Pct: Number(pp.discount_2 ?? plate.discount_2 ?? 8),
-      discountKamyonPct: Number(zone.discount_kamyon ?? 0),
-      discountTirPct: Number(zone.discount_tir ?? 0),
-      lorryPackages: lc.lorry_capacity_packages != null ? Number(lc.lorry_capacity_packages) : null,
-      truckPackages: lc.truck_capacity_packages != null ? Number(lc.truck_capacity_packages) : null,
-      marginRule: tasyunuRule,
-    });
-    return prices.kamyon ? { status: "ok", prices } : { status: "unavailable" };
+    return prices ? { status: "ok", prices } : { status: "unavailable" };
   }
 
   function slugFor(profile: TechnicalProfile): string | null {
@@ -409,7 +407,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     const plate = plates.find((pl) => pl.short_name === profile.modelShortName) as
       | (Plate & { slug?: string | null })
       | undefined;
-    return plate?.slug ?? null;
+    return plate?.slug ?? snapshot?.slugs[profile.modelShortName] ?? null;
   }
 
   function journey() {
@@ -470,7 +468,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const rows: Row[] = profiles.map((p, index) => ({
     profile: p,
     index,
-    cell: priceCellFor(p),
+    cell: cellFor(p),
     lambda: parseLambda(p.lambdaDisplay),
     tensile: parseKpa(p.tensileDisplay),
     compressive: parseKpa(p.compressiveDisplay),
@@ -505,7 +503,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
       <span id={headingId} className="block min-w-0">
         {row.slug ? (
           <Link
-            href={`/urunler/tasyunu-levha/${row.slug}`}
+            href={productHref(row)}
             className="block rounded-sm hover:[&>span:last-child]:text-hub-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hub-gold"
           >
             {label}
@@ -515,6 +513,12 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
         )}
       </span>
     );
+  }
+
+  // Ürün sayfası: seçili kalınlıkta fiyatı varsa o kalınlığın sayfası (hub'dan tek ürüne geçiş).
+  function productHref(row: Row): string {
+    const base = `/urunler/tasyunu-levha/${row.slug}`;
+    return row.cell.status === "ok" ? `${base}/${formatThicknessSegment(thicknessCm)}` : base;
   }
 
   function densityText(row: Row) {
@@ -651,17 +655,28 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
             <div>
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-hub-muted">Kalınlık</p>
               <div className="grid grid-cols-5 gap-1.5 sm:flex sm:flex-wrap">
-                {THICKNESS_OPTIONS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setThicknessCm(t)}
-                    aria-pressed={thicknessCm === t}
-                    className={`${chipClass(thicknessCm === t)} whitespace-nowrap px-1 sm:px-3`}
-                  >
-                    {t} cm
-                  </button>
-                ))}
+                {isHub && thicknessLinks
+                  ? THICKNESS_OPTIONS.filter((t) => thicknessLinks[t]).map((t) => (
+                      <Link
+                        key={t}
+                        href={thicknessLinks[t]}
+                        aria-current={thicknessCm === t ? "page" : undefined}
+                        className={`${chipClass(thicknessCm === t)} inline-flex items-center justify-center whitespace-nowrap px-1 sm:px-3`}
+                      >
+                        {t} cm
+                      </Link>
+                    ))
+                  : THICKNESS_OPTIONS.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setThicknessCm(t)}
+                        aria-pressed={thicknessCm === t}
+                        className={`${chipClass(thicknessCm === t)} whitespace-nowrap px-1 sm:px-3`}
+                      >
+                        {t} cm
+                      </button>
+                    ))}
               </div>
             </div>
           </div>
@@ -781,7 +796,17 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
                   </div>
                 </dl>
 
-                <div className="mt-3 sm:flex sm:justify-end">{cta(row, true)}</div>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                  {row.slug && (
+                    <Link
+                      href={productHref(row)}
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-lg px-3 text-[13px] font-semibold text-hub-ink-2 underline-offset-4 hover:text-hub-gold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hub-gold sm:w-auto"
+                    >
+                      Ürünü gör
+                    </Link>
+                  )}
+                  {cta(row, true)}
+                </div>
               </article>
             </li>
           ))}

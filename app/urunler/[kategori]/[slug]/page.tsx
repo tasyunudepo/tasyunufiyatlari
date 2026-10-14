@@ -17,6 +17,10 @@ import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { formatMonthYear } from '@/lib/seo/monthYear';
+import { productThicknessTitle } from '@/lib/seo/productThicknessTitle';
+import { getComparisonProfiles } from '@/lib/technical-profiles';
+import { density150HubPath, isDensity150 } from '@/lib/compare/hubs';
+import { getDensity150HubThicknesses } from '@/lib/compare/hubPages.server';
 import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
 import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
 import { BUSINESS_REF, BRAND_INFO, type BrandSlug } from '@/lib/business/info';
@@ -220,7 +224,15 @@ function buildThicknessMeta({
 }) {
   const monthYear = formatMonthYear();
   const searchLabel = SEARCH_LABELS[kategori] ?? product.category.name;
-  const title = `${thickness} cm ${searchLabel} Fiyatları - ${monthYear} | ${product.name}`;
+  const title = productThicknessTitle({
+    kategori,
+    slug: product.slug,
+    productName: product.name,
+    model: product.model,
+    thicknessCm: thickness,
+    searchLabel,
+    monthYear,
+  });
   const description =
     `${product.name} ${thickness} cm ${searchLabel.toLocaleLowerCase('tr-TR')} m2 fiyatı, paket metrajı ve teslimat seçenekleri. ${monthYear} güncel fiyatla şehir ve metraja göre PDF teklif alın.`;
 
@@ -348,6 +360,15 @@ export async function ProductDetailPage({
   const isAccessoryPdp = product.product_type === 'accessory';
   const usesWarmPurchaseShell = isHybridBonusPdp || isStandardPlatePdp || isAccessoryPdp;
 
+  // Hub kısa yolu (14 Ekim 2026): kalınlık hub'ı; 150'lik üründe o kalınlığın 150 hub'ı da.
+  const shortcutThickness = isValidThickness ? selectedThicknessValue : (product.wizard_prefill?.kalinlik ?? null);
+  const shortcutProfile = product.model ? getComparisonProfiles().find((p) => p.modelShortName === product.model) ?? null : null;
+  const shortcutDensity150Href =
+    product.material_type === 'tasyunu' && shortcutProfile && isDensity150(shortcutProfile) && shortcutThickness != null
+    && (await getDensity150HubThicknesses()).includes(shortcutThickness)
+      ? density150HubPath(shortcutThickness)
+      : null;
+
   // ─── Schema.org JSON-LD ──────────────────────────────────────
   const productUrl = `${SITE_ORIGIN}${pagePath}`;
   const productImage = product.image_cover
@@ -434,8 +455,9 @@ export async function ProductDetailPage({
       {product.product_type === 'plate' && product.material_type === 'tasyunu' && (
         <ComparisonThicknessShortcut
           model={product.model}
-          thicknessCm={isValidThickness ? selectedThicknessValue : (product.wizard_prefill?.kalinlik ?? null)}
+          thicknessCm={shortcutThickness}
           warm={usesWarmPurchaseShell}
+          density150Href={shortcutDensity150Href}
         />
       )}
 

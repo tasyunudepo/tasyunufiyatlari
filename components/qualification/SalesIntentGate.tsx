@@ -20,6 +20,8 @@ const EXCLUDED_PREFIXES = [
   '/kullanim-kosullari',
   '/tasyunu-karsilastir',
   '/tasyunu-yogunluk',
+  // Kalınlık hub'ları karşılaştırma sayfasıyla aynı karar yüzeyidir (14 Ekim 2026).
+  '/tasyunu-fiyatlari',
   // Ayrı bir işletmeye yönlendiren bilgi sayfası; taşyünü satış niyeti
   // sorusu jeneratör arayan ziyaretçiyi ana sayfaya çekmemeli.
   '/kiralik-jenerator',

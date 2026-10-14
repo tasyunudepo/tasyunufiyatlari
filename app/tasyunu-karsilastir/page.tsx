@@ -4,6 +4,9 @@ import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 import ComparisonCenter from '@/components/compare/ComparisonCenter';
 import MinimumOrderBanner from '@/components/sales/MinimumOrderBanner';
+import HubLinkBand from '@/components/compare/HubLinkBand';
+import { HUB_THICKNESSES, density150HubPath, thicknessHubPath } from '@/lib/compare/hubs';
+import { getDensity150HubThicknesses, getHubSnapshots } from '@/lib/compare/hubPages.server';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { getComparisonProfiles } from '@/lib/technical-profiles';
 
@@ -20,8 +23,10 @@ export const metadata: Metadata = buildMetadata({
   type: 'website',
 });
 
-export default function TasyunuKarsilastirPage() {
+export default async function TasyunuKarsilastirPage() {
   const count = getComparisonProfiles().length;
+  // Varsayılan koşulun (İstanbul, 5 cm) fiyatı sunucu HTML'ine yazılır; tablo açılınca canlı yenilenir.
+  const [snapshots, density150] = await Promise.all([getHubSnapshots(), getDensity150HubThicknesses()]);
   return (
     <div className="flex min-h-screen flex-col bg-hub-warm">
       <SiteHeader />
@@ -52,7 +57,14 @@ export default function TasyunuKarsilastirPage() {
         </section>
 
         <section className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 sm:py-8">
-          <ComparisonCenter variant="genel" />
+          <ComparisonCenter variant="genel" snapshot={snapshots.get(5)} />
+          <HubLinkBand
+            className="mt-8"
+            groups={[
+              { title: 'Kalınlığa göre taş yünü fiyatları', links: HUB_THICKNESSES.map((t) => ({ label: `${t} cm`, href: thicknessHubPath(t) })) },
+              { title: '150 yoğunluk, kalınlığa göre', links: density150.map((t) => ({ label: `${t} cm 150 yoğunluk`, href: density150HubPath(t) })) },
+            ]}
+          />
         </section>
       </main>
 

@@ -8,6 +8,7 @@
 
 import { computeFullTruckPlateUnitPrice } from '@/lib/pricing/plateUnitPrice'
 import { resolveMarginPctStrict, type MarginRuleInput } from '@/lib/pricing/margin'
+import type { BonusSubRegionChoice } from '@/lib/pricing/bonus/subRegions'
 
 export interface VehiclePrice {
   /** Aracın taşıdığı metraj, m² (0,1'e yuvarlı — ürün sayfasıyla aynı). */
@@ -66,4 +67,62 @@ export function bonusVehiclePrices(unit: number, kamyonM2: number | null, tirM2:
   const make = (m2: number | null): VehiclePrice | null =>
     m2 !== null && Number.isFinite(m2) && m2 > 0 ? { m2: roundM2(m2), unit, total: Math.round(unit * roundM2(m2)) } : null
   return { kamyon: make(kamyonM2), tir: make(tirM2) }
+}
+
+// ─── Filli/öteki markalar: katalog satırlarından tek ürünün araç fiyatları ───
+// Karşılaştırma tablosu (tarayıcı) ve hub sayfaları (sunucu, derleme anı) aynı hesabı kullanır.
+
+export interface LogisticsRow {
+  /** milimetre (5 cm → 50) */
+  thickness: number
+  lorry_capacity_packages: number | null
+  truck_capacity_packages: number | null
+  package_size_m2: number | null
+}
+
+type Num = number | string | null | undefined
+
+export interface PlateCatalogData {
+  plates: Array<{ id: number; short_name: string | null; brand_id: number | null; discount_2?: Num }>
+  platePrices: Array<{ plate_id: number; thickness: number; base_price: Num; is_kdv_included?: boolean | null; package_m2?: Num; discount_2?: Num }>
+  zone: { discount_kamyon?: Num; discount_tir?: Num } | null
+  marginRule: MarginRuleInput | null | undefined
+  logistics: LogisticsRow[]
+}
+
+/** null = bu ürün bu kalınlıkta / koşulda fiyatlanamaz. */
+export function platePricesForModel(data: PlateCatalogData, modelShortName: string, thicknessCm: number): VehiclePrices | null {
+  if (!data.zone || !data.marginRule) return null
+  const plate = data.plates.find((pl) => pl.short_name === modelShortName && pl.brand_id != null)
+  if (!plate) return null
+  const pp = data.platePrices.find((row) => row.plate_id === plate.id && row.thickness === thicknessCm)
+  if (!pp) return null
+  // Ürün sayfasıyla aynı: paket m² önce kalınlık satırından, yoksa lojistik kaydından; araç metrajı
+  // paket adedi × paket m²; kâr kademesi o aracın metrajıyla seçilir.
+  const lc = data.logistics.find((row) => row.thickness === thicknessCm * 10) ?? null
+  if (!lc) return null
+  const prices = plateVehiclePrices({
+    basePrice: Number(pp.base_price),
+    isKdvIncluded: pp.is_kdv_included ?? false,
+    packageM2: Number(pp.package_m2 ?? lc.package_size_m2 ?? 0),
+    discount2Pct: Number(pp.discount_2 ?? plate.discount_2 ?? 8),
+    discountKamyonPct: Number(data.zone.discount_kamyon ?? 0),
+    discountTirPct: Number(data.zone.discount_tir ?? 0),
+    lorryPackages: lc.lorry_capacity_packages != null ? Number(lc.lorry_capacity_packages) : null,
+    truckPackages: lc.truck_capacity_packages != null ? Number(lc.truck_capacity_packages) : null,
+    marginRule: data.marginRule,
+  })
+  return prices.kamyon ? prices : null
+}
+
+/** Hub sayfasının derleme anı fiyat fotoğrafı (varsayılan koşul: İstanbul, ilk yaka, 1 kamyon). */
+export interface ComparisonSnapshot {
+  cityCode: number
+  cityName: string
+  subChoice: BonusSubRegionChoice | null
+  thicknessCm: number
+  /** productKey → fiyat (null: bu kalınlıkta yok) */
+  prices: Record<string, VehiclePrices | null>
+  /** modelShortName → ürün sayfası slug'ı */
+  slugs: Record<string, string>
 }

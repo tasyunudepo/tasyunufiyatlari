@@ -4,6 +4,9 @@ import SiteHeader from '@/components/shared/SiteHeader';
 import SiteFooter from '@/components/shared/SiteFooter';
 import ComparisonCenter from '@/components/compare/ComparisonCenter';
 import MinimumOrderBanner from '@/components/sales/MinimumOrderBanner';
+import HubLinkBand from '@/components/compare/HubLinkBand';
+import { density150HubPath } from '@/lib/compare/hubs';
+import { getDensity150HubThicknesses, getHubSnapshots } from '@/lib/compare/hubPages.server';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { formatMonthYear } from '@/lib/seo/monthYear';
 
@@ -19,7 +22,8 @@ export const metadata: Metadata = buildMetadata({
   type: 'website',
 });
 
-export default function Yogunluk150Page() {
+export default async function Yogunluk150Page() {
+  const [snapshots, density150] = await Promise.all([getHubSnapshots(), getDensity150HubThicknesses()]);
   return (
     <div className="flex min-h-screen flex-col bg-hub-warm">
       <SiteHeader />
@@ -40,8 +44,9 @@ export default function Yogunluk150Page() {
             <p className="mt-2 max-w-3xl text-sm leading-6 text-hub-ink-2 sm:text-[15px] sm:leading-7">
               Föy beyanıyla 150 kg/m³ sınıfındaki üç mantolama levhası yan yana: Bonus Premium
               F 150, F 150 Pro ve Expert HD150. 150 yoğunluk daha iyi ısı yalıtımı iddiası
-              değildir; dik çekme ve basma dayanımıyla birlikte okunur. &quot;Pro&quot; adı tek
-              başına üstünlük anlamına gelmez. Öteki yoğunluklar için{' '}
+              değildir: ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi); yoğunluk, dik
+              çekme ve basma dayanımıyla birlikte okunur. &quot;Pro&quot; adı tek başına üstünlük
+              anlamına gelmez. Öteki yoğunluklar için{' '}
               <Link href="/tasyunu-karsilastir" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
                 genel karşılaştırmaya
               </Link>{' '}
@@ -51,7 +56,13 @@ export default function Yogunluk150Page() {
         </section>
 
         <section className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 sm:py-8">
-          <ComparisonCenter variant="yogunluk_150" />
+          <ComparisonCenter variant="yogunluk_150" snapshot={snapshots.get(5)} />
+          <HubLinkBand
+            className="mt-8"
+            groups={[
+              { title: '150 yoğunluk, kalınlığa göre', links: density150.map((t) => ({ label: `${t} cm 150 yoğunluk taş yünü fiyatları`, href: density150HubPath(t) })) },
+            ]}
+          />
         </section>
       </main>
 

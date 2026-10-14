@@ -4,6 +4,8 @@ import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import ProductCard from '@/components/catalog/ProductCard';
 import TasyunuCategoryExperience from '@/components/catalog/TasyunuCategoryExperience';
+import HubLinkBand from '@/components/compare/HubLinkBand';
+import { DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
 import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
@@ -83,6 +85,15 @@ export default async function KategoriPage({ params }: Props) {
         />
         <SiteHeader tone="warm" />
         <TasyunuCategoryExperience products={products} shippingZones={shippingZones} />
+        {/* Kalınlık ve yoğunluk hub'ları (14 Ekim 2026): kategoriden "10 cm taş yünü fiyatları" sayfalarına düz bağlantı. */}
+        <div className="mx-auto w-full max-w-[1200px] px-4 pb-4 sm:px-6">
+          <HubLinkBand
+            groups={[
+              { title: 'Kalınlığa göre mantolama taşyünü fiyatları', links: HUB_THICKNESSES.map((t) => ({ label: `${t} cm taş yünü fiyatları`, href: thicknessHubPath(t) })) },
+              { title: 'Yoğunluğa göre', links: [{ label: '150 yoğunluk taş yünü fiyatları', href: DENSITY_150_PATH }] },
+            ]}
+          />
+        </div>
         <SiteFooter tone="warm" />
       </div>
     );

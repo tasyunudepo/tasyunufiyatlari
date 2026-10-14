@@ -231,8 +231,9 @@ test.describe('Karşılaştırma Merkezi', () => {
       test.skip(true, 'HD150 PDP yok.')
       return
     }
-    await page.getByRole('link', { name: /Diğer taşyünü levhalarla karşılaştır/ }).click()
-    await page.waitForURL(/tasyunu-karsilastir/)
+    // 14 Ekim 2026: fiyat panelindeki bağlantı seçili kalınlığın hub'ına gider.
+    await page.getByRole('link', { name: /Diğer (\d+ cm )?taşyünü levhalarla karşılaştır/ }).click()
+    await page.waitForURL(/tasyunu-(karsilastir|fiyatlari)/)
     await expect(page.getByRole('heading', { name: 'Aynı koşulda fiyat ve teknik değerler' })).toBeVisible({ timeout: 20_000 })
   })
 

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { GENERATOR_PAGE_PATH } from '@/lib/portfolio/offers';
+import { COMPARISON_PATH, DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
 
 type Tone = 'dark' | 'warm';
 
@@ -105,7 +106,31 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
           ))}
         </div>
 
-        <div className={`mt-12 pt-6 border-t ${ruleSoft} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
+        {/* Hub bandı (14 Ekim 2026): her sayfadan kalınlık ve yoğunluk hub'larına düz bağlantı; yazı aramayla aynı. */}
+        <nav aria-label="Taşyünü fiyatları" className={`mt-12 pt-6 border-t ${ruleSoft}`} data-testid="footer-hub-links">
+          <div className={`eyebrow ${eyebrow} mb-3`}>Taşyünü fiyatları</div>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
+            {HUB_THICKNESSES.map((t) => (
+              <li key={t}>
+                <Link href={thicknessHubPath(t)} prefetch={false} className={`${linkText} text-sm transition-colors`}>
+                  {t} cm taş yünü
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link href={DENSITY_150_PATH} prefetch={false} className={`${linkText} text-sm transition-colors`}>
+                150 yoğunluk taş yünü
+              </Link>
+            </li>
+            <li>
+              <Link href={COMPARISON_PATH} prefetch={false} className={`${linkText} text-sm transition-colors`}>
+                Taşyünü karşılaştırma
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
+        <div className={`mt-6 pt-6 border-t ${ruleSoft} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
           <p className={`${copyText} text-xs`}>
             © {new Date().getFullYear()} Taşyünü Fiyatları. Tüm hakları saklıdır.
           </p>
