@@ -86,6 +86,16 @@ test.describe('ürün sayfasında alçı ve alçıpan bloğu', () => {
   })
 
   test('AC-208: görünüm bir kez, tıklama hedefiyle birlikte ölçülür; gezinme engellenmez', async ({ page, context }) => {
+    // GA etiketi yalnız üretimde yüklenir (app/layout.tsx); geliştirme sunucusunda gtag olmayınca olay hiç
+    // yazılmıyor ve test 0 olay görüyordu. Sitenin gtag'iyle aynı biçimli ikame kurulur.
+    await page.addInitScript(() => {
+      const w = window as unknown as { dataLayer: unknown[]; gtag: (...args: unknown[]) => void }
+      w.dataLayer = w.dataLayer || []
+      w.gtag = function gtag() {
+        // eslint-disable-next-line prefer-rest-params
+        w.dataLayer.push(arguments)
+      }
+    })
     await page.goto(`${SW035}/10-cm`)
 
     expect(await portfolioEvents(page)).toEqual([])

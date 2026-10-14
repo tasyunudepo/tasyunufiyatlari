@@ -1684,3 +1684,16 @@ Emrah (14 Ekim 2026): "minimum m² şu kadardır diye dev, belirgin yazmalı, st
 | Üretim derlemesi + metin kapıları | Başarılı; copy-gate 456 HTML temiz; `verify:visitor-copy` geçti |
 | Ölçüm bekçisi (kuru, gerçek alan adıyla yerel) | GEÇTİ: "Hemen Ara" → `Minimum_Kamyon_Soruldu` → onay → `Minimum_Kamyon_Cevap` + `Telefon_Aramalari`; WhatsApp aynı; sitenin kendi WhatsApp bildirimi denemede gönderilmedi |
 | Ekran görüntüsü (telefon 390, masaüstü 1440) | Şerit başlığa yapışık ve kaydırınca yerinde; hesaplayıcı penceresi, iletişim bloğu, telefon/WhatsApp penceresi ve ret ekranı incelendi; sayfa hatası yok |
+
+
+## 14 Ekim 2026 · Önceden kırık iki tarayıcı testi ve kabul kilidi onarıldı
+
+Emrah: "sonra ayağımıza dolaşmasın, çözelim." İkisinde de sitede arıza yoktu; testler eskimişti.
+
+| Test | Kök neden | Düzeltme |
+|---|---|---|
+| `bonus-challenge` "Filli PDP Bonus alternatifi" | 2 Eylül 2026'da (`c6ed7fc`) düğmenin adı "Bonus komple sistem alternatifini karşılaştır" → "Bonus komple mantolama setini hesapla" oldu; bu test güncellenmemişti (aynı kayıtta `pdp-product-information.spec.ts` yeni adla güncellenmişti) | Yeni ad |
+| `portfolio-offers` AC-208 | GA etiketi yalnız üretimde yüklenir; geliştirme sunucusunda `window.gtag` yokken olay hiç yazılmıyor, test 0 olay görüyordu | Öteki testlerdeki aynı biçimli gtag ikamesi |
+| Kabul kilidi (`verify:release` 1. adım) | `pdp-product-information.spec.ts` 2 Eylül'de değişti (kalınlık düğmesi → açılır liste tek satır, yeni kabul testleri eklendi; hiçbir kabul silinmedi ya da gevşetilmedi), kilit güncellenmemişti | 7/7 geçtikten sonra kilit yeniden alındı (`relocked_at`, `relock_reason` kilit dosyasında) |
+
+Sonuç: iki dosyanın bütün testleri geçiyor (14/14); `verify:release` kilit, 919 birim/sözleşme testi ve veritabanı denetimlerini geçiyor; bağımlılık taraması adımında duruyor (Next.js 16.0–16.3.7 için kritik güvenlik bildirimi, sharp ve source-map-js yüksek) — ayrı iş.

@@ -55,7 +55,8 @@ test.describe('Bonus ve karşılaştırma yüzeyleri', () => {
       test.skip(true, 'Expert HD150 PDP yok.')
       return
     }
-    await page.getByText('Bonus komple sistem alternatifini karşılaştır').click()
+    // Düğmenin adı 2 Eylül 2026'da değişti (c6ed7fc: "…alternatifini karşılaştır" → "…setini hesapla"); test güncellenmemişti.
+    await page.getByText('Bonus komple mantolama setini hesapla').click()
     const card = page.getByTestId('bonus-alternative-card')
     await expect(card).toBeVisible({ timeout: 20_000 })
     await expect(card.getByText('Bonus F 150').first()).toBeVisible({ timeout: 15_000 })
