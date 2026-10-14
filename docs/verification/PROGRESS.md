@@ -1638,11 +1638,11 @@ Sayfada görünen H1 ("Dalmaçyalı") ve altındaki tanıtım cümlesi değişme
 `14748b8` ana dala gönderildi, Vercel kendiliğinden yayımladı. Canlıda `/marka/dalmacyali`: yeni başlık ve açıklama görünüyor, H1 ve canonical aynı; `/marka/tekno` başlığı değişmedi; ana sayfa ve iletişim sayfası 200, ana sayfadaki telefon ve WhatsApp bölümü yerinde. GCR'de iş kapandı, Google tıklama deneyi açıldı (taban 15 Eylül–13 Ekim).
 
 
-## 14 Ekim 2026 sabah · Telefon ve WhatsApp yeniden kapatıldı (19 Ağustos düzenine dönüş)
+## 14 Ekim 2026 öğle · Telefon ve WhatsApp yeniden kapatıldı (19 Ağustos düzenine dönüş)
 
-Emrah (14 Ekim 2026, ~06.40): "taşyünündeki telefon WhatsApp'ı kaldır, 25 m²'ler geri geldi … neden kaldırdığımı hatırladım; boş telefonlar, kalitesiz talepler." Gece 01.28'de açılan ana sayfa ve iletişim sayfası telefon/WhatsApp bağlantıları (`4a334fd`) geri alındı. Ana sayfa, iletişim sayfası, ilk ziyaret penceresi, sözleşme testi ve WhatsApp kaynak etiketleri 19 Ağustos'taki haline birebir döndü (`git diff 4a334fd^` bu dosyalarda boş; yalnız sonraki Dalmaçyalı başlığı farklı). `tests/contracts/public-contact-gate.test.ts` yine iki sayfada da `tel:` / `wa.me` / ölçümlü iletişim bileşenini yasaklıyor; `public-contact-links.spec.ts` kaldırıldı.
+Emrah (14 Ekim 2026, ~13.40): "taşyünündeki telefon WhatsApp'ı kaldır, 25 m²'ler geri geldi … neden kaldırdığımı hatırladım; boş telefonlar, kalitesiz talepler." Gece 01.28'de açılan ana sayfa ve iletişim sayfası telefon/WhatsApp bağlantıları (`4a334fd`) geri alındı. Ana sayfa, iletişim sayfası, ilk ziyaret penceresi, sözleşme testi ve WhatsApp kaynak etiketleri 19 Ağustos'taki haline birebir döndü (`git diff 4a334fd^` bu dosyalarda boş; yalnız sonraki Dalmaçyalı başlığı farklı). `tests/contracts/public-contact-gate.test.ts` yine iki sayfada da `tel:` / `wa.me` / ölçümlü iletişim bileşenini yasaklıyor; `public-contact-links.spec.ts` kaldırıldı.
 
-**Karar:** proje ölçekli lead kapısı kalıcıdır; herkese açık telefon ve WhatsApp yeniden önerilmez (14 Ekim denemesi yaklaşık 5 saatte küçük metrajlı ve özensiz talepleri geri getirdi).
+**Karar:** proje ölçekli lead kapısı kalıcıdır; herkese açık telefon ve WhatsApp yeniden önerilmez (14 Ekim denemesi yaklaşık 12 saatte küçük metrajlı ve özensiz talepleri geri getirdi).
 
 | Kontrol | Sonuç |
 |---|---|
@@ -1650,4 +1650,4 @@ Emrah (14 Ekim 2026, ~06.40): "taşyünündeki telefon WhatsApp'ı kaldır, 25 m
 | Üretim derlemesi + metin kapıları | Başarılı; `verify:visitor-copy` geçti; copy-gate 456 HTML temiz |
 | Yerel üretimde iki sayfa | `tel:` / `wa.me` bağlantısı 0; ölçüm bekçisi GEÇTİ (page_view gidiyor) |
 
-**Ölçüm notu:** herkese açık kanal yalnız 14 Ekim 01.28 – yayın anı arasında açıktı. Bu aralıktaki telefon/WhatsApp temasları kanalın açık olmasındandır; GCR'de #4aa186 için açılan deney geçersizdir.
+**Ölçüm notu:** herkese açık kanal yalnız 14 Ekim 01.28 – 13.47 arasında açıktı (kapanış canlıda 13.47'de görüldü, `2a15a76`). Bu aralıktaki telefon/WhatsApp temasları kanalın açık olmasındandır; GCR'de #4aa186 için açılan deney geçersizdir.
