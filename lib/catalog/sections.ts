@@ -69,7 +69,8 @@ export const TASYUNU_SECTIONS: readonly TasyunuSection[] = [
     key: 'gemi-marin',
     title: 'Gemi & Marin',
     desc:
-      'Tersane ve gemi uygulamaları için marin sertifikalı taşyünü levha ve şilte serisi; makine dairesi, boru ve baca sarımları.',
+      // 14 Ekim 2026 (Emrah): marin sertifikası bu yıl alınmadı; "marin sertifikalı" ifadesi kaldırıldı.
+      'Tersane ve gemi uygulamaları için taşyünü levha ve şilte serisi; makine dairesi, boru ve baca sarımları.',
   },
   {
     key: 'bolme-panel',

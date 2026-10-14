@@ -1868,3 +1868,8 @@ Ertelenen (onaylı planda vardı): **mantolama** ve **çatı** kullanım hub'lar
 | Derleme + copy-gate + `verify:visitor-copy` + kabul kilidi | 475 HTML temiz; kapı geçti; 13 dosya kilit geçti |
 | Ölçüm bekçisi (kuru, yerel üretim): ana sayfa, 120, şilte | GEÇTİ |
 | Ekran (1440, 1280, 375) | Taşma yok, sayfa hatası yok |
+
+
+## 14 Ekim 2026 · Gemi & Marin grubundan "marin sertifikalı" ifadesi kaldırıldı
+
+Emrah: "bu yıl almamışlar, marin sertifikası yok; notu kaldırsan yeter". İddia yalnız `lib/catalog/sections.ts` Gemi & Marin açıklamasındaydı (kategori sayfasında grup seçilince görünür); Bonus Marin ürün sayfasında ve veritabanı metinlerinde sertifika ifadesi yok (canlı tarama). Yeni açıklama: "Tersane ve gemi uygulamaları için taşyünü levha ve şilte serisi; makine dairesi, boru ve baca sarımları." Kilit: `tests/catalog/marin-claim.test.ts`. Kategori tarayıcı testleri 7/7, copy-gate 475 HTML temiz.
