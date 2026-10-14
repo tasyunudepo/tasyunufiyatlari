@@ -529,6 +529,8 @@ export type ComparisonEntryPlacement =
   | 'direct'
   | 'category'
   | 'pdp'
+  // Ürün sayfasının üstündeki "N cm mantolama taşyünleri yan yana" kutusu (14 Ekim 2026).
+  | 'pdp_kalinlik'
   | 'wizard'
   | 'density_150'
   | 'unknown';

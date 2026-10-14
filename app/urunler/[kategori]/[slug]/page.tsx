@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import ComparisonThicknessShortcut from '@/components/compare/ComparisonThicknessShortcut';
 import { ChevronRight } from 'lucide-react';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
@@ -435,6 +436,15 @@ export async function ProductDetailPage({
           </Suspense>
         </div>
       </div>
+
+      {/* Aynı kalınlıktaki bütün taşyünü levhalar: Karşılaştırma Merkezi'ne kısa yol (14 Ekim 2026). */}
+      {product.product_type === 'plate' && product.material_type === 'tasyunu' && (
+        <ComparisonThicknessShortcut
+          model={product.model}
+          thicknessCm={isValidThickness ? selectedThicknessValue : (product.wizard_prefill?.kalinlik ?? null)}
+          warm={usesWarmPurchaseShell}
+        />
+      )}
 
       {/* Ana İçerik */}
       {isHybridBonusPdp ? (

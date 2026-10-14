@@ -48,6 +48,7 @@ const COMPARISON_ENTRY_PLACEMENTS = new Set<ComparisonEntryPlacement>([
   "direct",
   "category",
   "pdp",
+  "pdp_kalinlik",
   "wizard",
   "density_150",
   "unknown",
@@ -80,6 +81,13 @@ function readEntryPlacement(): ComparisonEntryPlacement {
   return COMPARISON_ENTRY_PLACEMENTS.has(value as ComparisonEntryPlacement)
     ? (value as ComparisonEntryPlacement)
     : "unknown";
+}
+
+// Ürün sayfasındaki "N cm mantolama taşyünleri yan yana" kutusu kalınlığı adresle taşır (?kalinlik=10).
+function readInitialThickness(): number | null {
+  if (typeof window === "undefined") return null;
+  const value = Number.parseFloat(new URLSearchParams(window.location.search).get("kalinlik") ?? "");
+  return THICKNESS_OPTIONS.includes(value) ? value : null;
 }
 
 function readFocusedModel(): string | null {
@@ -131,7 +139,11 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
     catalogJourneyIdRef.current = entryPlacementRef.current === "category"
       ? readCatalogJourneyId()
       : null;
-    const focusTimer = window.setTimeout(() => setFocusedModel(readFocusedModel()), 0);
+    const focusTimer = window.setTimeout(() => {
+      setFocusedModel(readFocusedModel());
+      const initialThickness = readInitialThickness();
+      if (initialThickness !== null) setThicknessCm(initialThickness);
+    }, 0);
     notifyComparisonOpened({
       surface: variant,
       urun_sayisi: profiles.length,

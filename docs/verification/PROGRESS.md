@@ -1697,3 +1697,32 @@ Emrah: "sonra ayağımıza dolaşmasın, çözelim." İkisinde de sitede arıza 
 | Kabul kilidi (`verify:release` 1. adım) | `pdp-product-information.spec.ts` 2 Eylül'de değişti (kalınlık düğmesi → açılır liste tek satır, yeni kabul testleri eklendi; hiçbir kabul silinmedi ya da gevşetilmedi), kilit güncellenmemişti | 7/7 geçtikten sonra kilit yeniden alındı (`relocked_at`, `relock_reason` kilit dosyasında) |
 
 Sonuç: iki dosyanın bütün testleri geçiyor (14/14); `verify:release` kilit, 919 birim/sözleşme testi ve veritabanı denetimlerini geçiyor; bağımlılık taraması adımında duruyor (Next.js 16.0–16.3.7 için kritik güvenlik bildirimi, sharp ve source-map-js yüksek) — ayrı iş.
+
+
+## 14 Ekim 2026 · 10 cm (ve her kalınlık) ürün sayfasından Karşılaştırma Merkezi'ne kısa yol
+
+GCR kartı #26e6c0 (Emrah, 14 Ekim 2026: "karşılaştırma sayfası projemiz vardı, sayfalarını yapmıştık, link verip öne çıkarmadık"; A yolu onaylandı). Kanıt: "taş yünü fiyatları" araması (3 Eyl–1 Eki, 3.521 gösterim, 127 tık, 5,9. sıra) SW035 10 cm sayfasına geliyor; Karşılaştırma Merkezi (`/tasyunu-karsilastir`, Temmuz 2026) yalnız fiyat panelinin içinden ve her zaman 5 cm ile açılıyordu.
+
+| Yer | Ne yapıldı |
+|---|---|
+| Taşyünü ürün sayfaları (sıvalı dış cephe profilli 8 model) | Sayfa yolu satırının altında kutu: "{N} cm mantolama taşyünleri yan yana" · "Sıvalı dış cephe mantolamasına uygun 8 levhanın fiyatı ve teknik değerleri, aynı şehir ve kalınlıkta" → `/tasyunu-karsilastir?entry=pdp_kalinlik&kalinlik={N}&focus={model}` (sunucu HTML'inde düz bağlantı). EPS ve profili olmayan ürünlerde yok |
+| Karşılaştırma Merkezi | `?kalinlik=` adresten okunur (geçersizse 5 cm); gelinen ürün mevcut `focus` düzeniyle işaretlenir; yeni giriş yeri `pdp_kalinlik` `Karsilastirma_Acildi` olayında ayrı sayılır |
+| Fiyat panelindeki "Diğer taşyünü levhalarla karşılaştır" | Bağlantı artık seçili kalınlığı da taşır |
+
+Google'da sıralanan sayfa yerinde kaldı (B yolu, ayrı 10 cm sayfası, seçilmedi).
+
+### Editör turu (GPT-6 Astra) ve hüküm
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | "Bütün 10 cm taşyünü levhaları" karşılaştırmanın kapsamını aşıyor (yalnız sıvalı dış cephe 8 levha) (ORTA) | ONAY: "10 cm mantolama taşyünleri yan yana" + alt satırda kapsam |
+
+### Kanıt (14 Ekim 2026)
+
+| Kontrol | Sonuç |
+|---|---|
+| Yeni `comparison-thickness-shortcut.spec.ts` (3) | Geçti (kutu, adres, 10 cm seçili açılış, `pdp_kalinlik` girişi; geçersiz kalınlık 5 cm; EPS'de kutu yok) |
+| İlgili testler (karşılaştırma, ürün sayfası bilgileri, kategori, alçıpan bloğu, Bonus) + `vitest run` | Geçti; 919 birim/sözleşme testi |
+| Derleme + metin kapıları | Başarılı; copy-gate 456 HTML temiz; `verify:visitor-copy` geçti; derlenen SW035 10 cm HTML'inde kutu var |
+| Ölçüm bekçisi (kuru, yerel üretim) | GEÇTİ: ürün sayfası ve `?kalinlik=10&entry=pdp_kalinlik` karşılaştırma sayfası (Karsilastirma_Acildi gidiyor) |
+| Ekran görüntüsü (telefon, masaüstü) | Kutu sayfa yolu altında; karşılaştırmada "10 cm" seçili ve SW035 işaretli; sayfa hatası yok |

@@ -908,7 +908,7 @@ export default function ProductPricePanel({
           product.material_type === "tasyunu" &&
           modelScope === "sivali_dis_cephe_mantolama" && (
           <Link
-            href="/tasyunu-karsilastir?entry=pdp"
+            href={activeThickness ? `/tasyunu-karsilastir?entry=pdp&kalinlik=${activeThickness}` : "/tasyunu-karsilastir?entry=pdp"}
             onClick={() => {
               const comparisonSessionId = createComparisonSessionId();
               window.sessionStorage.setItem('pdp_comparison_session_id', comparisonSessionId);
