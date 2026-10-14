@@ -32,14 +32,13 @@ test.describe('ürün sayfasından aynı kalınlıkta karşılaştırma', () => 
     await expect(shortcut).toBeVisible()
     await expect(shortcut).toContainText('10 cm mantolama taşyünleri yan yana')
     await expect(shortcut).toContainText('Sıvalı dış cephe mantolamasına uygun')
-    const href = (await shortcut.getAttribute('href')) ?? ''
-    expect(href).toContain('/tasyunu-karsilastir?')
-    expect(href).toContain('kalinlik=10')
-    expect(href).toContain('entry=pdp_kalinlik')
+    // 14 Ekim 2026: adres temiz (Google sayfayı tek adresle tanısın); giriş, kalınlık ve ürün tıklamada taşınır.
+    await expect(shortcut).toHaveAttribute('href', '/tasyunu-karsilastir')
 
     await shortcut.click()
-    await page.waitForURL(/\/tasyunu-karsilastir\?/u)
+    await page.waitForURL(/\/tasyunu-karsilastir$/u)
     await expect(page.getByRole('button', { name: '10 cm', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByTestId('comparison-table').getByTestId('comparison-row-dalmacyali-sw035')).toHaveAttribute('data-focused', 'true')
     await expect(page.getByRole('button', { name: '5 cm', exact: true })).toHaveAttribute('aria-pressed', 'false')
     // Geliştirme sunucusunda React açılış etkisini iki kez çalıştırır (StrictMode); üretimde tek olay gider.
     await expect.poll(async () => (await events(page, 'Karsilastirma_Acildi')).length).toBeGreaterThanOrEqual(1)

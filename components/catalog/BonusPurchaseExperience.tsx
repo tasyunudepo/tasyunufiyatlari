@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import ComparisonLink from "@/components/compare/ComparisonLink";
 import {
   ArrowRight,
   Banknote,
@@ -321,14 +322,14 @@ export default function BonusPurchaseExperience({
               )}
             </div>
             <div className="flex flex-col justify-center gap-3 lg:items-end">
-              <Link
-                href="/tasyunu-karsilastir?entry=pdp"
+              <ComparisonLink
+                entry="pdp"
                 prefetch={false}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-[#7d5d20] px-5 text-sm font-extrabold text-[#604615] transition-colors hover:bg-[#faf6ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7d5d20] focus-visible:ring-offset-2 sm:w-auto"
               >
                 Diğer taşyünü levhalarla karşılaştır
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
-              </Link>
+              </ComparisonLink>
               <a
                 href="#siparis-masasi"
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[8px] px-4 text-sm font-bold text-[#7d5d20] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7d5d20] focus-visible:ring-offset-2 sm:w-auto"

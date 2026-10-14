@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import ComparisonLink from '@/components/compare/ComparisonLink';
 import { supabase } from "@/lib/supabase";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import { notifyLeadRejected } from "@/lib/analytics/leadQualification";
@@ -2331,12 +2331,12 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                         Malzeme
                                     </label>
                                     {selectedMalzeme === 'tasyunu' && (
-                                        <Link
-                                            href="/tasyunu-karsilastir?entry=wizard"
+                                        <ComparisonLink
+                                            entry="wizard"
                                             className="inline-flex items-center py-1 text-xs font-semibold text-[#70591f] underline-offset-4 hover:text-[#4d3912] hover:underline"
                                         >
                                             Levhaları karşılaştır →
-                                        </Link>
+                                        </ComparisonLink>
                                     )}
                                 </span>
                                 <select

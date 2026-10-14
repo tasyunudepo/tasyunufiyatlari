@@ -1770,3 +1770,32 @@ Onaylanan tasarım değişikliği yüzünden seçiciler ve metinler güncellendi
 | Ekran (375 / 820 / 1024 / 1280 / 1440) + üretim konsolu | Taşma yok (1024'te tablo kutuya sığıyor); 8 fiyatın hepsi görünür; sayfa hatası yok |
 | `verify:release` | 1–5 geçti; 6. adım (bağımlılık taraması: Next.js 16.3.3 kritik, sharp ve source-map-js yüksek) önceden var, Emrah onayı bekleyen ayrı iş; 7 ve 9 elle geçti |
 | Tüm tarayıcı testleri (112) | 99 geçti, 13 kaldı — hepsi bu işten önce bozuk ve dokunulmayan yerlerde: 12'si ofis paneli (9 Ekim `5369023` ofis yenilemesi "Yeni teklif yaz" düğmesi ekledi, testler 8 Ekim'de kalmış), 1'i Bonus F 150 ürün sayfası ("föyü beyanına göre" metni 1 Eylül ürün sayfası yenilemesinden beri yok). Ayrı iş |
+
+
+## 14 Ekim 2026 · Hub planı Faz 1 — Google'a tanıtma, 150 sayfası yalnız 150'likler, Optimix 100–110
+
+Emrah'ın Search Console tespiti ("10 cm 150 yoğunluk arayan tüm 150'likleri arıyor") üzerine son 3 ay sorgu × sayfa verisi çekildi (14 Tem–12 Eki). Kök neden: `/tasyunu-karsilastir` ve `/tasyunu-yogunluk/150-kg-m3` Search Console URL denetiminde **"URL Google tarafından bilinmiyor"** (Temmuz'dan beri hiç taranmamış); mülke hiç site haritası gönderilmemişti; site içi bütün bağlantılar `?entry=…` etiketliydi; 150 sayfasına ürün sayfalarından bağlantı yoktu. Ayrıca 8 ürünün her kalınlık sayfası aynı başlık kalıbında ("10 cm Taş Yünü Fiyatları - Ekim 2026 | …") — Faz 2–5'te ele alınacak.
+
+| Yer | Ne yapıldı |
+|---|---|
+| Search Console | `https://www.tasyunufiyatlari.com/sitemap.xml` gönderildi (14 Eki 17.14, API; düz `<urlset>`, 408 adres, karşılaştırma ve 150 sayfası içinde) |
+| Bağlantılar (`components/compare/ComparisonLink.tsx`, `lib/compare/entry.ts`) | Ürün kartı, kategori (2), Bonus ürün sayfası, fiyat paneli, hesaplayıcı, ürün sayfası kısa yol kutusu artık temiz `/tasyunu-karsilastir`; giriş yeri / kalınlık / işaretli ürün tıklamada sekme hafızasına yazılır, karşılaştırma sayfası bir kez okur (10 dk, aynı yol). Adresle gelen eski bağlantılar çalışmaya devam eder. `Karsilastirma_Acildi.entry_placement` değişmedi |
+| 150 sayfası | Yalnız föy beyanlı 3 ürün (Bonus F 150, F 150 Pro, Expert HD150); "150'likler önce" sıralaması kalktı (varsayılan fiyat). Başlık "150 Yoğunluk Taş Yünü Fiyatları - {ay yıl} \| Föy Beyanlı 3 Levha", H1 "150 yoğunluk taş yünü fiyatları". Önceki karar 3 (öteki beş ürün bağlamda) Emrah kararıyla değişti |
+| Optimix TR7.5 | Sözlü yoğunluk beyanı 100–120 → **100–110 kg/m³** (Emrah: "120'ye ulaşmıyor"). Kaynak tarihi 14 Ekim 2026. Veritabanındaki `plate_technical_profiles` kopyası 100–120 kaldı; site bu tabloyu okumuyor |
+
+### Test değişikliği
+
+- `pdp-product-information.spec.ts` (**kilitli**): yalnız Optimix yoğunluk metni 100–110; kilit gerekçesiyle yenilendi (`relock_reason`). Başka kabul değişmedi.
+- `technical-profiles.test.ts`: Optimix 100–110 (iki yerde).
+- `comparison-thickness-shortcut`, `tasyunu-category`, `bonus-challenge`, `karsilastirma` (tarayıcı): beklenen adres etiketsiz; giriş yeri olayla doğrulanıyor (`wizard`, `pdp_kalinlik`), odak ve kalınlık tıklamadan sonra korunuyor. 150 testi: 3 satır ve yalnız 150'likler.
+- Yeni `tests/compare/comparison-entry.test.ts` (4): kayıt bir kez okunur, başka yol / eski kayıt / bozuk kayıt kullanılmaz.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` | 929 geçti |
+| İlgili tarayıcı testleri (karşılaştırma, kısa yol, kategori, Bonus, ürün sayfası bilgileri, en az sipariş) | 36/36 geçti |
+| `verify-acceptance-lock` | 13 dosya geçti |
+| Derleme + copy-gate + `verify:visitor-copy` | Başarılı; 456 HTML temiz; derlenen HTML'de `tasyunu-karsilastir?` kalmadı |
+| Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): `/`, karşılaştırma, 150, kategori, SW035 10 cm | GEÇTİ; CSP ihlali yok |

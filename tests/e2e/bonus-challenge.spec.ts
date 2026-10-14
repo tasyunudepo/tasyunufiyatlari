@@ -77,7 +77,8 @@ test.describe('Bonus ve karşılaştırma yüzeyleri', () => {
     const calculator = page.locator('[data-homepage-calculator]')
     await calculator.getByRole('link', { name: /Levhaları karşılaştır/ }).click()
 
-    await expect(page).toHaveURL(/\/tasyunu-karsilastir\?entry=wizard/)
+    // 14 Ekim 2026: temiz adres; "wizard" girişi tıklamada taşınır (karsilastirma.spec olay sayımını doğrular).
+    await expect(page).toHaveURL(/\/tasyunu-karsilastir$/)
     await expect(page.getByRole('heading', {
       level: 1,
       name: 'Taşyünü levhaları aynı koşulda karşılaştırın',

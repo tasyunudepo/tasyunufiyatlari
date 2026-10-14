@@ -331,11 +331,12 @@ const PROFILES: readonly TechnicalProfile[] = [
     wizardEligible: true,
     comparisonEligible: true,
     density: {
+      // 14 Ekim 2026 (Emrah): sözlü beyan 100–120 değil 100–110; Expert Premium ile aynı sınıf, 120'ye ulaşmaz.
       minKgM3: 100,
-      maxKgM3: 120,
-      display: '100–120 kg/m³',
+      maxKgM3: 110,
+      display: '100–110 kg/m³',
       sourceType: 'manufacturer_verbal',
-      sourceDate: '2026-07-13',
+      sourceDate: '2026-10-14',
     },
     lambdaDisplay: '0,035 W/mK',
     tensileDisplay: '≥7,5 kPa',

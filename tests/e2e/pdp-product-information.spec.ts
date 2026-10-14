@@ -10,7 +10,8 @@ test.describe('Levha PDP ürün ve paket bilgileri', () => {
     const packageDetails = page.getByTestId('pdp-package-details')
 
     await expect(quickFacts).toContainText('Yoğunluk')
-    await expect(quickFacts).toContainText('100–120 kg/m³')
+    // 14 Ekim 2026 (Emrah): Optimix sözlü yoğunluk beyanı 100–110 kg/m³ (önce 100–120).
+    await expect(quickFacts).toContainText('100–110 kg/m³')
     await expect(packageDetails).toBeVisible()
     await expect(packageDetails).toContainText('5 cm paket bilgisi')
     await expect(packageDetails).toContainText('60 × 100 cm')

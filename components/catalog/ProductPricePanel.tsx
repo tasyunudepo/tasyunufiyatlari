@@ -6,7 +6,7 @@
 // Bu dosya kapsamında değil; ayrı bir PR'da ele alınacak.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import ComparisonLink from "@/components/compare/ComparisonLink";
 import { supabase } from "@/lib/supabase";
 import { ArrowRight, ChevronDown, Layers, MapPin, Package } from "lucide-react";
 import {
@@ -907,8 +907,9 @@ export default function ProductPricePanel({
         {product.product_type === "plate" &&
           product.material_type === "tasyunu" &&
           modelScope === "sivali_dis_cephe_mantolama" && (
-          <Link
-            href={activeThickness ? `/tasyunu-karsilastir?entry=pdp&kalinlik=${activeThickness}` : "/tasyunu-karsilastir?entry=pdp"}
+          <ComparisonLink
+            entry="pdp"
+            thicknessCm={activeThickness ?? null}
             onClick={() => {
               const comparisonSessionId = createComparisonSessionId();
               window.sessionStorage.setItem('pdp_comparison_session_id', comparisonSessionId);
@@ -927,7 +928,7 @@ export default function ProductPricePanel({
           >
             <span>Diğer taşyünü levhalarla karşılaştır</span>
             <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-          </Link>
+          </ComparisonLink>
         )}
       </div>
 

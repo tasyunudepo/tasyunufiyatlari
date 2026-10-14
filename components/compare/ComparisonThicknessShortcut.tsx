@@ -5,8 +5,9 @@
 // fiyat panelinin içinden, kalınlıksız bağlantıyla açılıyordu. Kutu kalınlığı ve gelinen ürünü adresle taşır;
 // karşılaştırma sayfası `entry=pdp_kalinlik` girişini Karsilastirma_Acildi olayında ayrı sayar.
 
-import Link from 'next/link'
 import { ArrowRight, Columns3 } from 'lucide-react'
+
+import ComparisonLink from '@/components/compare/ComparisonLink'
 
 import { getComparisonProfiles, getProfileByModel } from '@/lib/technical-profiles'
 
@@ -16,12 +17,6 @@ interface Props {
   warm: boolean
 }
 
-export function comparisonShortcutHref(model: string | null, thicknessCm: number | null): string {
-  const params = new URLSearchParams({ entry: 'pdp_kalinlik' })
-  if (thicknessCm != null) params.set('kalinlik', String(thicknessCm))
-  if (model) params.set('focus', model)
-  return `/tasyunu-karsilastir?${params.toString()}`
-}
 
 /** Yalnız karşılaştırmadaki sıvalı dış cephe taşyünü levhalarında gösterilir. */
 export function showsComparisonShortcut(model: string | null): boolean {
@@ -39,8 +34,11 @@ export default function ComparisonThicknessShortcut({ model, thicknessCm, warm }
   return (
     // w-full: sayfa kökü flex-col; mx-auto tek başına kutuyu içerik genişliğine daraltıyordu.
     <div className="mx-auto w-full max-w-[1200px] px-4 pt-3 sm:px-6 sm:pt-4">
-      <Link
-        href={comparisonShortcutHref(model, thicknessCm)}
+      {/* Adres temiz (Google sayfayı tek adresle tanısın); giriş, kalınlık ve ürün tıklamada taşınır. */}
+      <ComparisonLink
+        entry="pdp_kalinlik"
+        thicknessCm={thicknessCm}
+        focus={model}
         prefetch={false}
         data-testid="comparison-thickness-shortcut"
         className={`group flex items-center gap-3 rounded-2xl border px-4 py-3 transition-colors sm:gap-4 sm:px-5 sm:py-4 ${
@@ -63,7 +61,7 @@ export default function ComparisonThicknessShortcut({ model, thicknessCm, warm }
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
         <ArrowRight className={`h-5 w-5 shrink-0 sm:hidden ${warm ? 'text-hub-gold' : 'text-brand-300'}`} aria-hidden="true" />
-      </Link>
+      </ComparisonLink>
     </div>
   )
 }

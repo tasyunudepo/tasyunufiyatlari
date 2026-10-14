@@ -22,6 +22,7 @@ import {
   parseLambda,
   type ParsedValue,
 } from "@/lib/compare/technicalValues";
+import { takeComparisonEntry, type ComparisonEntry } from "@/lib/compare/entry";
 import { useWizardStore } from "@/lib/store/wizardStore";
 import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import {
@@ -98,24 +99,27 @@ const formatSourceDate = (isoDate: string) =>
     timeZone: "UTC",
   }).format(new Date(`${isoDate}T00:00:00Z`));
 
-function readEntryPlacement(): ComparisonEntryPlacement {
+// Giriş bilgisi önce adresten (eski/dış bağlantılar), yoksa tıklamada sekme hafızasına yazılan kayıttan
+// okunur (lib/compare/entry.ts — site içi bağlantılar 14 Ekim 2026'dan beri temiz adreslidir).
+function readEntryPlacement(stored: ComparisonEntry | null): ComparisonEntryPlacement {
   if (typeof window === "undefined") return "direct";
-  const value = new URLSearchParams(window.location.search).get("entry") ?? "direct";
+  const value = new URLSearchParams(window.location.search).get("entry") ?? stored?.entry ?? "direct";
   return COMPARISON_ENTRY_PLACEMENTS.has(value as ComparisonEntryPlacement)
     ? (value as ComparisonEntryPlacement)
     : "unknown";
 }
 
-// Ürün sayfasındaki "N cm mantolama taşyünleri yan yana" kutusu kalınlığı adresle taşır (?kalinlik=10).
-function readInitialThickness(): number | null {
+// Ürün sayfasındaki "N cm mantolama taşyünleri yan yana" kutusu kalınlığı taşır.
+function readInitialThickness(stored: ComparisonEntry | null): number | null {
   if (typeof window === "undefined") return null;
-  const value = Number.parseFloat(new URLSearchParams(window.location.search).get("kalinlik") ?? "");
+  const fromUrl = Number.parseFloat(new URLSearchParams(window.location.search).get("kalinlik") ?? "");
+  const value = Number.isFinite(fromUrl) ? fromUrl : stored?.thicknessCm ?? Number.NaN;
   return THICKNESS_OPTIONS.includes(value) ? value : null;
 }
 
-function readFocusedModel(): string | null {
+function readFocusedModel(stored: ComparisonEntry | null): string | null {
   if (typeof window === "undefined") return null;
-  const value = new URLSearchParams(window.location.search).get("focus")?.trim();
+  const value = (new URLSearchParams(window.location.search).get("focus") ?? stored?.focus ?? "").trim();
   return value && value.length <= 80 ? value : null;
 }
 
@@ -232,10 +236,9 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const profiles = useMemo(() => {
     const all = getComparisonProfiles();
     if (variant !== "yogunluk_150") return all;
-    // 150 görünümü: föy-beyanlı 150'likler önce, kalanlar bağlamda kalır.
-    const is150 = (p: (typeof all)[number]) =>
-      p.density.sourceType === "datasheet" && p.density.minKgM3 >= 150;
-    return [...all.filter(is150), ...all.filter((p) => !is150(p))];
+    // 150 görünümü yalnız föy beyanlı 150'likleri gösterir (Emrah, 14 Ekim 2026: "150 sayfasında diğer
+    // ürünler olmamalı"; önceki karar 3'te öteki beş ürün bağlam olarak alttaydı).
+    return all.filter((p) => p.density.sourceType === "datasheet" && p.density.minKgM3 >= 150);
   }, [variant]);
 
   const [plates, setPlates] = useState<Plate[]>([]);
@@ -246,7 +249,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const [cityCode, setCityCode] = useState<number>(34);
   const [subChoice, setSubChoice] = useState<BonusSubRegionChoice | null>(() => defaultSubChoice(34));
   const [thicknessCm, setThicknessCm] = useState<number>(5);
-  const [sortKey, setSortKey] = useState<ComparisonSortKey>(variant === "yogunluk_150" ? "onerilen" : "fiyat");
+  const [sortKey, setSortKey] = useState<ComparisonSortKey>("fiyat");
   const [bonusPrices, setBonusPrices] = useState<Record<string, PriceCell>>({});
   const [comparisonDataError, setComparisonDataError] = useState(false);
   const [requestVersion, setRequestVersion] = useState(0);
@@ -254,18 +257,24 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const comparisonSessionIdRef = useRef<string | null>(null);
   const entryPlacementRef = useRef<ComparisonEntryPlacement>("direct");
   const catalogJourneyIdRef = useRef<string | null>(null);
+  const storedEntryRef = useRef<ComparisonEntry | null | undefined>(undefined);
 
   useEffect(() => {
     comparisonSessionIdRef.current = readComparisonSessionId();
     window.sessionStorage.removeItem('pdp_comparison_session_id');
     const comparisonSessionId = comparisonSessionIdRef.current;
-    entryPlacementRef.current = readEntryPlacement();
+    // Kayıt bir kez okunup silinir; geliştirmedeki ikinci etki çalışması aynı kaydı ref'ten kullanır.
+    if (storedEntryRef.current === undefined) {
+      storedEntryRef.current = takeComparisonEntry(window.location.pathname);
+    }
+    const stored = storedEntryRef.current;
+    entryPlacementRef.current = readEntryPlacement(stored);
     catalogJourneyIdRef.current = entryPlacementRef.current === "category"
       ? readCatalogJourneyId()
       : null;
     const focusTimer = window.setTimeout(() => {
-      setFocusedModel(readFocusedModel());
-      const initialThickness = readInitialThickness();
+      setFocusedModel(readFocusedModel(stored));
+      const initialThickness = readInitialThickness(stored);
       if (initialThickness !== null) setThicknessCm(initialThickness);
     }, 0);
     notifyComparisonOpened({
@@ -476,9 +485,7 @@ export default function ComparisonCenter({ variant }: ComparisonCenterProps) {
   const knownPrices = rows.map((r) => kamyonUnit(r.cell)).filter((v): v is number => v !== null);
   const bestPrice = knownPrices.length > 0 ? Math.min(...knownPrices) : null;
   const sortedRows = sortRows(rows, sortKey);
-  const sortOptions: ComparisonSortKey[] = variant === "yogunluk_150"
-    ? ["onerilen", "fiyat", "isi_iletkenligi", "basma"]
-    : ["fiyat", "isi_iletkenligi", "basma"];
+  const sortOptions: ComparisonSortKey[] = ["fiyat", "isi_iletkenligi", "basma"];
 
   const conditionLine = zone
     ? `${zone.city_name}${subChoice && subInfo ? ` · ${SUB_LABELS[subChoice]}` : ""} · ${thicknessCm} cm`

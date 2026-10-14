@@ -116,7 +116,8 @@ describe('sözlü yoğunluk beyanları — Tur 3 kararı', () => {
   it.each([
     ['dalmacyali-sw035', 110, 120],
     ['expert-tasyunu-premium', 100, 110],
-    ['fawori-optimix-tr75', 100, 120],
+    // 14 Ekim 2026 (Emrah): Optimix sözlü beyanı 100–110 (önce 100–120).
+    ['fawori-optimix-tr75', 100, 110],
   ])('%s sözlü kaynaklı ve %d–%d kg/m³ aralığındadır', (key, min, max) => {
     const density = getProfileByKey(key)!.density!
     expect(density.sourceType).toBe('manufacturer_verbal')
@@ -154,7 +155,7 @@ describe('TR7.5 adı çekme sınıfıdır, yoğunluk değildir', () => {
   it('TR7.5 profili 7,5 değerini yoğunluk olarak taşımaz', () => {
     const profile = getProfileByModel('TR7.5')!
     expect(profile.density!.minKgM3).toBe(100)
-    expect(profile.density!.maxKgM3).toBe(120)
+    expect(profile.density!.maxKgM3).toBe(110) // 14 Ekim 2026 (Emrah): 100–120 → 100–110
     expect(profile.density!.display).not.toMatch(/7[.,]5/u)
     expect(profile.tensileClass).toBe('TR7.5')
     expect(profile.tensileDisplay).toContain('7,5 kPa')

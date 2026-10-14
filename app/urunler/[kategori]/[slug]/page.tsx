@@ -16,6 +16,7 @@ import { getCatalogProduct } from '@/lib/catalog/server';
 import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
+import { formatMonthYear } from '@/lib/seo/monthYear';
 import { buildBreadcrumbList } from '@/lib/seo/buildBreadcrumbList';
 import { SITE_ORIGIN } from '@/lib/seo/siteConfig';
 import { BUSINESS_REF, BRAND_INFO, type BrandSlug } from '@/lib/business/info';
@@ -201,14 +202,6 @@ export async function generateStaticParams() {
 
     return kategoriEntry ? [{ kategori: kategoriEntry[0], slug: product.slug }] : [];
   });
-}
-
-function formatMonthYear(date = new Date()) {
-  return new Intl.DateTimeFormat('tr-TR', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'Europe/Istanbul',
-  }).format(date);
 }
 
 function buildProductPath(kategori: string, slug: string, thickness?: number | null) {

@@ -5,15 +5,16 @@ import SiteFooter from '@/components/shared/SiteFooter';
 import ComparisonCenter from '@/components/compare/ComparisonCenter';
 import MinimumOrderBanner from '@/components/sales/MinimumOrderBanner';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
+import { formatMonthYear } from '@/lib/seo/monthYear';
 
-// 150 kg/m³ görünümü (kilitli karar 3): ana karşılaştırma tablosunun
-// 150 filtresi açık hâlidir — föy beyanlı üç 150 ürünü önce gelir,
-// diğer beş ürün karşılaştırma bağlamında görünür kalır.
+// 150 kg/m³ görünümü: yalnız föy beyanlı üç 150'lik (Emrah, 14 Ekim 2026; önceki karar 3'te öteki
+// beş ürün de bağlam olarak alttaydı).
 
 export const metadata: Metadata = buildMetadata({
-  title: '150 kg/m³ Taşyünü Levhalar — Föy Beyanlı Karşılaştırma',
+  // Başlık aramayla aynı başlar ("150 yoğunluk taşyünü fiyatları"; Emrah, 14 Ekim 2026).
+  title: `150 Yoğunluk Taş Yünü Fiyatları - ${formatMonthYear()} | Föy Beyanlı 3 Levha`,
   description:
-    '150 kg/m³ yoğunluk sınıfındaki taşyünü mantolama levhaları (Bonus F 150, F 150 Pro, Expert HD150) föy beyanlarıyla; aynı şehir ve kalınlıkta tam araç levha fiyat karşılaştırması.',
+    '150 yoğunluk (150 kg/m³) taşyünü mantolama levhaları: Bonus Premium F 150, F 150 Pro ve Expert HD150 yan yana. Şehir ve kalınlığa göre 1 kamyon m² fiyatı, en az sipariş tutarı ve föy değerleri.',
   path: '/tasyunu-yogunluk/150-kg-m3',
   type: 'website',
 });
@@ -34,13 +35,13 @@ export default function Yogunluk150Page() {
               Yoğunluk Görünümü · 150 kg/m³
             </p>
             <h1 className="font-heading text-2xl font-bold text-hub-ink sm:text-4xl">
-              150 kg/m³ taşyünü levhalar
+              150 yoğunluk taş yünü fiyatları
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-hub-ink-2 sm:text-[15px] sm:leading-7">
-              Föy beyanıyla 150 kg/m³ sınıfında üç levha var: Bonus Premium F 150,
-              F 150 Pro ve Expert HD150; tabloda önce gelirler. 150 yoğunluk daha iyi
-              ısı yalıtımı iddiası değildir; dik çekme ve basma dayanımıyla birlikte
-              okunur. &quot;Pro&quot; adı tek başına üstünlük anlamına gelmez. Tüm ürünler için{' '}
+              Föy beyanıyla 150 kg/m³ sınıfındaki üç mantolama levhası yan yana: Bonus Premium
+              F 150, F 150 Pro ve Expert HD150. 150 yoğunluk daha iyi ısı yalıtımı iddiası
+              değildir; dik çekme ve basma dayanımıyla birlikte okunur. &quot;Pro&quot; adı tek
+              başına üstünlük anlamına gelmez. Öteki yoğunluklar için{' '}
               <Link href="/tasyunu-karsilastir" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
                 genel karşılaştırmaya
               </Link>{' '}

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import ComparisonLink from '@/components/compare/ComparisonLink'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -492,8 +493,8 @@ export default function TasyunuCategoryExperience({
                 </p>
               </div>
               {isMantolama && (
-                <Link
-                  href="/tasyunu-karsilastir?entry=category"
+                <ComparisonLink
+                  entry="category"
                   prefetch={false}
                   onClick={() => notifyCategoryCtaClick({
                     category_slug: 'tasyunu-levha',
@@ -506,7 +507,7 @@ export default function TasyunuCategoryExperience({
                 >
                   8 mantolama levhasını karşılaştır
                   <ArrowRight size={17} weight={ICON_WEIGHT} aria-hidden="true" />
-                </Link>
+                </ComparisonLink>
               )}
             </div>
 
@@ -665,14 +666,14 @@ export default function TasyunuCategoryExperience({
                   Proje hesabına dön
                   <ArrowRight size={17} weight={ICON_WEIGHT} aria-hidden="true" />
                 </a>
-                <Link
-                  href="/tasyunu-karsilastir?entry=category"
+                <ComparisonLink
+                  entry="category"
                   prefetch={false}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-[#6d6048] px-5 text-sm font-bold text-[#f2e8d5] hover:border-[#e7c77d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#171612]"
                 >
                   Teknik karşılaştırmayı aç
                   <ArrowRight size={17} weight={ICON_WEIGHT} aria-hidden="true" />
-                </Link>
+                </ComparisonLink>
               </div>
             </div>
           </div>

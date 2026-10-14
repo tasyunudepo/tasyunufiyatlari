@@ -213,17 +213,16 @@ test.describe('Karşılaştırma Merkezi', () => {
     ).toBeVisible()
   })
 
-  test('150 sayfası: föy-150 ürünler önce, nötr yoğunluk uyarısı', async ({ page }) => {
+  test('150 sayfası: yalnız föy beyanlı 150\'likler, nötr yoğunluk uyarısı', async ({ page }) => {
+    // 14 Ekim 2026 (Emrah): 150 sayfasında öteki yoğunluklar yer almaz (önce bağlam olarak alttaydı).
     await page.goto('/tasyunu-yogunluk/150-kg-m3')
+    await expect(page.getByRole('heading', { level: 1, name: '150 yoğunluk taş yünü fiyatları' })).toBeVisible()
     await expect(page.getByText(/daha iyi ısı yalıtımı iddiası değildir/)).toBeVisible()
-    await expect(page.getByRole('button', { name: "150'likler önce", exact: true })).toHaveAttribute('aria-pressed', 'true')
-    const names = await page
-      .getByTestId('comparison-table')
-      .locator('tbody tr th')
-      .allTextContents()
-    expect(names[0]).toContain('Premium F 150')
-    expect(names[1]).toContain('F 150 Pro')
-    expect(names[2]).toContain('HD150')
+    const table = page.getByTestId('comparison-table')
+    await expect(table.locator('tbody tr')).toHaveCount(3)
+    const keys = await table.locator('tbody tr').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-product-key')))
+    expect([...keys].sort()).toEqual(['bonus-premium-f-150', 'bonus-premium-f-150-pro', 'expert-hd150'])
+    await expect(page.getByTestId('comparison-cards').locator('[data-product-key]')).toHaveCount(3)
   })
 
   test('PDP çapraz linki karşılaştırma merkezine gider', async ({ page }) => {
@@ -239,17 +238,22 @@ test.describe('Karşılaştırma Merkezi', () => {
 
   test('kategori ve ana hesaplayıcı karşılaştırmayı bağlamsal olarak görünür kılar', async ({ page }) => {
     await page.goto('/urunler/tasyunu-levha')
+    // 14 Ekim 2026: bağlantı adresleri temiz; giriş yeri olayda yine ayrı sayılır.
     await expect(page.getByRole('link', { name: '8 mantolama levhasını karşılaştır' })).toHaveAttribute(
       'href',
-      '/tasyunu-karsilastir?entry=category',
+      '/tasyunu-karsilastir',
     )
 
     await page.goto('/')
     const calculator = page.locator('[data-homepage-calculator]')
-    await expect(calculator.getByRole('link', { name: 'Levhaları karşılaştır' })).toHaveAttribute(
-      'href',
-      '/tasyunu-karsilastir?entry=wizard',
-    )
+    const wizardLink = calculator.getByRole('link', { name: 'Levhaları karşılaştır' })
+    await expect(wizardLink).toHaveAttribute('href', '/tasyunu-karsilastir')
+    await wizardLink.click()
+    await page.waitForURL(/\/tasyunu-karsilastir$/)
+    await expect.poll(async () => (await events(page, 'Karsilastirma_Acildi')).length).toBeGreaterThanOrEqual(1)
+    for (const opened of await events(page, 'Karsilastirma_Acildi')) {
+      expect(opened[2]).toMatchObject({ entry_placement: 'wizard' })
+    }
   })
 
   test('satır CTA’sı şehir, yaka, kalınlık ve tam ürün modelini hesaplayıcıya taşır', async ({ page }) => {

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ComparisonLink from '@/components/compare/ComparisonLink';
 import { ArrowLeftRight, ArrowRight } from 'lucide-react';
 import PriceDisplay from './PriceDisplay';
 import ProductImage from './ProductImage';
@@ -69,8 +70,6 @@ export default function ProductCard({
     : badge.color;
 
   if (isWarm) {
-    const comparisonHref = `/tasyunu-karsilastir?entry=category&focus=${encodeURIComponent(productModel)}`;
-
     return (
       <article className="group grid h-full min-w-0 overflow-hidden rounded-[14px] bg-white shadow-[0_10px_28px_rgba(39,31,17,0.09)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(39,31,17,0.13)] lg:grid-cols-[42%_58%]">
         <Link
@@ -156,8 +155,9 @@ export default function ProductCard({
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
             {isComparisonEligible && (
-              <Link
-                href={comparisonHref}
+              <ComparisonLink
+                entry="category"
+                focus={productModel}
                 prefetch={false}
                 data-category-compare-link
                 data-product-model={productModel}
@@ -165,7 +165,7 @@ export default function ProductCard({
               >
                 <ArrowLeftRight size={15} aria-hidden="true" />
                 Karşılaştır
-              </Link>
+              </ComparisonLink>
             )}
           </div>
         </div>

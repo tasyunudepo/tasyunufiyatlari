@@ -74,18 +74,19 @@ test.describe('Taşyünü Levha Karar Masası', () => {
   test('ürün ve karşılaştırma yolları kategori bağlamını taşır', async ({ page }) => {
     await page.goto('/urunler/tasyunu-levha')
 
+    // 14 Ekim 2026: karşılaştırma bağlantıları temiz adreslidir; kategori bağlamı tıklamada taşınır.
     await expect(page.getByRole('link', { name: '8 mantolama levhasını karşılaştır' })).toHaveAttribute(
       'href',
-      '/tasyunu-karsilastir?entry=category',
+      '/tasyunu-karsilastir',
     )
     const productGrid = page.getByTestId('category-product-grid')
     const firstProduct = productGrid.locator('[data-category-product-link]').first()
     await expect(firstProduct).toHaveAttribute('href', /entry=category&uygulama=mantolama/)
 
     const firstCompare = productGrid.locator('[data-category-compare-link]').first()
-    await expect(firstCompare).toHaveAttribute('href', /entry=category&focus=/)
+    await expect(firstCompare).toHaveAttribute('href', '/tasyunu-karsilastir')
     await firstCompare.click()
-    await expect(page).toHaveURL(/\/tasyunu-karsilastir\?entry=category&focus=/)
+    await expect(page).toHaveURL(/\/tasyunu-karsilastir$/)
     await expect(page.getByRole('status')).toContainText('karşılaştırmada işaretlendi')
   })
 
