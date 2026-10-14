@@ -37,7 +37,8 @@ export default function ComparisonThicknessShortcut({ model, thicknessCm, warm }
     : 'Mantolama taşyünleri yan yana'
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 pt-3 sm:px-6 sm:pt-4">
+    // w-full: sayfa kökü flex-col; mx-auto tek başına kutuyu içerik genişliğine daraltıyordu.
+    <div className="mx-auto w-full max-w-[1200px] px-4 pt-3 sm:px-6 sm:pt-4">
       <Link
         href={comparisonShortcutHref(model, thicknessCm)}
         prefetch={false}
