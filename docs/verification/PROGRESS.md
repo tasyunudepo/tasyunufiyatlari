@@ -1907,3 +1907,10 @@ Emrah: "hepsini onaylıyorum başla"; Merchant Center hesabı ve İşletme Profi
 | Besleme XML çözümleme | 68 kalem, hepsinde görsel; markalar Bonus 26, Expert 25, Dalmaçyalı 9, Fawori 8 |
 | Derleme + copy-gate + `verify:visitor-copy` + kabul kilidi | 476 HTML temiz; geçti; 13 dosya |
 | Ölçüm bekçisi (kuru, yerel üretim): SW035 10 cm, Bonus F 150 5 cm, iade | GEÇTİ |
+
+
+## 15 Ekim 2026 · SW035 kalınlık başlıkları da ürün adıyla başlıyor (Faz 5 öne alındı)
+
+Emrah: "dalmaçyalı sayfalarını da değiştir, unuturum". Hub'ların Google'a girmesi beklenmeden `LEGACY_TITLE_SLUGS` boşaltıldı. SW035'in 9 kalınlık sayfası: "10 cm Taş Yünü Fiyatları - Ekim 2026 | Dalmaçyalı SW035" → **"Dalmaçyalı Stonewool SW035 10 cm Taş Yünü Fiyatı - Ekim 2026"** (3–15 cm). Ana ürün sayfası başlığı (veritabanı meta başlığı) değişmedi. Bilinen risk (14 Ekim kaydı): SW035 10 cm sitenin tıklamalarının %38'ini getiriyor ve "10 cm taş yünü fiyatları"nda 2,7. sırada; genel arama artık `/tasyunu-fiyatlari/10-cm` sayfasının, geçişte sıra oynayabilir. Kontrol 11 Kasım.
+
+Kanıt: `vitest run` 947 geçti (SW035 başlık testi yeni beklentiye güncellendi); kısa yol, ürün sayfası bilgileri (kilitli), hub tarayıcı testleri 24/24; derleme başarılı, 9 kalınlık sayfasının derlenen başlığı yeni kalıpta; copy-gate 476 HTML temiz.

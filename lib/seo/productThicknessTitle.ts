@@ -5,12 +5,14 @@
 // ürün sayfası ürün adıyla başlar, çünkü ürün aramaları da öyle başlıyor ("dalmaçyalı taşyünü fiyatları").
 // Föy beyanı 120 ya da 150 olan üründe yoğunluk da başlıkta ("taş yünü 10 cm 150 yoğunluk" aramaları).
 //
-// SW035 sayfaları sitenin tıklamalarının %38'ini getiriyor (14 Tem–12 Eki 2026); hub'lar Google'a girene kadar
-// eski başlıkta kalır (Faz 5). EPS ürünleri bu işin kapsamında değil.
+// SW035 sayfaları sitenin tıklamalarının %38'ini getiriyor (14 Tem–12 Eki 2026). Hub'lar Google'a girene kadar
+// eski başlıkta bekletilmişti (Faz 5); Emrah 15 Ekim 2026'da beklemeden değiştirilmesini istedi ("unuturum").
+// Liste boş kaldı; ileride bir ürünü eski başlıkta tutmak gerekirse slug'ı buraya eklemek yeter.
+// EPS ürünleri bu işin kapsamında değil.
 
 import { getProfileByModel } from '@/lib/technical-profiles'
 
-export const LEGACY_TITLE_SLUGS: ReadonlySet<string> = new Set(['dalmacyali-sw035-tasyunu'])
+export const LEGACY_TITLE_SLUGS: ReadonlySet<string> = new Set<string>()
 
 interface Input {
   kategori: string

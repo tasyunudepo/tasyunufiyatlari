@@ -22,9 +22,9 @@ describe('ürün kalınlık başlığı', () => {
       .toBe('Fawori Optimix TR7.5 10 cm Taş Yünü Fiyatı - Ekim 2026')
   })
 
-  it('SW035 ve EPS eski başlıkta kalır', () => {
+  it('SW035 de ürün adıyla başlar (15 Ekim 2026, Emrah); EPS eski başlıkta kalır', () => {
     expect(productThicknessTitle({ ...base, slug: 'dalmacyali-sw035-tasyunu', productName: 'Dalmaçyalı SW035', model: 'SW035' }))
-      .toBe('10 cm Taş Yünü Fiyatları - Ekim 2026 | Dalmaçyalı SW035')
+      .toBe('Dalmaçyalı Stonewool SW035 10 cm Taş Yünü Fiyatı - Ekim 2026')
     expect(productThicknessTitle({ ...base, kategori: 'eps-levha', searchLabel: 'EPS', slug: 'x', productName: 'Dalmaçyalı Ideal Carbon', model: null }))
       .toBe('10 cm EPS Fiyatları - Ekim 2026 | Dalmaçyalı Ideal Carbon')
   })
