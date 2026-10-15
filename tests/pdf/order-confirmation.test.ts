@@ -159,8 +159,9 @@ describe('AC-302: belge içeriği', () => {
     expect(buildOrderConfirmationHtml(buildOrderConfirmationModel(BASE))).not.toContain('text-transform')
   })
 
-  it('vergi, MERSİS ve referans boşken satır basmaz', () => {
-    expect(body).not.toMatch(/Vergi|MERSİS|REFERANS/u)
+  it('vergi dairesi ve no basar; MERSİS ve referans boşken satır basmaz', () => {
+    expect(body).toContain('Vergi dairesi / no Tuzla / 6900279237')
+    expect(body).not.toMatch(/MERSİS|REFERANS/u)
   })
 
   it('referans verilince basar', () => {

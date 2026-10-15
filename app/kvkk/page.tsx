@@ -20,7 +20,7 @@ const LAST_UPDATED  = '30 Nisan 2026';
 export const metadata: Metadata = {
   title: 'KVKK Aydınlatma Metni',
   description:
-    "ÖzerGrup Yalıtım ve İzolasyon A.Ş. KVKK Aydınlatma Metni — kişisel verilerin işlenmesine ilişkin bilgilendirme.",
+    "Özer Grup Yalıtım İzolasyon A.Ş. KVKK Aydınlatma Metni — kişisel verilerin işlenmesine ilişkin bilgilendirme.",
   alternates: { canonical: '/kvkk' },
 };
 

@@ -9,7 +9,7 @@ const LOGO_FILE = path.join(ROOT, 'public', 'images', 'teklifpdf', 'logo_dark.pn
 const BANNER_FILE = path.join(ROOT, 'public', 'images', 'teklifpdf', 'bannerozeryapi.png');
 
 const BUSINESS = {
-  legalName: 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
+  legalName: 'Özer Grup Yalıtım İzolasyon A.Ş.',
   phone: '0 543 518 69 88',
   website: 'www.ozeryapiinsaat.com',
   address: 'Mescit Mah. Ulugüney Sk. Harman Plaza A1 Blok K2 No:15 Tuzla / İstanbul',
@@ -17,7 +17,7 @@ const BUSINESS = {
 
 const BANKS = [
   ['KUVEYTTÜRK', 'TR22 0020 5000 0947 0027 8000 01', 'TL'],
-  ['VAKIFBANK', 'TR54 0001 5001 5800 7223 2324 14', 'TL'],
+  ['VAKIFBANK', 'TR54 0001 5001 5800 7323 2324 14', 'TL'],
 ];
 
 const COLORS = {

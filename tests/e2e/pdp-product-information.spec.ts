@@ -78,7 +78,7 @@ test.describe('Levha PDP ürün ve paket bilgileri', () => {
     await page.goto(OPTIMIX_PATH)
 
     const assurance = page.getByTestId('pdp-purchase-assurance')
-    await expect(assurance).toContainText('ÖzerGrup Yalıtım ve İzolasyon A.Ş.')
+    await expect(assurance).toContainText('Özer Grup Yalıtım İzolasyon A.Ş.')
     await expect(assurance).toContainText('Kredi kartı veya banka havalesi')
     await expect(assurance).toContainText('sipariş onayında tek seferde')
     await expect(assurance).toContainText('Referanslı PDF')

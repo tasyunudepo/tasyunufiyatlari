@@ -15,7 +15,7 @@ import { buildBusinessGraph } from '@/lib/seo/buildBusinessNode';
 export const metadata: Metadata = buildMetadata({
   title: 'Hakkımızda',
   description:
-    'Taşyünü ve EPS siparişlerinde ürün, metraj, fiyat ve fabrika çıkışlı sevkiyat koşullarını birlikte değerlendiren ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
+    'Taşyünü ve EPS siparişlerinde ürün, metraj, fiyat ve fabrika çıkışlı sevkiyat koşullarını birlikte değerlendiren Özer Grup Yalıtım İzolasyon A.Ş.',
   path: '/hakkimizda',
   type: 'website',
 });
@@ -55,7 +55,7 @@ export default function HakkimizdaPage() {
               <div className="md:col-span-6">
                 <Eyebrow tone="warm" className="mb-5">Kurumsal</Eyebrow>
                 <h1 className="font-heading font-extrabold text-hub-ink tracking-tight leading-[1.05] text-[clamp(2.25rem,4.6vw,4rem)] mb-6">
-                  ÖzerGrup Yalıtım ve İzolasyon A.Ş.
+                  Özer Grup Yalıtım İzolasyon A.Ş.
                 </h1>
                 <p className="text-hub-ink-2 text-lg leading-relaxed max-w-xl">
                   Taşyünü ve EPS siparişlerinde ürün seçimi, metraj, fiyat ve fabrika çıkışlı sevkiyat koşullarını

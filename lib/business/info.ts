@@ -13,7 +13,7 @@
 
 export const BUSINESS_INFO = {
   // Şirket kimliği
-  legalName: 'ÖzerGrup Yalıtım ve İzolasyon A.Ş.',
+  legalName: 'Özer Grup Yalıtım İzolasyon A.Ş.',
   brandName: 'Taşyünü Fiyatları',
   url: 'https://www.tasyunufiyatlari.com',
   // Aynı şirketin kurumsal sitesi — teklif belgesinde "Kurumsal" etiketiyle basılır.
@@ -21,8 +21,8 @@ export const BUSINESS_INFO = {
 
   // Vergi ve sicil bilgileri. Boşken belgelere basılmaz; değer gelince
   // doldurmak yeterli (lib/pdf/sellerIdentity.ts).
-  taxOffice:    '' as string,
-  taxNumber:    '' as string,
+  taxOffice:    'Tuzla' as string,
+  taxNumber:    '6900279237' as string,
   mersisNumber: '' as string,
 
   // Teklifi hazırlayan kişi (Emrah, 13 Ekim 2026). Telefon boş bırakılır:

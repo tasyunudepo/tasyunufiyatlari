@@ -143,6 +143,7 @@ export const QUOTE_DOCUMENT_CSS = `
 .tq.tq-single .tq-process h2{font-size:16px;margin-bottom:5px}
 .tq-single .tq-payment>p:first-of-type{display:none}
 .tq-single .tq-bank-row{padding:4px 0}
+.tq-single .tq-account{display:flex;flex-wrap:wrap;column-gap:22px}
 .tq-single .tq-trust{padding:7px 10px}
 .tq-single .tq-trust p{line-height:1.3}
 .tq-single .tq-cross{padding:8px 11px}
