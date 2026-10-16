@@ -10,6 +10,7 @@ import { Handshake, Truck, Medal, ArrowRight } from '@phosphor-icons/react/dist/
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { buildBusinessGraph } from '@/lib/seo/buildBusinessNode';
+import { LEAD_TIME_SENTENCE } from '@/lib/sales/leadTime';
 
 
 export const metadata: Metadata = buildMetadata({
@@ -32,7 +33,7 @@ const REASONS = [
     Icon: Truck,
     eyebrow: 'Fabrika Çıkışlı Lojistik',
     title: 'Üretim ve tam araç koşuluna göre sevkiyat',
-    body: 'Taşyününde tam kamyon veya tam TIR, EPS setinde ise levha ve toz grubu koşulu birlikte değerlendirilir. Sevkiyat tarihi sipariş görüşmesinde fabrika uygunluğuna göre netleşir.',
+    body: `Taşyününde tam kamyon veya tam TIR, EPS setinde ise levha ve toz grubu koşulu birlikte değerlendirilir. ${LEAD_TIME_SENTENCE} Kesin yükleme tarihi fabrika uygunluğuna göre netleşir.`,
   },
   {
     Icon: Medal,

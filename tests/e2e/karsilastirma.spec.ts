@@ -79,7 +79,7 @@ test.describe('Karşılaştırma Merkezi', () => {
     const hd150 = table.getByTestId('comparison-row-expert-hd150')
     await expect(f150.getByTestId('comparison-unit-price')).toContainText('₺/m²', { timeout: 20_000 })
     await expect(hd150.getByTestId('comparison-unit-price')).toContainText('₺/m²', { timeout: 20_000 })
-    await expect(pricing.getByText(/m² fiyatı 1 kamyon siparişinde · KDV hariç · Tam araçta nakliye fiyata dahildir/)).toBeVisible()
+    await expect(pricing.getByText(/1 kamyon siparişinde m² fiyatı · KDV hariç · Tam araçta nakliye fiyata dahildir/)).toBeVisible()
     // En az sipariş sütunu: 1 kamyonun tutarı ve metrajı.
     await expect(hd150.getByText(/^\d{1,3}(\.\d{3})* ₺$/)).toBeVisible()
     await expect(hd150.getByText(/^\d+(,\d)? m²$/)).toBeVisible()

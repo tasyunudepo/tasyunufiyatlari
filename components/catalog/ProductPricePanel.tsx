@@ -298,8 +298,9 @@ export default function ProductPricePanel({
       label: `${product.name} · ${activeThickness} cm`,
       thicknessCm: activeThickness,
       minimumM2: lorryM2,
+      materialType: product.material_type,
     });
-  }, [lorryM2, activeThickness, product.name]);
+  }, [lorryM2, activeThickness, product.name, product.material_type]);
 
   // Geçerlilik kontrolü direkt neededM2 üzerinden (anlık kırmızı border için)
   const inputInvalid = neededM2 !== "" && (() => {

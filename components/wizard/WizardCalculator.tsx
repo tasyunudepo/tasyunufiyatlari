@@ -552,6 +552,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             label: `${selectedHomepageProduct.label} · ${selectedKalinlik} cm`,
             thicknessCm: Number(selectedKalinlik),
             minimumM2,
+            materialType: selectedMalzeme,
         };
     }, [variant, selectedHomepageProduct, effectiveLogistics, materialTypes, selectedMalzeme, selectedKalinlik]);
 

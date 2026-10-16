@@ -11,6 +11,8 @@ export interface MinimumOrderSelection {
   thicknessCm: number
   /** 1 tam kamyonun metrajı, m². */
   minimumM2: number
+  /** 'tasyunu' | 'eps'; şeritteki termin yalnız taşyününde görünür (16 Ekim 2026). Eski kayıtta yok. */
+  materialType?: string
 }
 
 export const MINIMUM_ORDER_EVENT = 'tf:minimum-order'

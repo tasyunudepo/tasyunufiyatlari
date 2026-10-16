@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { List, X, ArrowRight } from '@phosphor-icons/react';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
+import { LEAD_TIME_TITLE } from '@/lib/sales/leadTime';
 
 type Tone = 'dark' | 'warm';
 
@@ -160,7 +161,7 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
           <span className="mx-2 sm:mx-4 text-fe-muted">|</span>
           <span className="font-semibold text-white">Fabrika Çıkışlı Satış</span>
           <span className="hidden lg:inline mx-2 sm:mx-4 text-fe-muted">|</span>
-          <span className="hidden lg:inline text-fe-text/80">Tam araç ve uygun EPS seti</span>
+          <span className="hidden lg:inline font-semibold text-white" data-testid="topbar-lead-time">{LEAD_TIME_TITLE}</span>
           <span className="mx-2 sm:mx-4 text-fe-muted">|</span>
           <span className="text-hub-gold-soft font-semibold">Bölgeye Göre İskonto</span>
         </div>

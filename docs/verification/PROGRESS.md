@@ -2013,3 +2013,35 @@ Bonus şeridinde başlık 1440 px'te iki satıra kırılıyordu; kısa hâl ("Te
 | tsc, eslint, derleme, copy-gate, `verify:visitor-copy` | temiz |
 | Ekran 375/1440: ana sayfa sonucu, soru-cevap, Bonus şeridi | görünür, taşma yok, konsol temiz |
 | Ölçüm bekçisi (kuru, yerel üretim): `/`, Bonus F 150, `/tasyunu-fiyatlari/10-cm` | GEÇTİ |
+
+
+## 16 Ekim 2026 · Termin süresi plan sırası 8–12
+
+Emrah: "7-21 gün teslim planların güzel, bunu uygula" (önce Codex görselleriyle "şimdi / sonra" gösterildi; görseller GCR oturum çalışma klasöründe).
+
+| # | Yer | Metin |
+|---|---|---|
+| 8 | Sarı "En az sipariş" şeridi (ana sayfa, kalınlık/150/120/karşılaştırma) — yalnız 640 px üstü | Sağda koyu kutu: **TAŞYÜNÜNDE TERMİN 7–21 GÜN** / Çoğunlukla 1 hafta içinde teslim edilir. Ana sayfada EPS seçilince görünmez (`MinimumOrderSelection.materialType`). Telefonda yok: başlık iki satıra kayıyor, şerit 61→98 px oluyordu |
+| 9 | Karşılaştırma tablosu koşul satırı | "… · 1 kamyon siparişinde m² fiyatı · KDV hariç · Tam araçta nakliye fiyata dahildir · **Termin 7–21 gün**"; Sırala düğmeleri `lg:shrink-0` (uzayan satır düğmeleri iki satıra itiyordu) |
+| 10 | Masaüstü üst şerit (koyu sayfalar, ≥1024 px) | "Tam araç ve uygun EPS seti" yerine **Taşyününde Termin 7–21 Gün** (beşinci madde tek satıra sığmıyordu; tam araç koşulu sarı şeritte) |
+| 11 | Ürün sayfası Google ürün verisi (yalnız taşyünü) | `AggregateOffer.shippingDetails`: kargo 0 TRY, TR, hazırlık 4–13 + taşıma 1–2 gün (Merchant beslemesiyle aynı) |
+| 12 | Kullanım Koşulları §4, Hakkımızda "Fabrika Çıkışlı Lojistik" | "Taşyününde termin süresi sipariş onayından teslime 7–21 gündür; çoğunlukla 1 hafta içinde teslim edilir." (`LEAD_TIME_SENTENCE`) |
+
+### Editör turu (GPT-6 Astra)
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | Kullanım Koşulları | İtiraz yok |
+| 2 | Hakkımızda "EPS setinde levha ve toz grubu koşulu" belirsiz (ORTA) | RED: sitenin eski metni, bu işin kapsamı dışında |
+| 3 | Ortak şeritlerde "Termin 7–21 Gün" EPS için de okunuyor (ORTA) | ONAY: üst şerit EPS ürün sayfasında da çıkıyor; iki şeritte "Taşyününde termin 7–21 gün" (`LEAD_TIME_SCOPED`, `LEAD_TIME_TITLE`) |
+| 4 | "m² fiyatı 1 kamyon siparişinde" sözcük sırası (KÜÇÜK) | ONAY: "1 kamyon siparişinde m² fiyatı"; `karsilastirma.spec.ts` beklenen metni aynı gerekçeyle güncellendi (kilitli değil) |
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` (lead-time sözleşmesi: 16 dosyada elle yazılmış süre yok, yeni cümleler, ürün verisi değerleri) | 984 geçti |
+| Tarayıcı testleri: `lead-time` (sarı şerit masaüstü/telefon/EPS, koşul satırı, üst şerit, ürün verisi taşyünü var/EPS yok, yasal sayfalar), `minimum-order`, `karsilastirma`, `hub-pages`, `homepage-conversion`, `pdp-product-information` (kilitli), `pdp-a2-order-desk`, `authorized-dealer` | 70/70 |
+| tsc, eslint, derleme, copy-gate, `verify:visitor-copy` | temiz |
+| Ekran: 1440 kalınlık sayfası; telefon 360/375/390 (şerit 61 px, kutu yok); 1024/1280/1440 Sırala tek satır; Kullanım Koşulları, Hakkımızda | taşma yok, konsol temiz |
+| Ölçüm bekçisi (kuru, yerel üretim): `/`, `/tasyunu-fiyatlari/10-cm`, SW035 | GEÇTİ |

@@ -44,6 +44,7 @@ import { isUnpricedBonusModel } from '@/lib/pricing/bonus/families';
 import BonusPurchaseExperience from '@/components/catalog/BonusPurchaseExperience';
 import StandardPlatePurchaseExperience from '@/components/catalog/StandardPlatePurchaseExperience';
 import AccessoryPurchaseExperience from '@/components/catalog/AccessoryPurchaseExperience';
+import { leadTimeShippingDetails, showsLeadTime } from '@/lib/sales/leadTime';
 
 // Tam statik (force-static): tüm ürün detayları build'de prerender → CDN'den servis → ISR Read Unit = 0.
 // Fiyatlar aylık güncelleniyor; ay başı (otomatik) redeploy fiyat snapshot'ını ve metadata'yı yeniler.
@@ -159,6 +160,8 @@ function buildProductOffers({
         itemCondition: 'https://schema.org/NewCondition',
         url: productUrl,
         seller: BUSINESS_REF,
+        // Termin (16 Ekim 2026): taşyününde teslim süresi Google'a da gider; Merchant beslemesiyle aynı değerler.
+        ...(showsLeadTime(product.material_type) ? { shippingDetails: leadTimeShippingDetails() } : {}),
       };
     }
   }

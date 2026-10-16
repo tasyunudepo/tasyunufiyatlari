@@ -7,6 +7,7 @@ import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
 import { ICON_WEIGHT } from '@/lib/design/tokens';
 
 import { BUSINESS_INFO } from '@/lib/business/info';
+import { LEAD_TIME_SENTENCE } from '@/lib/sales/leadTime';
 
 const COMPANY       = BUSINESS_INFO.legalName;
 // Kullanım Koşulları işletmecinin kurumsal merkezini gösterir (kanonik ofis).
@@ -98,8 +99,8 @@ export default function KullanimKosullariPage() {
                 yazılı/sistemik teyidiyle kurulur.
               </p>
               <p>
-                Türkiye geneli sevkiyat yapılır. Teslim süreleri ürün stoku, sevkiyat hattı ve hava
-                koşullarına göre değişiklik gösterebilir. Net teslim tarihi siparişe özel olarak bildirilir.
+                Türkiye geneli sevkiyat yapılır. {LEAD_TIME_SENTENCE} Teslim süreleri ürün stoku, sevkiyat
+                hattı ve hava koşullarına göre değişebilir; net teslim tarihi siparişe özel olarak bildirilir.
               </p>
               <p>
                 Taşyününde tam kamyon/TIR, EPS setinde tanımlı set koşullarına göre nakliye

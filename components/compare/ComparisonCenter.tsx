@@ -42,6 +42,7 @@ import {
   type ComparisonSortKey,
 } from "@/lib/notifyWizardEvent";
 import type { Plate, PlatePrice, ShippingZone, MaterialType } from "@/lib/types";
+import { LEAD_TIME_SHORT } from '@/lib/sales/leadTime'
 
 // ============================================================
 // Karşılaştırma Merkezi (Sprint 2) — 8 ürün, aynı koşulda
@@ -705,11 +706,12 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
             {conditionLine && (
               <p className="mt-1 text-sm text-hub-ink-2">
                 <strong className="font-semibold text-hub-ink">{conditionLine}</strong>
-                {' · '}m² fiyatı 1 kamyon siparişinde · KDV hariç · Tam araçta nakliye fiyata dahildir
+                {' · '}1 kamyon siparişinde m² fiyatı · KDV hariç · Tam araçta nakliye fiyata dahildir
+                {' · '}<strong className="font-semibold text-hub-ink" data-testid="comparison-lead-time">{LEAD_TIME_SHORT}</strong>
               </p>
             )}
           </div>
-          <div role="group" aria-label="Sıralama" className="flex flex-wrap items-center gap-1.5">
+          <div role="group" aria-label="Sıralama" className="flex flex-wrap items-center gap-1.5 lg:shrink-0">
             <span className="mr-1 text-xs font-semibold uppercase tracking-[0.12em] text-hub-muted">Sırala</span>
             {sortOptions.map((key) => (
               <button

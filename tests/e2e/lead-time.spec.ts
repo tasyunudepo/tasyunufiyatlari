@@ -57,3 +57,38 @@ test('ana sayfa hesaplayıcı sonucu: taşyünü seçiminde termin', async ({ pa
   await expect(line).toContainText('Termin süresi: 7–21 gün')
   await expect(line).toContainText('Sipariş onayından teslime kadar. Çoğunlukla 1 hafta içinde teslim edilir.')
 })
+
+test('sarı şerit: taşyününde termin (masaüstü), EPS seçilince yok; telefonda gizli', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  const chip = page.getByTestId('minimum-order-banner-lead-time')
+  await expect(chip).toContainText('Taşyününde termin 7–21 gün')
+  await expect(chip).toContainText('Çoğunlukla 1 hafta içinde teslim edilir.')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(chip).toBeHidden()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const calculator = page.locator('[data-homepage-calculator]')
+  const eps = await calculator.getByRole('combobox', { name: 'Malzeme' }).locator('option[value^="eps|"]').first().getAttribute('value')
+  if (eps) {
+    await calculator.getByRole('combobox', { name: 'Malzeme' }).selectOption(eps)
+    await expect(chip).toHaveCount(0)
+  }
+})
+
+test('kalınlık sayfası: koşul satırı ve üst şeritte termin; ürün verisinde teslim süresi', async ({ page, request }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/tasyunu-fiyatlari/10-cm')
+  await expect(page.getByTestId('comparison-lead-time')).toHaveText('Termin 7–21 gün')
+  await expect(page.getByTestId('topbar-lead-time')).toHaveText('Taşyününde Termin 7–21 Gün')
+  const html = await (await request.get('/urunler/tasyunu-levha/dalmacyali-sw035-tasyunu')).text()
+  expect(html).toContain('"@type":"OfferShippingDetails"')
+  const eps = await (await request.get('/urunler/eps-levha/expert-eps-beyaz-eps')).text()
+  expect(eps).not.toContain('OfferShippingDetails')
+})
+
+test('Kullanım Koşulları ve Hakkımızda termin cümlesi', async ({ request }) => {
+  for (const path of ['/kullanim-kosullari', '/hakkimizda']) {
+    const html = await (await request.get(path)).text()
+    expect(html, path).toContain('Taşyününde termin süresi sipariş onayından teslime 7–21 gündür; çoğunlukla 1 hafta içinde teslim edilir.')
+  }
+})

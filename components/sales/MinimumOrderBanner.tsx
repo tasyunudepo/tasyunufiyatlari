@@ -4,7 +4,7 @@
 // Hesaplayıcıda ürün ve kalınlık seçildikçe o seçimin kamyon metrajını yazar (14 Ekim 2026).
 
 import { useEffect, useState } from 'react'
-import { Truck } from '@phosphor-icons/react'
+import { CalendarCheck, Truck } from '@phosphor-icons/react'
 
 import {
   MINIMUM_ORDER_EVENT,
@@ -12,6 +12,7 @@ import {
   readMinimumOrder,
   type MinimumOrderSelection,
 } from '@/lib/sales/minimumOrder'
+import { LEAD_TIME_NOTE, LEAD_TIME_SCOPED, showsLeadTime } from '@/lib/sales/leadTime'
 
 interface Props {
   /** false: oturumda kalan son seçim okunmaz (karşılaştırma sayfası kendi kalınlığını gösterir). */
@@ -53,6 +54,9 @@ export default function MinimumOrderBanner({
     }
   }, [remember])
 
+  // Termin yalnız taşyününde (EPS için süre söylenmedi); seçim yokken şerit taşyünü siparişini anlatır.
+  const showLeadTime = showsLeadTime(selection?.materialType ?? 'tasyunu')
+
   return (
     <div
       className="sticky top-[45px] z-40 border-y border-[#7d5d20] bg-[#e0b736] text-[#1d1708] shadow-[0_6px_18px_rgba(60,40,0,0.18)] sm:top-[65px]"
@@ -73,6 +77,21 @@ export default function MinimumOrderBanner({
               : fallbackDetail}
           </span>
         </p>
+        {showLeadTime && (
+          <p
+            data-testid="minimum-order-banner-lead-time"
+            className="hidden shrink-0 items-center gap-2 rounded-[12px] bg-[#2b210c] px-3.5 py-2 text-white sm:flex"
+          >
+            {/* Telefonda yok: başlık iki satıra kayıyor, şerit 61 px'ten 98 px'e çıkıyordu (16 Ekim 2026). */}
+            <CalendarCheck size={22} weight="fill" aria-hidden="true" className="shrink-0 text-[#e0b736]" />
+            <span className="leading-tight">
+              <span className="block whitespace-nowrap font-heading text-base font-extrabold uppercase tracking-[0.02em]">
+                {LEAD_TIME_SCOPED}
+              </span>
+              <span className="block text-xs font-medium text-white/80">{LEAD_TIME_NOTE}</span>
+            </span>
+          </p>
+        )}
       </div>
     </div>
   )
