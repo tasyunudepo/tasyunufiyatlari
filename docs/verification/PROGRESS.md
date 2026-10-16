@@ -2045,3 +2045,10 @@ Emrah: "7-21 gün teslim planların güzel, bunu uygula" (önce Codex görseller
 | tsc, eslint, derleme, copy-gate, `verify:visitor-copy` | temiz |
 | Ekran: 1440 kalınlık sayfası; telefon 360/375/390 (şerit 61 px, kutu yok); 1024/1280/1440 Sırala tek satır; Kullanım Koşulları, Hakkımızda | taşma yok, konsol temiz |
 | Ölçüm bekçisi (kuru, yerel üretim): `/`, `/tasyunu-fiyatlari/10-cm`, SW035 | GEÇTİ |
+
+
+## 16 Ekim 2026 · GCR işi #05e174 — SW035 10 cm'den kategoriye metin içi bağlantı
+
+Kart: "taşyünü levha" aramasında `/urunler/tasyunu-levha` 6,7 → 13,5. sıraya geriledi; aynı sorguda SW035 10 cm sayfası 9,1. sırada (yamyamlık). Doğrulama: sayfa kategoriye zaten yol satırı ve altbilgide "Taşyünü Levha" diye bağlıyordu; eksik olan metin içi bağlantıydı. "Kullanım ve seçim" kutusuna tek cümle: "Diğer marka ve yoğunluklar için tüm **taşyünü levha** modellerine bakın." Yalnız SW035 10 cm (`lib/seo/categoryLinks.ts`) — önce/sonra gözlemde etki ayrı okunsun. Adres sitenin kategori yolu (`/urunler/tasyunu-levha`); ürünün `category.slug`'ı (`tasyunu`) değil — ilk denemede tarayıcı testi bu yanlış adresi yakaladı.
+
+Editör (GPT-6 Astra): itiraz yok. Kanıt: tsc temiz; vitest 984; `category-link.spec.ts` (yeni: 10 cm'de var, 8 cm ve başka üründe yok) + `pdp-product-information` (kilitli) 9/9; derleme, copy-gate 476 HTML temiz, `verify:visitor-copy` geçti; ekran 390/1440 taşma yok; ölçüm bekçisi (kuru, yerel üretim) GEÇTİ.

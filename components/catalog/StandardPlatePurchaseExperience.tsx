@@ -20,6 +20,8 @@ import StandardPurchaseAssurance from './StandardPurchaseAssurance'
 import VideoGomme from '@/components/video/VideoGomme'
 import { THICKNESS_VIDEO, showsThicknessVideo } from '@/lib/video/placements'
 import { showsLeadTime } from '@/lib/sales/leadTime'
+import { categoryLinkFor } from '@/lib/seo/categoryLinks'
+import Link from 'next/link'
 
 interface StandardPlatePurchaseExperienceProps {
   product: CatalogProductView
@@ -147,11 +149,14 @@ function ProductDetails({
   profile,
   thicknessRange,
   commercialTitle,
+  categoryLinkHref = null,
 }: {
   product: CatalogProductView
   profile: TechnicalProfile | null
   thicknessRange: string
   commercialTitle: string
+  /** Metin içi kategori bağlantısının adresi (lib/seo/categoryLinks.ts; şimdilik yalnız SW035 10 cm). */
+  categoryLinkHref?: string | null
 }) {
   const descriptionParts = product.catalog_description
     ? product.catalog_description.split(/\s*ÖZELLİKLER\s*/i)
@@ -216,6 +221,15 @@ function ProductDetails({
           <p className="mt-4 border-t border-[#ded2c0] pt-4 text-sm leading-6 text-[#625b50]">
             Kalınlık seçimi paket içeriğini ve tam araçta taşınan toplam metrajı değiştirir.
           </p>
+          {categoryLinkHref && (
+            <p data-testid="pdp-category-link" className="mt-3 text-sm leading-6 text-[#625b50]">
+              Diğer marka ve yoğunluklar için tüm{' '}
+              <Link href={categoryLinkHref} className="font-semibold text-[#765621] underline underline-offset-2 hover:text-[#5a3f12]">
+                taşyünü levha
+              </Link>{' '}
+              modellerine bakın.
+            </p>
+          )}
         </aside>
       </div>
 
@@ -329,6 +343,7 @@ export default function StandardPlatePurchaseExperience({
                 profile={profile}
                 thicknessRange={thicknessRange}
                 commercialTitle={commercialTitle}
+                categoryLinkHref={categoryLinkFor(product.slug, selectedThickness)}
               />
             </ProductSectionTracker>
           </div>
