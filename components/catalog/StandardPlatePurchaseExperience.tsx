@@ -17,6 +17,8 @@ import StandardPlateCommercialHeader from './StandardPlateCommercialHeader'
 import ThicknessSelector from './ThicknessSelector'
 import ProductSectionTracker from './ProductSectionTracker'
 import StandardPurchaseAssurance from './StandardPurchaseAssurance'
+import VideoGomme from '@/components/video/VideoGomme'
+import { THICKNESS_VIDEO, showsThicknessVideo } from '@/lib/video/placements'
 
 interface StandardPlatePurchaseExperienceProps {
   product: CatalogProductView
@@ -53,6 +55,50 @@ function ProductVisual({ product, prefill }: { product: CatalogProductView; pref
         </div>
       )}
     </div>
+  )
+}
+
+// S4 "Hangi kalınlık" (16 Ekim 2026): tıkla-oynat, fiyat panelinin hemen altında. Kapsam lib/video/placements.ts.
+function ThicknessVideo() {
+  const v = THICKNESS_VIDEO
+  return (
+    <section
+      data-testid="pdp-thickness-video"
+      aria-labelledby="pdp-thickness-video-title"
+      className="overflow-hidden rounded-[14px] border border-hub-rule bg-white shadow-[0_16px_36px_rgba(39,31,17,0.1)]"
+    >
+      <div className="grid items-center lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="px-5 py-6 sm:px-7 lg:px-8">
+          <p className="font-heading text-xs font-bold uppercase tracking-[0.12em] text-[#765621]">Video · 40 sn</p>
+          <h2 id="pdp-thickness-video-title" className="mt-2 font-heading text-2xl font-extrabold tracking-[-0.02em] text-[#282219]">
+            Hangi kalınlık?
+          </h2>
+          <p className="mt-3 max-w-[48ch] text-base leading-7 text-[#625b50]">
+            Kalınlık seçimi paket içeriğini ve tam araçta taşınan toplam metrajı değiştirir.
+          </p>
+          <a
+            href="#pdp-commercial-planner"
+            data-vg-cta={v.id}
+            data-vg-cta-id="fiyat_paneli"
+            className="mt-4 inline-flex min-h-11 items-center text-sm font-bold text-[#765621] underline decoration-[#c9a663] underline-offset-4 transition-colors hover:text-[#282219]"
+          >
+            Teslim fiyatını hesaplayın
+          </a>
+        </div>
+        <div className="border-t border-hub-rule bg-[#1b1a16] lg:border-l lg:border-t-0">
+          <div className="mx-auto w-full max-w-[360px] min-[769px]:max-w-none">
+            <VideoGomme
+              id={v.id}
+              mod="click"
+              sayfa="urun"
+              etiket={v.etiket}
+              masaustu={v.masaustu}
+              mobil={v.mobil}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -264,6 +310,7 @@ export default function StandardPlatePurchaseExperience({
           </div>
 
           <div className="order-3 min-w-0 space-y-5 xl:col-span-2">
+            {showsThicknessVideo(product.slug, selectedThickness) && <ThicknessVideo />}
             <ProductSectionTracker sectionName="seller_payment_process" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
               <StandardPurchaseAssurance />
             </ProductSectionTracker>

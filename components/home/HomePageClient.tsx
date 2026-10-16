@@ -7,12 +7,14 @@ import OperationVideo from "@/components/home/OperationVideo";
 import SalesChannels from "@/components/portfolio/SalesChannels";
 import SiteFooter from "@/components/shared/SiteFooter";
 import SiteHeader from "@/components/shared/SiteHeader";
+import VideoGomme from "@/components/video/VideoGomme";
 import WizardCalculator from "@/components/wizard/WizardCalculator";
 import MinimumOrderBanner from "@/components/sales/MinimumOrderBanner";
 import { BUSINESS_INFO } from "@/lib/business/info";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 import { buildHowToNode } from "@/lib/seo/buildHowTo";
 import { buildCalculationServiceNode, buildShippingServiceNode } from "@/lib/seo/buildService";
+import { ORDER_PROCESS_VIDEO } from "@/lib/video/placements";
 
 const faqItems = [
   {
@@ -129,6 +131,40 @@ export default function HomePageClient({ priceTable }: { priceTable?: ReactNode 
         </section>
 
         {priceTable}
+
+        {/* S2 güven filmi, kapanış A (16 Ekim 2026): tıkla-oynat; SSS'deki sipariş sorusunun görüntülü karşılığı. */}
+        <section className="border-t border-[#d6d0c2]" aria-labelledby="siparis-sureci-title">
+          <div className="mx-auto grid max-w-[1240px] items-center gap-7 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[0.84fr_1.16fr] lg:gap-12">
+            <div className="max-w-[520px]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#70591f]">Sipariş süreci</p>
+              <h2 id="siparis-sureci-title" className="mt-3 font-heading text-3xl font-bold tracking-tight text-[#171711] sm:text-4xl">
+                Sipariş nasıl ilerler?
+              </h2>
+              <p className="mt-4 text-base leading-7 text-[#59564d]">
+                Satış ekibi üretim uygunluğunu ve sevkiyat planını görüşmede netleştirir; ödeme sipariş onayında tek seferde alınır.
+              </p>
+              <a
+                href="#mantolama-hesaplayici"
+                data-vg-cta={ORDER_PROCESS_VIDEO.id}
+                data-vg-cta-id="hesaplayici"
+                className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-[#70591f] underline decoration-[#c9a663] underline-offset-4 transition-colors hover:text-[#171711]"
+              >
+                Teslim fiyatını hesaplayın
+              </a>
+            </div>
+            <div className="mx-auto w-full max-w-[360px] min-[769px]:max-w-none">
+              <VideoGomme
+                id={ORDER_PROCESS_VIDEO.id}
+                mod="click"
+                sayfa="anasayfa"
+                etiket={ORDER_PROCESS_VIDEO.etiket}
+                masaustu={ORDER_PROCESS_VIDEO.masaustu}
+                mobil={ORDER_PROCESS_VIDEO.mobil}
+                className="rounded-[1.35rem] border border-black/10 bg-[#0f1b33] shadow-[0_24px_70px_rgba(24,22,17,0.14)]"
+              />
+            </div>
+          </div>
+        </section>
 
         <section className="mx-auto max-w-[900px] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="faq-title">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#70591f]">Kısa yanıtlar</p>

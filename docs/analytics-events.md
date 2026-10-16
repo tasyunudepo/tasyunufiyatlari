@@ -153,6 +153,27 @@ KULLANICI EYLEMİ
 
 ---
 
+### 6. Video bağlam olayları (`video_start`, `video_progress`, `video_complete`, `video_cta_click`) — 16 Ekim 2026
+
+**Dönüşüm değildir:** key event yapılmaz, Google Ads'e alınmaz. "Videoyu izleyen ziyaretçi nasıl davrandı" bölümlemesi için.
+Adlar üç sitede (taşyünü, alçı, alçıpan) ortak sözleşmedir; bu yüzden sitenin `PascalCase_SnakeCase` biçiminden ayrıdır.
+
+**Tetiklendiği yer:** `components/video/VideoGomme.tsx` → `lib/video/video-gomme.js` → köprü `lib/analytics/videoEvents.ts`
+(`gtag('event')` + `page_path` + `send_to`). Yerleşimler `lib/video/placements.ts`.
+
+| Olay | Ne zaman | Kaç kez |
+|---|---|---|
+| `video_start` | İlk gerçek oynatma | Sayfa görüntülemesi başına video başına 1 |
+| `video_progress` | Sürenin %50'si geçilince | 1 |
+| `video_complete` | Video sona erince | 1 |
+| `video_cta_click` | `[data-vg-cta="<video_id>"]` bağlantısına tıklama | Her tıklamada |
+
+**Parametreler:** `video_id` (`S4` kalınlık, `S2A` sipariş süreci), `page_type` (`urun`, `anasayfa`), `variant` (`16x9`, `9x16`),
+CTA'da `cta_id` (`fiyat_paneli`, `hesaplayici`). Mobil ve masaüstü sürelerinin farklı olduğu videolarda (S2A: 59 / 29 sn)
+tamamlanma oranı `variant`a göre ayrı okunur.
+
+---
+
 ## Funnel Analizi
 
 GA4 Explore → Funnel Exploration:
@@ -338,3 +359,4 @@ Yönetici → Events → Toggle "Mark as conversion":
 | `components/analytics/CookieConsent.tsx` | KVKK rıza banner |
 | `app/api/whatsapp-intent/route.ts` | Server-side WA intent → CallMeBot |
 | `app/api/quotes/route.ts` | Server-side quote insert + CallMeBot |
+| `lib/analytics/videoEvents.ts` | Video bağlam olayları köprüsü (`video_*`, dönüşüm değil) |
