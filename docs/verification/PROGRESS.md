@@ -1914,3 +1914,34 @@ Emrah: "hepsini onaylıyorum başla"; Merchant Center hesabı ve İşletme Profi
 Emrah: "dalmaçyalı sayfalarını da değiştir, unuturum". Hub'ların Google'a girmesi beklenmeden `LEGACY_TITLE_SLUGS` boşaltıldı. SW035'in 9 kalınlık sayfası: "10 cm Taş Yünü Fiyatları - Ekim 2026 | Dalmaçyalı SW035" → **"Dalmaçyalı Stonewool SW035 10 cm Taş Yünü Fiyatı - Ekim 2026"** (3–15 cm). Ana ürün sayfası başlığı (veritabanı meta başlığı) değişmedi. Bilinen risk (14 Ekim kaydı): SW035 10 cm sitenin tıklamalarının %38'ini getiriyor ve "10 cm taş yünü fiyatları"nda 2,7. sırada; genel arama artık `/tasyunu-fiyatlari/10-cm` sayfasının, geçişte sıra oynayabilir. Kontrol 11 Kasım.
 
 Kanıt: `vitest run` 947 geçti (SW035 başlık testi yeni beklentiye güncellendi); kısa yol, ürün sayfası bilgileri (kilitli), hub tarayıcı testleri 24/24; derleme başarılı, 9 kalınlık sayfasının derlenen başlığı yeni kalıpta; copy-gate 476 HTML temiz.
+
+
+## 16 Ekim 2026 · Bonus ve Filli Boya yetkili bayilik yazısı görünür yerlerde
+
+Emrah: "Bonus yetkili bayisiyiz. Filli Boya yetkili bayisiyiz diye görünür yerlere… uygun bir dille ekleyelim." Cümle PDF teklif ve sipariş onayındakiyle aynı (`AUTHORIZED_DEALER_LABEL`, `lib/business/info.ts`).
+
+| Yer | Metin |
+|---|---|
+| Masaüstü üst şerit (koyu sayfalar) | "Bonus ve Filli Boya Yetkili Bayisi" ilk madde; "Tam araç ve uygun EPS seti" 1024 px altında gizli (tek satır kalsın) |
+| Ana sayfa ilk ekran, "Satış ve sevkiyat: ÖzerGrup" altı | "Bonus ve Filli Boya yetkili bayisi"; "Bayilikler" etiketi 9→10 px, renk koyulaştı (kontrast 3,91 idi) |
+| Dalmaçyalı / Expert / Optimix / Fawori ürün sayfası, Filli Boya logosu yanı | "Filli Boya ürün grubundadır" + onay işaretiyle "Yetkili bayisiyiz" |
+| Bonus ürün sayfası, logo yanı | onay işaretiyle "Yetkili bayisiyiz" |
+| Altbilgi (tüm sayfalar, mobil dahil) | "ÖzerGrup, Bonus ve Filli Boya yetkili bayisidir." |
+| Hakkımızda ilk ekran | "Bonus ve Filli Boya yetkili bayisiyiz. Dalmaçyalı, Expert ve Fawori, Filli Boya ürün grubundadır." |
+
+### Editör turu (GPT-6 Astra)
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | "BAYİLİKLER" etiketi beş logoyu (TEKNO dahil) aynı ilişki altında topluyor (ORTA) | RED: etiket ve logolar sitenin mevcut, işletme beyanı olan içeriği; yeni satır hemen üstünde Bonus ve Filli Boya'yı adıyla söylüyor |
+| 2 | "ürün grubudur" yerine "ürün grubundadır" (KÜÇÜK) | ONAY: PDF ve Hakkımızda ile aynı yapı. `pdp-a2-order-desk.spec.ts` (kilitli değil) beklenen metni aynı gerekçeyle güncellendi |
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `tsc --noEmit`, eslint (değişen dosyalar), `vitest run` | temiz; 955 geçti |
+| `authorized-dealer.spec.ts` (yeni) + `pdp-a2-order-desk.spec.ts` | 17/17 geçti |
+| Derleme + copy-gate + `verify:visitor-copy` | başarılı; 476 HTML temiz; geçti |
+| Ekran: ana sayfa, SW035, Bonus F 150, Hakkımızda, altbilgi (375/1440) | yazılar görünür, yatay taşma yok, konsol temiz |
+| Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): `/`, SW035, Bonus F 150, Hakkımızda | GEÇTİ |

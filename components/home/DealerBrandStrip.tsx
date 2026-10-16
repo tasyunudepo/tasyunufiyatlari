@@ -22,7 +22,7 @@ const DEALER_BRANDS: readonly DealerBrand[] = [
 export default function DealerBrandStrip() {
   return (
     <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-      <span className="text-[9px] font-bold uppercase leading-3 tracking-[0.12em] text-[#7d7768]">
+      <span className="text-[10px] font-bold uppercase leading-3 tracking-[0.12em] text-[#5f5a4e]">
         Bayilikler
       </span>
       <span

@@ -10,7 +10,7 @@ import SiteHeader from "@/components/shared/SiteHeader";
 import VideoGomme from "@/components/video/VideoGomme";
 import WizardCalculator from "@/components/wizard/WizardCalculator";
 import MinimumOrderBanner from "@/components/sales/MinimumOrderBanner";
-import { BUSINESS_INFO } from "@/lib/business/info";
+import { AUTHORIZED_DEALER_LABEL, BUSINESS_INFO } from "@/lib/business/info";
 import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 import { buildHowToNode } from "@/lib/seo/buildHowTo";
 import { buildCalculationServiceNode, buildShippingServiceNode } from "@/lib/seo/buildService";
@@ -113,9 +113,12 @@ export default function HomePageClient({ priceTable }: { priceTable?: ReactNode 
                   Teslim ili, ürün, kalınlık ve miktarı seçin; fiyatınızı anında görün.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-t border-[#d2ccbe] pt-4 text-sm text-[#514d43]">
-                  <span className="flex items-center gap-3">
-                    <span className="h-2 w-2 rounded-full bg-[#9a7528]" aria-hidden />
-                    <span><strong className="font-semibold text-[#25241f]">Satış ve sevkiyat:</strong> ÖzerGrup</span>
+                  <span className="flex items-start gap-3">
+                    <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#9a7528]" aria-hidden />
+                    <span>
+                      <span className="block"><strong className="font-semibold text-[#25241f]">Satış ve sevkiyat:</strong> ÖzerGrup</span>
+                      <span className="block font-semibold text-[#25241f]" data-testid="home-authorized-dealer">{AUTHORIZED_DEALER_LABEL}</span>
+                    </span>
                   </span>
                   <DealerBrandStrip />
                 </div>

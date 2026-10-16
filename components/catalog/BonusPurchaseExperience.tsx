@@ -3,6 +3,7 @@ import Link from "next/link";
 import ComparisonLink from "@/components/compare/ComparisonLink";
 import {
   ArrowRight,
+  BadgeCheck,
   Banknote,
   Building2,
   CheckCircle2,
@@ -109,13 +110,19 @@ export default function BonusPurchaseExperience({
         >
           <div className="grid xl:grid-cols-[0.8fr_1.12fr_1.38fr]">
             <article data-testid="pdp-product-identity" className="flex min-w-0 flex-col border-b border-[#ded7c8] bg-[#fffaf0] p-5 sm:p-7 xl:min-h-[590px] xl:border-b-0 xl:border-r">
-              <Image
-                src="/images/markalogolar/bonus-logo-red.svg"
-                alt="Bonus"
-                width={142}
-                height={55}
-                className="h-12 w-auto self-start object-contain object-left"
-              />
+              <div className="flex items-center gap-4">
+                <Image
+                  src="/images/markalogolar/bonus-logo-red.svg"
+                  alt="Bonus"
+                  width={142}
+                  height={55}
+                  className="h-12 w-auto object-contain object-left"
+                />
+                <span data-testid="pdp-authorized-dealer" className="flex items-center gap-1.5 border-l border-[#ded7c8] pl-4 text-xs font-semibold leading-4 text-[#2b6b45]">
+                  <BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  Yetkili bayisiyiz
+                </span>
+              </div>
 
               <div className="mt-7 flex flex-wrap gap-2">
                 <span className="rounded-full border border-[#a98336]/25 bg-[#a98336]/8 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#74551d]">

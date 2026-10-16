@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { BadgeCheck } from "lucide-react";
 import type { BrandMarkPresentation } from "@/lib/brandLogo";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
@@ -70,8 +71,12 @@ export default function StandardPlateCommercialHeader({
                   height={34}
                   className="h-7 w-auto object-contain"
                 />
-                <span className="max-w-[112px] text-xs font-semibold leading-4 text-[#625a4f]">
-                  Filli Boya ürün grubudur
+                <span className="max-w-[128px] text-xs font-semibold leading-4 text-[#625a4f]">
+                  Filli Boya ürün grubundadır
+                  <span data-testid="pdp-authorized-dealer" className="mt-0.5 flex items-center gap-1 text-[#2b6b45]">
+                    <BadgeCheck aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                    Yetkili bayisiyiz
+                  </span>
                 </span>
               </div>
             )}

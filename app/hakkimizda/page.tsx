@@ -61,6 +61,9 @@ export default function HakkimizdaPage() {
                   Taşyünü ve EPS siparişlerinde ürün seçimi, metraj, fiyat ve fabrika çıkışlı sevkiyat koşullarını
                   <span className="text-hub-gold font-semibold"> tek teklif akışında</span> anlaşılır hâle getiriyoruz.
                 </p>
+                <p className="mt-4 text-hub-ink text-lg font-semibold leading-relaxed max-w-xl" data-testid="about-authorized-dealer">
+                  Bonus ve Filli Boya yetkili bayisiyiz. Dalmaçyalı, Expert ve Fawori, Filli Boya ürün grubundadır.
+                </p>
               </div>
 
               <div className="md:col-span-6 relative aspect-[5/4] rounded-2xl overflow-hidden ring-1 ring-hub-rule">

@@ -156,9 +156,11 @@ export default function SiteHeader({ tone, theme, minimal = false }: SiteHeaderP
           aria-label="Satış koşulları"
           className="hidden bg-fe-surface border-b border-fe-border text-center sm:block sm:py-2 sm:text-sm sm:px-4"
         >
+          <span className="font-semibold text-white" data-testid="topbar-authorized-dealer">Bonus ve Filli Boya Yetkili Bayisi</span>
+          <span className="mx-2 sm:mx-4 text-fe-muted">|</span>
           <span className="font-semibold text-white">Fabrika Çıkışlı Satış</span>
-          <span className="hidden sm:inline mx-2 sm:mx-4 text-fe-muted">|</span>
-          <span className="hidden sm:inline text-fe-text/80">Tam araç ve uygun EPS seti</span>
+          <span className="hidden lg:inline mx-2 sm:mx-4 text-fe-muted">|</span>
+          <span className="hidden lg:inline text-fe-text/80">Tam araç ve uygun EPS seti</span>
           <span className="mx-2 sm:mx-4 text-fe-muted">|</span>
           <span className="text-hub-gold-soft font-semibold">Bölgeye Göre İskonto</span>
         </div>

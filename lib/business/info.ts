@@ -108,6 +108,11 @@ export const WAREHOUSE_INFO = {
 // node'unu inline tekrarlamak yerine `{ '@id': BUSINESS_ID }` pointer
 // kullanır. Knowledge Graph entity füzyonu bu sayede temiz olur.
 
+// Yetkili bayilik beyanı (Emrah, 16 Ekim 2026): ÖzerGrup Bonus ve Filli Boya yetkili bayisidir.
+// Dalmaçyalı, Expert, Optimix ve Fawori Filli Boya ürün grubundadır.
+// PDF teklif ve sipariş onayındaki cümleyle aynı (lib/pdf).
+export const AUTHORIZED_DEALER_LABEL = 'Bonus ve Filli Boya yetkili bayisi' as const;
+
 export const BUSINESS_ID  = `${BUSINESS_INFO.url}/#organization` as const;
 export const WAREHOUSE_ID = `${BUSINESS_INFO.url}/#warehouse`    as const;
 export const WEBSITE_ID   = `${BUSINESS_INFO.url}/#website`      as const;

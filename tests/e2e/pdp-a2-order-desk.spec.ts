@@ -372,7 +372,7 @@ test.describe('A2 hibrit Bonus Sipariş Masası', () => {
       await expect(page.getByTestId('pdp-standard-plate-summary')).toBeVisible()
       await expect(page.getByTestId('pdp-standard-plate-brand')).toContainText(productCase.brand)
       await expect(page.getByTestId('pdp-standard-plate-brand').getByText(productCase.brand, { exact: true })).toBeVisible()
-      await expect(page.getByTestId('pdp-filli-group-mark')).toContainText('Filli Boya ürün grubudur')
+      await expect(page.getByTestId('pdp-filli-group-mark')).toContainText('Filli Boya ürün grubundadır')
     }
   })
 

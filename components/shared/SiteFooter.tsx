@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { GENERATOR_PAGE_PATH } from '@/lib/portfolio/offers';
+import { AUTHORIZED_DEALER_LABEL } from '@/lib/business/info';
 import { COMPARISON_PATH, DENSITY_120_PATH, DENSITY_150_PATH, HUB_THICKNESSES, thicknessHubPath } from '@/lib/compare/hubs';
 
 type Tone = 'dark' | 'warm';
@@ -76,6 +77,9 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
             />
             <p className={`${sloganText} text-sm leading-relaxed max-w-xs`}>
               Taşyünü ve EPS fiyatlarını, tam araç ve set nakliye koşullarıyla hesaplayın.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-hub-gold-soft" data-testid="footer-authorized-dealer">
+              ÖzerGrup, {AUTHORIZED_DEALER_LABEL}dir.
             </p>
           </div>
 
