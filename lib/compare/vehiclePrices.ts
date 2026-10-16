@@ -77,7 +77,7 @@ export function bonusVehiclePrices(unit: number, packageM2: number, kamyonM2: nu
   return { kamyon: make(kamyonM2), tir: make(tirM2) }
 }
 
-// ─── Filli/öteki markalar: katalog satırlarından tek ürünün araç fiyatları ───
+// ─── Filli/diğer markalar: katalog satırlarından tek ürünün araç fiyatları ───
 // Karşılaştırma tablosu (tarayıcı) ve hub sayfaları (sunucu, derleme anı) aynı hesabı kullanır.
 
 export interface LogisticsRow {

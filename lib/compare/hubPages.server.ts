@@ -82,7 +82,7 @@ export async function getThicknessHubData(thicknessCm: number): Promise<HubPageD
         links: facts.priced.filter((p) => p.href).map((p) => ({ label: `${p.profile.displayName} ${thicknessCm} cm fiyatı`, href: p.href! })),
       },
       {
-        title: 'Öteki kalınlıklar',
+        title: 'Diğer kalınlıklar',
         links: HUB_THICKNESSES.map((t) => ({ label: `${t} cm taş yünü fiyatları`, href: thicknessHubPath(t), current: t === thicknessCm })),
       },
       {
@@ -126,7 +126,7 @@ export async function getDensity150HubData(thicknessCm: number): Promise<HubPage
         links: facts.priced.filter((p) => p.href).map((p) => ({ label: `${p.profile.displayName} ${thicknessCm} cm fiyatı`, href: p.href! })),
       },
       {
-        title: '150 yoğunluk, öteki kalınlıklar',
+        title: '150 yoğunluk, diğer kalınlıklar',
         links: thicknesses.map((t) => ({ label: `${t} cm 150 yoğunluk taş yünü fiyatları`, href: density150HubPath(t), current: t === thicknessCm })),
       },
       {

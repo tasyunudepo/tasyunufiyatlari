@@ -254,7 +254,7 @@ export default function ComparisonCenter({ variant, fixedThicknessCm, thicknessL
     }
     if (variant !== "yogunluk_150" && variant !== "yogunluk_150_kalinlik") return all;
     // 150 görünümü yalnız föy beyanlı 150'likleri gösterir (Emrah, 14 Ekim 2026: "150 sayfasında diğer
-    // ürünler olmamalı"; önceki karar 3'te öteki beş ürün bağlam olarak alttaydı).
+    // ürünler olmamalı"; önceki karar 3'te diğer beş ürün bağlam olarak alttaydı).
     return all.filter((p) => p.density.sourceType === "datasheet" && p.density.minKgM3 >= 150);
   }, [variant]);
 

@@ -3,7 +3,7 @@
 // NEDEN: "taş yünü fiyatları" aramasında Alışveriş sekmesinde ürün ve fiyat görünsün. Satılan birim 1 tam
 // kamyondur (en az sipariş); her ürün × kalınlık bir kalemdir, fiyat 1 kamyonun KDV dahil tutarıdır (Merchant
 // Center Türkiye'de KDV dahil fiyat ister), m² fiyatı birim fiyat olarak verilir. Tutar ürün sayfasındaki
-// "KDV dahil" satırıyla aynı hesaptır: Filli/öteki markalarda TL'ye yuvarlı (SepetVehicleCards), Bonus'ta
+// "KDV dahil" satırıyla aynı hesaptır: Filli/diğer markalarda TL'ye yuvarlı (SepetVehicleCards), Bonus'ta
 // kuruşa yuvarlı (BonusRegionPrice). Koşul: İstanbul Avrupa Yakası teslim (ürün sayfasının varsayılanı).
 
 import type { ComparisonProfile } from '@/lib/technical-profiles'

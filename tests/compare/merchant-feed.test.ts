@@ -14,7 +14,7 @@ describe('Merchant Center beslemesi', () => {
     expect(MERCHANT_FEED_PATH.startsWith('/feed')).toBe(false)
   })
 
-  it('Filli/öteki: KDV dahil tutar TL\'ye yuvarlı (kamyon kartıyla aynı)', () => {
+  it('Filli/diğer: KDV dahil tutar TL\'ye yuvarlı (kamyon kartıyla aynı)', () => {
     expect(kamyonPriceWithVat(sw035, { unit: 654.92, m2: 403.2, total: 264064 })).toBe(Math.round(654.92 * 403.2 * 1.2))
   })
 

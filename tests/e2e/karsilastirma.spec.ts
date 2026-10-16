@@ -214,7 +214,7 @@ test.describe('Karşılaştırma Merkezi', () => {
   })
 
   test('150 sayfası: yalnız föy beyanlı 150\'likler, nötr yoğunluk uyarısı', async ({ page }) => {
-    // 14 Ekim 2026 (Emrah): 150 sayfasında öteki yoğunluklar yer almaz (önce bağlam olarak alttaydı).
+    // 14 Ekim 2026 (Emrah): 150 sayfasında diğer yoğunluklar yer almaz (önce bağlam olarak alttaydı).
     await page.goto('/tasyunu-yogunluk/150-kg-m3')
     await expect(page.getByRole('heading', { level: 1, name: '150 yoğunluk taş yünü fiyatları' })).toBeVisible()
     await expect(page.getByText(/daha iyi ısı yalıtımı iddiası değildir/)).toBeVisible()

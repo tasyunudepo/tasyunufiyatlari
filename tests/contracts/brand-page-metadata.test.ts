@@ -32,7 +32,7 @@ describe('marka sayfası başlık ve açıklaması', () => {
     expect(BRAND_MAP.dalmacyali.description).toBe('Dalmaçyalı taşyünü ve EPS ısı yalıtım levhaları, sistem aksesuarları.');
   });
 
-  it('öteki markaların başlık ve açıklaması aynı kaldı', async () => {
+  it('diğer markaların başlık ve açıklaması aynı kaldı', async () => {
     for (const brand of ['filli-boya', 'optimix', 'tekno', 'oem']) {
       const meta = await metadataOf(brand);
       expect(meta.title).toBe(`${BRAND_MAP[brand].displayName} Ürünleri`);

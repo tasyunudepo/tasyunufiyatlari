@@ -10,7 +10,7 @@ import { getDensity150HubThicknesses, getHubSnapshots } from '@/lib/compare/hubP
 import { buildMetadata } from '@/lib/seo/buildMetadata';
 import { formatMonthYear } from '@/lib/seo/monthYear';
 
-// 150 kg/m³ görünümü: yalnız föy beyanlı üç 150'lik (Emrah, 14 Ekim 2026; önceki karar 3'te öteki
+// 150 kg/m³ görünümü: yalnız föy beyanlı üç 150'lik (Emrah, 14 Ekim 2026; önceki karar 3'te diğer
 // beş ürün de bağlam olarak alttaydı).
 
 export const metadata: Metadata = buildMetadata({
@@ -46,7 +46,7 @@ export default async function Yogunluk150Page() {
               F 150, F 150 Pro ve Expert HD150. 150 yoğunluk daha iyi ısı yalıtımı iddiası
               değildir: aynı kalınlıkta ısı yalıtımını ısı iletkenliği gösterir (düşük olan iyi); yoğunluk, dik
               çekme ve basma dayanımıyla birlikte okunur. &quot;Pro&quot; adı tek başına üstünlük
-              anlamına gelmez. Öteki yoğunluklar için{' '}
+              anlamına gelmez. Diğer yoğunluklar için{' '}
               <Link href="/tasyunu-karsilastir" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
                 genel karşılaştırmaya
               </Link>{' '}
