@@ -443,3 +443,21 @@ describe('telefon gösterimi', () => {
     expect(formatPhoneForDisplay('')).toBe('')
   })
 })
+
+// Termin süresi (Emrah, 16 Ekim 2026): taşyünü teklifinde "Sevkiyat planı" adımında yazılır; EPS'te süre söylenmedi.
+describe('teklif PDF\'i: termin süresi', () => {
+  const processText = (data: PDFQuoteData) => text(blockOf(buildQuoteDocument(data, options).flow, 'process'))
+
+  it('taşyünü teklifinde termin ve not sevkiyat planında yazar', () => {
+    const body = processText({ ...setQuote, materialType: 'tasyunu' })
+    expect(body).toContain('Termin süresi: 7–21 gün (sipariş onayından teslime).')
+    expect(body).toContain('Çoğunlukla 1 hafta içinde teslim edilir.')
+    expect(body).toContain(ORDER_PROCESS_TEXT.shippingPlan)
+  })
+
+  it('EPS teklifinde termin yazmaz', () => {
+    const body = processText({ ...setQuote, materialType: 'eps' })
+    expect(body).not.toContain('Termin süresi')
+    expect(body).toContain(ORDER_PROCESS_TEXT.shippingPlan)
+  })
+})

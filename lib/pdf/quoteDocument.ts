@@ -1,6 +1,7 @@
 import { BUSINESS_INFO, TEL_URL, WHATSAPP_URL } from '@/lib/business/info'
 import { resolveNetM2Price } from '@/lib/pdf/m2Price'
 import { ORDER_PROCESS_TEXT, SELLER_BANK_ACCOUNTS } from '@/lib/pdf/orderProcess'
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, showsLeadTime } from '@/lib/sales/leadTime'
 import { buildPortfolioPdfItems } from '@/lib/pdf/portfolioSection'
 import { buildAccountIdentityRows, getQuoteContact, getSellerIdentity } from '@/lib/pdf/sellerIdentity'
 import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
@@ -290,7 +291,12 @@ export function buildQuoteDocument(data: PDFQuoteData, options: QuoteDocumentOpt
   const steps = [
     { title: '1. Onay ve ödeme', detail: 'Sipariş Onay Formu düzenlenir; ödeme tek seferde alınır.' },
     { title: '2. Üretici teyidi', detail: ORDER_PROCESS_TEXT.manufacturerOrder },
-    { title: '3. Sevkiyat planı', detail: ORDER_PROCESS_TEXT.shippingPlan },
+    {
+      title: '3. Sevkiyat planı',
+      detail: showsLeadTime(data.materialType)
+        ? `${LEAD_TIME_LABEL} (sipariş onayından teslime). ${LEAD_TIME_NOTE} ${ORDER_PROCESS_TEXT.shippingPlan}`
+        : ORDER_PROCESS_TEXT.shippingPlan,
+    },
     { title: '4. Teslim', detail: 'Araç yola çıktığında bilgi verilir; ürün şantiyeye teslim edilir.' },
   ]
   const process = block('process', `<h2>Sipariş nasıl ilerler?</h2><div class="tq-steps">${steps.map((s) => `<div><b>${s.title}</b><p>${escapeHtml(s.detail)}</p></div>`).join('')}</div>`)

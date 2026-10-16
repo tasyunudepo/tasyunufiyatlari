@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, LEAD_TIME_SCOPE } from "@/lib/sales/leadTime";
 import type { BrandMarkPresentation } from "@/lib/brandLogo";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 
@@ -10,6 +11,7 @@ interface Props {
   categoryName: string;
   brandMark: BrandMarkPresentation;
   isFilliGroup: boolean;
+  showLeadTime: boolean;
   cityOptions: Array<{ code: number; name: string }>;
   fallbackThickness: number | null;
 }
@@ -19,6 +21,7 @@ export default function StandardPlateCommercialHeader({
   categoryName,
   brandMark,
   isFilliGroup,
+  showLeadTime,
   cityOptions,
   fallbackThickness,
 }: Props) {
@@ -114,6 +117,12 @@ export default function StandardPlateCommercialHeader({
           <p className="mt-2 text-sm leading-6 text-[#625a4f]">
             KDV hariç · Fabrika çıkışlı bayilik fiyatı
           </p>
+          {showLeadTime && (
+            <p data-testid="pdp-lead-time" className="mt-1 text-sm leading-6 text-[#625a4f]">
+              <strong className="font-semibold text-[#2d261d]">{LEAD_TIME_LABEL}</strong>
+              <span className="block text-xs leading-5">{LEAD_TIME_SCOPE} {LEAD_TIME_NOTE}</span>
+            </p>
+          )}
           <button
             type="button"
             onClick={scrollToPlanner}

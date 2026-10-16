@@ -25,6 +25,7 @@ import { readCatalogJourneyId } from "@/lib/analytics/catalogJourney";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
 import { withVat } from "@/lib/pricing/vat";
 import { roundToKurus } from "@/lib/pricing/quoteTotals";
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, LEAD_TIME_SHORT } from "@/lib/sales/leadTime";
 
 // ============================================================
 // Bonus PDP canlı bölge fiyatı (Faz 2)
@@ -795,6 +796,13 @@ export default function BonusRegionPrice({
                   Bonus yetkili bayisi.
                 </p>
               </div>
+              <div data-testid="pdp-cta-lead-time" className="flex items-start gap-2 sm:col-span-2">
+                <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#55cd88]" />
+                <p>
+                  <strong className="text-[#eee7dc]">{LEAD_TIME_LABEL}.</strong>{" "}
+                  {LEAD_TIME_NOTE}
+                </p>
+              </div>
             </div>
 
             <div
@@ -851,7 +859,7 @@ export default function BonusRegionPrice({
                     <p className="mt-0.5 truncate text-sm font-black leading-none text-white">
                       {fmt(purchaseCalculation.selectedOrder.totalExVat, 0)} ₺
                     </p>
-                    <p className="mt-1 text-[10px] leading-none text-[#a9a195]">KDV hariç</p>
+                    <p className="mt-1 truncate text-[10px] leading-none text-[#a9a195]">KDV hariç · {LEAD_TIME_SHORT}</p>
                   </div>
                   <a
                     href={whatsappHref}

@@ -1945,3 +1945,38 @@ Emrah: "Bonus yetkili bayisiyiz. Filli Boya yetkili bayisiyiz diye görünür ye
 | Derleme + copy-gate + `verify:visitor-copy` | başarılı; 476 HTML temiz; geçti |
 | Ekran: ana sayfa, SW035, Bonus F 150, Hakkımızda, altbilgi (375/1440) | yazılar görünür, yatay taşma yok, konsol temiz |
 | Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): `/`, SW035, Bonus F 150, Hakkımızda | GEÇTİ |
+
+
+## 16 Ekim 2026 · Termin süresi: 7–21 gün (taşyünü; plan sırası 1–2–3)
+
+Emrah: "Taşyününde termin süresi: 7–21 gün… altına not olarak 'çoğunlukla 1 haftada teslim edilir'… başla 1-2-3'ten". Plan: GCR `reports/tasyunu-termin-plani-2026-10-16.md`. Bu karar eski "teslim süresi yazılmaz" kurallarının yerine geçer (`PLAN-pdp-ui-ux-fixes-2026-09-01`, `PLAN-capraz-satis-paketi` AC-305): sitede izin verilen tek süre cümlesi budur, tek kaynaktan okunur (`lib/sales/leadTime.ts`); başka süre sözü `customer-promises` sözleşmesiyle yasak kalır. Yalnız taşyünü (`material_type = tasyunu`); EPS için süre söylenmedi, gösterilmez.
+
+| Yer | Metin |
+|---|---|
+| Ürün sayfası üst fiyat kutusu (standart levhalar) | **Termin süresi: 7–21 gün** / Sipariş onayından teslime kadar. Çoğunlukla 1 hafta içinde teslim edilir. |
+| "Teklifimi hazırla" düğmesinin altı | **Termin süresi: 7–21 gün** / Çoğunlukla 1 hafta içinde teslim edilir. |
+| Telefon alt çubuğu (standart) | "806,4 m² · Termin 7–21 gün" |
+| Bonus: WhatsApp sipariş düğmesi altındaki maddeler | **Termin süresi: 7–21 gün.** Çoğunlukla 1 hafta içinde teslim edilir. |
+| Bonus telefon alt çubuğu | "KDV hariç · Termin 7–21 gün" |
+| PDF teklif, "3. Sevkiyat planı" (taşyünü teklifi) | Termin süresi: 7–21 gün (sipariş onayından teslime). Çoğunlukla 1 hafta içinde teslim edilir. Yükleme tarihi fabrika uygunluğuna göre bildirilir. |
+| Merchant beslemesi | `min/max_handling_time` 4/13 + `shipping` içinde `min/max_transit_time` 1/2 iş günü (Merchant iş günü ister; ≈ 7–21 takvim günü) |
+
+Sipariş Onay Formu (plan sırası 5) değişmedi; `order-confirmation.test.ts` "iş günü" yasağı o belge için geçerli kalır.
+
+### Editör turu (GPT-6 Astra)
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | "7–21 gün" ile "çoğunlukla 1 hafta" çelişmiyor | İtiraz değil |
+| 2 | Sürenin onaydan teslime mi, yüklemeye mi olduğu web'de belirsiz (ORTA) | ONAY: üst fiyat kutusuna "Sipariş onayından teslime kadar." (`LEAD_TIME_SCOPE`) |
+| 3 | Üst kutu ve düğme altı aynı ekrandaysa tekrar (KÜÇÜK) | RED: iki blok ayrı ekranlarda (üst başlık ve aşağıdaki planlayıcı); karar noktalarında tekrar editörün de kabul ettiği durum |
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` (yeni: `tests/contracts/lead-time.test.ts`, PDF termin testleri; besleme testi teslim süresi alanlarıyla güncellendi) | 963 geçti |
+| Tarayıcı testleri: `lead-time.spec.ts` (yeni; EPS'te yok), `pdp-a2-order-desk`, `pdp-product-information` (kilitli), `authorized-dealer`, `hub-pages` | 39/39 |
+| tsc, eslint, derleme, copy-gate, `verify:visitor-copy` | temiz; 476 HTML temiz |
+| Ekran 375/1440: SW035 üst kutu, düğme altı, telefon alt çubuğu; Bonus düğme altı ve çubuk; PDF süreç bölümü | görünür, taşma yok, konsol temiz (alt çubukta ilk denemede kesiliyordu, harf aralığı düzeltildi) |
+| Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): SW035, Bonus F 150 | GEÇTİ |

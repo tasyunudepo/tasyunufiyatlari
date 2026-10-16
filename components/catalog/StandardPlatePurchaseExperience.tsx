@@ -19,6 +19,7 @@ import ProductSectionTracker from './ProductSectionTracker'
 import StandardPurchaseAssurance from './StandardPurchaseAssurance'
 import VideoGomme from '@/components/video/VideoGomme'
 import { THICKNESS_VIDEO, showsThicknessVideo } from '@/lib/video/placements'
+import { showsLeadTime } from '@/lib/sales/leadTime'
 
 interface StandardPlatePurchaseExperienceProps {
   product: CatalogProductView
@@ -282,6 +283,7 @@ export default function StandardPlatePurchaseExperience({
             categoryName={commercialCategoryName}
             brandMark={brandMark}
             isFilliGroup={isFilliGroup}
+            showLeadTime={showsLeadTime(product.material_type)}
             cityOptions={shippingZones.map((zone) => ({ code: zone.city_code, name: zone.city_name }))}
             fallbackThickness={selectedThickness ?? prefill?.kalinlik ?? null}
           />

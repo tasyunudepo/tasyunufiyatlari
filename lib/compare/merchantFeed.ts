@@ -9,6 +9,7 @@
 import type { ComparisonProfile } from '@/lib/technical-profiles'
 import { withVat } from '@/lib/pricing/vat'
 import type { VehiclePrice } from './vehiclePrices'
+import { MERCHANT_HANDLING_BUSINESS_DAYS, MERCHANT_TRANSIT_BUSINESS_DAYS } from '@/lib/sales/leadTime'
 
 export const MERCHANT_FEED_PATH = '/google-merchant-feed.xml'
 
@@ -63,6 +64,8 @@ export function merchantItemFields(item: MerchantFeedItem): Record<string, strin
     identifier_exists: 'no',
     product_type: `Taşyünü > Mantolama levhası > ${thicknessCm} cm`,
     size: `${thicknessCm} cm`,
+    min_handling_time: String(MERCHANT_HANDLING_BUSINESS_DAYS.min),
+    max_handling_time: String(MERCHANT_HANDLING_BUSINESS_DAYS.max),
   }
 }
 
@@ -70,7 +73,7 @@ export function buildMerchantFeedXml(items: MerchantFeedItem[], siteOrigin: stri
   const itemXml = items.map((item) => {
     const fields = merchantItemFields(item)
     const lines = Object.entries(fields).map(([key, value]) => `      <g:${key}>${escapeXml(value)}</g:${key}>`)
-    lines.push('      <g:shipping><g:country>TR</g:country><g:price>0.00 TRY</g:price></g:shipping>')
+    lines.push(`      <g:shipping><g:country>TR</g:country><g:price>0.00 TRY</g:price><g:min_transit_time>${MERCHANT_TRANSIT_BUSINESS_DAYS.min}</g:min_transit_time><g:max_transit_time>${MERCHANT_TRANSIT_BUSINESS_DAYS.max}</g:max_transit_time></g:shipping>`)
     return `    <item>\n${lines.join('\n')}\n    </item>`
   })
   return [

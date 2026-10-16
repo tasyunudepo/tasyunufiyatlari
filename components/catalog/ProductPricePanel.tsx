@@ -40,6 +40,7 @@ import type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
 import { formatLocalizedM2Input, parseLocalizedM2Input } from "@/lib/catalog/m2Input";
 import { createComparisonSessionId } from "@/lib/analytics/pdpJourney";
 import { publishMinimumOrder } from "@/lib/sales/minimumOrder";
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, LEAD_TIME_SHORT, showsLeadTime } from "@/lib/sales/leadTime";
 
 export type { ProductLogisticsCapacity } from "@/lib/catalog/package-details";
 
@@ -819,6 +820,12 @@ export default function ProductPricePanel({
                   : undefined}
               />
             )}
+            {showsLeadTime(product.material_type) && (
+              <p data-testid="pdp-cta-lead-time" className={`px-1 text-center text-sm leading-5 ${isWarmCommercial ? "text-[#2d261d]" : "text-fe-text"}`}>
+                <strong className="font-semibold">{LEAD_TIME_LABEL}</strong>
+                <span className={`block text-xs ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>{LEAD_TIME_NOTE}</span>
+              </p>
+            )}
             <p className={`px-1 text-center text-xs leading-5 ${isWarmCommercial ? "text-[#625a4f]" : "text-fe-muted-strong"}`}>
               Ürün, şehir ve tam araç planınız teklif referansına eklenir.
             </p>
@@ -944,8 +951,11 @@ export default function ProductPricePanel({
         >
           <div className="mx-auto flex max-w-screen-sm items-center gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-300/80">
+              <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-brand-300/80">
                 {formatM2(quoteM2)} m²
+                {showsLeadTime(product.material_type) && (
+                  <span className="font-medium normal-case tracking-normal"> · {LEAD_TIME_SHORT}</span>
+                )}
               </p>
               <p className="truncate text-sm font-black leading-none text-white">
                 {heroPrice.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}

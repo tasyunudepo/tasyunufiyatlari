@@ -51,7 +51,10 @@ describe('Merchant Center beslemesi', () => {
     expect(xml).toContain('xmlns:g="http://base.google.com/ns/1.0"')
     expect(xml).toContain('<g:price>429684.76 TRY</g:price>')
     expect(xml).toContain('?a=1&amp;b=2')
-    expect(xml).toContain('<g:shipping><g:country>TR</g:country><g:price>0.00 TRY</g:price></g:shipping>')
+    // Teslim süresi (Emrah, 16 Ekim 2026: 7–21 gün): Merchant iş günü ister; hazırlık 4–13 + taşıma 1–2 iş günü.
+    expect(xml).toContain('<g:shipping><g:country>TR</g:country><g:price>0.00 TRY</g:price><g:min_transit_time>1</g:min_transit_time><g:max_transit_time>2</g:max_transit_time></g:shipping>')
+    expect(xml).toContain('<g:min_handling_time>4</g:min_handling_time>')
+    expect(xml).toContain('<g:max_handling_time>13</g:max_handling_time>')
     expect(xml).not.toContain('<g:image_link>')
   })
 })
