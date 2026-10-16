@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Banknote,
+  CalendarClock,
   Building2,
   CheckCircle2,
   CreditCard,
@@ -24,6 +25,7 @@ import { WAREHOUSE_INFO } from "@/lib/business/info";
 import ProductImage from "./ProductImage";
 import BonusPurchaseDesk, { type BonusPurchaseShippingZone } from "./BonusPurchaseDesk";
 import ProductSectionTracker from "./ProductSectionTracker";
+import { LEAD_TIME_NOTE, LEAD_TIME_SCOPE, LEAD_TIME_SHORT } from "@/lib/sales/leadTime";
 
 interface BonusPurchaseExperienceProps {
   product: CatalogProductView;
@@ -229,7 +231,7 @@ export default function BonusPurchaseExperience({
               </div>
             </div>
 
-            <ul className="grid sm:grid-cols-3">
+            <ul className="grid sm:grid-cols-2 xl:grid-cols-4">
               {[
                 {
                   Icon: Banknote,
@@ -246,12 +248,17 @@ export default function BonusPurchaseExperience({
                   title: "Tek seferde ödeme",
                   body: "Kredi kartı veya banka havalesi; sipariş onayında alınır.",
                 },
+                {
+                  Icon: CalendarClock,
+                  title: LEAD_TIME_SHORT,
+                  body: `${LEAD_TIME_SCOPE} ${LEAD_TIME_NOTE}`,
+                },
               ].map(({ Icon, title, body }, index) => (
                 <li
                   key={title}
-                  className={`grid min-h-[104px] grid-cols-[22px_1fr] gap-3 px-5 py-5 ${
-                    index < 2 ? "border-b border-[#ded7c8] sm:border-b-0 sm:border-r" : ""
-                  }`}
+                  className={`grid min-h-[104px] grid-cols-[22px_1fr] gap-3 border-[#ded7c8] px-5 py-5 ${
+                    index < 3 ? "border-b xl:border-b-0" : ""
+                  } ${index % 2 === 0 ? "sm:border-r" : "xl:border-r"} ${index === 3 ? "sm:border-r-0" : ""}`}
                 >
                   <Icon aria-hidden="true" className="mt-0.5 h-5 w-5 text-[#7d5d20]" />
                   <span>

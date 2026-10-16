@@ -56,6 +56,7 @@ import { notifyMinimumOrderAnswer, notifyMinimumOrderShown } from "@/lib/analyti
 import { publishMinimumOrder, type MinimumOrderSelection } from "@/lib/sales/minimumOrder";
 import { filterMantolamaWizardModels, isMantolamaWizardModel } from "@/lib/wizard/eligibility";
 import type { PdfOfferFormData } from "@/lib/schemas/pdfOffer.schema";
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, LEAD_TIME_SCOPE, showsLeadTime } from "@/lib/sales/leadTime";
 import type {
     ShippingZone,
     Brand,
@@ -2853,6 +2854,12 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                                 WhatsApp&apos;tan teyit iste
                                             </button>
                                         </div>
+                                        {showsLeadTime(selectedMalzeme) && (
+                                            <p data-testid="wizard-lead-time" className="text-center text-sm leading-5 text-fe-text">
+                                                <strong className="font-semibold">{LEAD_TIME_LABEL}</strong>
+                                                <span className="block text-xs text-fe-muted">{LEAD_TIME_SCOPE} {LEAD_TIME_NOTE}</span>
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

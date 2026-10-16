@@ -8,6 +8,7 @@ import { resolveBrandMark, type BrandMarkPresentation } from '@/lib/brandLogo';
 import { buildQuoteSurfacePricing } from '@/lib/pricing/quoteTotals';
 import { getPackageTierDescriptor, getTierGridClass } from '@/lib/pricing/packagePresentation';
 import type { CalculatedPackage, CalculatedPackageItem } from '@/lib/types';
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, LEAD_TIME_SCOPE, showsLeadTime } from '@/lib/sales/leadTime';
 
 type MaterialType = 'tasyunu' | 'eps';
 
@@ -340,6 +341,12 @@ export default function HomepageCalculationResult({
             <DownloadSimple size={16} aria-hidden="true" />
             Teklif detayını indir
           </button>
+          {showsLeadTime(materialType) && (
+            <p data-testid="homepage-result-lead-time" className="mt-3 text-center text-sm font-semibold leading-5 text-white">
+              {LEAD_TIME_LABEL}
+              <span className="mt-0.5 block text-[11px] font-normal leading-4 text-white/55">{LEAD_TIME_SCOPE} {LEAD_TIME_NOTE}</span>
+            </p>
+          )}
         </div>
       </div>
 

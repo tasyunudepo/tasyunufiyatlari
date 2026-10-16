@@ -4,6 +4,7 @@
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url'
 import type { ComparisonProfile } from '@/lib/technical-profiles'
 import type { ComparisonSnapshot, VehiclePrice } from './vehiclePrices'
+import { LEAD_TIME_FAQ } from '@/lib/sales/leadTime'
 
 export interface HubFaq { q: string; a: string }
 
@@ -134,6 +135,7 @@ export function thicknessHubCopy(f: HubFacts, monthYear: string, cityLabel: stri
       { q: `${t} cm taşyünü 1 kamyon kaç m²?`, a: lorryAnswer(f) },
       MINIMUM_FAQ,
       SHIPPING_FAQ,
+      LEAD_TIME_FAQ,
     ],
     listName: `${t} cm taş yünü levhalar`,
   }
@@ -170,6 +172,7 @@ export function density150HubCopy(f: HubFacts, monthYear: string, cityLabel: str
       },
       { q: `${t} cm 150 yoğunluk taşyünü 1 kamyon kaç m²?`, a: lorryAnswer(f) },
       MINIMUM_FAQ,
+      LEAD_TIME_FAQ,
     ],
     listName: `${t} cm 150 yoğunluk taş yünü levhalar`,
   }

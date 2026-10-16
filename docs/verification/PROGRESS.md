@@ -1980,3 +1980,36 @@ Sipariş Onay Formu (plan sırası 5) değişmedi; `order-confirmation.test.ts` 
 | tsc, eslint, derleme, copy-gate, `verify:visitor-copy` | temiz; 476 HTML temiz |
 | Ekran 375/1440: SW035 üst kutu, düğme altı, telefon alt çubuğu; Bonus düğme altı ve çubuk; PDF süreç bölümü | görünür, taşma yok, konsol temiz (alt çubukta ilk denemede kesiliyordu, harf aralığı düzeltildi) |
 | Ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı): SW035, Bonus F 150 | GEÇTİ |
+
+
+## 16 Ekim 2026 · Termin süresi plan sırası 4–7 + "öteki" → "diğer"
+
+Emrah: "devam et". Aynı tek kaynak (`lib/sales/leadTime.ts`), yalnız taşyünü.
+
+| Yer | Metin |
+|---|---|
+| Ana sayfa hesaplayıcı sonucu (`HomepageCalculationResult`, düğmelerin altı) ve diğer hesaplayıcı sonucu (`WizardCalculator`) | **Termin süresi: 7–21 gün** / Sipariş onayından teslime kadar. Çoğunlukla 1 hafta içinde teslim edilir. |
+| Sipariş Onay Formu, "Sevkiyat planı" (taşyünü teklifi; `orderInputFromQuote` artık `material_type` taşır) | Termin süresi: 7–21 gün (sipariş onayından teslime). Çoğunlukla 1 hafta içinde teslim edilir. Yükleme tarihi fabrika uygunluğuna göre bildirilir. |
+| Bonus güvence şeridi (4. kutu; şerit 2×2, geniş ekranda 4 sütun) | **Termin 7–21 gün** / Sipariş onayından teslime kadar. Çoğunlukla 1 hafta içinde teslim edilir. |
+| Soru-cevap: ana sayfa, kalınlık sayfaları, 150 yoğunluk kalınlık sayfaları (FAQPage verisine de girer) | "Taşyünü siparişi kaç günde teslim edilir?" → "Termin süresi sipariş onayından teslime 7–21 gündür. Çoğunlukla 1 hafta içinde teslim edilir. Yükleme tarihi fabrika uygunluğuna göre bildirilir." |
+
+"Öteki" (Emrah: olumsuz çağrışım): 150 yoğunluk sayfası "Diğer yoğunluklar için", kalınlık sayfalarında "Diğer kalınlıklar" / "150 yoğunluk, diğer kalınlıklar"; kod notları da. 14 Ekim hub işinde Claude yazmıştı, editör yakalamamıştı. `~/.claude/tools/copy-gate.mjs` ortak yasak listesine 'öteki' eklendi (site `e3b52f2`).
+
+### Editör turu (GPT-6 Astra)
+
+| # | Bulgu | Hüküm |
+|---|---|---|
+| 1 | Hesaplayıcı ve Bonus şeridinde sürenin başlangıcı yok (KÜÇÜK) | ONAY: `LEAD_TIME_SCOPE` eklendi |
+| 2–3 | Soru-cevap ve Sipariş Onay Formu | İtiraz yok |
+
+Bonus şeridinde başlık 1440 px'te iki satıra kırılıyordu; kısa hâl ("Termin 7–21 gün") kullanıldı, diğer kutu başlıklarıyla aynı uzunlukta.
+
+### Kanıt
+
+| Kontrol | Sonuç |
+|---|---|
+| `vitest run` (lead-time sözleşmesi: soru-cevap tam cümle, Sipariş Onay Formu taşyünü/EPS, 10 dosyada elle yazılmış süre yok) | 971 geçti |
+| Tarayıcı testleri: `lead-time.spec.ts` (ana sayfa sonucu, soru-cevap, hub, Bonus şeridi, EPS'te yok), `homepage-conversion`, `pdp-a2-order-desk`, `pdp-product-information` (kilitli), `hub-pages`, `karsilastirma`, `authorized-dealer` | 62/62 |
+| tsc, eslint, derleme, copy-gate, `verify:visitor-copy` | temiz |
+| Ekran 375/1440: ana sayfa sonucu, soru-cevap, Bonus şeridi | görünür, taşma yok, konsol temiz |
+| Ölçüm bekçisi (kuru, yerel üretim): `/`, Bonus F 150, `/tasyunu-fiyatlari/10-cm` | GEÇTİ |

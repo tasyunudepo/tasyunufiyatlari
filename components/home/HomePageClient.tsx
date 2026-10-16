@@ -15,6 +15,7 @@ import { buildBusinessGraph } from "@/lib/seo/buildBusinessNode";
 import { buildHowToNode } from "@/lib/seo/buildHowTo";
 import { buildCalculationServiceNode, buildShippingServiceNode } from "@/lib/seo/buildService";
 import { ORDER_PROCESS_VIDEO } from "@/lib/video/placements";
+import { LEAD_TIME_FAQ } from "@/lib/sales/leadTime";
 
 const faqItems = [
   {
@@ -29,6 +30,8 @@ const faqItems = [
     q: "Hesaptan sonra sipariş nasıl ilerler?",
     a: "Hesaplanan ürün ve sevkiyat özetinden WhatsApp sipariş akışını başlatabilirsiniz. Satış ekibi üretim uygunluğunu ve sevkiyat planını görüşmede netleştirir; ödeme sipariş onayında tek seferde alınır.",
   },
+  // Termin süresi (Emrah, 16 Ekim 2026): yalnız taşyünü; soru bunu adıyla söyler.
+  LEAD_TIME_FAQ,
 ];
 
 const howSteps = [

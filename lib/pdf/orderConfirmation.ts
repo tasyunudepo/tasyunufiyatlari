@@ -1,5 +1,6 @@
 import { BUSINESS_INFO } from '@/lib/business/info'
 import { ORDER_PROCESS_TEXT, SELLER_BANK_ACCOUNTS } from '@/lib/pdf/orderProcess'
+import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, showsLeadTime } from '@/lib/sales/leadTime'
 import { buildAccountIdentityRows, getSellerIdentity, type IdentityRow } from '@/lib/pdf/sellerIdentity'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
 import { fitVehicles, type VehicleCapacity } from '@/lib/quote/vehicleArea'
@@ -43,6 +44,8 @@ export interface OrderConfirmationInput {
   vatAmount?: number | null
   /** Tam araç kapasitesi; yoksa "1. araç" satırı basılmaz. */
   vehicleCapacity?: VehicleCapacity | null
+  /** 'tasyunu' ise sevkiyat planı adımında termin süresi yazar (Emrah, 16 Ekim 2026). */
+  materialType?: string | null
   /** Müşterinin izniyle doldurulur; boşken basılmaz. */
   reference?: OrderReference | null
   issuedAt: Date
@@ -182,6 +185,7 @@ export function orderInputFromQuote(quote: QuoteRecordLike, now: Date = new Date
       lorryCapacityPackages: toNumberOrNull(quote.lorry_capacity_packages),
       packageSizeM2: toNumberOrNull(quote.package_size_m2),
     }),
+    materialType: quote.material_type ?? null,
     issuedAt: now,
   }
 }
@@ -273,7 +277,12 @@ export function buildOrderConfirmationModel(input: OrderConfirmationInput): Orde
           : 'Bu formu onaylarsınız; ödeme tek seferde alınır.',
       },
       { title: 'Üretici siparişi', detail: ORDER_PROCESS_TEXT.manufacturerOrder },
-      { title: 'Sevkiyat planı', detail: ORDER_PROCESS_TEXT.shippingPlan },
+      {
+        title: 'Sevkiyat planı',
+        detail: showsLeadTime(input.materialType)
+          ? `${LEAD_TIME_LABEL} (sipariş onayından teslime). ${LEAD_TIME_NOTE} ${ORDER_PROCESS_TEXT.shippingPlan}`
+          : ORDER_PROCESS_TEXT.shippingPlan,
+      },
       { title: 'Yükleme', detail: ORDER_PROCESS_TEXT.dispatch },
       { title: 'Teslim', detail: ORDER_PROCESS_TEXT.delivery },
     ],
