@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import ComparisonThicknessShortcut from '@/components/compare/ComparisonThicknessShortcut';
 import { ChevronRight } from 'lucide-react';
@@ -13,6 +13,7 @@ import MobileProductHero from '@/components/catalog/MobileProductHero';
 import ProductCategoryContext from '@/components/catalog/ProductCategoryContext';
 import { ProductInteractiveProvider } from '@/components/catalog/ProductInteractiveContext';
 import { getCatalogProduct } from '@/lib/catalog/server';
+import { joinBrandAndModel } from '@/lib/catalog/productLabel';
 import { getCatalogProducts } from '@/lib/catalog/server';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { buildMetadata } from '@/lib/seo/buildMetadata';
@@ -37,6 +38,7 @@ import {
   type MarginRuleInput,
 } from '@/lib/pricing/margin';
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
+import { RENAMED_PRODUCT_SLUGS } from '@/lib/catalog/slug';
 import type { CatalogProductView } from '@/lib/catalog/types';
 import { isUnpricedBonusModel } from '@/lib/pricing/bonus/families';
 import BonusPurchaseExperience from '@/components/catalog/BonusPurchaseExperience';
@@ -274,7 +276,7 @@ export async function generateProductMetadata({
       override?.description ??
       product.meta_description ??
       product.catalog_description ??
-      `${product.brand.name} ${product.name} ürün detayları, fiyat ve teklif.`,
+      `${joinBrandAndModel(product.brand.name, product.name)} ürün detayları, fiyat ve teklif.`,
     path: buildProductPath(kategori, slug, supportsThickness ? thickness : null),
     image: product.image_cover,
     type: 'product',
@@ -314,7 +316,14 @@ export async function ProductDetailPage({
       .select('slug, tier1_max_m2, tier1_margin_pct, tier2_max_m2, tier2_margin_pct, tier3_margin_pct'),
   ]);
 
-  if (!productData) notFound();
+  if (!productData) {
+    const renamedSlug = RENAMED_PRODUCT_SLUGS[slug];
+    if (renamedSlug) {
+      const thicknessPath = selectedThickness != null ? `/${formatThicknessSegment(selectedThickness)}` : '';
+      permanentRedirect(`/urunler/${kategori}/${renamedSlug}${thicknessPath}`);
+    }
+    notFound();
+  }
 
   const { product, decision } = productData;
   const shippingZones = sortZones((zonesResult.data ?? []) as {
@@ -604,7 +613,7 @@ export async function ProductDetailPage({
                 {product.name}
               </h1>
 
-              {product.model && (
+              {product.model && !product.name.toLocaleLowerCase('tr-TR').includes(product.model.toLocaleLowerCase('tr-TR')) && (
                 <p className="text-fe-muted text-sm">{product.model}</p>
               )}
             </div>

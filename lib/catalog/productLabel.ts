@@ -10,14 +10,30 @@
 //
 // Aynı tekrar /ofis Analiz sekmesinde ve teklif kalemlerinde de görünüyordu.
 //
-// Neden veriyi düzeltmiyoruz: `short_name` katalog sayfalarında, PDP
-// başlıklarında ve arama sonuçlarında da kullanılıyor; oradaki adı
-// değiştirmek SEO ve müşteri yüzeyini etkiler. Birleştirme kuralını tek
-// yerde toplamak hem geçmiş kayıtları hem yenilerini düzeltiyor.
+// 16 Ekim 2026: kaynak veri de düzeltildi. Ürün 42'nin kaydı diğer
+// levhalarla aynı düzene alındı: short_name="Karbonlu",
+// name="Optimix Karbonlu", slug="optimix-karbonlu-eps" (eski adres 301,
+// next.config.ts). Bu dosyadaki birleştirme kuralları yine de kalır: bir
+// kayıt ileride markayı short_name'e yazarsa ad tekrar çiftlenmez.
 
 /** Türkçe duyarlı karşılaştırma için normalize et. */
 function norm(value: string): string {
   return value.trim().toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ');
+}
+
+/**
+ * Art arda iki kez yazılmış kelimeyi teke indirir. Eski kayıtlardan gelen
+ * ya da gözden kaçan bir birleştirmenin ürettiği tekrarı müşteriye
+ * gitmeden siler. Yalnız en az üç harfli kelimelere dokunur; sayılar ve
+ * ölçüler ("5 5") olduğu gibi kalır.
+ *
+ * @example
+ * collapseRepeatedWords('Optimix Optimix Karbonlu 5 cm EPS') // 'Optimix Karbonlu 5 cm EPS'
+ * collapseRepeatedWords('TEKNO TEKNO GRENLİ BOYA')           // 'TEKNO GRENLİ BOYA'
+ */
+export function collapseRepeatedWords<T extends string | null | undefined>(text: T): T {
+  if (!text) return text;
+  return text.replace(/(^|[\s(])(\p{L}{3,})(?:\s+\2)+(?=[\s),.;:]|$)/giu, '$1$2') as T;
 }
 
 /**

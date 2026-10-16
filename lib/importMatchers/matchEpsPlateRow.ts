@@ -11,7 +11,7 @@ import {
     chooseStatusFromConfidence,
     computeNameSimilarity,
     finalizeMatchResult,
-    findFamilyCanonicalInText,
+    findPlateFamilyCanonical,
     resolveBrandId,
 } from './shared';
 
@@ -36,7 +36,7 @@ export function matchEpsPlateRow(
     const candidates = plates
         .filter(plate => epsMaterialTypeId === undefined || plate.material_type_id === epsMaterialTypeId)
         .map(plate => {
-            const dbFamily = findFamilyCanonicalInText(plate.short_name) ?? plate.short_name;
+            const dbFamily = findPlateFamilyCanonical(plate, brands);
             const familyMatch = row.familyCanonical !== undefined && dbFamily === row.familyCanonical;
             const brandMatch = hintBrandId !== undefined && plate.brand_id === hintBrandId;
             const thicknessMatch = row.thicknessCm !== undefined

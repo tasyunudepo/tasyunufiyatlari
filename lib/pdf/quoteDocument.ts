@@ -3,6 +3,7 @@ import { resolveNetM2Price } from '@/lib/pdf/m2Price'
 import { ORDER_PROCESS_TEXT, SELLER_BANK_ACCOUNTS } from '@/lib/pdf/orderProcess'
 import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, showsLeadTime } from '@/lib/sales/leadTime'
 import { buildPortfolioPdfItems } from '@/lib/pdf/portfolioSection'
+import { collapseRepeatedWords } from '@/lib/catalog/productLabel'
 import { buildAccountIdentityRows, getQuoteContact, getSellerIdentity } from '@/lib/pdf/sellerIdentity'
 import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import type { ShippingMode } from '@/lib/pricing/commercialRules'
@@ -173,7 +174,15 @@ function rowHtml(it: PDFQuoteItem, index: number): string {
   return `<tr><td><div class="tq-row-name"><span class="tq-row-no">${index + 1}</span><div><b>${escapeHtml(description)}</b>${detail}</div></div></td><td>${escapeHtml(fmtQty(it.quantity))}<small>${escapeHtml(it.unit)}</small></td><td>${unitPrice}</td><td>${total}</td></tr>`
 }
 
-export function buildQuoteDocument(data: PDFQuoteData, options: QuoteDocumentOptions): QuoteDocumentParts {
+export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOptions): QuoteDocumentParts {
+  // Ürün adı belgeye tek kez yazılır: eski kayıtlardaki ya da gözden kaçan
+  // bir birleştirmedeki "Optimix Optimix Karbonlu" tekrarı burada kesilir.
+  const data: PDFQuoteData = {
+    ...input,
+    systemDescription: collapseRepeatedWords(input.systemDescription),
+    packageName: collapseRepeatedWords(input.packageName),
+    items: input.items.map((it) => ({ ...it, description: collapseRepeatedWords(it.description) })),
+  }
   const seller = getSellerIdentity()
   const contact = getQuoteContact()
   const scope = quoteScope(data)

@@ -1,4 +1,5 @@
 import { BUSINESS_INFO } from '@/lib/business/info'
+import { collapseRepeatedWords } from '@/lib/catalog/productLabel'
 import { ORDER_PROCESS_TEXT, SELLER_BANK_ACCOUNTS } from '@/lib/pdf/orderProcess'
 import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, showsLeadTime } from '@/lib/sales/leadTime'
 import { buildAccountIdentityRows, getSellerIdentity, type IdentityRow } from '@/lib/pdf/sellerIdentity'
@@ -160,7 +161,8 @@ export function productLabelFromQuote(quote: QuoteRecordLike): string {
   if (quote.thickness_cm != null && quote.thickness_cm > 0) {
     parts.push(`${quote.thickness_cm.toLocaleString('tr-TR')} cm`)
   }
-  return parts.join(' ')
+  // Eski kayıtlarda model adı "Optimix Optimix Karbonlu" diye saklı olabilir.
+  return collapseRepeatedWords(parts.join(' '))
 }
 
 const toNumberOrNull = (value: unknown): number | null => {

@@ -23,7 +23,7 @@ export const UYGULAMA_KATEGORILERI: UygulamaKategorisi[] = [
         name: 'Dış Cephe',
         icon: '🏢',
         description: 'Mantolama',
-        levhalar: ['SW035', 'Premium', 'HD150', 'LD125', 'TR7.5', 'İdeal Carbon', 'Double Carbon', 'EPS Karbonlu', 'EPS Beyaz', 'EPS 035 Beyaz', 'Optimix Karbonlu']
+        levhalar: ['SW035', 'Premium', 'HD150', 'LD125', 'TR7.5', 'İdeal Carbon', 'Double Carbon', 'EPS Karbonlu', 'EPS Beyaz', 'EPS 035 Beyaz', 'Karbonlu']
     },
     {
         id: 'cati',

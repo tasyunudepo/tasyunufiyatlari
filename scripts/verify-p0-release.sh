@@ -34,6 +34,7 @@ npm audit --omit=dev --audit-level=high
 
 echo '7/8 Production build'
 npm run build
+node scripts/check-brand-repeat.mjs
 
 echo '8/9 Kritik tarayıcı akışları'
 CI=1 npm run test:e2e -- --workers=1 --retries=0

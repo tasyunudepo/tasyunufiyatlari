@@ -181,6 +181,19 @@ export function findFamilyCanonicalInText(text: string): string | undefined {
     )?.canonical;
 }
 
+/**
+ * Levha kaydının ailesi. short_name tek başına bir aile kuralına uymazsa
+ * markayla birlikte denenir: Optimix Karbonlu'nun short_name'i "Karbonlu",
+ * aile kuralı ise "optimix karbonlu" metnini bekler (16 Ekim 2026).
+ */
+export function findPlateFamilyCanonical(plate: MatchPlateRecord, brands: MatchBrandRecord[]): string {
+    const own = findFamilyCanonicalInText(plate.short_name);
+    if (own) return own;
+    const brandName = brands.find(b => b.id === plate.brand_id)?.name;
+    const withBrand = brandName ? findFamilyCanonicalInText(`${brandName} ${plate.short_name}`) : undefined;
+    return withBrand ?? plate.short_name;
+}
+
 export function findVariantCanonicalInText(text: string): string | undefined {
     const normalized = normalizeTextForMatch(text);
     return VARIANT_ALIAS_RULES.find(rule =>

@@ -16,7 +16,8 @@
     "verify:live:readonly": "node --env-file=.env.local scripts/verify-p0-live-readonly.mjs",
     "verify:visitor-copy": "bash scripts/verify-visitor-copy.sh",
     "verify:fast": "vitest run && tsc --noEmit",
-    "verify:full": "vitest run && tsc --noEmit && eslint && next build",
+    "verify:full": "vitest run && tsc --noEmit && eslint && next build && node scripts/check-brand-repeat.mjs",
+    "verify:brand-repeat": "node scripts/check-brand-repeat.mjs",
     "verify:release": "bash scripts/verify-p0-release.sh",
     "deploy:prod": "node scripts/deploy-prod.mjs",
     "verify:contrast": "node scripts/audit-contrast.mjs"

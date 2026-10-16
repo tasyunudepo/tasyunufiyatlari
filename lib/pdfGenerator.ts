@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { collapseRepeatedWords } from '@/lib/catalog/productLabel';
 import { toPdfRect } from '@/lib/pdf/portfolioSection';
 import { buildQrOrderLink, buildQuoteDocument } from '@/lib/pdf/quoteDocument';
 import { QUOTE_DOCUMENT_CSS, SHEET_WIDTH_PX } from '@/lib/pdf/quoteDocumentStyles';
@@ -112,7 +113,13 @@ function addWrappedText(doc: jsPDF, text: string, x: number, y: number, maxWidth
     return y + (lines.length * lineHeight);
 }
 
-function generateFallbackQuotePDF(data: PDFQuoteData): QuotePDFResult {
+function generateFallbackQuotePDF(input: PDFQuoteData): QuotePDFResult {
+    const data: PDFQuoteData = {
+        ...input,
+        systemDescription: collapseRepeatedWords(input.systemDescription),
+        packageName: collapseRepeatedWords(input.packageName),
+        items: input.items.map((item) => ({ ...item, description: collapseRepeatedWords(item.description) })),
+    };
     const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',

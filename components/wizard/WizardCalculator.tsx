@@ -23,7 +23,7 @@ import HomepageCalculationResult from "@/components/home/HomepageCalculationResu
 import MaterialOffers from "@/components/portfolio/MaterialOffers";
 import { citySubRegionQuestion, type BonusSubRegionChoice } from "@/lib/pricing/bonus/subRegions";
 import { buildBonusPlateOrder } from "@/lib/pricing/bonus/packageAssembly";
-import { buildPlateItemName } from "@/lib/catalog/productLabel";
+import { buildPlateItemName, joinBrandAndModel } from "@/lib/catalog/productLabel";
 import {
     getBonusChallengerModel,
     buildBonusChallenge,
@@ -529,7 +529,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 material: material.slug as "tasyunu" | "eps",
                 brandId: brand.id,
                 model: plate.short_name,
-                label: `${brand.name} ${plate.short_name}`,
+                label: joinBrandAndModel(brand.name, plate.short_name),
                 thicknessOptions: plate.thickness_options,
             }];
         }).sort((a, b) => a.label.localeCompare(b.label, "tr-TR"));
@@ -1902,7 +1902,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
 
             calculated.push({
                 definition: pkgDef,
-                plateBrandName: selectedModel ? `${selectedBrand.name} ${selectedModel}` : selectedBrand.name,
+                plateBrandName: selectedModel ? joinBrandAndModel(selectedBrand.name, selectedModel) : selectedBrand.name,
                 accessoryBrandName: brands.find(b => b.id === pkgDef.accessory_brand_id)?.name || '',
                 items,
                 totalProductCost,

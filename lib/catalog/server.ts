@@ -8,6 +8,7 @@ import { buildMinimumOrderLabel } from '@/lib/catalog/slug';
 import { buildWizardPrefill } from '@/lib/catalog/prefill';
 import { getDecisionContext } from '@/lib/catalog/decision';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
+import { collapseRepeatedWords } from '@/lib/catalog/productLabel';
 import type {
   CatalogProductView,
   CatalogProductDetailResponse,
@@ -135,7 +136,7 @@ export async function getCatalogProducts(
       return {
         id: row.id,
         slug: row.slug,
-        name: row.name,
+        name: collapseRepeatedWords(row.name),
         brand: { id: row.brands?.id ?? 0, name: row.brands?.name ?? '', tier: row.brands?.tier ?? '' },
         model: row.short_name ?? null,
         thickness_options: null,
@@ -310,7 +311,7 @@ export async function getCatalogProduct(
       const product: CatalogProductView = {
         id: row.id,
         slug: row.slug,
-        name: row.name,
+        name: collapseRepeatedWords(row.name),
         brand: {
           id:   row.brands?.id   ?? 0,
           name: row.brands?.name ?? '',
@@ -426,7 +427,7 @@ function buildPlateView(row: SupabasePlateRow): CatalogProductView {
   return {
     id:   row.id,
     slug: row.slug,
-    name: row.name,
+    name: collapseRepeatedWords(row.name),
     brand: { id: brand?.id ?? 0, name: brand?.name ?? '', tier: brand?.tier ?? '' },
     model:             row.short_name ?? null,
     thickness_options: derivedThicknesses,

@@ -96,3 +96,17 @@ export function buildMinimumOrderLabel(
   const unit = unitMap[type] ?? type;
   return `minimum ${value} ${unit}`;
 }
+
+// ============================================================
+// Adı değişen ürünler — eski adres yeni adrese kalıcı yönlenir
+// ============================================================
+//
+// Yönlendirme next.config'te değil ürün sayfasında yapılır: eski slug
+// veritabanında hâlâ duruyorsa sayfa normal açılır, kayıt yeni slug'a
+// geçince eski adres yeni adrese gider. Kod ile veri hangi sırayla canlıya
+// çıkarsa çıksın ürün sayfası 404 vermez.
+
+export const RENAMED_PRODUCT_SLUGS: Readonly<Record<string, string>> = {
+  // Optimix Karbonlu: adreste marka iki kez yazılıyordu (16 Ekim 2026).
+  'optimix-optimix-karbonlu-eps': 'optimix-karbonlu-eps',
+};

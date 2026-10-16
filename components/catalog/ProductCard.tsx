@@ -47,6 +47,12 @@ export default function ProductCard({
       : null;
   const densitySource = isWarm ? getDensitySourceLabel(product.model) : null;
   const productModel = product.model ?? '';
+  // Başlık markayı ya da modeli zaten içeriyorsa üst etiket ve model satırı
+  // yazılmaz: "Optimix / Optimix TR7.5 / TR7.5" yerine "Optimix TR7.5"
+  // (Emrah, 16 Ekim 2026).
+  const nameLower = product.name.toLocaleLowerCase('tr-TR');
+  const showBrandLabel = !nameLower.includes(product.brand.name.toLocaleLowerCase('tr-TR'));
+  const showModelLine = productModel !== '' && !nameLower.includes(productModel.toLocaleLowerCase('tr-TR'));
   const isComparisonEligible = getProfileByModel(productModel)?.comparisonEligible === true;
   const thicknessSummary = formatThicknessSummary(product.thickness_options);
 
@@ -101,7 +107,7 @@ export default function ProductCard({
           >
             <div className="mb-2 flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="mb-1 text-xs font-semibold text-hub-muted">{product.brand.name}</p>
+                {showBrandLabel && <p className="mb-1 text-xs font-semibold text-hub-muted">{product.brand.name}</p>}
                 <h3 className="text-[15px] font-bold leading-5 tracking-[-0.015em] text-hub-ink transition-colors group-hover:text-hub-gold">
                   {product.name}
                 </h3>
@@ -111,7 +117,7 @@ export default function ProductCard({
               </span>
             </div>
 
-            {product.model && (
+            {showModelLine && (
               <p className="mb-2 text-xs text-hub-muted">{product.model}</p>
             )}
             {(densityBadge || thicknessSummary) && (
@@ -197,7 +203,7 @@ export default function ProductCard({
       {/* Üst: isim + badge */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
-          <p className={isWarm ? 'mb-1 text-xs font-semibold text-hub-muted' : 'text-xs text-fe-muted-strong mb-0.5'}>{product.brand.name}</p>
+          {showBrandLabel && <p className={isWarm ? 'mb-1 text-xs font-semibold text-hub-muted' : 'text-xs text-fe-muted-strong mb-0.5'}>{product.brand.name}</p>}
           <h3 className={isWarm
             ? 'line-clamp-2 text-base font-bold leading-6 tracking-[-0.015em] text-hub-ink transition-colors group-hover:text-hub-gold'
             : 'text-sm font-semibold text-white group-hover:text-brand-400 transition-colors line-clamp-2'}>
@@ -212,7 +218,7 @@ export default function ProductCard({
       </div>
 
       {/* Model + ayırt edici özet: yoğunluk rozeti ve kalınlık aralığı */}
-      {product.model && (
+      {showModelLine && (
         <p className={isWarm ? 'mb-2 text-xs text-hub-muted' : 'text-xs text-fe-muted-strong mb-1.5'}>{product.model}</p>
       )}
       {(densityBadge || thicknessSummary) && (

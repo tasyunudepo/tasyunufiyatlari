@@ -17,6 +17,7 @@ import {
 } from "@/lib/notifyWizardEvent";
 import { createComparisonSessionId } from "@/lib/analytics/pdpJourney";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
+import { joinBrandAndModel } from "@/lib/catalog/productLabel";
 
 // ============================================================
 // Filli grubu PDP'sinde Bonus alternatif kartı (Sprint 1.3)
@@ -148,7 +149,7 @@ export default function BonusAlternativeCard({
       comparison_session_id: comparisonSessionId,
     });
     notifyProductDetailComparisonPathClick({
-      product_name: `${sourceBrandName} ${sourceModel}`,
+      product_name: joinBrandAndModel(sourceBrandName, sourceModel),
       brand_name: sourceBrandName,
       product_slug: sourceModel,
       result_session_id: interactive?.resultSessionId ?? `pdp_${comparisonSessionId}`,
@@ -213,7 +214,7 @@ export default function BonusAlternativeCard({
           {currentUnitPriceExVat != null && currentUnitPriceExVat > 0 && (
             <div className="mb-2 grid grid-cols-2 gap-2 text-sm">
               <div className="rounded-lg border border-fe-border/60 bg-fe-bg/40 p-2">
-                <p className="text-xs uppercase tracking-wide text-fe-muted">{sourceBrandName} {sourceModel}</p>
+                <p className="text-xs uppercase tracking-wide text-fe-muted">{joinBrandAndModel(sourceBrandName, sourceModel)}</p>
                 <p className="font-bold tabular-nums text-white">{fmt(currentUnitPriceExVat)} ₺/m²</p>
               </div>
               <div className="rounded-lg border border-brand-500/40 bg-brand-900/20 p-2">

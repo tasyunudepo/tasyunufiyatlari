@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import type { CalculatedPackage } from '@/lib/types';
+import { joinBrandAndModel } from '@/lib/catalog/productLabel';
 
 interface PackageCardProps {
     pkg: CalculatedPackage;
@@ -307,7 +308,7 @@ export function PackageCard({
                     {visibleItems.map((item, i) => (
                         <div key={i} className="flex justify-between text-fe-text">
                             <span className="truncate pr-2" title={item.name}>
-                                {item.brandName} {item.shortName}
+                                {joinBrandAndModel(item.brandName, item.shortName)}
                             </span>
                             <span className="text-fe-muted whitespace-nowrap">
                                 {item.quantity % 1 === 0

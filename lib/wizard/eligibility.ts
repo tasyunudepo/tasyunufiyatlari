@@ -20,6 +20,10 @@ export const EPS_MANTOLAMA_MODELLER: readonly string[] = [
   'EPS Karbonlu',
   'EPS Beyaz',
   'EPS 035 Beyaz',
+  // Optimix Karbonlu. Kayıt 16 Ekim 2026'da diğer levhalarla aynı düzene
+  // alınıyor (short_name "Optimix Karbonlu" → "Karbonlu"); veri güncellenene
+  // kadar eski ad da tanınır, ürün sihirbazdan düşmez.
+  'Karbonlu',
   'Optimix Karbonlu',
 ]
 
