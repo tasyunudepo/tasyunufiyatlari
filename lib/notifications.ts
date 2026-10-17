@@ -119,10 +119,23 @@ function cleanEnv(raw: string | undefined): string | undefined {
   return v || undefined;
 }
 
+/**
+ * Bildirim yalnız canlı yayında gider (17 Ekim 2026). Yerelde `next start` ile koşan otomatik testler gerçek
+ * CallmeBot numarasına mesaj atıyordu; Vercel önizlemesi de canlı değildir. Birim testleri (NODE_ENV=test)
+ * gönderimi taklit ederek sınar. Yerelde bilerek denemek için NOTIFY_IN_DEV=1.
+ */
+export function notificationsEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.VERCEL_ENV === 'production' || env.NODE_ENV === 'test' || env.NOTIFY_IN_DEV === '1';
+}
+
 export async function sendNotification(
   event: LeadEventType,
   data: NotificationData
 ): Promise<void> {
+  if (!notificationsEnabled()) {
+    console.info(`[sendNotification] canlı yayın değil, bildirim gönderilmedi (${event})`);
+    return;
+  }
   const phone1  = cleanEnv(process.env.CALLMEBOT_PHONE_1);
   const apiKey1 = cleanEnv(process.env.CALLMEBOT_APIKEY_1);
   const phone2  = cleanEnv(process.env.CALLMEBOT_PHONE_2);

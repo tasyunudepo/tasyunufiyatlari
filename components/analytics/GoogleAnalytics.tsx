@@ -7,6 +7,9 @@ interface Props {
   measurementId: string;
 }
 
+/** Ölçüm yalnız bu alan adlarında (www ve çıplak) çalışır. */
+export const REAL_HOST_PATTERN = '/^(www\\.)?tasyunufiyatlari\\.com$/';
+
 export default function GoogleAnalytics({ measurementId }: Props) {
   if (!measurementId) return null;
 
@@ -31,19 +34,25 @@ export default function GoogleAnalytics({ measurementId }: Props) {
         gtag('set', 'ads_data_redaction', true);
       `}</Script>
 
-      {/* 2) GA4 gtag.js — sayfa görüntülemeleri ayrı izleyicide güvenli URL ile gönderilir */}
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
-        strategy="afterInteractive"
-      />
+      {/* 2) GA4 gtag.js — yalnız gerçek alan adında yüklenir (17 Ekim 2026). Yerelde (127.0.0.1) koşan otomatik
+          testler gerçek etiketi yükleyip düğmelere basıyor, Google bunları ziyaretçi ve temas sayıyordu (16 Eki:
+          284 kişi / 18 temas görünen günde gerçek 117 kişi / 3 temas). gtag yine tanımlı kalır: olaylar dataLayer'a
+          düşer, ağa gitmez. Ölçüm bekçisi gerçek alan adıyla (--resolve) koştuğu için etiket yüklenir. */}
       <Script id="ga-init" strategy="afterInteractive">{`
-        gtag('js', new Date());
-        gtag('config', '${measurementId}', {
-          anonymize_ip: true,
-          allow_google_signals: false,
-          allow_ad_personalization_signals: false,
-          send_page_view: false
-        });
+        (function () {
+          if (!${REAL_HOST_PATTERN}.test(location.hostname)) { window.__gaSkippedHost = location.hostname; return; }
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=${measurementId}';
+          document.head.appendChild(s);
+          gtag('js', new Date());
+          gtag('config', '${measurementId}', {
+            anonymize_ip: true,
+            allow_google_signals: false,
+            allow_ad_personalization_signals: false,
+            send_page_view: false
+          });
+        })();
       `}</Script>
     </>
   );

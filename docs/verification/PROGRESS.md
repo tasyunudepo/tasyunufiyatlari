@@ -2052,3 +2052,17 @@ Emrah: "7-21 gün teslim planların güzel, bunu uygula" (önce Codex görseller
 Kart: "taşyünü levha" aramasında `/urunler/tasyunu-levha` 6,7 → 13,5. sıraya geriledi; aynı sorguda SW035 10 cm sayfası 9,1. sırada (yamyamlık). Doğrulama: sayfa kategoriye zaten yol satırı ve altbilgide "Taşyünü Levha" diye bağlıyordu; eksik olan metin içi bağlantıydı. "Kullanım ve seçim" kutusuna tek cümle: "Diğer marka ve yoğunluklar için tüm **taşyünü levha** modellerine bakın." Yalnız SW035 10 cm (`lib/seo/categoryLinks.ts`) — önce/sonra gözlemde etki ayrı okunsun. Adres sitenin kategori yolu (`/urunler/tasyunu-levha`); ürünün `category.slug`'ı (`tasyunu`) değil — ilk denemede tarayıcı testi bu yanlış adresi yakaladı.
 
 Editör (GPT-6 Astra): itiraz yok. Kanıt: tsc temiz; vitest 984; `category-link.spec.ts` (yeni: 10 cm'de var, 8 cm ve başka üründe yok) + `pdp-product-information` (kilitli) 9/9; derleme, copy-gate 476 HTML temiz, `verify:visitor-copy` geçti; ekran 390/1440 taşma yok; ölçüm bekçisi (kuru, yerel üretim) GEÇTİ.
+
+
+## 17 Ekim 2026 · Yerel test trafiği Google'a ve bildirime gitmez
+
+Emrah: panel 16 Eki'de tasyunu'da 18 temas / 17 WhatsApp kişisi gösterdi, gerçekte yazan yok. Kanıt (GA4 hostName): 16 Eki temas olaylarının 3'ü hariç hepsi `127.0.0.1` — yerelde `next start` üzerinde koşan Playwright testleri gerçek GA4 etiketini yükleyip düğmelere basıyor; her test yeni tarayıcı = yeni "kişi". 30 günde 281 oturum, 60 günde 48 temas olayı 127.0.0.1'den. Ayrıca `/api/whatsapp-intent` yerelde `.env.local`'daki CallmeBot numarasına gerçek bildirim atabiliyordu.
+
+| Değişiklik | Sonuç |
+|---|---|
+| `components/analytics/GoogleAnalytics.tsx`: gtag.js ve config yalnız `(www.)tasyunufiyatlari.com`'da yüklenir; diğer adreste `window.__gaSkippedHost`, gtag/dataLayer tanımlı kalır | yerel testler Google'a istek göndermez; ölçüm bekçisi `--resolve` ile gerçek alan adında çalışmaya devam eder |
+| `lib/notifications.ts` `notificationsEnabled()`: yalnız `VERCEL_ENV=production` (birim testinde NODE_ENV=test, bilerek deneme `NOTIFY_IN_DEV=1`) | yerel ve önizleme yayını CallmeBot mesajı atmaz |
+
+Gerçek sitede telefonun gereksiz tetiklenmesi yok: 30 günde 3 telefon olayı, üçü de /iletisim'de "en az 1 kamyon mu?" onayından sonra; 11 WhatsApp olayı.
+
+Kanıt: vitest 990 (yeni `notifications-production-only`); tarayıcı testleri 69/69 (yeni `no-test-tracking.spec.ts`: 127.0.0.1'de Google'a sıfır istek, `gtag` tanımlı); ölçüm bekçisi gerçek alan adıyla (yerel üretim, kuru) GEÇTİ — `/`, Bonus F 150 (WhatsApp tık → Whatsapp_Yazanlar), /iletisim (telefon ve WhatsApp onaylı tık). GCR tarafı: tüm GA4 sorgularında test/önizleme alan adı dışlaması, geçmiş kayıtlar silindi (GCR ANA-PLAN 17 Eki).
