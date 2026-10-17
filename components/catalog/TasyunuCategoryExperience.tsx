@@ -490,6 +490,15 @@ export default function TasyunuCategoryExperience({
                 <p className="mt-2 text-sm leading-6 text-hub-ink-2 sm:text-base">
                   {activeGroup?.section.desc}
                   {isMantolama && ' Yoğunluk tek başına kalite sırası değildir; uygulama ve mekanik değerlerle birlikte değerlendirin.'}
+                  {isMantolama && (
+                    <>
+                      {' '}Kalınlığa göre en düşük m² fiyatları:{' '}
+                      <Link href="/" prefetch={false} className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
+                        güncel taş yünü fiyatları
+                      </Link>
+                      .
+                    </>
+                  )}
                 </p>
               </div>
               {isMantolama && (

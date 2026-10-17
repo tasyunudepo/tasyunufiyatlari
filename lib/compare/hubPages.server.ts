@@ -25,6 +25,9 @@ const SUB_LABELS: Record<string, string> = {
   diger: 'Merkez ve diğer ilçeler',
 }
 
+/** Ana sayfaya giden bağlantının adı (17 Ekim 2026, "taş yünü fiyatları" hedefi ana sayfa). */
+export const HOME_PRICES_LABEL = 'Kalınlığa göre bütün taş yünü fiyatları'
+
 /** Bir derlemede tek kez: bütün kalınlıkların fotoğrafı. */
 export const getHubSnapshots = cache(async () => getComparisonSnapshots(HUB_THICKNESSES))
 
@@ -83,7 +86,11 @@ export async function getThicknessHubData(thicknessCm: number): Promise<HubPageD
       },
       {
         title: 'Diğer kalınlıklar',
-        links: HUB_THICKNESSES.map((t) => ({ label: `${t} cm taş yünü fiyatları`, href: thicknessHubPath(t), current: t === thicknessCm })),
+        // 17 Ekim 2026: ana sayfa "taş yünü fiyatları" hedefi — kalınlık sayfaları ana sayfaya bu adla bağlanır.
+        links: [
+          { label: HOME_PRICES_LABEL, href: '/' },
+          ...HUB_THICKNESSES.map((t) => ({ label: `${t} cm taş yünü fiyatları`, href: thicknessHubPath(t), current: t === thicknessCm })),
+        ],
       },
       {
         title: 'Yoğunluğa göre',
@@ -133,6 +140,7 @@ export async function getDensity150HubData(thicknessCm: number): Promise<HubPage
         title: `${thicknessCm} cm bütün levhalar`,
         links: [
           { label: `${thicknessCm} cm taş yünü fiyatları (bütün markalar)`, href: thicknessHubPath(thicknessCm) },
+          { label: HOME_PRICES_LABEL, href: '/' },
           { label: 'Bütün kalınlıklar ve şehirler: karşılaştırma', href: COMPARISON_PATH },
         ],
       },

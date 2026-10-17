@@ -50,6 +50,10 @@ export default async function Yogunluk120Page() {
               <Link href={DENSITY_150_PATH} className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
                 150 yoğunluk taş yünü fiyatları
               </Link>
+              ; kalınlığa göre en düşük m² fiyatları:{' '}
+              <Link href="/" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
+                güncel taş yünü fiyatları
+              </Link>
               .
             </p>
           </div>

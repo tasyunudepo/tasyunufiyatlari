@@ -7,11 +7,13 @@ test.describe('Ana sayfa tek dönüşüm yolu', () => {
   test('başlangıçta yalnız hesaplama CTA görünür; sonuçtan sonra WhatsApp baskınlaşır', async ({ page }) => {
     await page.goto('/')
 
+    // 17 Ekim 2026 (Emrah onayı, "taş yünü fiyatları" yuvarlak masası): ana sayfa bu aramanın hedefi; başlık aramayla
+    // aynı, hesaplama alt cümlede. Önceki başlık "Taşyünü ve EPS teslim fiyatını hesaplayın." idi.
     await expect(page.getByRole('heading', {
       level: 1,
-      name: 'Taşyünü ve EPS teslim fiyatını hesaplayın.',
+      name: 'Taş yünü fiyatları',
     })).toBeVisible()
-    await expect(page.getByText('Teslim ili, ürün, kalınlık ve miktarı seçin; fiyatınızı anında görün.')).toBeVisible()
+    await expect(page.getByText('Kalınlığa göre m² fiyatını görün; teslim ili, ürün ve miktarı seçip taşyünü ya da EPS teslim fiyatınızı hesaplayın.')).toBeVisible()
     await expect(page.locator('header img[alt="Taşyünü Fiyatları"]')).toBeVisible()
     await expect(page.getByText('Satış ve sevkiyat:')).toBeVisible()
 

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import DealerBrandStrip from "@/components/home/DealerBrandStrip";
 import OperationVideo from "@/components/home/OperationVideo";
@@ -89,7 +90,7 @@ const jsonLdGraph = buildBusinessGraph([
 
 // 14 Ekim 2026: ana sayfanın gövdesi (önceki app/page.tsx, değişmeden). Sunucudaki app/page.tsx fiyat tablosunu
 // derleme anında hesaplayıp `priceTable` olarak verir; sayfanın geri kalanı eskisi gibi istemcide çalışır.
-export default function HomePageClient({ priceTable }: { priceTable?: ReactNode }) {
+export default function HomePageClient({ priceTable, priceSummary }: { priceTable?: ReactNode; priceSummary?: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#f3f0e8] text-[#171711]">
       <script
@@ -110,11 +111,13 @@ export default function HomePageClient({ priceTable }: { priceTable?: ReactNode 
                   Proje ölçeğinde teslim fiyatı
                 </p>
                 <h1 className="font-heading text-[42px] font-extrabold leading-[0.98] tracking-[-0.035em] text-[#151510] sm:text-[54px] lg:text-[62px]">
-                  Taşyünü ve EPS teslim fiyatını hesaplayın.
+                  Taş yünü fiyatları
                 </h1>
                 <p className="mt-5 max-w-[540px] text-base leading-7 text-[#59564d] sm:text-lg sm:leading-8">
-                  Teslim ili, ürün, kalınlık ve miktarı seçin; fiyatınızı anında görün.
+                  Kalınlığa göre m² fiyatını görün; teslim ili, ürün ve miktarı seçip taşyünü ya da EPS teslim fiyatınızı hesaplayın.
                 </p>
+                {/* İlk ekran fiyat özeti (17 Ekim 2026, "taş yünü fiyatları" hedefi ana sayfa): rakam önce, hesap sonra. */}
+                {priceSummary}
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-t border-[#d2ccbe] pt-4 text-sm text-[#514d43]">
                   <span className="flex items-start gap-3">
                     <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#9a7528]" aria-hidden />
@@ -169,6 +172,43 @@ export default function HomePageClient({ priceTable }: { priceTable?: ReactNode 
                 className="rounded-[1.35rem] border border-black/10 bg-[#0f1b33] shadow-[0_24px_70px_rgba(24,22,17,0.14)]"
               />
             </div>
+          </div>
+        </section>
+
+        {/* "taş yünü" tek başına aranınca da cevap (17 Ekim 2026). Fiyat önceliği üstte; burası kısa tanım. */}
+        <section className="border-t border-[#d6d0c2]" aria-labelledby="tasyunu-nedir-title">
+          <div className="mx-auto max-w-[900px] px-4 py-14 sm:px-6 sm:py-16">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#70591f]">Kısaca</p>
+            <h2 id="tasyunu-nedir-title" className="mt-3 font-heading text-3xl font-bold tracking-tight text-[#171711] sm:text-4xl">
+              Taş yünü nedir, nerede kullanılır?
+            </h2>
+            <p className="mt-4 text-base leading-7 text-[#59564d]">
+              Taş yünü (taşyünü), volkanik kayaçların eritilip lif hâline getirilmesiyle üretilen mineral yün yalıtım malzemesidir.
+              Isı ve ses yalıtımında kullanılır; sitede karşılaştırılan mantolama levhalarının hepsi A1 (yanmaz) sınıfındadır.
+            </p>
+            <ul className="mt-5 space-y-2 text-base leading-7 text-[#59564d]">
+              <li>
+                <strong className="font-semibold text-[#25241f]">Dış cephe mantolaması:</strong> sıvalı sistemde levha olarak uygulanır. Yukarıdaki{" "}
+                <a href="#fiyat-tablosu" className="font-semibold text-[#70591f] underline decoration-[#c9a663] underline-offset-4 hover:text-[#171711]">
+                  m² fiyatları
+                </a>{" "}
+                bu levhalar içindir.
+              </li>
+              <li>
+                <strong className="font-semibold text-[#25241f]">Yoğunluğa göre seçim:</strong> levhalar yoğunluk ve mekanik dayanım değerleriyle ayrılır;{" "}
+                <Link href="/tasyunu-karsilastir" prefetch={false} className="font-semibold text-[#70591f] underline decoration-[#c9a663] underline-offset-4 hover:text-[#171711]">
+                  levhaları karşılaştırın
+                </Link>
+                .
+              </li>
+              <li>
+                <strong className="font-semibold text-[#25241f]">Diğer uygulamalar:</strong> çatı, ara bölme ve tesisat yalıtımında levha, şilte ve rulo olarak kullanılır;{" "}
+                <Link href="/urunler/tasyunu-levha" prefetch={false} className="font-semibold text-[#70591f] underline decoration-[#c9a663] underline-offset-4 hover:text-[#171711]">
+                  bütün taşyünü ürünleri
+                </Link>
+                .
+              </li>
+            </ul>
           </div>
         </section>
 

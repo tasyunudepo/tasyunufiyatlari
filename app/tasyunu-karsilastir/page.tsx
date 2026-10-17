@@ -51,6 +51,10 @@ export default async function TasyunuKarsilastirPage() {
               <Link href="/tasyunu-yogunluk/150-kg-m3" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
                 150 kg/m³ levhalar
               </Link>
+              . Kalınlığa göre en düşük m² fiyatları:{' '}
+              <Link href="/" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
+                güncel taş yünü fiyatları
+              </Link>
               .
             </p>
           </div>

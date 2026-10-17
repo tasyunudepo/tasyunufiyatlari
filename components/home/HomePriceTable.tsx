@@ -18,7 +18,7 @@ const tl = (n: number) => n.toLocaleString('tr-TR', { minimumFractionDigits: 2, 
 export default function HomePriceTable({ rows, monthYear, cityLabel }: { rows: HomePriceRow[]; monthYear: string; cityLabel: string }) {
   if (rows.length === 0) return null
   return (
-    <section className="border-b border-[#d6d0c2]" aria-labelledby="fiyat-tablosu-baslik" data-testid="home-price-table">
+    <section id="fiyat-tablosu" className="scroll-mt-24 border-b border-[#d6d0c2]" aria-labelledby="fiyat-tablosu-baslik" data-testid="home-price-table">
       <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#70591f]">Taşyünü fiyatları · {monthYear}</p>
         <h2 id="fiyat-tablosu-baslik" className="mt-3 font-heading text-3xl font-bold tracking-tight text-[#171711] sm:text-4xl">

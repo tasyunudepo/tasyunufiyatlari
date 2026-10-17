@@ -89,6 +89,18 @@ export default function ComparisonThicknessShortcut({ model, thicknessCm, warm, 
           </Link>
         </p>
       )}
+      {/* 17 Ekim 2026: "taş yünü fiyatları" hedefi ana sayfa — ürün sayfaları genel fiyat listesine bu adla bağlanır. */}
+      <p className={`mt-2 px-1 text-sm ${warm ? 'text-hub-ink-2' : 'text-fe-muted'}`}>
+        Kalınlığa göre en düşük m² fiyatları:{' '}
+        <Link
+          href="/"
+          prefetch={false}
+          data-testid="home-prices-link"
+          className={`font-semibold underline-offset-2 hover:underline ${warm ? 'text-hub-gold' : 'text-brand-300'}`}
+        >
+          güncel taş yünü fiyatları
+        </Link>
+      </p>
     </div>
   )
 }

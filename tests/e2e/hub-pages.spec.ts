@@ -130,6 +130,39 @@ test.describe('120 yoğunluk sayfası ve ana sayfa fiyat tablosu (Faz 4)', () =>
     await expect(table.locator('tbody tr').first()).toContainText('₺/m²')
   })
 
+  // 17 Ekim 2026 — "taş yünü fiyatları" hedefi ana sayfa (Emrah onayı + Astra uzlaşısı).
+  test('ana sayfa: başlık aramayla aynı, ilk ekranda fiyat özeti hesaplayıcıdan önce', async ({ page }) => {
+    await page.goto('/')
+    await expect(page).toHaveTitle(/^Taş Yünü Fiyatları \S+ \d{4} — Mantolama Levhası m² Fiyatı$/u)
+    const description = await page.locator('meta[name="description"]').getAttribute('content')
+    expect(description).toMatch(/taş yünü fiyatları \(KDV hariç, 1 kamyon, İstanbul Avrupa Yakası\): mantolama levhası m² fiyatı \d+ cm’de [\d.,]+ ₺, \d+ cm’de [\d.,]+ ₺’den başlar\./u)
+    const summary = page.getByTestId('home-price-summary')
+    await expect(summary).toBeVisible()
+    await expect(summary.getByRole('link', { name: /^10 cm taş yünü/ })).toHaveAttribute('href', '/tasyunu-fiyatlari/10-cm')
+    await expect(summary).toContainText('en az 1 tam kamyon')
+    await expect(summary).toContainText('KDV hariç')
+    await expect(summary.getByRole('link', { name: 'Bütün kalınlıkların fiyatları' })).toHaveAttribute('href', '#fiyat-tablosu')
+    await expect(summary.getByRole('link', { name: 'Teslim fiyatını hesaplayın' })).toHaveAttribute('href', '#mantolama-hesaplayici')
+    // Özetteki 10 cm rakamı tablodaki 10 cm satırıyla aynı kaynaktan.
+    const summary10 = (await summary.getByRole('link', { name: /^10 cm taş yünü/ }).innerText()).match(/[\d.,]+ ₺\/m²/u)?.[0]
+    await expect(page.getByTestId('home-price-table').locator('tbody tr', { hasText: '10 cm taş yünü' })).toContainText(summary10!)
+    const summaryBox = await summary.boundingBox()
+    const calculatorBox = await page.locator('[data-homepage-calculator]').boundingBox()
+    expect(summaryBox!.y).toBeLessThan(calculatorBox!.y)
+    await expect(page.getByRole('heading', { level: 2, name: 'Taş yünü nedir, nerede kullanılır?' })).toBeVisible()
+  })
+
+  test('ana sayfaya "taş yünü fiyatları" bağlantıları: kalınlık, karşılaştırma, kategori, ürün', async ({ page }) => {
+    await page.goto('/tasyunu-fiyatlari/10-cm')
+    await expect(page.getByTestId('hub-links').getByRole('link', { name: 'Kalınlığa göre bütün taş yünü fiyatları' })).toHaveAttribute('href', '/')
+    await page.goto('/tasyunu-karsilastir')
+    await expect(page.locator('main').getByRole('link', { name: 'güncel taş yünü fiyatları' })).toHaveAttribute('href', '/')
+    await page.goto('/urunler/tasyunu-levha')
+    await expect(page.locator('main').getByRole('link', { name: 'güncel taş yünü fiyatları' }).first()).toHaveAttribute('href', '/')
+    await page.goto('/urunler/tasyunu-levha/dalmacyali-sw035-tasyunu/8-cm')
+    await expect(page.getByTestId('home-prices-link')).toHaveAttribute('href', '/')
+  })
+
   test('rabitz telli şilte "Rulo Taşyünü Şilte" başlığıyla', async ({ page }) => {
     const response = await page.goto('/urunler/tasyunu-levha/bonus-endustriyel-silte-tasyunu')
     test.skip(response?.status() === 404, 'Şilte sayfası yok')

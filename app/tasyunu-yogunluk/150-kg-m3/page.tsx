@@ -50,7 +50,11 @@ export default async function Yogunluk150Page() {
               <Link href="/tasyunu-karsilastir" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
                 genel karşılaştırmaya
               </Link>{' '}
-              bakabilirsiniz.
+              bakabilirsiniz; kalınlığa göre en düşük m² fiyatları:{' '}
+              <Link href="/" className="font-semibold text-hub-gold underline underline-offset-2 hover:no-underline">
+                güncel taş yünü fiyatları
+              </Link>
+              .
             </p>
           </div>
         </section>
