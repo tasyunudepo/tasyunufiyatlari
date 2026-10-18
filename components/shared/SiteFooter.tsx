@@ -156,6 +156,15 @@ export default function SiteFooter({ tone = 'dark' }: SiteFooterProps) {
             >
               Kiralık Jeneratör
             </Link>
+            {' · '}
+            {/* Bağımsız bilgi yazısı; ayrı işletmeye (FiberglasArt) küçük bağlantı verir (GCR, 18 Ekim 2026). */}
+            <Link
+              href="/dis-mekan-saksi-malzemesi"
+              prefetch={false}
+              className={`${linkText} transition-colors`}
+            >
+              Dış mekân saksısı
+            </Link>
           </p>
         </div>
       </div>
