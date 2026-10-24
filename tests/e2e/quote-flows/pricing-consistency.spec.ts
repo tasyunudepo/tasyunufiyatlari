@@ -7,7 +7,7 @@ function parseTl(text: string): number {
   return value
 }
 
-test('3 sistemde kart fiyatı, KDV hariç, KDV ve toplam aynı fiyat tabanını kullanır', async ({ page }) => {
+test('her sistem kartında kart fiyatı, KDV hariç, KDV ve toplam aynı fiyat tabanını kullanır', async ({ page }) => {
   test.setTimeout(90_000)
   await page.goto('/')
 
@@ -22,9 +22,11 @@ test('3 sistemde kart fiyatı, KDV hariç, KDV ve toplam aynı fiyat tabanını 
   const result = page.getByTestId('homepage-calculation-result')
   await expect(result).toBeVisible({ timeout: 20_000 })
   const tierSelector = result.getByTestId('homepage-tier-selector')
-  await expect(tierSelector).toHaveAttribute('data-tier-count', '3')
+  // 24 Ekim 2026 (Emrah kararı): TEKNO tozlu Ekonomik sistem hesaplayıcıda gösterilmez.
+  await expect(tierSelector).toHaveAttribute('data-tier-count', '2')
+  await expect(tierSelector.getByRole('radio', { name: /Ekonomik/ })).toHaveCount(0)
 
-  for (const tierName of ['Ekonomik', 'Dengeli', 'Orijinal']) {
+  for (const tierName of ['Dengeli', 'Orijinal']) {
     const radio = tierSelector.getByRole('radio', { name: new RegExp(tierName) })
     await radio.check()
     await expect(radio).toBeChecked()

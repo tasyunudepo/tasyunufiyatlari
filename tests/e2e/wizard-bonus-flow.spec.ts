@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 // Bonus harman paket akışı (karar 13 revizyonu, 13 Temmuz 2026):
-// Bonus levha + Expert/Optimix/TEKNO toz grubu üç sistem alternatifi üretir.
+// Bonus levha + Expert/Optimix toz grubu iki sistem alternatifi üretir.
+// TEKNO tozlu üçüncü sistem 24 Ekim 2026'dan beri hesaplayıcıda gösterilmez (Emrah kararı).
 
 test.describe('Bonus harman paket teklifi', () => {
-  test('Bonus akışı: kendi araç kapasitesi + 3 harman sistemi', async ({ page }) => {
+  test('Bonus akışı: kendi araç kapasitesi + 2 harman sistemi', async ({ page }) => {
     await page.goto('/')
     const calculator = page.locator('[data-homepage-calculator]')
     const productSelect = calculator.getByRole('combobox', { name: 'Malzeme' })
@@ -39,8 +40,8 @@ test.describe('Bonus harman paket teklifi', () => {
     const result = page.getByTestId('homepage-calculation-result')
     await expect(result).toBeVisible({ timeout: 20_000 })
     const tierSelector = result.getByTestId('homepage-tier-selector')
-    await expect(tierSelector.getByRole('radio')).toHaveCount(3)
-    await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Ekonomik' })).toContainText('TEKNO')
+    await expect(tierSelector.getByRole('radio')).toHaveCount(2)
+    await expect(tierSelector).not.toContainText('TEKNO')
     await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Dengeli' })).toContainText('Optimix')
     await expect(tierSelector.locator('[data-tier-card]').filter({ hasText: 'Premium' })).toContainText('Expert')
     await expect(result).toContainText('Bonus F 150 5 cm Taşyünü')

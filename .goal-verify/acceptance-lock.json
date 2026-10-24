@@ -64,10 +64,12 @@
       "reason": "Tekno KDV ve PDF güvenlik kontrolleri korunur; v24 müşteri tablolarının anonim kapısı ile v26 comparison şema erişimi eklenmiştir"
     },
     "tests/e2e/quote-flows/pricing-consistency.spec.ts": {
-      "sha256": "6f49a346f4e91a6d0ea7ee625141880fe231871d3f45ad7689a16c17611866d9",
-      "size": 2142,
+      "sha256": "0d6ed7cecb165cf5fbec97550f0f1974c9d8a475672e7c5b4b7f680910d329c9",
+      "size": 2318,
       "locked_at": "2026-08-31",
-      "reason": "Güncel üç sistem seçicisinde her kart toplamı sonuç toplamıyla; KDV ara toplamın yüzde 20'siyle ve toplam ara toplam + KDV ile uçtan uca tutarlıdır"
+      "reason": "Güncel üç sistem seçicisinde her kart toplamı sonuç toplamıyla; KDV ara toplamın yüzde 20'siyle ve toplam ara toplam + KDV ile uçtan uca tutarlıdır",
+      "relocked_at": "2026-10-24",
+      "relock_reason": "24 Ekim 2026 (Emrah kararı): TEKNO tozlu Ekonomik sistem hesaplayıcıda gösterilmez; SW035 5 cm'de sistem sayısı 3 → 2 (Dengeli, Orijinal) ve Ekonomik kartın olmadığı da doğrulanır. Korunan kabul (her kartta kart toplamı = sonuç toplamı, KDV = ara toplam × 0,20, toplam = ara toplam + KDV) değişmedi."
     }
   },
   "note": "Bu kilit test değişikliğini yasaklamaz; sessiz değişikliği görünür kılar."

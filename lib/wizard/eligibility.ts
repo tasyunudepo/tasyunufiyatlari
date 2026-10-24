@@ -41,3 +41,26 @@ export function filterMantolamaWizardModels(
 ): string[] {
   return models.filter((model) => isMantolamaWizardModel(malzeme, model))
 }
+
+// Hesaplayıcıda gösterilmeyen toz grubu markaları (Emrah, 24 Ekim 2026):
+// TEKNO setinde hazır toz seti tam kurulmuyor, fiyatı ve nakliyesi
+// netleşmiyor. Kayıtlar veritabanında durur; ofis teklif ekranı etkilenmez.
+export const WIZARD_HIDDEN_ACCESSORY_BRANDS: readonly string[] = ['TEKNO']
+
+export function isWizardAccessoryBrandHidden(brandName: string | null | undefined): boolean {
+  if (!brandName) return false
+  return WIZARD_HIDDEN_ACCESSORY_BRANDS.includes(brandName.trim().toLocaleUpperCase('tr-TR'))
+}
+
+/** Toz grubu markası gizli olan paket tanımlarını çıkarır. */
+export function filterWizardPackageDefinitions<T extends { accessory_brand_id: number | null }>(
+  definitions: readonly T[],
+  brands: ReadonlyArray<{ id: number; name: string | null }>,
+): T[] {
+  const hiddenIds = new Set(
+    brands.filter((brand) => isWizardAccessoryBrandHidden(brand.name)).map((brand) => brand.id),
+  )
+  return definitions.filter(
+    (definition) => definition.accessory_brand_id == null || !hiddenIds.has(definition.accessory_brand_id),
+  )
+}

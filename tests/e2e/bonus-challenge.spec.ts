@@ -43,8 +43,9 @@ test.describe('Bonus ve karşılaştırma yüzeyleri', () => {
     const result = page.getByTestId('homepage-calculation-result')
     await expect(result).toBeVisible({ timeout: 20_000 })
     const tierSelector = result.getByTestId('homepage-tier-selector')
-    await expect(tierSelector.getByRole('radio')).toHaveCount(3)
-    await expect(tierSelector).toContainText('Ekonomik')
+    // 24 Ekim 2026 (Emrah kararı): TEKNO tozlu Ekonomik sistem hesaplayıcıda gösterilmez.
+    await expect(tierSelector.getByRole('radio')).toHaveCount(2)
+    await expect(tierSelector).not.toContainText('Ekonomik')
     await expect(tierSelector).toContainText('Dengeli')
     await expect(tierSelector).toContainText('Premium')
   })

@@ -1001,7 +1001,7 @@ export default function ProductPricePanel({
             Komple set fiyatı hesaplayıcıda
           </p>
           <p className="mb-4 text-xs text-fe-muted">
-            Levha + toz grubu (yapıştırıcı, sıva, dübel, file…) komple set fiyatını bölgenize göre üç paket seçeneğiyle hesaplayın.
+            Levha + toz grubu (yapıştırıcı, sıva, dübel, file…) komple set fiyatını bölgenize göre paket seçenekleriyle hesaplayın.
           </p>
           <WizardLinkButton
             prefill={prefill}

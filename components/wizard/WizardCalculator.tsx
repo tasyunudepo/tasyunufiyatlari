@@ -54,7 +54,11 @@ import { useWizardStore, type WizardEntrySurface } from "@/lib/store/wizardStore
 import MinimumOrderDialog from "@/components/sales/MinimumOrderDialog";
 import { notifyMinimumOrderAnswer, notifyMinimumOrderShown } from "@/lib/analytics/leadQualification";
 import { publishMinimumOrder, type MinimumOrderSelection } from "@/lib/sales/minimumOrder";
-import { filterMantolamaWizardModels, isMantolamaWizardModel } from "@/lib/wizard/eligibility";
+import {
+    filterMantolamaWizardModels,
+    filterWizardPackageDefinitions,
+    isMantolamaWizardModel,
+} from "@/lib/wizard/eligibility";
 import type { PdfOfferFormData } from "@/lib/schemas/pdfOffer.schema";
 import { LEAD_TIME_LABEL, LEAD_TIME_NOTE, LEAD_TIME_SCOPE, showsLeadTime } from "@/lib/sales/leadTime";
 import type {
@@ -676,7 +680,9 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             if (platesRes.data) setPlates(platesRes.data);
             if (accessoriesRes.data) setAccessories(accessoriesRes.data);
             if (accessoryTypesRes.data) setAccessoryTypes(accessoryTypesRes.data);
-            if (packagesRes.data) setPackageDefinitions(packagesRes.data);
+            if (packagesRes.data) {
+                setPackageDefinitions(filterWizardPackageDefinitions(packagesRes.data, brandsRes.data ?? []));
+            }
             if (materialTypesRes.data) setMaterialTypes(materialTypesRes.data);
             if (platePricesRes.data) setPlatePrices(platePricesRes.data);
             if (logisticsRes.data) setLogisticsCapacity(logisticsRes.data);
@@ -2580,7 +2586,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                                 formu deneyin — paket, nakliye ve iskonto eş zamanlı işler.
                             </h3>
                             <p className="text-fe-text/75 text-sm leading-relaxed mb-5 max-w-md">
-                                8 kalemli komple set + 3 paket alternatifi + bölge iskontosu, tek formdan PDF teklife.
+                                8 kalemli komple set + paket alternatifleri + bölge iskontosu, tek formdan PDF teklife.
                             </p>
 
                             {/* Mini stat strip (eski hero altından taşındı) */}

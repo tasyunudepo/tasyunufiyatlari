@@ -2090,3 +2090,19 @@ Dübel matrisi (canlı veri): Dalmaçyalı, Expert, Optimix taşyünü ve EPS 12
 Kanıt: vitest 997 (yeni: 15/12 cm beton dübeli + pul, 10 cm'de pulsuz, ince levhada beton dübeli seçilse de pulsuz, pulsuz marka, EPS'e pul yok; hesaplayıcıda pul kapıdan sonra — normal + Bonus); tsc, eslint temiz; derleme temiz, 21 yeni 15 cm sayfası, site haritası kökü `<urlset>`; copy-gate 477 HTML temiz; yerel üretimde TR7.5 15 cm sayfası 764,40 TL/m² (ofis kataloğuyla aynı), Optimix Karbonlu 15 cm paket 1,5 m² ile; hesaplayıcı İstanbul + TR7.5 + 15 cm + 2.496 m² → Optimix Orijinal set, reçetede Dübel Pulu, KDV dahil 2.918.613 TL; ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı) `/`, `/iletisim`, TR7.5 15 cm GEÇTİ (ana sayfa 15 sn bekleme ile; canlı da aynı). Tarayıcı testleri 131 + ofis teklif AC-01–AC-06 geçti. Önceden kırık ve bu işle ilgisiz: ofis revize/çoğalt AC-07–09 (`quote-revise-*` liste düğmesi detay paneline taşındı), `ofis-patron-readonly` AC-01/02, `ofis-responsive` AC-03, `catalog-bonus-pdp` ("föyü beyanına göre" metni yok), `quote-pdf-document` tek kalem tek sayfa (13 Eki'den beri 2. sayfa var). `ofis-quote-builder.spec.ts` seçicisi netleştirildi (`Yeni Teklif` exact: ofis yeniden tasarımında ikinci "Yeni teklif yaz" düğmesi geldi); beklentiler değişmedi.
 
 Açık: ofisteki "Teklif notu (PDF'e girer)" yeni PDF şablonunda basılmıyor (`packageDescription` şablonda kullanılmıyor). Ayrı fiyat işi: EPS levhaları listenin ~%10 altında, Expert EPS Beyaz %52 üstünde, PW50 paket m² yanlış, Optimix Beyaz/035 Beyaz EPS DB'de yok.
+
+
+## 24 Ekim 2026 · TEKNO toz seti hesaplayıcıdan çıktı + Filli listesi tam kontrol
+
+Emrah: "Ne seti tam olur, ne fiyatı net olur, ne gidişi belli, ne nakliyesi belli… Çıkar teknoyu. Veri tabanında kaydı durabilir de gösterme, ön yüzdeki wizard'a ekleme."
+
+| Değişiklik | Sonuç |
+|---|---|
+| `lib/wizard/eligibility.ts` `filterWizardPackageDefinitions` + `WIZARD_HIDDEN_ACCESSORY_BRANDS = ['TEKNO']`; hesaplayıcı paket tanımlarını yüklerken uygular | Ekonomik Sistem (Dalmaçyalı, Expert, Bonus) ve Optimix'in Dengeli Sistemi (hepsi TEKNO tozlu) hesaplayıcıda yok. Dalmaçyalı/Expert/Bonus: 2 sistem; Optimix: yalnız Orijinal. `package_definitions` ve TEKNO ürünleri veritabanında duruyor; ofis teklif ekranı değişmedi |
+| Müşteri metni: "üç paket seçeneğiyle" → "paket seçenekleriyle" (ürün sayfası), "3 paket alternatifi" → "paket alternatifleri" (hesaplayıcı) | Sayı artık ürüne göre 1–2 |
+
+Kabul testi değişiklikleri (iş kuralı Emrah kararıyla değişti; korunan davranışlar aynen kaldı): `pricing-consistency.spec.ts` (kilitli; yeniden kilitlendi, gerekçe kilit kaydında) 3 → 2 sistem ve Ekonomik kartın yokluğu; `homepage-conversion.spec.ts` SW035 3 → 2 kart, kart geçişi Orijinal üzerinden, "iki kolon" testi Optimix TR7.5 yerine Expert HD150 (TR7.5 artık tek sistem), Bonus 3 → 2 marka çifti ve TEKNO yok; `bonus-challenge.spec.ts`, `wizard-bonus-flow.spec.ts` 3 → 2 sistem, TEKNO yok. Yeni: `tests/contracts/wizard-hidden-accessory-brand.test.ts`.
+
+Kanıt: vitest 1000; tsc temiz; derleme, copy-gate 477 HTML temiz; tarayıcı testleri 136 geçti, 6 önceden kırık ve ilgisiz (ofis revize AC-07–09, ofis-responsive AC-03, catalog-bonus-pdp, quote-pdf-document), 3 atlandı (`ofis-patron-readonly`: `.env.local`'da `PATRON_PASSWORD` satırı 24 Eki'de silinmiş, yerel); ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı) `/` ve `/iletisim` GEÇTİ. Kabul kilidi: `pdp-product-information.spec.ts` fe9f4a7'den (IBAN) beri kilit dışı — bu işten önce.
+
+Filli listesi tam kontrol: `docs/analiz/2026-10-24-filli-tam-kontrol.md`. Taşyünü levhaları Ağustos listesiyle aynı; EPS ve toz grubu Mayıs 2026 listesinde (Excel'in FİLLİ/FAWORİ sayfaları 2026-6 listesini kullanıyor: EPS +%10, toz +%3–15); Expert EPS Beyaz ve Dalmaçyalı Isı Yalıtım Sıvası listenin üstünde; PW50 paket m² yanlış. Fiyat güncellemesi Emrah onayı bekliyor.
