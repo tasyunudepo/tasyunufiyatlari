@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { generateQuotePDF } from "@/lib/pdfGenerator";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import { buildManualPdfData } from "@/lib/quote/buildManualPdfData";
+import { quoteDensityNote } from "@/lib/technical-profiles";
 import { describeVehicles, fitVehicles } from "@/lib/quote/vehicleArea";
 import { formatCurrency } from "@/lib/admin/utils";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
@@ -515,7 +516,14 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                     materialType: payload.materialType,
                     areaM2: payload.areaM2,
                     validityDays: payload.validityDays,
-                    lines: payload.lines,
+                    // Levhanın yoğunluğu belgede yazar (Gold Plus 50/70/90 gibi varyantlarda
+                    // müşteri ne aldığını görmeli). Katalogdan seçilmemiş serbest satıra not düşülmez.
+                    lines: payload.lines.map((l) => ({
+                        ...l,
+                        technicalNote: l.isPlate
+                            ? quoteDensityNote(catalogItems.find((i) => i.key === l.catalogKey)?.modelShortName)
+                            : null,
+                    })),
                     discountPct: payload.discountPct,
                     shippingCharge: payload.shippingCharge,
                     shippingMode: payload.shippingMode,

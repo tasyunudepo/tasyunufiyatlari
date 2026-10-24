@@ -40,6 +40,7 @@ import { technicalConsumptionUnitForSlug } from "@/lib/quote/technicalConsumptio
 import { resolveMarginPctStrict } from "@/lib/pricing/margin";
 import { resolveAccessoryDiscounts } from "@/lib/pricing/accessoryDiscounts";
 import { selectAccessoryForSet, selectDowelWasherForSet } from "@/lib/quote/selectAccessoryForSet";
+import { quoteDensityDisplay, quoteDensityNote } from "@/lib/technical-profiles";
 import {
     buildQuoteSurfacePricing,
 } from "@/lib/pricing/quoteTotals";
@@ -849,6 +850,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                     ? 'fiyata dahil'
                     : 'alıcıya ait',
             subRegionName: getSubRegionLabel(citySubRegion) ?? undefined,
+            densityDisplay: quoteDensityDisplay(selectedModel),
             setContext: {
                 itemCount: pkg.items.length,
                 plateName: pkg.items.find(item => item.isPlate)?.name || pkg.plateBrandName,
@@ -872,6 +874,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 totalPrice: it.totalPrice,
                 isPlate: it.isPlate,
                 packageCount: it.packageCount,
+                technicalNote: it.isPlate ? quoteDensityNote(selectedModel) : null,
             };
         });
 

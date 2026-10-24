@@ -42,6 +42,8 @@ export interface ManualPdfInput {
     packageCount?: number | null
     consumptionRate?: number | null
     consumptionUnit?: TechnicalConsumptionUnit | null
+    /** Levha satırının altına yazılan teknik not (yoğunluk). */
+    technicalNote?: string | null
   }>
   discountPct: number
   shippingCharge: number
@@ -79,6 +81,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
     totalPrice: effectiveLineTotal(l, input.discountPct),
     isPlate: l.isPlate ?? false,
     packageCount: l.packageCount ?? undefined,
+    technicalNote: l.technicalNote ?? null,
   }))
 
   if (input.shippingCharge > 0) {

@@ -56,6 +56,8 @@ export interface PDFQuoteItem {
     totalPrice: number;
     isPlate?: boolean;
     packageCount?: number;
+    /** Levha satırının altına yazılan teknik not (ör. "Yoğunluk: 70 kg/m³ · Föy beyanı"). */
+    technicalNote?: string | null;
 }
 
 export interface PDFQuoteData {

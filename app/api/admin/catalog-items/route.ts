@@ -74,6 +74,8 @@ export interface CatalogItem {
   /** Marjın nereden geldiği — operatör görsün diye. */
   marginSource: 'marka' | 'malzeme'
   materialSlug: string | null
+  /** Levhanın kısa model adı (plates.short_name) — teklif belgesindeki yoğunluk notu buradan çözülür. */
+  modelShortName?: string | null
   isActive: boolean
 }
 
@@ -225,6 +227,7 @@ export async function GET(req: NextRequest) {
           marginPct: Number(brand?.margin_pct ?? 0),
           marginSource: 'marka',
           materialSlug: 'tasyunu',
+          modelShortName: plate.short_name ?? null,
           isActive: plate.is_active !== false,
         })
       }
@@ -286,6 +289,7 @@ export async function GET(req: NextRequest) {
         marginPct: margin.pct,
         marginSource: margin.source,
         materialSlug,
+        modelShortName: plate.short_name ?? null,
         isActive: plate.is_active !== false,
       })
     }
@@ -342,6 +346,7 @@ export async function GET(req: NextRequest) {
       marginPct: accessoryMarginPct,
       marginSource: 'malzeme',
       materialSlug: null,
+      modelShortName: null,
       isActive: acc.is_active !== false,
     })
   }

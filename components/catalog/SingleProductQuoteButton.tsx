@@ -17,6 +17,7 @@ import { createClientIdempotencyKey } from '@/lib/utils/clientIdempotencyKey';
 import { getOfferValidityDate } from '@/lib/utils/packageHelpers';
 import { readCatalogJourneyId } from '@/lib/analytics/catalogJourney';
 import { getCategoryEntryContext } from '@/lib/catalog/category-entry-context';
+import { quoteDensityDisplay, quoteDensityNote } from '@/lib/technical-profiles';
 
 interface Props {
   product: CatalogProductView;
@@ -99,6 +100,9 @@ export default function SingleProductQuoteButton({
       // Marka+ürün adını duplikasyonsuz, Fawori parent ekleyerek formatla
       const brandProductName = formatBrandProductName(product.brand.name, product.name);
       const plateBrandLabel  = formatBrandName(product.brand.name);
+      // Varyantlı üründe (Gold Plus 50/70/90) seçilen model override'dan gelir.
+      const densityModel     = modelNameOverride ?? product.model;
+      const densityNote      = quoteDensityNote(densityModel);
 
       // Aktif kalınlığa karşılık gelen paket başına m² → paket sayısı
       const activeRow = activeThickness != null
@@ -132,6 +136,7 @@ export default function SingleProductQuoteButton({
         pricePerM2,
         totalKdvHaric: totalKdvHaric,
         shippingMessage: isShippingIncluded ? 'fiyata dahil' : 'satış görüşmesinde netleşir',
+        densityDisplay: quoteDensityDisplay(densityModel),
         refCode,
       });
       const pdfResult = await generateQuotePDF({
@@ -176,6 +181,7 @@ export default function SingleProductQuoteButton({
             totalPrice:      totalKdvHaric,
             isPlate:         true,
             packageCount:    computedPackageCount,
+            technicalNote:   densityNote,
           },
         ],
       });

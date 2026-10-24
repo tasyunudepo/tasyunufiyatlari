@@ -607,6 +607,23 @@ export function densityWithSourceLabel(profile: TechnicalProfile): string {
   return `${profile.density.display} · ${densitySourceLabel(profile)}`
 }
 
+/**
+ * Teklif belgesindeki levha satırı için yoğunluk notu (Emrah, 24 Ekim 2026):
+ * Gold Plus 50/70/90 gibi varyantlarda müşteri hangi yoğunluğu aldığını
+ * belgede görmeli. Föyde beyan yoksa null döner; değer uydurulmaz.
+ */
+export function quoteDensityNote(modelShortName: string | null | undefined): string | null {
+  const profile = modelShortName ? getProfileByModel(modelShortName.trim()) : null
+  if (!profile?.density) return null
+  return `Yoğunluk: ${densityWithSourceLabel(profile)}`
+}
+
+/** WhatsApp sipariş mesajı için kaynak etiketi olmadan yalnız değer. */
+export function quoteDensityDisplay(modelShortName: string | null | undefined): string | null {
+  const profile = modelShortName ? getProfileByModel(modelShortName.trim()) : null
+  return profile?.density?.display ?? null
+}
+
 export function getAllProfiles(): readonly TechnicalProfile[] {
   return PROFILES
 }

@@ -2106,3 +2106,17 @@ Kabul testi değişiklikleri (iş kuralı Emrah kararıyla değişti; korunan da
 Kanıt: vitest 1000; tsc temiz; derleme, copy-gate 477 HTML temiz; tarayıcı testleri 136 geçti, 6 önceden kırık ve ilgisiz (ofis revize AC-07–09, ofis-responsive AC-03, catalog-bonus-pdp, quote-pdf-document), 3 atlandı (`ofis-patron-readonly`: `.env.local`'da `PATRON_PASSWORD` satırı 24 Eki'de silinmiş, yerel); ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı) `/` ve `/iletisim` GEÇTİ. Kabul kilidi: `pdp-product-information.spec.ts` fe9f4a7'den (IBAN) beri kilit dışı — bu işten önce.
 
 Filli listesi tam kontrol: `docs/analiz/2026-10-24-filli-tam-kontrol.md`. Taşyünü levhaları Ağustos listesiyle aynı; EPS ve toz grubu Mayıs 2026 listesinde (Excel'in FİLLİ/FAWORİ sayfaları 2026-6 listesini kullanıyor: EPS +%10, toz +%3–15); Expert EPS Beyaz ve Dalmaçyalı Isı Yalıtım Sıvası listenin üstünde; PW50 paket m² yanlış. Fiyat güncellemesi Emrah onayı bekliyor.
+
+
+## 24 Ekim 2026 · Teklif belgesinde levha yoğunluğu
+
+Emrah: TY2866541 (Ferhat Öner, Malatya, 3.548 m² Bonus Gold Plus 10 cm). Müşteri 70 kg/m³ varyantını seçti (kayıtta `model_name: Gold Plus 70`), PDF'te yoğunluk yazmadı: "Yazmadığınız için belki de 50 yoğunlukta yollayacaksınız. İşte güven kaybı."
+
+| Değişiklik | Sonuç |
+|---|---|
+| `lib/technical-profiles` `quoteDensityNote` / `quoteDensityDisplay` | Değer teknik profilden; föy beyanı ile üretici sözlü beyanı ayrı etiketli ("Yoğunluk: 70 kg/m³ · Föy beyanı", "Yoğunluk: 100–110 kg/m³ · Üretici sözlü beyanı — değişken"); föyde beyan yoksa (Premium F/R, EPS) hiçbir şey yazılmaz |
+| PDF şablonu: `PDFQuoteItem.technicalNote` levha satırının altına; ürün kutusunun alt satırına | |
+| Ürün sayfası teklifi (seçilen varyant `modelNameOverride` önce), hesaplayıcı teklifi, ofis teklifi (katalog kaleminin `modelShortName`'i; serbest satıra not yok) | Üç yol da aynı fonksiyonu kullanır |
+| WhatsApp sipariş mesajı: ürün/levha satırının altına "Yoğunluk: 70 kg/m³" | Sipariş yazışmasında da varyant belli |
+
+Kanıt: vitest 1010 (yeni `tests/pdf/quote-density-note.test.ts`: Gold Plus 50/70/90, sözlü beyan etiketi, beyansız üründe boş, PDF satırı + ürün kutusu, WhatsApp tek ürün ve set, üç yolun bağlantısı); tsc, eslint temiz; derleme, copy-gate 477 HTML temiz; yerel üretimde gerçek PDF (kayıt istekleri sahte cevaplı): SW035 → "Yoğunluk: 110–120 kg/m³ · Üretici sözlü beyanı — değişken", Gold Plus 70 → "Yoğunluk: 70 kg/m³ · Föy beyanı" hem ürün kutusunda hem levha satırında; tarayıcı testleri 136 geçti (aynı 6 önceden kırık); ölçüm bekçisi GEÇTİ.

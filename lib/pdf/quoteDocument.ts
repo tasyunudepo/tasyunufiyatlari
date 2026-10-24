@@ -166,7 +166,10 @@ function rowHtml(it: PDFQuoteItem, index: number): string {
 
   // Levha kendi alanını kaplar; "1 m²/m²" bilgi taşımaz, yazılmaz.
   const consumption = it.isPlate ? '—' : formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit)
-  const detail = consumption === '—' ? '' : `<small>m² sarfiyatı: ${escapeHtml(consumption)}</small>`
+  const consumptionDetail = consumption === '—' ? '' : `<small>m² sarfiyatı: ${escapeHtml(consumption)}</small>`
+  // Levhada yoğunluk müşterinin aldığı ürünü tanımlar (Gold Plus 50/70/90).
+  const technicalDetail = it.isPlate && it.technicalNote ? `<small>${escapeHtml(it.technicalNote)}</small>` : ''
+  const detail = consumptionDetail + technicalDetail
 
   const unitPrice = isZeroPrice ? '<span class="tq-in-package">Pakete dahil</span>' : escapeHtml(fmtMoney(it.unitPrice))
   const total = isZeroPrice ? '—' : `<b>${escapeHtml(fmtMoney(it.totalPrice))}</b>`
@@ -236,9 +239,11 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
       : { value: `${itemCount} kalem`, label: 'MALZEME' }
 
   // Ürün kartının alt satırı: sihirbazda paket adı; adı ürünü tekrarlıyorsa malzeme ve kalınlık.
-  const productNote = data.packageName && !product.includes(data.packageName)
+  const baseProductNote = data.packageName && !product.includes(data.packageName)
     ? `Paket: ${data.packageName}`
     : [materialLabel, data.thickness ? `${data.thickness} cm` : ''].filter(Boolean).join(' · ')
+  const plateNote = data.items.find((it) => it.isPlate && it.technicalNote)?.technicalNote
+  const productNote = [baseProductNote, plateNote].filter(Boolean).join(' · ')
   const phone = formatPhoneForDisplay(data.phone)
   const customerNote = data.customerCompany && data.relatedPerson
     ? `<small>${escapeHtml(data.relatedPerson)}</small><small class="tq-nowrap">${escapeHtml(phone)}</small>`

@@ -20,6 +20,8 @@ export interface QuoteContext {
   shippingMessage: string;    // "fiyata dahil" | "satış görüşmesinde netleşir"
   refCode?: string;           // "TY123456" — opsiyonel
   subRegionName?: string;
+  /** Levha yoğunluğu ("70 kg/m³") — varyantlı üründe sipariş hangi yoğunluk için, net olsun. */
+  densityDisplay?: string | null;
   setContext?: {
     itemCount: number;
     plateName: string;
@@ -38,12 +40,14 @@ export function generateQuoteWhatsAppMessage(ctx: QuoteContext): string {
       `${ctx.setContext.itemCount} kalem komple mantolama seti siparişi başlatmak istiyorum.`,
       "",
       `Levha: ${ctx.setContext.plateName}`,
+      ...(ctx.densityDisplay ? [`Yoğunluk: ${ctx.densityDisplay}`] : []),
       `Sistem: ${ctx.setContext.tierName}`,
     );
   } else {
     lines.push(
       `${ctx.productName}${ctx.thicknessCm ? ` (${ctx.thicknessCm} cm)` : ""} için teklif almak istiyorum.`,
     );
+    if (ctx.densityDisplay) lines.push(`Yoğunluk: ${ctx.densityDisplay}`);
   }
 
   lines.push(
