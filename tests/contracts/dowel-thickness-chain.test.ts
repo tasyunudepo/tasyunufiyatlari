@@ -22,4 +22,12 @@ describe('dübel boyu için levha kalınlığı uçtan uca taşınır', () => {
     expect(source).toContain('selectAccessoryForSet({')
     expect(source).toContain('plateThicknessCm: Number(selectedKalinlik)')
   })
+
+  it('müşteri hesaplayıcısı dübel pulunu 8 kalem kapısından sonra ekler (normal + Bonus)', () => {
+    const source = readFileSync('components/wizard/WizardCalculator.tsx', 'utf8')
+
+    expect(source).toContain('selectDowelWasherForSet({')
+    const gate = /items\.length !== 8\) \{\s*continue;\s*\}\s*items\.push\(\.\.\.accResult\.companionItems\);/g
+    expect(source.match(gate)?.length).toBe(2)
+  })
 })

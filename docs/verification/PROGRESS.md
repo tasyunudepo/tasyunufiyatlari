@@ -2066,3 +2066,27 @@ Emrah: panel 16 Eki'de tasyunu'da 18 temas / 17 WhatsApp kişisi gösterdi, ger�
 Gerçek sitede telefonun gereksiz tetiklenmesi yok: 30 günde 3 telefon olayı, üçü de /iletisim'de "en az 1 kamyon mu?" onayından sonra; 11 WhatsApp olayı.
 
 Kanıt: vitest 990 (yeni `notifications-production-only`); tarayıcı testleri 69/69 (yeni `no-test-tracking.spec.ts`: 127.0.0.1'de Google'a sıfır istek, `gtag` tanımlı); ölçüm bekçisi gerçek alan adıyla (yerel üretim, kuru) GEÇTİ — `/`, Bonus F 150 (WhatsApp tık → Whatsapp_Yazanlar), /iletisim (telefon ve WhatsApp onaylı tık). GCR tarafı: tüm GA4 sorgularında test/önizleme alan adı dışlaması, geçmiş kayıtlar silindi (GCR ANA-PLAN 17 Eki).
+
+
+## 24 Ekim 2026 · 11–15 cm kalınlıklar, uzun dübel ve taşyünü dübel pulu
+
+Tetik: sitede bir müşteri Optimix TR7.5 15 cm ile set kuramadı; ofiste toz grubu "Eksik: Dübel" verdi. Kaynak: Filli Boya 2026 Eylül maliyet analizi (FİLLİ, FAWORİ, TAŞYÜNÜ, YÜKLEME sayfaları). Plan: `docs/analiz/2026-10-24-15cm-kalinlik-ve-dubel-plani.md`. Emrah: "plan yaptığın hepsini yapalım" (24 Eki).
+
+| Katman | Değişiklik | Neden |
+|---|---|---|
+| Veri (canlı DB, 13:27, yedek scratchpad `faz1-yedek-*.json`) | 55 `plate_prices` satırına paket m²: taşyünü 11–15 → 1,2; EPS 11–13 → 2,0; 14–15 → 1,5 | Boş paket m² `plates.package_m2 = 1,8`'e düşüp taşyünü 11–15 m² fiyatını %33 düşük hesaplatacaktı |
+| Veri | Expert #136/#137, Optimix #144/#145 (17,5/19,5 cm): paket içeriği 200, birim KUTU, liste fiyatı, `is_for_eps=true`; Optimix pul #146 paket 200; Dalmaçyalı #114/#115 fiyatı 1.280/1.380 (Expert'in fiyatı girilmişti) | Paket içeriği boş satırı seçici atlıyordu; Expert/Optimix'te 15,5'ten uzun plastik dübel yok |
+| Veri | 11 levhanın `thickness_options`'ına 11–15 (SW035, Premium, HD150, LD125, TR7.5, İdeal Carbon, Double Carbon, Expert EPS Karbonlu/Beyaz/035 Beyaz, Optimix Karbonlu); SW035/Premium teknik profil üst sınırı 150 mm | Fiyatlar 18 Mart'tan beri vardı, liste 10'da bitiyordu |
+| Kod | `selectDowelWasherForSet`: taşyününde markanın taşyünü dübeli (9 cm tabla) yetecek boyda değilse beton dübelinin yanına aynı markanın "Taşyünü Dübel Pulu" eklenir, adet = dübel adedi; ofis seti ve hesaplayıcı aynı kuralı kullanır | Filli listesinde taşyünü dübeli 15,5'te biter; 12–15 cm'de 17,5/19,5 cm beton dübeli (6 cm tabla) + pul |
+| Kod | Hesaplayıcıda pul, 8 kalem kapısından SONRA eklenir (`companionItems`) | "Levha + 7 zorunlu kalem" kapısı ve sözleşme testi aynen kalır |
+| Kod | Hesaplayıcı kalınlık listesine 12 ve 15 cm | Hub ve en az sipariş tablosundaki liste |
+
+Bilinçli dokunulmayan: #135, #140–#143 (9,5–15,5 beton dübeli, paket içeriği boş) — doldurulursa Expert/Optimix 3–5 cm taşyünü setleri 11,5 taşyünü dübelinden 9,5 beton dübeline kayar. Dalmaçyalı 3–5 cm'de bugün 9,5 beton dübeli çıkıyor; taşyünü dübeli yettiği için pul eklenmez, set değişmez. TEKNO'da 15,5'ten uzun dübel yok: Ekonomik/Dengeli (TEKNO) set taşyününde 12 cm ve üstünde, EPS'te 9 cm ve üstünde kurulmaz (önceden de böyleydi).
+
+Dübel matrisi (canlı veri): Dalmaçyalı, Expert, Optimix taşyünü ve EPS 12–13 cm → 17,5; 14–15 cm → 19,5. 11 cm ve altında hiçbir seçim değişmedi.
+
+İlk iş: Zafer Ticaret TE-2026-000264 — Arnavutköy, 2.500 m² TR7.5 15 cm + Optimix toz grubu (19,5 cm beton dübeli 75 kutu + pul 75 kutu), %5, KDV dahil 2.922.311,76 TL.
+
+Kanıt: vitest 997 (yeni: 15/12 cm beton dübeli + pul, 10 cm'de pulsuz, ince levhada beton dübeli seçilse de pulsuz, pulsuz marka, EPS'e pul yok; hesaplayıcıda pul kapıdan sonra — normal + Bonus); tsc, eslint temiz; derleme temiz, 21 yeni 15 cm sayfası, site haritası kökü `<urlset>`; copy-gate 477 HTML temiz; yerel üretimde TR7.5 15 cm sayfası 764,40 TL/m² (ofis kataloğuyla aynı), Optimix Karbonlu 15 cm paket 1,5 m² ile; hesaplayıcı İstanbul + TR7.5 + 15 cm + 2.496 m² → Optimix Orijinal set, reçetede Dübel Pulu, KDV dahil 2.918.613 TL; ölçüm bekçisi (kuru, yerel üretim, gerçek alan adı) `/`, `/iletisim`, TR7.5 15 cm GEÇTİ (ana sayfa 15 sn bekleme ile; canlı da aynı). Tarayıcı testleri 131 + ofis teklif AC-01–AC-06 geçti. Önceden kırık ve bu işle ilgisiz: ofis revize/çoğalt AC-07–09 (`quote-revise-*` liste düğmesi detay paneline taşındı), `ofis-patron-readonly` AC-01/02, `ofis-responsive` AC-03, `catalog-bonus-pdp` ("föyü beyanına göre" metni yok), `quote-pdf-document` tek kalem tek sayfa (13 Eki'den beri 2. sayfa var). `ofis-quote-builder.spec.ts` seçicisi netleştirildi (`Yeni Teklif` exact: ofis yeniden tasarımında ikinci "Yeni teklif yaz" düğmesi geldi); beklentiler değişmedi.
+
+Açık: ofisteki "Teklif notu (PDF'e girer)" yeni PDF şablonunda basılmıyor (`packageDescription` şablonda kullanılmıyor). Ayrı fiyat işi: EPS levhaları listenin ~%10 altında, Expert EPS Beyaz %52 üstünde, PW50 paket m² yanlış, Optimix Beyaz/035 Beyaz EPS DB'de yok.

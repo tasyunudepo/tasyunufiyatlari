@@ -150,6 +150,88 @@ describe('dübelde 4–5 cm duvar tutunma payı gözetilir', () => {
     expect(set.items[0]?.accessoryId).toBe(86)
   })
 
+  describe('kalın taşyününde beton dübeli + taşyünü dübel pulu', () => {
+    const betonDubeli = (id: number, boyCm: number) => ({
+      ...dubel(id, boyCm, { name: `Fawori Optimix Beton Dübeli ${String(boyCm).replace('.', ',')} cm çelik çivili` }),
+      base_price: 1140,
+    })
+    const pul = (id = 146, name = 'Fawori Optimix Taşyünü Dübel Pulu') => ({
+      ...dubel(id, 1, { name }),
+      dowel_length: null,
+      base_price: 420,
+    })
+    const optimix = [
+      dubel(35, 11.5),
+      dubel(36, 13.5),
+      dubel(37, 15.5),
+      betonDubeli(144, 17.5),
+      betonDubeli(145, 19.5),
+      pul(),
+    ]
+    const kur = (plateThicknessCm: number, accessories: AccessoryRow[] = optimix) =>
+      buildAccessorySet({
+        accessoryTypes: DUBEL_TIPI,
+        accessories,
+        accessoryBrandId: 4,
+        accessoryBrandName: 'Fawori Optimix',
+        materialType: 'tasyunu',
+        plateThicknessCm,
+        areaM2: 2500,
+        marginPct: 5,
+        city: null,
+      })
+
+    it('15 cm levhada 19,5 cm beton dübeli seçer ve aynı adette pul ekler', () => {
+      const set = kur(15)
+
+      expect(set.complete).toBe(true)
+      expect(set.items.map((item) => item.accessoryId)).toEqual([145, 146])
+      expect(set.items[1]?.accessoryTypeName).toBe('Dübel Pulu')
+      expect(set.items[1]?.quantity).toBe(set.items[0]?.quantity)
+      expect(set.items[0]?.quantity).toBe(75)
+    })
+
+    it('12 cm levhada 17,5 cm beton dübeli + pul seçer', () => {
+      expect(kur(12).items.map((item) => item.accessoryId)).toEqual([144, 146])
+    })
+
+    it('taşyünü dübelinin yettiği 10 cm levhada pul eklemez', () => {
+      expect(kur(10).items.map((item) => item.accessoryId)).toEqual([37])
+    })
+
+    it('ince levhada beton dübeli seçilse de taşyünü dübeli yetiyorsa pul eklemez', () => {
+      // Dalmaçyalı 5 cm: 9,5 cm beton dübeli en kısa uygun boy; bugünkü set korunur.
+      const set = kur(5, [betonDubeli(110, 9.5), dubel(9, 11.5), pul(120, 'Dalmaçyalı Taşyünü Dübel Pulu')])
+      expect(set.items.map((item) => item.accessoryId)).toEqual([110])
+    })
+
+    it('markada pul yoksa set yine tamdır, pulsuz kurulur', () => {
+      const set = kur(15, optimix.filter((item) => item.id !== 146))
+      expect(set.complete).toBe(true)
+      expect(set.items.map((item) => item.accessoryId)).toEqual([145])
+    })
+
+    it('EPS levhaya pul eklemez', () => {
+      const eps = [
+        { ...betonDubeli(145, 19.5), is_for_eps: true },
+        { ...pul(), is_for_eps: true },
+      ]
+      const set = buildAccessorySet({
+        accessoryTypes: DUBEL_TIPI,
+        accessories: eps,
+        accessoryBrandId: 4,
+        accessoryBrandName: 'Fawori Optimix',
+        materialType: 'eps',
+        plateThicknessCm: 15,
+        areaM2: 1000,
+        marginPct: 5,
+        city: null,
+      })
+      expect(set.complete).toBe(true)
+      expect(set.items.map((item) => item.accessoryId)).toEqual([145])
+    })
+  })
+
   it('levha + 4 cm alt sınırını karşılayan ürün yoksa yanlış dübel üretmez', () => {
     const set = buildAccessorySet({
       accessoryTypes: DUBEL_TIPI,

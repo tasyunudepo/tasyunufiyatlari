@@ -6,6 +6,8 @@ export interface SelectableAccessory {
   is_for_tasyunu: boolean | null
   dowel_length?: number | null
   unit_content: number | null
+  /** Taşyünü dübeli ve dübel pulu ayrımı ürün adından yapılır. */
+  name?: string | null
 }
 
 export interface SelectableAccessoryType {
@@ -48,6 +50,60 @@ function isDowelType(type: SelectableAccessoryType): boolean {
   const slug = (type.slug ?? '').toLocaleLowerCase('tr-TR')
   const name = type.name.toLocaleLowerCase('tr-TR')
   return slug === 'dubel' || name.includes('dübel') || name.includes('dubel')
+}
+
+function accessoryName(accessory: SelectableAccessory): string {
+  return (accessory.name ?? '').toLocaleLowerCase('tr-TR')
+}
+
+function isDowelWasher(accessory: SelectableAccessory): boolean {
+  return accessoryName(accessory).includes('dübel pulu')
+}
+
+/** 9 cm tablalı "taşyünü dübeli" — beton/tuğla dübelinin tablası 6 cm. */
+function isTasyunuDowel(accessory: SelectableAccessory): boolean {
+  return accessoryName(accessory).includes('taşyünü dübel') && !isDowelWasher(accessory)
+}
+
+/**
+ * Filli listesinde taşyünü dübeli 15,5 cm'de biter; 12 cm ve üstü taşyününde
+ * set 17,5/19,5 cm beton dübeliyle kurulur. Dar tablalı bu dübelin yanına
+ * aynı markanın "Taşyünü Dübel Pulu" eklenir (adet = dübel adedi).
+ *
+ * Markanın taşyünü dübeli yoksa ya da yetecek boyda varsa pul eklenmez; ince
+ * levha setleri (ör. Dalmaçyalı 5 cm'de 9,5 cm beton dübeli) olduğu gibi kalır.
+ */
+export function selectDowelWasherForSet<T extends SelectableAccessory>(input: {
+  accessories: T[]
+  type: SelectableAccessoryType
+  materialType: MaterialType
+  plateThicknessCm?: number | null
+  selectedDowel: T | null
+}): T | null {
+  const { accessories, type, materialType, plateThicknessCm, selectedDowel } = input
+  if (materialType !== 'tasyunu' || !selectedDowel || !isDowelType(type)) return null
+  if (isTasyunuDowel(selectedDowel)) return null
+
+  const requiredLength = requiredDowelLengthCm(materialType, plateThicknessCm)
+  if (requiredLength == null) return null
+
+  const sameType = accessories.filter(
+    (accessory) => accessory.accessory_type_id === type.id && accessory.is_for_tasyunu,
+  )
+  const tasyunuDowels = sameType.filter(isTasyunuDowel)
+  if (tasyunuDowels.length === 0) return null
+
+  const yetenTasyunuDubeliVar = tasyunuDowels.some((accessory) => {
+    const length = normalizeDowelLengthCm(accessory.dowel_length)
+    return length != null && length >= requiredLength && Number(accessory.unit_content ?? 0) > 0
+  })
+  if (yetenTasyunuDubeliVar) return null
+
+  return (
+    sameType.find(
+      (accessory) => isDowelWasher(accessory) && Number(accessory.unit_content ?? 0) > 0,
+    ) ?? null
+  )
 }
 
 /**

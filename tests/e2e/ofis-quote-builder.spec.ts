@@ -49,7 +49,7 @@ async function acEkran(browser: Browser): Promise<Page> {
   const page = await context.newPage()
   await page.goto('/ofis')
   await page.getByRole('button', { name: 'Teklifler' }).first().click()
-  await page.getByRole('button', { name: 'Yeni Teklif' }).click()
+  await page.getByRole('button', { name: 'Yeni Teklif', exact: true }).click()
   await expect(page.getByTestId('manual-quote-editor')).toBeVisible({ timeout: 30_000 })
 
   await page.getByLabel('Müşteri adı *').fill('E2E Kontrol')

@@ -39,7 +39,7 @@ import { createClientIdempotencyKey } from "@/lib/utils/clientIdempotencyKey";
 import { technicalConsumptionUnitForSlug } from "@/lib/quote/technicalConsumption";
 import { resolveMarginPctStrict } from "@/lib/pricing/margin";
 import { resolveAccessoryDiscounts } from "@/lib/pricing/accessoryDiscounts";
-import { selectAccessoryForSet } from "@/lib/quote/selectAccessoryForSet";
+import { selectAccessoryForSet, selectDowelWasherForSet } from "@/lib/quote/selectAccessoryForSet";
 import {
     buildQuoteSurfacePricing,
 } from "@/lib/pricing/quoteTotals";
@@ -139,6 +139,8 @@ export const KALINLIKLAR = [
     { value: "6", label: "6cm" },
     { value: "8", label: "8cm" },
     { value: "10", label: "10cm", popular: true },
+    { value: "12", label: "12cm" },
+    { value: "15", label: "15cm" },
 ];
 
 interface WizardCalculatorProps {
@@ -1224,11 +1226,18 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         totalM2: number,
         marginPct: number,
         plateBrandNameForPricing: string,
-    ): { items: CalculatedPackageItem[]; totalCost: number; requiredAccessoriesComplete: boolean } => {
+    ): {
+        items: CalculatedPackageItem[];
+        /** Zorunlu tiplerin dışındaki ek kalemler (dübel pulu) — 8 kalem kapısından sonra eklenir. */
+        companionItems: CalculatedPackageItem[];
+        totalCost: number;
+        requiredAccessoriesComplete: boolean;
+    } => {
         const selectedCity = shippingZones.find(z => z.city_code === selectedCityCode) ?? null;
         const accBrandName = brands.find(b => b.id === pkgDef.accessory_brand_id)?.name ?? '';
         const pkgAccessories = accessories.filter(acc => acc.brand_id === pkgDef.accessory_brand_id);
         const items: CalculatedPackageItem[] = [];
+        const companionItems: CalculatedPackageItem[] = [];
         let totalCost = 0;
         let requiredAccessoriesComplete = true;
 
@@ -1249,6 +1258,38 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 continue;
             }
 
+            const consumptionUnit = technicalConsumptionUnitForSlug(accType.slug);
+            const washer = selectDowelWasherForSet({
+                accessories: pkgAccessories,
+                type: accType,
+                materialType: selectedMalzeme,
+                plateThicknessCm: Number(selectedKalinlik),
+                selectedDowel: acc,
+            });
+            if (washer) {
+                const washerItem = priceAccessoryItem(washer, 'Dübel Pulu', consumption, consumptionUnit);
+                totalCost += washerItem.totalPrice;
+                companionItems.push(washerItem);
+            }
+
+            const item = priceAccessoryItem(
+                acc,
+                accType.slug === 'kaplama' ? 'Mineral Kaplama' : accType.name,
+                consumption,
+                consumptionUnit,
+            );
+            totalCost += item.totalPrice;
+            items.push(item);
+        }
+
+        return { items, companionItems, totalCost, requiredAccessoriesComplete };
+
+        function priceAccessoryItem(
+            acc: Accessory,
+            categoryLabel: string,
+            consumption: number,
+            consumptionUnit: CalculatedPackageItem['consumptionUnit'],
+        ): CalculatedPackageItem {
             const totalNeed = totalM2 * consumption;
             const itemQuantity = Math.ceil(totalNeed / acc.unit_content);
 
@@ -1270,24 +1311,21 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             );
 
             const accTotal = roundToKurus(accUnitPrice * itemQuantity);
-            totalCost += accTotal;
 
-            items.push({
+            return {
                 name: acc.name,
                 shortName: acc.short_name,
                 brandName: accBrandName,
-                categoryLabel: accType.slug === 'kaplama' ? 'Mineral Kaplama' : accType.name,
+                categoryLabel,
                 quantity: itemQuantity,
                 unit: acc.unit,
                 unitPrice: accUnitPrice,
                 totalPrice: accTotal,
                 isPlate: false,
                 consumptionRate: consumption,
-                consumptionUnit: technicalConsumptionUnitForSlug(accType.slug),
-            });
+                consumptionUnit,
+            };
         }
-
-        return { items, totalCost, requiredAccessoriesComplete };
     };
 
     // Bonus harman paketleri (karar 13 revizyonu, 13 Temmuz 2026): levha
@@ -1406,6 +1444,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 if (!accResult.requiredAccessoriesComplete || items.length !== 8) {
                     continue;
                 }
+                items.push(...accResult.companionItems);
 
                 // Bölge fiyatı nakliye bölgesine göredir; tam araçta nakliye
                 // satış fiyatına dahildir (kilitli karar 3) → ayrı nakliye 0.
@@ -1867,6 +1906,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
             if (!requiredAccessoriesComplete || items.length !== 8) {
                 continue;
             }
+            items.push(...accResult.companionItems);
 
             // Tam-araç kuralı aktifken (yeni davranış) parsiyel taşıma kabul edilmediği için
             // step4'ten geçerli metraj zaten doğrulanmış olur — nakliye daima dahil.

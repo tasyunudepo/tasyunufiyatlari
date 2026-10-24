@@ -5,7 +5,10 @@ import {
 } from '@/lib/pricing/accessoryDiscounts'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
 import { technicalConsumptionUnitForAccessoryType } from '@/lib/quote/technicalConsumption'
-import { selectAccessoryForSet } from '@/lib/quote/selectAccessoryForSet'
+import {
+  selectAccessoryForSet,
+  selectDowelWasherForSet,
+} from '@/lib/quote/selectAccessoryForSet'
 import type { TechnicalConsumptionUnit } from '@/lib/types'
 
 // Toz grubu setini kurar — wizard'ın `buildAccessoryItemsForDefinition`
@@ -132,35 +135,15 @@ export function buildAccessorySet(input: {
   const missingTypes: string[] = []
   let totalCost = 0
 
-  // SIRA DEĞİŞTİRİLMEZ. Wizard `accessoryTypes` ve `accessories` dizilerini
-  // sorgudan geldiği sırayla kullanır (tipler `sort_order`, ürünler `id`) ve
-  // her tipte İLK eşleşen ürünü seçer. Burada yeniden sıralamak — hatta
-  // "aynı" görünen bir sıralama bile — seçilen ÜRÜNÜ değiştirebilir.
-  // Sıralama sorumluluğu çağırana aittir (app/api/admin/accessory-sets).
-  for (const type of accessoryTypes) {
-    const consumption = Number(
-      (isEps ? type.consumption_rate_eps : type.consumption_rate_tasyunu) ?? 0,
-    )
-    // Sarfiyatı olmayan tip bu malzemede kullanılmaz — eksik sayılmaz.
-    if (!Number.isFinite(consumption) || consumption <= 0) continue
-
-    const acc = selectAccessoryForSet({
-      accessories: brandAccessories,
-      type,
-      materialType,
-      plateThicknessCm,
-    })
-    if (!acc) {
-      missingTypes.push(type.name)
-      continue
-    }
-
+  function pushItem(
+    acc: AccessoryRow,
+    type: AccessoryTypeRow,
+    typeName: string,
+    consumption: number,
+  ): boolean {
     const basePrice = Number(acc.base_price ?? 0)
     const unitContent = Number(acc.unit_content ?? 0)
-    if (!Number.isFinite(basePrice) || basePrice <= 0 || unitContent <= 0) {
-      missingTypes.push(type.name)
-      continue
-    }
+    if (!Number.isFinite(basePrice) || basePrice <= 0 || unitContent <= 0) return false
 
     // Paket/kutu bazlı satılır: ihtiyaç yukarı yuvarlanır.
     const quantity = Math.ceil((areaM2 * consumption) / unitContent)
@@ -179,7 +162,7 @@ export function buildAccessorySet(input: {
 
     items.push({
       accessoryId: acc.id,
-      accessoryTypeName: type.name,
+      accessoryTypeName: typeName,
       description: acc.name,
       quantity,
       unit: acc.unit ?? 'PKT',
@@ -194,6 +177,41 @@ export function buildAccessorySet(input: {
       unitPrice,
       totalPrice,
     })
+    return true
+  }
+
+  // SIRA DEĞİŞTİRİLMEZ. Wizard `accessoryTypes` ve `accessories` dizilerini
+  // sorgudan geldiği sırayla kullanır (tipler `sort_order`, ürünler `id`) ve
+  // her tipte İLK eşleşen ürünü seçer. Burada yeniden sıralamak — hatta
+  // "aynı" görünen bir sıralama bile — seçilen ÜRÜNÜ değiştirebilir.
+  // Sıralama sorumluluğu çağırana aittir (app/api/admin/accessory-sets).
+  for (const type of accessoryTypes) {
+    const consumption = Number(
+      (isEps ? type.consumption_rate_eps : type.consumption_rate_tasyunu) ?? 0,
+    )
+    // Sarfiyatı olmayan tip bu malzemede kullanılmaz — eksik sayılmaz.
+    if (!Number.isFinite(consumption) || consumption <= 0) continue
+
+    const acc = selectAccessoryForSet({
+      accessories: brandAccessories,
+      type,
+      materialType,
+      plateThicknessCm,
+    })
+    if (!acc || !pushItem(acc, type, type.name, consumption)) {
+      missingTypes.push(type.name)
+      continue
+    }
+
+    // Pul zorunlu tip değildir: markada yoksa set yine tamdır.
+    const washer = selectDowelWasherForSet({
+      accessories: brandAccessories,
+      type,
+      materialType,
+      plateThicknessCm,
+      selectedDowel: acc,
+    })
+    if (washer) pushItem(washer, type, 'Dübel Pulu', consumption)
   }
 
   return {

@@ -9,6 +9,8 @@ const KALINLIKLAR = [
     { value: "6",  label: "6cm"  },
     { value: "8",  label: "8cm"  },
     { value: "10", label: "10cm", popular: true },
+    { value: "12", label: "12cm" },
+    { value: "15", label: "15cm" },
 ];
 
 interface WizardStep2Props {
@@ -29,7 +31,7 @@ export function WizardStep2({ selectedKalinlik, setSelectedKalinlik }: WizardSte
             <p className="mt-2 text-sm text-fe-muted leading-relaxed">
                 Apartman/villa için <strong className="text-fe-text">5–6 cm</strong> ılıman bölgelerde, <strong className="text-fe-text">8–10 cm</strong> soğuk bölgelerde standart. 10 cm &quot;Popüler&quot; çünkü EKB hedefini büyük çoğunlukla karşılar.
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
                 {KALINLIKLAR.map(k => (
                     <button
                         key={k.value}

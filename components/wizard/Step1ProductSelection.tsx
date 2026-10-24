@@ -55,6 +55,8 @@ const KALINLIKLAR = [
     { value: "6", label: "6cm" },
     { value: "8", label: "8cm" },
     { value: "10", label: "10cm", popular: true },
+    { value: "12", label: "12cm" },
+    { value: "15", label: "15cm" },
 ];
 
 const MARKA_LOGOLARI: { [key: string]: string } = {
@@ -258,8 +260,8 @@ export function Step1ProductSelection({
                             </span>
                         )}
                     </label>
-                    {/* tek satır görünümü için 6'lı grid */}
-                    <div className="grid grid-cols-6 gap-2">
+                    {/* 8 kalınlık iki satırda */}
+                    <div className="grid grid-cols-4 gap-2">
                         {KALINLIKLAR.map((k) => {
                             const selected = selectedKalinlik === k.value;
                             return (
