@@ -73,6 +73,13 @@ const nextConfig: NextConfig = {
       // 302 (permanent: false) — Sprint 4-5'te Tier 1/2 bölge sayfaları
       // gerçek içerikle yeniden açılacak. 301 yapılırsa Google ileride
       // yeni sayfaları kabul ederken zorlanır.
+      // ─── TEKNO ön yüzden çıktı (Emrah, 26 Ekim 2026) ───────
+      // 21 ürün sayfası ve marka sayfası kalıcı olarak kategoriye yönlenir;
+      // kayıtlar veritabanında ve ofiste durur. TEKNO slug'ları "tekno-" ile başlar.
+      { source: '/urunler/:kategori/tekno-:slug', destination: '/urunler/:kategori', permanent: true },
+      { source: '/marka/tekno', destination: '/urunler', permanent: true },
+      { source: '/marka/tekno/:kategori', destination: '/urunler/:kategori', permanent: true },
+
       {
         source: '/urunler/:kategori/:slug',
         has: [{ type: 'query', key: 'kalinlik', value: '(?<kalinlik>.*)' }],

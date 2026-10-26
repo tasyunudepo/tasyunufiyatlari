@@ -33,7 +33,9 @@ describe('marka sayfası başlık ve açıklaması', () => {
   });
 
   it('diğer markaların başlık ve açıklaması aynı kaldı', async () => {
-    for (const brand of ['filli-boya', 'optimix', 'tekno', 'oem']) {
+    // TEKNO marka sayfası 26 Ekim 2026'da kaldırıldı (Emrah kararı; /marka/tekno → /urunler, 301).
+    expect(BRAND_MAP).not.toHaveProperty('tekno');
+    for (const brand of ['filli-boya', 'optimix', 'oem']) {
       const meta = await metadataOf(brand);
       expect(meta.title).toBe(`${BRAND_MAP[brand].displayName} Ürünleri`);
       expect(meta.description).toBe(BRAND_MAP[brand].description);

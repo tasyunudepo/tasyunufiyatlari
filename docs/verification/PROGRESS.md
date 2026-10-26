@@ -2148,3 +2148,23 @@ Emrah: "Teklifi hazırlarken tam metraj yazdığımda pakete göre yuvarlasın, 
 Test değişikliği: `ofis-quote-builder.spec.ts` AC-06 beklenen birim fiyatları ve toplam Eylül listesine göre güncellendi (yapıştırıcı 180,65 → 189,88, sıva 199,99 → 210,10, köşe 2.329,51 → 2.439,39, astar 1.213,10 → 1.274,64; toplam 2.875.031,17 → 2.894.209,43 TL). Kanıt: birim satış / liste oranı eski ve yenide 0,87907 (aynı %9 + %8 iskonto ve marj); listesi değişmeyen dübel, file, kaplama aynı; ekran toplamı elle hesapla aynı. Kendi sözleşme testim `quote-density-note.test.ts` ofis satırının yeni biçimine göre güncellendi (davranış aynı).
 
 Kanıt: vitest 1035 (yeni `tests/catalog/package-spec.test.ts` 14); tsc, eslint temiz; derleme, copy-gate 477 HTML temiz; yerel üretim: Gold Plus 70 sayfası 10 cm 4 levha · 60 × 120 · 2,88 m², tablo 3–15 cm, 90'a geçince 3 levha · 2,16 m², 1 kamyon 168 paket · 672 levha; 390 px taşma yok; İdeal Carbon 10 cm 5 levha · 50 × 100; ofis 1.200 → 1.200,96 m², 1.500 → 1.500,48 m², PDF paket + yoğunluk satırı; tarayıcı testleri 134 + ofis AC-01–06 geçti (önceden kırık 6 aynı); ölçüm bekçisi `/`, `/iletisim`, Gold Plus sayfası GEÇTİ.
+
+
+## 26 Ekim 2026 · TEKNO sitenin ön yüzünden çıktı
+
+Emrah: "TEKNO'nun 21 ürün sayfası, /marka/tekno sayfası ve bayilik logosu çıkaralım."
+
+| Değişiklik | Sonuç |
+|---|---|
+| `lib/catalog/storefrontBrands.ts` (`STOREFRONT_HIDDEN_BRAND_IDS = [6]`) | Katalog listeleri, tek ürün sayfası, ürün merkezi (marka çipi + kategori sayıları) ve site haritası TEKNO'yu atlar |
+| `next.config.ts` kalıcı yönlendirme (308) | `/urunler/:kategori/tekno-*` → `/urunler/:kategori` (21 adres; `tekno-` öneki yalnız marka 6'da, DB'de doğrulandı), `/marka/tekno` → `/urunler`, `/marka/tekno/:kategori` → `/urunler/:kategori` |
+| `app/marka/[brand]` haritasından `tekno` çıktı | Marka sayfası ve marka-kategori sayfaları üretilmez |
+| Ana sayfa bayilik şeridi, CRO marka şeridi, ProofBlock cümlesi | TEKNO logosu ve "Tekno" adı çıktı |
+
+Veritabanı (21 ürün) ve ofis teklif ekranı değişmedi; hesaplayıcı kuralı (24 Ekim) ayrı.
+
+Test değişiklikleri (karar gereği): `brand-page-metadata.test.ts` döngüsünden `tekno` çıktı, yerine "marka haritasında tekno yok"; `customer-promises.test.ts` TEKNO alt metninin varlığını beklemez, "levha üreticisi gibi tanıtma" koruması kaldı. Yeni: `tests/contracts/storefront-hidden-brand.test.ts`.
+
+Kanıt: vitest 1039; tsc, eslint temiz; derleme, copy-gate 452 HTML temiz (477 → 452: TEKNO sayfaları üretilmedi); site haritasında TEKNO 0; yerel üretimde 5 örnek eski adres 308 ile kategoriye/merkeze, kategori ve marka sayfaları 200, ana sayfa/ürün merkezi/yapıştırıcı/sıva sayfalarında "TEKNO" geçmiyor; tarayıcı testleri 136 (aynı 6 önceden kırık); ölçüm bekçisi `/`, `/iletisim`, `/urunler/yapistirici` GEÇTİ.
+
+Kâr etkisi notu (EPS Mayıs fiyatıyla verilen teklifler, Eylül maliyetine göre): satışa dönen TE-2026-000254 (110 m²) kâr 2.186 → 436 TL; Fayat Turgut TE-2026-000260/261 %10 marj → %2,4 / %2,9 (zarar yok).

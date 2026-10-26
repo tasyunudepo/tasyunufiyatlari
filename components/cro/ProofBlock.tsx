@@ -44,7 +44,7 @@ export function ProofBlock() {
               <h3 className="text-lg font-semibold text-fe-text">Örnek PDF teklif</h3>
             </div>
             <p className="mt-2 text-sm text-fe-muted leading-relaxed">
-              Taşyünü Fiyatları; Filli Boya, Tekno ve Bestkim ürünlerini Özergrup tedarik altyapısı üzerinden hesaplayan teklif ve maliyet ekranıdır.
+              Taşyünü Fiyatları; Filli Boya ve Bestkim ürünlerini Özergrup tedarik altyapısı üzerinden hesaplayan teklif ve maliyet ekranıdır.
               <span className="block mt-1.5 text-xs text-fe-muted">
                 Aşağıdaki örnek anonimleştirilmiştir; tarih ve referans numarası gerçek teklifte sizin tarihinizle yenilenir.
               </span>

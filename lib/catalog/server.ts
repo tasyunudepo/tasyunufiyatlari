@@ -9,6 +9,7 @@ import { buildWizardPrefill } from '@/lib/catalog/prefill';
 import { getDecisionContext } from '@/lib/catalog/decision';
 import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { collapseRepeatedWords } from '@/lib/catalog/productLabel';
+import { isStorefrontHiddenBrandId } from '@/lib/catalog/storefrontBrands';
 import type {
   CatalogProductView,
   CatalogProductDetailResponse,
@@ -121,7 +122,10 @@ export async function getCatalogProducts(
 
     if (error) return { products: [], total: 0, filters_applied: { material } };
 
-    let rows = (data ?? []) as unknown as SupabaseAccessoryRow[];
+    // Ön yüzde gizli markalar (TEKNO, 26 Ekim 2026) katalogda listelenmez.
+    let rows = ((data ?? []) as unknown as SupabaseAccessoryRow[]).filter(
+      (r) => !isStorefrontHiddenBrandId(r.brand_id),
+    );
     if (options?.accessoryTypeSlug) {
       rows = rows.filter((r) => r.accessory_types?.slug === options.accessoryTypeSlug);
     }
@@ -191,9 +195,9 @@ export async function getCatalogProducts(
   const { data, error } = await query;
   if (error) return { products: [], total: 0, filters_applied: { material } };
 
-  const products: CatalogProductView[] = ((data ?? []) as unknown as SupabasePlateRow[]).map((row) =>
-    buildPlateView(row)
-  );
+  const products: CatalogProductView[] = ((data ?? []) as unknown as SupabasePlateRow[])
+    .filter((row) => !isStorefrontHiddenBrandId(row.brands?.id))
+    .map((row) => buildPlateView(row));
 
   return { products, total: products.length, filters_applied: { material } };
 }
@@ -303,6 +307,8 @@ export async function getCatalogProduct(
       if (expectedAccessoryType && accTypeSlug !== expectedAccessoryType) {
         return null;
       }
+      // Ön yüzde gizli marka (TEKNO): ürün sayfası yok; eski adres 301 ile kategoriye gider.
+      if (isStorefrontHiddenBrandId(row.brands?.id)) return null;
 
       const rules = buildAccessoryRules(row);
       const minimum_order = buildMinOrder(rules);

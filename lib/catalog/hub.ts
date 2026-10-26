@@ -6,6 +6,7 @@
 // ============================================================
 
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { isStorefrontHiddenBrandId } from '@/lib/catalog/storefrontBrands';
 import { KATEGORI_LIST, type CategoryInfo } from '@/lib/catalog/categories';
 
 export type HubBadge = 'tekil' | 'sistem' | 'mixed';
@@ -40,11 +41,11 @@ const BRAND_SLUG_BY_ID: Record<number, { slug: string; name: string }> = {
   1:  { slug: 'dalmacyali',  name: 'Dalmaçyalı' },
   2:  { slug: 'filli-boya',  name: 'Fawori Expert' },   // DB'de "Expert" = Fawori Expert
   4:  { slug: 'optimix',     name: 'Fawori Optimix' },
-  6:  { slug: 'tekno',       name: 'TEKNO' },
   11: { slug: 'oem',         name: 'Ekonomik' },         // 2.kalite line
 };
 
-const HUB_BRAND_IDS = [1, 2, 4, 6, 11];
+// TEKNO (6) 26 Ekim 2026'dan beri ön yüzde gösterilmez (lib/catalog/storefrontBrands).
+const HUB_BRAND_IDS = [1, 2, 4, 11];
 
 export async function getUrunlerHubData(): Promise<HubData> {
   const supabase = createServerSupabaseClient();
@@ -105,7 +106,9 @@ export async function getUrunlerHubData(): Promise<HubData> {
   type BrandIdRow = { brand_id: number };
 
   const platesRows  = (platesResult.data ?? []) as unknown as HubPlateRow[];
-  const accsRows    = (accessoriesResult.data ?? []) as unknown as HubAccessoryRow[];
+  // Kategori kartı sayıları ve görselleri gizli markayı (TEKNO) saymaz.
+  const accsRows    = ((accessoriesResult.data ?? []) as unknown as HubAccessoryRow[])
+    .filter((row) => !isStorefrontHiddenBrandId(row.brand_id));
   const brandPlates = (brandPlatesResult.data ?? []) as unknown as BrandIdRow[];
   const brandAccs   = (brandAccsResult.data ?? []) as unknown as BrandIdRow[];
 

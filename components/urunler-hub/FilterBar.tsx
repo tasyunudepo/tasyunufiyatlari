@@ -1,6 +1,6 @@
 // /urunler hub marka chip filter row + sıralama dropdown.
 // NOT sticky (SiteHeader zaten sticky — iki sticky katman çakışır).
-// 5 markanın 5'i tıklanabilir (TEKNO ve OEM dahil — BRAND_MAP'e eklendi).
+// Markalar ürün merkezinin marka listesinden gelir; TEKNO 26 Ekim 2026'dan beri ön yüzde yok.
 // Sıralama dropdown UI-only; hub statik liste (mantolama workflow sırası).
 
 import Link from 'next/link';

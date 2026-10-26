@@ -15,7 +15,6 @@ const DEALER_BRANDS: readonly DealerBrand[] = [
   { name: 'Bonus', src: '/images/markalogolar/bonus-logo-red.svg', width: 307, height: 118, heightClass: 'h-[18px]' },
   { name: 'Fawori', src: '/images/markalogolar/strip/fawori.webp', width: 71, height: 71, heightClass: 'h-5' },
   { name: 'Dalmaçyalı', src: '/images/markalogolar/strip/dalmacyali.webp', width: 180, height: 64, heightClass: 'h-[18px]' },
-  { name: 'TEKNO', src: '/images/markalogolar/strip/tekno.webp', width: 179, height: 48, heightClass: 'h-[18px]' },
   { name: 'Filli Boya', src: '/images/markalogolar/strip/filli-boya.webp', width: 130, height: 87, heightClass: 'h-[22px]' },
 ];
 

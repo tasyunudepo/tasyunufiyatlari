@@ -38,11 +38,7 @@ export const BRAND_MAP: Record<
     displayName: 'Fawori Optimix',
     description: 'Fawori Optimix ısı yalıtım levhaları ve sistem aksesuarları.',
   },
-  'tekno': {
-    id: 6,
-    displayName: 'TEKNO',
-    description: 'TEKNO mantolama sistem ürünleri — yapıştırıcı, sıva, dübel, file ve dekoratif kaplamalar.',
-  },
+  // TEKNO 26 Ekim 2026'da ön yüzden çıktı; /marka/tekno → /urunler (next.config, 301).
   'oem': {
     id: 11,
     displayName: 'Ekonomik (2.Kalite)',

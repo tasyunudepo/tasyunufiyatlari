@@ -4,6 +4,7 @@ import { KATEGORI_MAP } from '@/lib/catalog/categories';
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 import { HUB_THICKNESSES, density150HubPath, thicknessHubPath } from '@/lib/compare/hubs';
 import { getDensity150HubThicknesses } from '@/lib/compare/hubPages.server';
+import { isStorefrontHiddenBrandId } from '@/lib/catalog/storefrontBrands';
 
 const BASE_URL = 'https://www.tasyunufiyatlari.com';
 
@@ -30,7 +31,8 @@ const STATIC_PATHS = [
 
 // Marka detay sayfaları — BRAND_MAP ile aynı slug listesi
 // Düzeltme: aynı slug taksonomisini lib/catalog/hub.ts'teki BRAND_SLUG_BY_ID ile paralel tut
-const BRAND_SLUGS = ['dalmacyali', 'filli-boya', 'optimix', 'tekno', 'oem'];
+// TEKNO 26 Ekim 2026'dan beri ön yüzde yok (lib/catalog/storefrontBrands).
+const BRAND_SLUGS = ['dalmacyali', 'filli-boya', 'optimix', 'oem'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -118,11 +120,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: accs } = await supabase
       .from('accessories')
-      .select('slug, accessory_types(slug)')
+      .select('slug, brand_id, accessory_types(slug)')
       .eq('is_active', true)
       .not('slug', 'is', null);
 
-    for (const row of (accs ?? []) as unknown as Array<{ slug: string; accessory_types: { slug: string } | null }>) {
+    for (const row of (accs ?? []) as unknown as Array<{ slug: string; brand_id: number | null; accessory_types: { slug: string } | null }>) {
+      if (isStorefrontHiddenBrandId(row.brand_id)) continue;
       const accTypeSlug = row.accessory_types?.slug;
       if (!accTypeSlug || !row.slug) continue;
       // accessory_types.slug ile KATEGORI_MAP'taki accessoryTypeSlug eşleşeni bul

@@ -82,7 +82,8 @@ describe('ziyaretçiye verilen ticari vaatler', () => {
   it('TEKNO markasını levha veya taşyünü üreticisi gibi tanıtmaz', () => {
     const brandStrip = sources.find(({ file }) => file === 'components/cro/BrandStrip.tsx')?.content ?? ''
 
-    expect(brandStrip).toContain('Tekno toz grubu ve aksesuar ürünleri')
+    // 26 Ekim 2026: TEKNO logosu şeritten kaldırıldı (Emrah kararı); geri gelirse
+    // yine levha/taşyünü üreticisi gibi tanıtılmamalı.
     expect(brandStrip).not.toMatch(/alt:\s*['"]Tekno\s+(?:taşyünü|levha)/iu)
   })
 })
