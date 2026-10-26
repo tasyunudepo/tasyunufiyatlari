@@ -101,6 +101,21 @@ export function getBonusFamily(modelShortName: string): BonusFamily | null {
   )
 }
 
+/**
+ * Aile varyantları (Gold Plus 70/90 vb.) ayrı ürün sayfası açmasın diye
+ * veritabanında pasif tutulur; satış ailenin aktif ürün sayfasındaki
+ * yoğunluk seçicisinden yapılır. Ailenin bir üyesi aktifse varyant da
+ * satılabilir sayılır — ofis kataloğu bunları göstermeli (Emrah, 26 Ekim 2026).
+ */
+export function isSellableFamilyVariant(
+  modelShortName: string,
+  activeModelShortNames: ReadonlySet<string>,
+): boolean {
+  const family = getBonusFamily(modelShortName)
+  if (!family) return false
+  return family.variants.some((v) => activeModelShortNames.has(v.modelShortName))
+}
+
 export function getBonusFamilyVariant(
   modelShortName: string,
 ): BonusFamilyVariant | null {

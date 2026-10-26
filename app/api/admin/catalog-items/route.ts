@@ -11,6 +11,7 @@ import {
 } from '@/lib/pricing/margin'
 import { joinBrandAndModel } from '@/lib/catalog/productLabel'
 import { computeBonusUnitSale } from '@/lib/pricing/bonus/sale'
+import { isSellableFamilyVariant } from '@/lib/pricing/bonus/families'
 import { citySubRegionQuestion, type BonusSubRegionChoice } from '@/lib/pricing/bonus/subRegions'
 import { resolveAccessoryDiscounts } from '@/lib/pricing/accessoryDiscounts'
 import { capacityForPlate, type LogisticsCapacityRow } from '@/lib/quote/vehicleArea'
@@ -165,6 +166,16 @@ export async function GET(req: NextRequest) {
 
   const items: CatalogItem[] = []
 
+  // Bonus aile varyantları (Gold Plus 70/90, Endüstriyel Levha 110…) ayrı ürün
+  // sayfası açmasın diye pasif tutulur ama ailenin ürün sayfasından satılır;
+  // ofiste de seçilebilmeleri için aktiflik aileden çözülür (26 Ekim 2026).
+  const activeBonusModels = new Set(
+    (platesRes.data ?? [])
+      .filter((p) => p.is_active !== false && p.brand_id != null && brandById.get(p.brand_id)?.name === 'Bonus')
+      .map((p) => p.short_name)
+      .filter((name): name is string => Boolean(name)),
+  )
+
   // Bonus fiyatı `plate_prices` tablosunda DEĞİL — bölge bazlı fiyat
   // listesinde (lib/pricing/bonus/bonus-region-prices.json). Bonus levhalarının
   // base_price'ı null ve plate_prices'ta hiç satırı yok; bu yüzden genel
@@ -228,7 +239,7 @@ export async function GET(req: NextRequest) {
           marginSource: 'marka',
           materialSlug: 'tasyunu',
           modelShortName: plate.short_name ?? null,
-          isActive: plate.is_active !== false,
+          isActive: plate.is_active !== false || isSellableFamilyVariant(plate.short_name ?? '', activeBonusModels),
         })
       }
       continue

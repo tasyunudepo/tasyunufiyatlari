@@ -2120,3 +2120,14 @@ Emrah: TY2866541 (Ferhat Öner, Malatya, 3.548 m² Bonus Gold Plus 10 cm). Müş
 | WhatsApp sipariş mesajı: ürün/levha satırının altına "Yoğunluk: 70 kg/m³" | Sipariş yazışmasında da varyant belli |
 
 Kanıt: vitest 1010 (yeni `tests/pdf/quote-density-note.test.ts`: Gold Plus 50/70/90, sözlü beyan etiketi, beyansız üründe boş, PDF satırı + ürün kutusu, WhatsApp tek ürün ve set, üç yolun bağlantısı); tsc, eslint temiz; derleme, copy-gate 477 HTML temiz; yerel üretimde gerçek PDF (kayıt istekleri sahte cevaplı): SW035 → "Yoğunluk: 110–120 kg/m³ · Üretici sözlü beyanı — değişken", Gold Plus 70 → "Yoğunluk: 70 kg/m³ · Föy beyanı" hem ürün kutusunda hem levha satırında; tarayıcı testleri 136 geçti (aynı 6 önceden kırık); ölçüm bekçisi GEÇTİ.
+
+
+## 26 Ekim 2026 · Ofis kataloğunda Bonus yoğunluk varyantları
+
+Emrah: ürün sayfasında Gold Plus 50/70/90 seçiliyor, ofiste "Gold Plus 70" aranınca sonuç yok; 1.200 m² özel teklif yazılamadı.
+
+Kök neden: aile varyantları (Gold Plus 70/90, Gold Black 70/90, Gold Yellow 70, Endüstriyel Levha 110, Şilte 700/720/750) ayrı ürün sayfası açmasın diye `plates.is_active=false` (20 Temmuz kararı); satış ailenin aktif ürün sayfasındaki yoğunluk seçicisinden. Ofis `catalog-items` fiyatı hesaplıyor ama yanıtı `items.filter(i => i.isActive)` ile dönüyordu → varyantlar düşüyordu.
+
+Düzeltme: `isSellableFamilyVariant` (`lib/pricing/bonus/families.ts`) — ailenin bir üyesi aktifse varyant ofiste satılabilir sayılır; `catalog-items` Bonus dalında aktiflik buradan çözülür. Veritabanı ve ürün sayfaları değişmedi (varyantlara ayrı sayfa açılmaz).
+
+Kanıt: önce kırmızı test (`tests/quote/bonus-family-office-catalog.test.ts`, 11/11 kırmızı → yeşil); vitest 1021; tsc, eslint temiz; derleme, copy-gate 477 HTML temiz; yerel API Kocaeli/Gebze: Gold Plus 70 ve 90 (9'ar kalınlık), Gold Black 70/90, Gold Yellow 70, Endüstriyel Levha 110, Şilte 700/720/750 listede; Gold Plus 70 10 cm 355,87 TL (ürün sayfasıyla aynı); ofis ekranında arama → satır → PDF (kayıt sahte cevaplı): "Yoğunluk: 70 kg/m³ · Föy beyanı"; ofis AC-01–06 ve kritik teklif akışları geçti (AC-07–09 önceden kırık).
