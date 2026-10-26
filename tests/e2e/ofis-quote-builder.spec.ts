@@ -267,10 +267,14 @@ test.describe('yarı otomatik teklif ekranı', () => {
     expect(urunler).toContain('Fawori Optimix Taşyünü Dübeli Çelik Çivili 13,5cm 200 adet')
     expect(urunler).not.toContain('Fawori Optimix Taşyünü Dübeli Çelik Çivili 11,5cm 200 adet')
 
+    // 26 Ekim 2026: Filli Eylül listesi işlendi — Optimix yapıştırıcı 205,5 → 216,
+    // sıva 227,5 → 239, köşe 2.650 → 2.775, astar 1.380 → 1.450 (KDV hariç liste).
+    // İskonto + marj zinciri aynı (birim satış / liste = 0,87907); dübel, file ve
+    // kaplamanın listesi değişmedi.
     expect((await sutun(page, 5)).slice(1)).toEqual([
-      '180.65', '199.99', '1186.73', '1350.24', '2329.51', '1213.1', '284.82',
+      '189.88', '210.1', '1186.73', '1350.24', '2439.39', '1274.64', '284.82',
     ])
-    await expect(page.getByText('2.875.031,17 ₺')).toBeVisible()
+    await expect(page.getByText('2.894.209,43 ₺')).toBeVisible()
 
     await page.context().close()
   })

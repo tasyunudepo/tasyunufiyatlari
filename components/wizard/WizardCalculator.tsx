@@ -41,6 +41,7 @@ import { resolveMarginPctStrict } from "@/lib/pricing/margin";
 import { resolveAccessoryDiscounts } from "@/lib/pricing/accessoryDiscounts";
 import { selectAccessoryForSet, selectDowelWasherForSet } from "@/lib/quote/selectAccessoryForSet";
 import { quoteDensityDisplay, quoteDensityNote } from "@/lib/technical-profiles";
+import { formatPackageSpecNote, resolvePackageSpec } from "@/lib/catalog/packageSpec";
 import {
     buildQuoteSurfacePricing,
 } from "@/lib/pricing/quoteTotals";
@@ -863,6 +864,16 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         const materialLabel = selectedMalzeme === "tasyunu" ? "Taşyünü" : "EPS";
         const materialLongName = materialTypes.find(m => m.slug === selectedMalzeme)?.name || materialLabel;
 
+        // Paket içi adet ve levha ölçüsü belgeye yazılır (26 Ekim 2026).
+        const platePackageM2 = pkg.logistics?.packageSizeM2 ?? null;
+        const platePackageNote = formatPackageSpecNote(platePackageM2, resolvePackageSpec({
+            brandName: brands.find(b => b.id === selectedBrandId)?.name,
+            materialSlug: selectedMalzeme,
+            modelShortName: selectedModel,
+            packageM2: platePackageM2,
+            packagePieces: isBonusSelected ? bonusCapacity?.packagePieces ?? null : null,
+        }));
+
         const itemsForPdf = (pkg.items || []).map((it) => {
             return {
                 description: it.name, // Orijinal uzun ismi kullan
@@ -875,6 +886,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 isPlate: it.isPlate,
                 packageCount: it.packageCount,
                 technicalNote: it.isPlate ? quoteDensityNote(selectedModel) : null,
+                packageNote: it.isPlate ? platePackageNote : null,
             };
         });
 

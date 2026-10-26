@@ -58,6 +58,8 @@ export interface PDFQuoteItem {
     packageCount?: number;
     /** Levha satırının altına yazılan teknik not (ör. "Yoğunluk: 70 kg/m³ · Föy beyanı"). */
     technicalNote?: string | null;
+    /** Levha satırının paket bilgisi (ör. "Paket: 4 levha · 2,88 m² · Levha 60 × 120 cm"). */
+    packageNote?: string | null;
 }
 
 export interface PDFQuoteData {
@@ -158,7 +160,7 @@ function generateFallbackQuotePDF(input: PDFQuoteData): QuotePDFResult {
     doc.text('Sistem Bilgileri', 14, y);
     y += 6;
     doc.setFont('helvetica', 'normal');
-    y = addWrappedText(doc, `Paket: ${data.packageName}`, 14, y, 180);
+    if (data.packageName) y = addWrappedText(doc, `Paket: ${data.packageName}`, 14, y, 180);
     y = addWrappedText(doc, `Sistem: ${data.systemDescription || '-'}`, 14, y, 180);
     y = addWrappedText(doc, `Sehir: ${data.city || data.cityName}`, 14, y, 180);
     y = addWrappedText(doc, `Metraj: ${data.metraj} m2`, 14, y, 180);

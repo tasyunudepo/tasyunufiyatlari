@@ -5,6 +5,7 @@ import type { CatalogProductView } from "@/lib/catalog/types";
 import {
   buildPlatePackageDetails,
   resolvePlatePackageDetail,
+  type PlatePackageDetail,
   type ProductLogisticsCapacity,
 } from "@/lib/catalog/package-details";
 import { useProductInteractiveOptional } from "./ProductInteractiveContext";
@@ -13,6 +14,8 @@ interface Props {
   product: CatalogProductView;
   logisticsCapacity: ProductLogisticsCapacity[];
   fallbackThickness: number | null;
+  /** Hazır satırlar (Bonus: üretici listesi). Verilirse lojistik tablosundan hesaplanmaz. */
+  details?: PlatePackageDetail[];
 }
 
 const integerFormat = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 });
@@ -32,14 +35,18 @@ export default function PlatePackageDetails({
   product,
   logisticsCapacity,
   fallbackThickness,
+  details,
 }: Props) {
   const interactive = useProductInteractiveOptional();
   const activeThickness = interactive?.activeThickness ?? fallbackThickness;
-  const activeDetail = resolvePlatePackageDetail(product, logisticsCapacity, activeThickness);
-  const allDetails = buildPlatePackageDetails(product, logisticsCapacity);
+  const activeDetail = details
+    ? details.find((detail) => detail.thicknessCm === activeThickness) ?? null
+    : resolvePlatePackageDetail(product, logisticsCapacity, activeThickness);
+  const allDetails = details ?? buildPlatePackageDetails(product, logisticsCapacity);
   const orderPlan = interactive?.orderPlan ?? null;
 
   if (!activeDetail) return null;
+  const pieceLabel = activeDetail.pieceLabel ?? "levha";
 
   const packageCount = orderPlan
     ? orderPlan.lorryCount * activeDetail.lorryPackages + orderPlan.truckCount * activeDetail.truckPackages
@@ -67,7 +74,7 @@ export default function PlatePackageDetails({
           {activeDetail.boardSizeLabel && (
             <div className="min-h-[112px] rounded-[12px] border border-[#ded2c0] bg-white p-4">
               <Ruler className="h-5 w-5 text-[#8a5f1d]" aria-hidden="true" />
-              <dt className="mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#625a4f]">Levha ölçüsü</dt>
+              <dt className="mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#625a4f]">{pieceLabel === "rulo" ? "Rulo ölçüsü" : "Levha ölçüsü"}</dt>
               <dd className="mt-1 font-heading text-xl font-extrabold text-[#282219]">{activeDetail.boardSizeLabel}</dd>
             </div>
           )}
@@ -75,7 +82,7 @@ export default function PlatePackageDetails({
             <div className="min-h-[112px] rounded-[12px] border border-[#ded2c0] bg-white p-4">
               <PackageOpen className="h-5 w-5 text-[#8a5f1d]" aria-hidden="true" />
               <dt className="mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#625a4f]">Paket içeriği</dt>
-              <dd className="mt-1 font-heading text-xl font-extrabold text-[#282219]">{activeDetail.itemsPerPackage} levha</dd>
+              <dd className="mt-1 font-heading text-xl font-extrabold text-[#282219]">{activeDetail.itemsPerPackage} {pieceLabel}</dd>
             </div>
           )}
           <div className="min-h-[112px] rounded-[12px] border border-[#ded2c0] bg-white p-4">
@@ -91,7 +98,7 @@ export default function PlatePackageDetails({
             {packageCount > 0 ? (
               <dd className="mt-1 font-heading text-lg font-extrabold leading-6 text-[#282219]">
                 {integerFormat.format(packageCount)} paket
-                {boardCount !== null && <span className="block text-sm font-bold text-[#62533b]">{integerFormat.format(boardCount)} levha</span>}
+                {boardCount !== null && <span className="block text-sm font-bold text-[#62533b]">{integerFormat.format(boardCount)} {pieceLabel}</span>}
               </dd>
             ) : (
               <dd className="mt-1 text-sm font-semibold leading-5 text-[#62533b]">Araç seçiminizle hesaplanır</dd>
@@ -121,7 +128,7 @@ export default function PlatePackageDetails({
                   <tr key={detail.thicknessCm} className={detail.thicknessCm === activeDetail.thicknessCm ? "bg-[#fff3d7]" : "bg-white"}>
                     <td className="px-5 py-3 font-bold sm:px-7 lg:px-8">{detail.thicknessCm.toLocaleString("tr-TR")} cm</td>
                     <td className="px-5 py-3">{detail.boardSizeLabel ?? "—"}</td>
-                    <td className="px-5 py-3">{detail.itemsPerPackage ? `${detail.itemsPerPackage} levha` : "—"}</td>
+                    <td className="px-5 py-3">{detail.itemsPerPackage ? `${detail.itemsPerPackage} ${detail.pieceLabel ?? "levha"}` : "—"}</td>
                     <td className="px-5 py-3 font-semibold">{decimalFormat.format(detail.packageM2)} m²</td>
                   </tr>
                 ))}

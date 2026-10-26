@@ -24,12 +24,15 @@ import {
 import { WAREHOUSE_INFO } from "@/lib/business/info";
 import ProductImage from "./ProductImage";
 import BonusPurchaseDesk, { type BonusPurchaseShippingZone } from "./BonusPurchaseDesk";
+import BonusPackageDetails, { type BonusPackageTableRow } from "./BonusPackageDetails";
 import ProductSectionTracker from "./ProductSectionTracker";
 import { LEAD_TIME_NOTE, LEAD_TIME_SCOPE, LEAD_TIME_SHORT } from "@/lib/sales/leadTime";
 
 interface BonusPurchaseExperienceProps {
   product: CatalogProductView;
   shippingZones: BonusPurchaseShippingZone[];
+  /** Kalınlığa göre paket satırları (sunucuda üretici listesinden; fiyat içermez). */
+  packageTable?: Record<string, BonusPackageTableRow[]>;
 }
 
 const CATALOG_BRANDS = [
@@ -62,6 +65,7 @@ const CATALOG_BRANDS = [
 export default function BonusPurchaseExperience({
   product,
   shippingZones,
+  packageTable,
 }: BonusPurchaseExperienceProps) {
   const profile = product.model ? getProfileByModel(product.model) : null;
   const displayTitle = profile?.displayName ?? product.name;
@@ -271,6 +275,14 @@ export default function BonusPurchaseExperience({
           </div>
           </ProductSectionTracker>
         </section>
+
+        {packageTable && (
+          <div className="mt-5">
+            <ProductSectionTracker sectionName="package" productName={product.name} brandName={product.brand.name} productSlug={product.slug}>
+              <BonusPackageDetails product={product} packageTable={packageTable} />
+            </ProductSectionTracker>
+          </div>
+        )}
 
         <section className="mt-5 overflow-hidden rounded-[14px] bg-[#171612] text-white shadow-[0_20px_46px_rgba(39,31,17,0.15)]">
           <div className="grid lg:grid-cols-[0.92fr_1.08fr]">

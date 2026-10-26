@@ -44,6 +44,8 @@ export interface ManualPdfInput {
     consumptionUnit?: TechnicalConsumptionUnit | null
     /** Levha satırının altına yazılan teknik not (yoğunluk). */
     technicalNote?: string | null
+    /** Levha satırının paket bilgisi. */
+    packageNote?: string | null
   }>
   discountPct: number
   shippingCharge: number
@@ -82,6 +84,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
     isPlate: l.isPlate ?? false,
     packageCount: l.packageCount ?? undefined,
     technicalNote: l.technicalNote ?? null,
+    packageNote: l.packageNote ?? null,
   }))
 
   if (input.shippingCharge > 0) {
@@ -140,7 +143,8 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
   const aciklama = [iskontoNotu, input.notes?.trim()].filter(Boolean).join(' ')
 
   return {
-    packageName: input.title || 'Ofis Teklifi',
+    // Başlık yoksa ürün kutusuna "Paket: Ofis Teklifi" yazılmaz; malzeme ve kalınlık görünür.
+    packageName: input.title?.trim() || '',
     packageDescription: aciklama,
     plateBrandName: plateLine?.description.split(' ')[0] || '',
     accessoryBrandName: '',

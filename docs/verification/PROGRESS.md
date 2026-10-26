@@ -2131,3 +2131,20 @@ Kök neden: aile varyantları (Gold Plus 70/90, Gold Black 70/90, Gold Yellow 70
 Düzeltme: `isSellableFamilyVariant` (`lib/pricing/bonus/families.ts`) — ailenin bir üyesi aktifse varyant ofiste satılabilir sayılır; `catalog-items` Bonus dalında aktiflik buradan çözülür. Veritabanı ve ürün sayfaları değişmedi (varyantlara ayrı sayfa açılmaz).
 
 Kanıt: önce kırmızı test (`tests/quote/bonus-family-office-catalog.test.ts`, 11/11 kırmızı → yeşil); vitest 1021; tsc, eslint temiz; derleme, copy-gate 477 HTML temiz; yerel API Kocaeli/Gebze: Gold Plus 70 ve 90 (9'ar kalınlık), Gold Black 70/90, Gold Yellow 70, Endüstriyel Levha 110, Şilte 700/720/750 listede; Gold Plus 70 10 cm 355,87 TL (ürün sayfasıyla aynı); ofis ekranında arama → satır → PDF (kayıt sahte cevaplı): "Yoğunluk: 70 kg/m³ · Föy beyanı"; ofis AC-01–06 ve kritik teklif akışları geçti (AC-07–09 önceden kırık).
+
+
+## 26 Ekim 2026 · Eylül fiyatları, paket yuvarlama, belgede paket bilgisi, Bonus paket tablosu
+
+Emrah: "Teklifi hazırlarken tam metraj yazdığımda pakete göre yuvarlasın, PDF'te belirtsin; paket miktar ve ölçüleri teklifte belirtilsin; ürün sayfasında kalınlığa göre liste olsun, Bonus'a özel; Eylül fiyat listesi de halloldu sanıyordum."
+
+| Değişiklik | Sonuç |
+|---|---|
+| Fiyat (canlı DB, 10:15, yedek scratchpad `fiyat-eylul-yedek-*.json`; betik `scripts/filli-fiyat-eylul-2026.py`, kurallar `fiyat-kurallari.json`) | 133 satır: 84 EPS levha fiyatı (İdeal/Double Carbon, Expert EPS Karbonlu/Beyaz/035 Beyaz, Optimix Karbonlu; 2–15 cm), 5 PW50 paket m² (4,8/3,6/2,4), 44 aksesuar (toz grubu, profil, Optimix beton dübeli 9,5–15,5, Expert çelik 9,5). İkinci kuru çalıştırmada fark 0. Expert EPS Beyaz −%34,5, Dalmaçyalı Isı Yalıtım Sıvası −%29 (liste değeri) |
+| `lib/catalog/packageSpec.ts` | Tek kural: Filli taşyünü 60 × 100, EPS 50 × 100 (Excel YÜKLEME / sarfiyat); Bonus paket içi adet üretici listesinden, ölçü yalnız listede yazan 60 × 120 levha ve 100 × 300 / 100 × 500 rulo; `roundAreaToPackages` |
+| Ofis | Katalogdan levha seçilince ve metraj değişince miktar tam pakete yukarı yuvarlanır (1.200 m² Gold Plus 70 → 417 paket = 1.200,96 m²); paket adedi kayda ve PDF'e ("(417 PKT)") gider; revize/çoğaltmada paket m² katalogdan tamamlanır; başlıksız teklifte ürün kutusunda "Paket: Ofis Teklifi" yazmaz |
+| PDF (üç yol) | Levha satırında "Paket: 4 levha · 2,88 m² · Levha 60 × 120 cm", altında yoğunluk |
+| Ürün sayfası | Standart paket bölümü adet/ölçüyü kuraldan alır (EPS 10 cm: 3 levha 60 × 100 yanlıştı → 5 levha 50 × 100; 11–15 cm'de ölçü artık yazar). Bonus ürün sayfasına aynı bölüm: kalınlık tablosu üretici listesinden (sunucuda, fiyatsız), yoğunluk seçimini izler (Gold Plus 90: 10 cm 3 levha), seçili araç planı "168 paket · 672 levha" |
+
+Test değişikliği: `ofis-quote-builder.spec.ts` AC-06 beklenen birim fiyatları ve toplam Eylül listesine göre güncellendi (yapıştırıcı 180,65 → 189,88, sıva 199,99 → 210,10, köşe 2.329,51 → 2.439,39, astar 1.213,10 → 1.274,64; toplam 2.875.031,17 → 2.894.209,43 TL). Kanıt: birim satış / liste oranı eski ve yenide 0,87907 (aynı %9 + %8 iskonto ve marj); listesi değişmeyen dübel, file, kaplama aynı; ekran toplamı elle hesapla aynı. Kendi sözleşme testim `quote-density-note.test.ts` ofis satırının yeni biçimine göre güncellendi (davranış aynı).
+
+Kanıt: vitest 1035 (yeni `tests/catalog/package-spec.test.ts` 14); tsc, eslint temiz; derleme, copy-gate 477 HTML temiz; yerel üretim: Gold Plus 70 sayfası 10 cm 4 levha · 60 × 120 · 2,88 m², tablo 3–15 cm, 90'a geçince 3 levha · 2,16 m², 1 kamyon 168 paket · 672 levha; 390 px taşma yok; İdeal Carbon 10 cm 5 levha · 50 × 100; ofis 1.200 → 1.200,96 m², 1.500 → 1.500,48 m², PDF paket + yoğunluk satırı; tarayıcı testleri 134 + ofis AC-01–06 geçti (önceden kırık 6 aynı); ölçüm bekçisi `/`, `/iletisim`, Gold Plus sayfası GEÇTİ.

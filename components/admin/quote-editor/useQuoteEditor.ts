@@ -12,6 +12,7 @@ import {
 import type { CatalogItem } from "@/app/api/admin/catalog-items/route";
 import type { AccessorySetItem } from "@/lib/quote/buildAccessorySet";
 import type { TechnicalConsumptionUnit } from "@/lib/types";
+import { roundAreaToPackages } from "@/lib/catalog/packageSpec";
 
 // Teklif editörünün durumu ve canlı hesabı.
 //
@@ -37,6 +38,11 @@ export interface EditorLine extends ManualQuoteLine {
   consumptionUnit: TechnicalConsumptionUnit | null;
   /** Paket içeriği — paket artığı göstergesi için. */
   unitContent: number | null;
+  /**
+   * Levha paketinin m²'si. Doluysa levha miktarı tam pakete yukarı yuvarlanır
+   * ve paket adedi belgeye yazılır (Emrah, 26 Ekim 2026).
+   */
+  packageM2: number | null;
 }
 
 let rowCounter = 0;
@@ -64,10 +70,13 @@ export function createEmptyLine(): EditorLine {
     consumptionRate: null,
     consumptionUnit: null,
     unitContent: null,
+    packageM2: null,
   };
 }
 
 export function lineFromCatalog(item: CatalogItem, quantity: number): EditorLine {
+  const packageM2 = item.kind === "levha" && item.packageM2 && item.packageM2 > 0 ? item.packageM2 : null;
+  const rounded = packageM2 ? roundAreaToPackages(quantity, packageM2) : null;
   return {
     ...createEmptyLine(),
     kind: item.kind === "levha" ? "levha" : "aksesuar",
@@ -76,7 +85,9 @@ export function lineFromCatalog(item: CatalogItem, quantity: number): EditorLine
     // aynı gösterebiliyor. Teklif ve PDF daima veritabanındaki tam ticari adı
     // taşır; levhada ise kalınlığı içeren katalog etiketi korunur.
     description: item.kind === "aksesuar" ? item.fullName : item.label,
-    quantity,
+    quantity: rounded?.quantityM2 ?? quantity,
+    packageCount: rounded?.packageCount ?? null,
+    packageM2,
     unit: item.unit,
     unitPrice: item.suggestedUnitPrice,
     isPlate: item.kind === "levha",
@@ -119,7 +130,18 @@ export function useQuoteEditor(areaM2 = 0) {
   }, []);
 
   const updateLine = useCallback((rowId: string, patch: Partial<EditorLine>) => {
-    setLines((prev) => prev.map((l) => (l.rowId === rowId ? { ...l, ...patch } : l)));
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.rowId !== rowId) return l;
+        const next = { ...l, ...patch };
+        // Operatör levha miktarını elle yazarsa miktar korunur; paket adedi
+        // yazdığı miktarı karşılayan tam pakete göre yeniden hesaplanır.
+        if (patch.quantity !== undefined && patch.packageCount === undefined && next.packageM2) {
+          next.packageCount = roundAreaToPackages(next.quantity, next.packageM2)?.packageCount ?? null;
+        }
+        return next;
+      }),
+    );
   }, []);
 
   const removeLine = useCallback((rowId: string) => {
@@ -199,7 +221,10 @@ export function useQuoteEditor(areaM2 = 0) {
           return { ...l, quantity: Math.ceil((yeniAlanM2 * sarfiyat) / icerik) };
         }
         if (l.unit.toLocaleLowerCase("tr-TR").includes("m²")) {
-          return { ...l, quantity: yeniAlanM2 };
+          const rounded = l.packageM2 ? roundAreaToPackages(yeniAlanM2, l.packageM2) : null;
+          return rounded
+            ? { ...l, quantity: rounded.quantityM2, packageCount: rounded.packageCount }
+            : { ...l, quantity: yeniAlanM2 };
         }
         return l;
       }),

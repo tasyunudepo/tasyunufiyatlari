@@ -18,6 +18,7 @@ import { getOfferValidityDate } from '@/lib/utils/packageHelpers';
 import { readCatalogJourneyId } from '@/lib/analytics/catalogJourney';
 import { getCategoryEntryContext } from '@/lib/catalog/category-entry-context';
 import { quoteDensityDisplay, quoteDensityNote } from '@/lib/technical-profiles';
+import { formatPackageSpecNote, resolvePackageSpec } from '@/lib/catalog/packageSpec';
 
 interface Props {
   product: CatalogProductView;
@@ -37,6 +38,8 @@ interface Props {
   // uzun ad olduğu için ("Bonus Premium F 150 Taşyünü…") eşleşmez ve
   // "kapasite doğrulanamadı" ile reddedilir. Bonus PDP kısa adı geçer.
   modelNameOverride?: string | null;
+  /** Paketteki levha adedi — Bonus'ta üretici listesinden gelir; diğerlerinde paket m²'sinden türetilir. */
+  packagePieces?: number | null;
   onOpen?: () => void;
   buttonClassName?: string;
   getJourneyAttribution?: () => Record<string, string | null>;
@@ -64,6 +67,7 @@ export default function SingleProductQuoteButton({
   resultSessionId,
   packageSizeM2: fallbackPackageSizeM2,
   modelNameOverride,
+  packagePieces,
   onOpen,
   buttonClassName,
   getJourneyAttribution,
@@ -182,6 +186,13 @@ export default function SingleProductQuoteButton({
             isPlate:         true,
             packageCount:    computedPackageCount,
             technicalNote:   densityNote,
+            packageNote:     formatPackageSpecNote(effectivePackageSizeM2, resolvePackageSpec({
+              brandName:      product.brand.name,
+              materialSlug:   product.material_type,
+              modelShortName: densityModel,
+              packageM2:      effectivePackageSizeM2,
+              packagePieces,
+            })),
           },
         ],
       });

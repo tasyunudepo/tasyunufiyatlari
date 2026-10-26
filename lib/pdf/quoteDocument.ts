@@ -169,7 +169,9 @@ function rowHtml(it: PDFQuoteItem, index: number): string {
   const consumptionDetail = consumption === '—' ? '' : `<small>m² sarfiyatı: ${escapeHtml(consumption)}</small>`
   // Levhada yoğunluk müşterinin aldığı ürünü tanımlar (Gold Plus 50/70/90).
   const technicalDetail = it.isPlate && it.technicalNote ? `<small>${escapeHtml(it.technicalNote)}</small>` : ''
-  const detail = consumptionDetail + technicalDetail
+  // Paket içi adet ve levha ölçüsü: müşteri kaç paket ve ne aldığını görür (26 Ekim 2026).
+  const packageDetail = it.isPlate && it.packageNote ? `<small>${escapeHtml(it.packageNote)}</small>` : ''
+  const detail = consumptionDetail + packageDetail + technicalDetail
 
   const unitPrice = isZeroPrice ? '<span class="tq-in-package">Pakete dahil</span>' : escapeHtml(fmtMoney(it.unitPrice))
   const total = isZeroPrice ? '—' : `<b>${escapeHtml(fmtMoney(it.totalPrice))}</b>`

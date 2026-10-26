@@ -1,4 +1,5 @@
 import type { CatalogProductView } from './types'
+import { resolvePackageSpec } from './packageSpec'
 
 export interface ProductLogisticsCapacity {
   thickness: number
@@ -20,6 +21,8 @@ export interface PlatePackageDetail {
   lorryPackages: number
   truckPackages: number
   isPopular: boolean
+  /** Şilte ürünleri rulo halinde gelir; varsayılan levha. */
+  pieceLabel?: 'levha' | 'rulo'
 }
 
 function finiteNumber(value: string | number | null | undefined): number | null {
@@ -60,11 +63,21 @@ export function resolvePlatePackageDetail(
   const packageM2 = finiteNumber(productPackageM2 ?? logistics.package_size_m2)
   if (packageM2 === null) return null
 
+  // Levha adedi ve ölçüsü marka/malzeme kuralından gelir: lojistik tablosu
+  // taşyünü paketine göredir, EPS'te (10 cm: 5 levha) yanlış adet verirdi ve
+  // 11–15 cm satırlarında ölçü notu yoktur. Kural çözülemezse eski yedek kalır.
+  const spec = resolvePackageSpec({
+    brandName: product.brand?.name,
+    materialSlug: product.material_type,
+    modelShortName: product.model,
+    packageM2,
+  })
+
   return {
     thicknessCm,
     packageM2,
-    itemsPerPackage: finiteNumber(logistics.items_per_package),
-    boardSizeLabel: parseBoardSizeLabel(logistics.notes),
+    itemsPerPackage: spec?.piecesPerPackage ?? finiteNumber(logistics.items_per_package),
+    boardSizeLabel: spec?.sizeLabel ?? parseBoardSizeLabel(logistics.notes),
     lorryPackages: logistics.lorry_capacity_packages,
     truckPackages: logistics.truck_capacity_packages,
     isPopular: logistics.is_popular,

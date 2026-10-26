@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { CatalogProductView } from "@/lib/catalog/types";
 import { getBonusFamily } from "@/lib/pricing/bonus/families";
@@ -26,7 +25,8 @@ export default function BonusPurchaseDesk({
   shippingZones,
 }: BonusPurchaseDeskProps) {
   const interactive = useProductInteractive();
-  const [bonusVariantModel, setBonusVariantModel] = useState<string | null>(null);
+  // Yoğunluk seçimi sayfa düzeyindedir: paket tablosu da seçili varyantı izler.
+  const { bonusVariantModel, setBonusVariantModel } = interactive;
   const resultSessionId = interactive.resultSessionId;
 
   const defaultZone = shippingZones.find((zone) => zone.city_code === 34) ?? shippingZones[0];

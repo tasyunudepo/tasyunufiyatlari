@@ -135,7 +135,9 @@ describe('üç teklif yolu yoğunluk notunu belgeye taşır', () => {
   })
 
   it('ofis: katalogdan seçilen levhanın model adından', () => {
-    expect(source('app/ofis/tabs/quotes/QuoteBuilder.tsx')).toContain('quoteDensityNote(catalogItems.find((i) => i.key === l.catalogKey)?.modelShortName)')
+    const ofis = source('app/ofis/tabs/quotes/QuoteBuilder.tsx')
+    expect(ofis).toContain('const item = l.isPlate ? catalogItems.find((i) => i.key === l.catalogKey) : undefined;')
+    expect(ofis).toContain('technicalNote: item ? quoteDensityNote(item.modelShortName) : null,')
     expect(source('lib/quote/buildManualPdfData.ts')).toContain('technicalNote: l.technicalNote ?? null,')
   })
 })

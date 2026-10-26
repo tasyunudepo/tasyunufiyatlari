@@ -18,6 +18,7 @@ import { generateQuotePDF } from "@/lib/pdfGenerator";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import { buildManualPdfData } from "@/lib/quote/buildManualPdfData";
 import { quoteDensityNote } from "@/lib/technical-profiles";
+import { formatPackageSpecNote, resolvePackageSpec, roundAreaToPackages } from "@/lib/catalog/packageSpec";
 import { describeVehicles, fitVehicles } from "@/lib/quote/vehicleArea";
 import { formatCurrency } from "@/lib/admin/utils";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
@@ -173,6 +174,22 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
     });
 
     const catalogItems = useMemo(() => catalogQuery.data?.items ?? [], [catalogQuery.data]);
+
+    // Revize/çoğaltmada kayıttan gelen levha satırında paket m² yoktur; katalogdan
+    // tamamlanır ki metraj değişince miktar yine tam pakete yuvarlansın.
+    const { lines: editorLines, updateLine } = editor;
+    useEffect(() => {
+        if (catalogItems.length === 0) return;
+        for (const l of editorLines) {
+            if (!l.isPlate || !l.catalogKey || l.packageM2 != null) continue;
+            const item = catalogItems.find((i) => i.key === l.catalogKey);
+            if (!item?.packageM2) continue;
+            updateLine(l.rowId, {
+                packageM2: item.packageM2,
+                packageCount: l.packageCount ?? roundAreaToPackages(l.quantity, item.packageM2)?.packageCount ?? null,
+            });
+        }
+    }, [catalogItems, editorLines, updateLine]);
     const catalogNotes = catalogQuery.data?.notes ?? [];
     const bonusSubRegion = catalogQuery.data?.context.bonusSubRegion ?? null;
 
@@ -319,7 +336,10 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
             thicknessCm: yeni.thicknessCm,
             netCost: yeni.netCost,
             unitContent: yeni.unitContent,
-            quantity: onerilenMiktar,
+            // Levhada miktar tam pakete yuvarlanmış gelir (lineFromCatalog).
+            quantity: yeni.quantity,
+            packageCount: yeni.packageCount,
+            packageM2: yeni.packageM2,
         });
 
         // Miktar boş kaldıysa imleci oraya götür — sıradaki iş o.
@@ -518,12 +538,23 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                     validityDays: payload.validityDays,
                     // Levhanın yoğunluğu belgede yazar (Gold Plus 50/70/90 gibi varyantlarda
                     // müşteri ne aldığını görmeli). Katalogdan seçilmemiş serbest satıra not düşülmez.
-                    lines: payload.lines.map((l) => ({
-                        ...l,
-                        technicalNote: l.isPlate
-                            ? quoteDensityNote(catalogItems.find((i) => i.key === l.catalogKey)?.modelShortName)
-                            : null,
-                    })),
+                    lines: payload.lines.map((l) => {
+                        const item = l.isPlate ? catalogItems.find((i) => i.key === l.catalogKey) : undefined;
+                        return {
+                            ...l,
+                            technicalNote: item ? quoteDensityNote(item.modelShortName) : null,
+                            // Paket içi adet ve levha ölçüsü (26 Ekim 2026).
+                            packageNote: item
+                                ? formatPackageSpecNote(item.packageM2, resolvePackageSpec({
+                                    brandName: item.brandName,
+                                    materialSlug: item.materialSlug,
+                                    modelShortName: item.modelShortName,
+                                    packageM2: item.packageM2,
+                                    packagePieces: item.packagePieces,
+                                }))
+                                : null,
+                        };
+                    }),
                     discountPct: payload.discountPct,
                     shippingCharge: payload.shippingCharge,
                     shippingMode: payload.shippingMode,

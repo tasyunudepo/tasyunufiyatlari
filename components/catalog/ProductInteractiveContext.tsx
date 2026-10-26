@@ -31,6 +31,9 @@ interface ContextValue {
   setHeroPrice: (price: number | null) => void;
   orderPlan: ProductOrderPlan | null;
   setOrderPlan: (plan: ProductOrderPlan | null) => void;
+  /** Bonus aile ürün sayfasında seçili yoğunluk varyantı (Gold Plus 70 gibi); null = sayfanın kendi modeli. */
+  bonusVariantModel: string | null;
+  setBonusVariantModel: (model: string | null) => void;
   resultSessionId: string;
   markSectionSeen: (section: PdpMeasuredSection) => void;
   getMeasurementSnapshot: () => PdpJourneySnapshot;
@@ -61,6 +64,7 @@ export function ProductInteractiveProvider({
   const [activeThickness, setActiveThicknessState] = useState<number | null>(initialThickness);
   const [heroPrice, setHeroPriceState] = useState<number | null>(null);
   const [orderPlan, setOrderPlanState] = useState<ProductOrderPlan | null>(null);
+  const [bonusVariantModel, setBonusVariantModel] = useState<string | null>(null);
   const [resultSessionId] = useState(
     () => `pdp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
   );
@@ -140,6 +144,8 @@ export function ProductInteractiveProvider({
         setHeroPrice,
         orderPlan,
         setOrderPlan,
+        bonusVariantModel,
+        setBonusVariantModel,
         resultSessionId,
         markSectionSeen,
         getMeasurementSnapshot,

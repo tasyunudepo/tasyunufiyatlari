@@ -60,6 +60,8 @@ export interface CatalogItem {
   /** Paket içeriği — aksesuarda adet, levhada m². */
   unitContent: number | null
   packageM2: number | null
+  /** Paketteki levha adedi — Bonus'ta üretici listesinden; diğerlerinde paket m²'sinden türetilir. */
+  packagePieces?: number | null
   /**
    * Tam araç kapasitesi (m²) — operatör "3 TIR" deyip metrajı elde etsin
    * diye. Bonus'ta üreticinin kendi kapasitesi, diğerlerinde
@@ -219,6 +221,7 @@ export async function GET(req: NextRequest) {
           unit: 'm²',
           unitContent: null,
           packageM2: sale.packageM2 ?? null,
+          packagePieces: sale.packagePieces ?? null,
           // Bonus kapasitesi üreticinin kendi listesinden gelir; genel
           // `logistics_capacity` tablosundan FARKLIDIR (4 cm'de 2.217,6 m²
           // vs 1.872 m²) — karıştırılırsa metraj yanlış çıkar.

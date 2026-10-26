@@ -85,6 +85,8 @@ interface BonusPriceResponse {
   reason?: string;
   salePricePerM2?: number;
   packageM2?: number;
+  /** Paketteki levha adedi (üretici listesi) — teklif belgesinde yazar. */
+  packagePieces?: number;
   kamyonM2?: number;
   tirM2?: number;
 }
@@ -94,7 +96,7 @@ type FetchState =
   | {
       status: "ok";
       requestKey: string;
-      data: Required<Pick<BonusPriceResponse, "salePricePerM2" | "kamyonM2" | "tirM2" | "packageM2">>;
+      data: Required<Pick<BonusPriceResponse, "salePricePerM2" | "kamyonM2" | "tirM2" | "packageM2">> & { packagePieces: number | null };
     }
   | { status: "error"; reason: string };
 
@@ -208,6 +210,7 @@ export default function BonusRegionPrice({
               kamyonM2: json.kamyonM2,
               tirM2: json.tirM2,
               packageM2: json.packageM2,
+              packagePieces: typeof json.packagePieces === "number" ? json.packagePieces : null,
             },
           });
         } else {
@@ -281,6 +284,21 @@ export default function BonusRegionPrice({
       selectedVehicleType,
     };
   })();
+
+  // Seçili tam araç planı sayfa düzeyine yazılır: paket bölümü "417 paket ·
+  // 1.668 levha" toplamını gösterir (26 Ekim 2026). Ayarlayıcı sabittir.
+  const setInteractiveOrderPlan = interactive?.setOrderPlan;
+  const planTir = purchaseCalculation?.selectedPlan?.tir ?? null;
+  const planKamyon = purchaseCalculation?.selectedPlan?.kamyon ?? null;
+  const planM2 = purchaseCalculation?.selectedPlan?.planM2 ?? null;
+  useEffect(() => {
+    if (!setInteractiveOrderPlan) return;
+    setInteractiveOrderPlan(
+      planTir != null && planKamyon != null && planM2 != null
+        ? { lorryCount: planKamyon, truckCount: planTir, totalM2: planM2 }
+        : null,
+    );
+  }, [setInteractiveOrderPlan, planTir, planKamyon, planM2]);
   const purchaseAreaError =
     purchaseAreaValidation.error ??
     (resolvedData && purchaseCalculation && purchaseCalculation.plans.length === 0
@@ -838,6 +856,7 @@ export default function BonusRegionPrice({
                   label="Referanslı PDF teklifini hazırla"
                   resultSessionId={resultSessionId}
                   packageSizeM2={resolvedData.packageM2}
+                  packagePieces={resolvedData.packagePieces}
                   modelNameOverride={modelShortName}
                   onOpen={trackPdfOpen}
                   getJourneyAttribution={getJourneyAttribution}
@@ -1093,6 +1112,7 @@ export default function BonusRegionPrice({
                       label={`PDF teklifimi hazırla · ${selectedPlan ? selectedPlan.label : vehicle === "kamyon" ? "1 Kamyon" : "1 TIR"}`}
                       resultSessionId={resultSessionId}
                       packageSizeM2={state.data.packageM2}
+                      packagePieces={state.data.packagePieces}
                       modelNameOverride={modelShortName}
                       getJourneyAttribution={getJourneyAttribution}
                     />

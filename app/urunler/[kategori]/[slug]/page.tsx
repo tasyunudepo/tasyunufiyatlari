@@ -40,7 +40,8 @@ import {
 import { formatThicknessSegment } from '@/lib/catalog/thickness-url';
 import { RENAMED_PRODUCT_SLUGS } from '@/lib/catalog/slug';
 import type { CatalogProductView } from '@/lib/catalog/types';
-import { isUnpricedBonusModel } from '@/lib/pricing/bonus/families';
+import { getBonusFamily, isUnpricedBonusModel } from '@/lib/pricing/bonus/families';
+import { buildBonusPackageTable } from '@/lib/pricing/bonus/packageTable';
 import BonusPurchaseExperience from '@/components/catalog/BonusPurchaseExperience';
 import StandardPlatePurchaseExperience from '@/components/catalog/StandardPlatePurchaseExperience';
 import AccessoryPurchaseExperience from '@/components/catalog/AccessoryPurchaseExperience';
@@ -375,6 +376,12 @@ export async function ProductDetailPage({
   const isStandardPlatePdp =
     product.product_type === 'plate' &&
     !isHybridBonusPdp;
+  // Bonus kalınlık paket tablosu: aile ürün sayfasında her yoğunluk varyantı (26 Ekim 2026).
+  const bonusPackageTable = isHybridBonusPdp && product.model
+    ? buildBonusPackageTable(
+        getBonusFamily(product.model)?.variants.map((variant) => variant.modelShortName) ?? [product.model],
+      )
+    : undefined;
   const isAccessoryPdp = product.product_type === 'accessory';
   const usesWarmPurchaseShell = isHybridBonusPdp || isStandardPlatePdp || isAccessoryPdp;
 
@@ -489,6 +496,7 @@ export async function ProductDetailPage({
             <BonusPurchaseExperience
               product={product}
               shippingZones={shippingZones}
+              packageTable={bonusPackageTable}
             />
           </ProductInteractiveProvider>
         </ErrorBoundaryWrapper>

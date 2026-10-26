@@ -1,0 +1,23 @@
+{
+  "dataDosyasi": "Supabase: plate_prices.base_price ve accessories.base_price (KDV hariç liste fiyatı, is_kdv_included=false). İskontolar discount_1/discount_2 ve şehir kuralıyla, marj kodda uygulanır; liste fiyatına marj/iskonto işlenmez.",
+  "markalar": {
+    "Filli (Dalmaçyalı, Expert, Optimix/Fawori)": {
+      "bazSutun": "FİLLİ ve FAWORİ sayfalarında sütun H (KDV hariç liste, 2026-6 başlıklı); TAŞYÜNÜ sayfasında sütun H (Ağustos 2026 KDV hariç liste)",
+      "paket": "Ambalaj fiyatıdır; plate_prices.package_m2 = sütun F (ambalaj m²). PW50 paketi YÜKLEME sayfasından (50 mm 8 adet, 60 mm 6, 70–100 mm 4 adet).",
+      "betik": "scripts/filli-fiyat-eylul-2026.py (önce kuru çalıştır, ad eşleşmesini kontrol et)"
+    },
+    "TEKNO": {
+      "bazSutun": "Tedarikçi PDF liste fiyatı (KDV hariç)",
+      "iskonto": "discount_1=40, discount_2=5"
+    },
+    "Bonus": {
+      "bazSutun": "lib/pricing/bonus/bonus-region-prices.json (üretici bölge listesi); veritabanında fiyat tutulmaz"
+    }
+  },
+  "notlar": [
+    "KDV %20, fiyatlar KDV hariç saklanır",
+    "Kâr marjı ve tedarikçi maliyeti müşteriye görünen yüzeye yazılmaz",
+    "Optimix Karbonlu ve Optimix Beyaz EPS 15 cm: Excel '4 adet / 2 m²' yazıyor, fiyat 3 adet / 1,5 m²'ye denk; 1,5 kullanılır",
+    "Katalog sayfaları derleme anında okunur; fiyat değişince yayın gerekir"
+  ]
+}
