@@ -63,7 +63,6 @@ export const QUOTE_DOCUMENT_CSS = `
 .tq-info b{font-size:13px;line-height:1.25}
 .tq-info small{display:block;font-size:10px;color:var(--tq-muted)}
 .tq-nowrap{white-space:nowrap}
-.tq-scope p{font-size:10.5px;line-height:1.45;padding:0 2px}
 .tq table{border-collapse:collapse;table-layout:fixed;width:100%;font-size:11.5px;margin:0}
 .tq th{text-align:right;background:var(--tq-green-deep);color:#fff;padding:7px;font-size:10px;line-height:1.25;font-weight:600;border:0}
 .tq th:first-child{text-align:left;width:56%}
@@ -134,7 +133,6 @@ export const QUOTE_DOCUMENT_CSS = `
 .tq-eyebrow{font-size:10px;letter-spacing:.8px;color:var(--tq-green);font-weight:700}
 /* Tek kalemli teklif tek sayfada kalsın diye bir kademe sıkı. */
 .tq-single .tq-content{gap:6px}
-.tq-single .tq-scope p{font-size:10px}
 .tq-single .tq-facts img{display:none}
 .tq-single .tq-action{padding:8px 12px}
 .tq-single .tq-action h2{display:none}

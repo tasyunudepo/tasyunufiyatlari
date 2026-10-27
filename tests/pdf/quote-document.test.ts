@@ -140,12 +140,25 @@ describe('teklif PDF\'i: önce döküm, sonra diğer bilgiler', () => {
     ])
   })
 
-  it('tek kalemli teklifte toplam bloğu yoktur; kapsam cümlesi tablonun üstündedir', () => {
-    const single = buildQuoteDocument({ ...setQuote, accessoryBrandName: '-', items: [plate] }, options)
+  // 27 Ekim 2026: tek kalemli teklifte tablonun altında ara toplam, KDV ve
+  // genel toplam yoktu; müşteriye giden belge "eksik" diye geri döndü (Emrah).
+  it('tek kalemli teklifte de tablonun altında ara toplam, KDV ve genel toplam yazar', () => {
+    const single = buildQuoteDocument({
+      ...setQuote,
+      accessoryBrandName: '-',
+      items: [plate],
+      priceWithoutVat: 306082.4,
+      vatAmount: 61216.48,
+      grandTotal: 367298.88,
+    }, options)
     expect(single.single).toBe(true)
-    expect(kinds(single.flow)).toEqual(['intro', 'hero', 'info', 'scope', 'table', 'action', 'process', 'payment', 'trust', 'cross'])
+    expect(kinds(single.flow)).toEqual(['intro', 'hero', 'info', 'table', 'total', 'action', 'process', 'payment', 'trust', 'cross'])
     expect(text(blockOf(single.flow, 'intro'))).toContain('LEVHA FİYAT TEKLİFİ')
-    expect(text(blockOf(single.flow, 'scope'))).toContain('Levha tedariki.')
+    const total = text(blockOf(single.flow, 'total'))
+    expect(total).toContain('Levha tedariki.')
+    expect(total).toContain('Ara toplam · KDV hariç 306.082,40 ₺')
+    expect(total).toContain('KDV (%20) 61.216,48 ₺')
+    expect(total).toContain('Genel toplam · KDV dahil 367.298,88 ₺')
   })
 
   it('ofisten yazılan serbest kalem listesi "komple set" diye adlandırılmaz', () => {

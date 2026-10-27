@@ -349,11 +349,11 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
 
   const continuationTitle = `<section class="tq-block tq-continuation" data-kind="continuation"><p class="tq-eyebrow">MALZEME DÖKÜMÜ · DEVAM · ${ref}</p></section>`
 
-  // Önce döküm, sonra diğer bilgiler. Tek kalemli teklifte toplam üst
-  // bölümdeki kartta zaten yazılıdır; kapsam cümlesi tablonun üstünde kalır
-  // ve belge tek sayfaya sığar.
+  // Önce döküm, sonra diğer bilgiler. Tek kalemli teklif de tablonun altında
+  // ara toplam, KDV ve genel toplamı yazar: üstteki kartta olması yetmedi,
+  // müşteri belgeyi "eksik" diye geri çevirdi (27 Ekim 2026).
   const flow = single
-    ? [intro, hero, info, block('scope', `<p>${scopeSentence}</p>`), table, ...notice, action, process, payment, trust, cross]
+    ? [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross]
     : [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross, contactLine]
 
   return { single, header, footer, context, flow, tableHead, continuationTitle }
