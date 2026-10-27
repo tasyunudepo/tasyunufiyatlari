@@ -2,7 +2,8 @@ import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import { discountedUnitPrice, effectiveLineTotal } from '@/lib/schemas/manualQuote.schema'
 import { generateQuoteWhatsAppMessage, buildWhatsAppLink } from '@/lib/utils/whatsapp'
 import { roundToKurus } from '@/lib/pricing/quoteTotals'
-import { SHIPPING_LINE_DESCRIPTION } from '@/lib/pdf/quoteDocument'
+import { SHIPPING_LINE_DESCRIPTION, SHIPPING_LINE_SENTENCE } from '@/lib/pdf/quoteDocument'
+import type { PlateIdentity } from '@/lib/quote/plateIdentity'
 import { lastValidDay } from '@/lib/quote/validity'
 import type { TechnicalConsumptionUnit } from '@/lib/types'
 
@@ -42,10 +43,8 @@ export interface ManualPdfInput {
     packageCount?: number | null
     consumptionRate?: number | null
     consumptionUnit?: TechnicalConsumptionUnit | null
-    /** Levha satırının altına yazılan teknik not (yoğunluk). */
-    technicalNote?: string | null
-    /** Levha satırının paket bilgisi. */
-    packageNote?: string | null
+    /** Levha kimliği: ad, tür, yoğunluk, ölçü, paket (lib/quote/plateIdentity.ts). */
+    identity?: PlateIdentity | null
   }>
   discountPct: number
   shippingCharge: number
@@ -83,8 +82,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
     totalPrice: effectiveLineTotal(l, input.discountPct),
     isPlate: l.isPlate ?? false,
     packageCount: l.packageCount ?? undefined,
-    technicalNote: l.technicalNote ?? null,
-    packageNote: l.packageNote ?? null,
+    identity: l.isPlate ? l.identity ?? null : null,
   }))
 
   if (input.shippingCharge > 0) {
@@ -106,15 +104,24 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
       ? 'buyer_pays'
       : (input.shippingMode ?? 'included_in_sale_price')
 
+  // Ayrı nakliye kalemi toplamın içindedir; mesaj belgeyle aynı cümleyi
+  // kullanır. Eskiden mesaj "fiyata dahil değildir; alıcıya aittir" diyordu.
   const nakliyeMesaji =
-    nakliyeModu === 'included_in_sale_price'
-      ? 'Nakliye dahildir.'
-      : nakliyeModu === 'buyer_pays'
-        ? 'Nakliye fiyata dahil değildir; alıcıya aittir.'
-        : 'Nakliye koşulu satış görüşmesinde netleşir.'
+    input.shippingCharge > 0
+      ? SHIPPING_LINE_SENTENCE
+      : nakliyeModu === 'included_in_sale_price'
+        ? 'Nakliye dahildir.'
+        : nakliyeModu === 'buyer_pays'
+          ? 'Nakliye fiyata dahil değildir; alıcıya aittir.'
+          : 'Nakliye koşulu satış görüşmesinde netleşir.'
 
-  const pricePerM2 = input.areaM2 > 0
-    ? roundToKurus(input.totals.priceWithoutVat / input.areaM2)
+  // Belgedeki metraj ve m² fiyatının paydası aynı kaynaktan gelir: levha
+  // varsa fiyatlandırılan levha metrajı (tam pakete yuvarlanmış), yoksa iş
+  // metrajı. Eskiden pay ile payda ayrıydı: 3.548,16 m² levhada m² fiyatı
+  // 3.548 m²'ye bölünüyor, birim fiyat 446,78 iken üstte 446,80 yazıyordu.
+  const pricedArea = plateLine && plateLine.quantity > 0 ? plateLine.quantity : input.areaM2
+  const pricePerM2 = pricedArea > 0
+    ? roundToKurus(input.totals.priceWithoutVat / pricedArea)
     : 0
 
   // PDF şablonu 'tasyunu' | 'eps' bekliyor; karma teklifte levha satırı
@@ -125,7 +132,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
   const whatsappMessage = generateQuoteWhatsAppMessage({
     productName: input.title || plateLine?.description || 'Teklif',
     thicknessCm: plateLine?.thicknessCm ?? 0,
-    metrajM2: input.areaM2,
+    metrajM2: pricedArea,
     vehicleLabel: '',
     cityName: input.cityName,
     pricePerM2,
@@ -149,7 +156,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
     quoteNote: aciklama || undefined,
     plateBrandName: plateLine?.description.split(' ')[0] || '',
     accessoryBrandName: '',
-    metraj: input.areaM2,
+    metraj: pricedArea,
     thickness: plateLine?.thicknessCm != null ? String(plateLine.thicknessCm) : '',
     materialType,
     cityName: input.cityName,

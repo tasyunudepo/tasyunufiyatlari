@@ -17,8 +17,8 @@ import { createClientIdempotencyKey } from '@/lib/utils/clientIdempotencyKey';
 import { getOfferValidityDate } from '@/lib/utils/packageHelpers';
 import { readCatalogJourneyId } from '@/lib/analytics/catalogJourney';
 import { getCategoryEntryContext } from '@/lib/catalog/category-entry-context';
-import { quoteDensityDisplay, quoteDensityNote } from '@/lib/technical-profiles';
-import { formatPackageSpecNote, resolvePackageSpec } from '@/lib/catalog/packageSpec';
+import { quoteDensityDisplay } from '@/lib/technical-profiles';
+import { formatPlateLine, resolvePlateIdentity } from '@/lib/quote/plateIdentity';
 
 interface Props {
   product: CatalogProductView;
@@ -106,7 +106,6 @@ export default function SingleProductQuoteButton({
       const plateBrandLabel  = formatBrandName(product.brand.name);
       // Varyantlı üründe (Gold Plus 50/70/90) seçilen model override'dan gelir.
       const densityModel     = modelNameOverride ?? product.model;
-      const densityNote      = quoteDensityNote(densityModel);
 
       // Aktif kalınlığa karşılık gelen paket başına m² → paket sayısı
       const activeRow = activeThickness != null
@@ -124,6 +123,18 @@ export default function SingleProductQuoteButton({
       const computedPackageCount = effectivePackageSizeM2
         ? Math.max(1, Math.ceil(areaM2 / effectivePackageSizeM2))
         : 0;
+
+      // Levha kimliği: ad, tür, yoğunluk, levha ölçüsü, paket içeriği. Üç
+      // kanal aynı kuralı kullanır (teklif PDF standardı, 27 Ekim 2026).
+      const plateIdentity = resolvePlateIdentity({
+        brandName:      product.brand.name,
+        modelShortName: densityModel,
+        displayName:    densityModel ? null : brandProductName,
+        materialSlug:   product.material_type,
+        thicknessCm:    activeThickness,
+        packageM2:      effectivePackageSizeM2,
+        packagePieces,
+      });
 
       // 1. PDF üret (müşteri otomatik indirir)
       const message = generateQuoteWhatsAppMessage({
@@ -169,7 +180,10 @@ export default function SingleProductQuoteButton({
         email:              formData.email || '',
         city:               formData.city,
         district:           formData.district,
-        systemDescription:  `${brandProductName}${activeThickness ? ` — ${thickness} cm` : ''}`,
+        // Ürün kartı levhanın standart adını taşır: "Bonus Gold Plus 70 · 10 cm".
+        systemDescription:  plateIdentity
+          ? formatPlateLine(plateIdentity, areaM2, computedPackageCount).title
+          : `${brandProductName}${activeThickness ? ` — ${thickness} cm` : ''}`,
         isShippingIncluded,
         shippingMode: isShippingIncluded
           ? 'included_in_sale_price'
@@ -185,14 +199,7 @@ export default function SingleProductQuoteButton({
             totalPrice:      totalKdvHaric,
             isPlate:         true,
             packageCount:    computedPackageCount,
-            technicalNote:   densityNote,
-            packageNote:     formatPackageSpecNote(effectivePackageSizeM2, resolvePackageSpec({
-              brandName:      product.brand.name,
-              materialSlug:   product.material_type,
-              modelShortName: densityModel,
-              packageM2:      effectivePackageSizeM2,
-              packagePieces,
-            })),
+            identity:        plateIdentity,
           },
         ],
       });

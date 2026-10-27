@@ -40,8 +40,8 @@ import { technicalConsumptionUnitForSlug } from "@/lib/quote/technicalConsumptio
 import { resolveMarginPctStrict } from "@/lib/pricing/margin";
 import { resolveAccessoryDiscounts } from "@/lib/pricing/accessoryDiscounts";
 import { selectAccessoryForSet, selectDowelWasherForSet } from "@/lib/quote/selectAccessoryForSet";
-import { quoteDensityDisplay, quoteDensityNote } from "@/lib/technical-profiles";
-import { formatPackageSpecNote, resolvePackageSpec } from "@/lib/catalog/packageSpec";
+import { quoteDensityDisplay } from "@/lib/technical-profiles";
+import { resolvePlateIdentity } from "@/lib/quote/plateIdentity";
 import {
     buildQuoteSurfacePricing,
 } from "@/lib/pricing/quoteTotals";
@@ -864,15 +864,17 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
         const materialLabel = selectedMalzeme === "tasyunu" ? "Taşyünü" : "EPS";
         const materialLongName = materialTypes.find(m => m.slug === selectedMalzeme)?.name || materialLabel;
 
-        // Paket içi adet ve levha ölçüsü belgeye yazılır (26 Ekim 2026).
+        // Levha kimliği: ad, tür, yoğunluk, levha ölçüsü, paket içeriği. Üç
+        // kanal aynı kuralı kullanır (teklif PDF standardı, 27 Ekim 2026).
         const platePackageM2 = pkg.logistics?.packageSizeM2 ?? null;
-        const platePackageNote = formatPackageSpecNote(platePackageM2, resolvePackageSpec({
+        const plateIdentity = resolvePlateIdentity({
             brandName: brands.find(b => b.id === selectedBrandId)?.name,
-            materialSlug: selectedMalzeme,
             modelShortName: selectedModel,
+            materialSlug: selectedMalzeme,
+            thicknessCm: Number(selectedKalinlik),
             packageM2: platePackageM2,
             packagePieces: isBonusSelected ? bonusCapacity?.packagePieces ?? null : null,
-        }));
+        });
 
         const itemsForPdf = (pkg.items || []).map((it) => {
             return {
@@ -885,8 +887,7 @@ export default function WizardCalculator({ preSelectedCityName, variant = "defau
                 totalPrice: it.totalPrice,
                 isPlate: it.isPlate,
                 packageCount: it.packageCount,
-                technicalNote: it.isPlate ? quoteDensityNote(selectedModel) : null,
-                packageNote: it.isPlate ? platePackageNote : null,
+                identity: it.isPlate ? plateIdentity : null,
             };
         });
 

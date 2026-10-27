@@ -13,6 +13,7 @@ import type { CatalogItem } from "@/app/api/admin/catalog-items/route";
 import type { AccessorySetItem } from "@/lib/quote/buildAccessorySet";
 import type { TechnicalConsumptionUnit } from "@/lib/types";
 import { roundAreaToPackages } from "@/lib/catalog/packageSpec";
+import { resolvePlateIdentity, type PlateIdentity } from "@/lib/quote/plateIdentity";
 
 // Teklif editörünün durumu ve canlı hesabı.
 //
@@ -71,7 +72,24 @@ export function createEmptyLine(): EditorLine {
     consumptionUnit: null,
     unitContent: null,
     packageM2: null,
+    identity: null,
   };
+}
+
+/**
+ * Katalog levhasının belge kimliği (ad, tür, yoğunluk, ölçü, paket). Kalemle
+ * birlikte kaydedilir; belge katalog yüklü olmasa da aynı bilgiyi basar.
+ */
+export function identityFromCatalog(item: CatalogItem): PlateIdentity | null {
+  if (item.kind !== "levha") return null;
+  return resolvePlateIdentity({
+    brandName: item.brandName,
+    modelShortName: item.modelShortName,
+    materialSlug: item.materialSlug,
+    thicknessCm: item.thicknessCm,
+    packageM2: item.packageM2,
+    packagePieces: item.packagePieces,
+  });
 }
 
 export function lineFromCatalog(item: CatalogItem, quantity: number): EditorLine {
@@ -95,6 +113,7 @@ export function lineFromCatalog(item: CatalogItem, quantity: number): EditorLine
     suggestedUnitPrice: item.suggestedUnitPrice,
     netCost: item.netCost > 0 ? item.netCost : null,
     unitContent: item.unitContent,
+    identity: identityFromCatalog(item),
   };
 }
 

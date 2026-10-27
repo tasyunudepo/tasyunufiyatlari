@@ -58,7 +58,7 @@ describe('PDF şablonu bağlantıları tıklanır yapar', () => {
 
   it('bölüm fiyat kutusunun ve kalem tablosunun dışındadır', () => {
     // Akış sırası: … döküm, toplam, eylem, süreç, ödeme, bayilik, ALÇI VE ALÇIPAN, iletişim.
-    const flow = documentSource.slice(documentSource.lastIndexOf('const flow = single'))
+    const flow = documentSource.slice(documentSource.lastIndexOf('const flow = ['))
     expect(flow.indexOf('cross')).toBeGreaterThan(flow.indexOf('table'))
     expect(flow.indexOf('cross, contactLine')).toBeGreaterThan(flow.indexOf('totals'))
     expect(flow.indexOf('cross, contactLine')).toBeGreaterThan(flow.indexOf('trust'))

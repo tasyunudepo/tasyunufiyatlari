@@ -7,6 +7,7 @@ import { QUOTE_DOCUMENT_CSS, SHEET_WIDTH_PX } from '@/lib/pdf/quoteDocumentStyle
 import { paginateQuoteDocument } from '@/lib/pdf/quotePagination';
 import { addInvisibleTextLayer, loadTextLayerFont, registerTextLayerFont } from '@/lib/pdf/textLayer';
 import type { ShippingMode } from '@/lib/pricing/commercialRules';
+import type { PlateIdentity } from '@/lib/quote/plateIdentity';
 import { formatTechnicalConsumption } from '@/lib/quote/technicalConsumption';
 import type { TechnicalConsumptionUnit } from '@/lib/types';
 
@@ -56,10 +57,12 @@ export interface PDFQuoteItem {
     totalPrice: number;
     isPlate?: boolean;
     packageCount?: number;
-    /** Levha satırının altına yazılan teknik not (ör. "Yoğunluk: 70 kg/m³ · Föy beyanı"). */
-    technicalNote?: string | null;
-    /** Levha satırının paket bilgisi (ör. "Paket: 4 levha · 2,88 m² · Levha 60 × 120 cm"). */
-    packageNote?: string | null;
+    /**
+     * Levha kimliği: ad, tür, yoğunluk, levha ölçüsü, paket içeriği
+     * (lib/quote/plateIdentity.ts). Üç kanal da aynı kimliği verir; belge
+     * yalnız bunu biçimlendirir (Emrah, 27 Ekim 2026: "bir standarda bağlansın").
+     */
+    identity?: PlateIdentity | null;
 }
 
 export interface PDFQuoteData {
@@ -275,7 +278,7 @@ export async function generateQuotePDF(data: PDFQuoteData): Promise<QuotePDFResu
     container.style.position = 'fixed';
     container.style.left = '-10000px';
     container.style.top = '0';
-    container.innerHTML = `<style>${QUOTE_DOCUMENT_CSS}</style><div class="tq${parts.single ? ' tq-single' : ''}"></div>`;
+    container.innerHTML = `<style>${QUOTE_DOCUMENT_CSS}</style><div class="tq"></div>`;
     document.body.appendChild(container);
     const root = container.querySelector('.tq') as HTMLElement;
 

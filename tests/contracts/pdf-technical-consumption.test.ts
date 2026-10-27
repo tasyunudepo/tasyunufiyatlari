@@ -33,7 +33,8 @@ describe('teklif PDF teknik sarfiyat sözleşmesi', () => {
   })
 
   it('PDF değeri birimiyle birlikte açıkça gösterir', () => {
-    expect(documentSource).toContain('m² sarfiyatı: ')
+    // Standart A (27 Ekim 2026): yardımcı malzemede "Sarfiyat 6 kg/m²".
+    expect(documentSource).toContain('details.push(`Sarfiyat ${consumption}`)')
     expect(documentSource).not.toContain('>SARFİYAT</th>')
     expect(documentSource).toContain(
       'formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit)',

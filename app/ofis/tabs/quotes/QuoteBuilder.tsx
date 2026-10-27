@@ -17,8 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { generateQuotePDF } from "@/lib/pdfGenerator";
 import { uploadPdfToStorage } from "@/lib/uploadPdfToStorage";
 import { buildManualPdfData } from "@/lib/quote/buildManualPdfData";
-import { quoteDensityNote } from "@/lib/technical-profiles";
-import { formatPackageSpecNote, resolvePackageSpec, roundAreaToPackages } from "@/lib/catalog/packageSpec";
+import { roundAreaToPackages } from "@/lib/catalog/packageSpec";
 import { describeVehicles, fitVehicles } from "@/lib/quote/vehicleArea";
 import { formatCurrency } from "@/lib/admin/utils";
 import { useAdminRole } from "@/lib/admin/useAdminRole";
@@ -35,6 +34,7 @@ import {
     type DuplicateSource,
 } from "@/components/admin/quote-editor/QuoteDuplicateDialog";
 import {
+    identityFromCatalog,
     lineFromAccessorySet,
     lineFromCatalog,
     useQuoteEditor,
@@ -177,17 +177,23 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
 
     // Revize/çoğaltmada kayıttan gelen levha satırında paket m² yoktur; katalogdan
     // tamamlanır ki metraj değişince miktar yine tam pakete yuvarlansın.
+    // 27 Ekim 2026'dan önceki kayıtlarda levha kimliği de yoktur; o da
+    // katalogdan tamamlanır ve bu kayıtla birlikte saklanır.
     const { lines: editorLines, updateLine } = editor;
     useEffect(() => {
         if (catalogItems.length === 0) return;
         for (const l of editorLines) {
-            if (!l.isPlate || !l.catalogKey || l.packageM2 != null) continue;
+            if (!l.isPlate || !l.catalogKey) continue;
+            if (l.packageM2 != null && l.identity) continue;
             const item = catalogItems.find((i) => i.key === l.catalogKey);
-            if (!item?.packageM2) continue;
-            updateLine(l.rowId, {
-                packageM2: item.packageM2,
-                packageCount: l.packageCount ?? roundAreaToPackages(l.quantity, item.packageM2)?.packageCount ?? null,
-            });
+            if (!item) continue;
+            const patch: Partial<EditorLine> = {};
+            if (!l.identity) patch.identity = identityFromCatalog(item);
+            if (l.packageM2 == null && item.packageM2) {
+                patch.packageM2 = item.packageM2;
+                patch.packageCount = l.packageCount ?? roundAreaToPackages(l.quantity, item.packageM2)?.packageCount ?? null;
+            }
+            if (Object.keys(patch).length) updateLine(l.rowId, patch);
         }
     }, [catalogItems, editorLines, updateLine]);
     const catalogNotes = catalogQuery.data?.notes ?? [];
@@ -307,6 +313,11 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
             else if (l.unitPrice <= 0) eksikler.push(`${i + 1}. satırda birim fiyat girin`);
         }
     }
+    // Revizede levha kimliği katalogdan tamamlanır; katalog gelmeden
+    // kaydedilen belge yoğunluk ve paket bilgisini kaybediyordu (27 Ekim 2026).
+    if (catalogQuery.isFetching && editor.lines.some((l) => l.isPlate && l.catalogKey && !l.identity)) {
+        eksikler.push("Katalog yükleniyor");
+    }
 
     const kaydedilebilir = canMutate && eksikler.length === 0 && !saving;
 
@@ -340,6 +351,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
             quantity: yeni.quantity,
             packageCount: yeni.packageCount,
             packageM2: yeni.packageM2,
+            identity: yeni.identity,
         });
 
         // Miktar boş kaldıysa imleci oraya götür — sıradaki iş o.
@@ -470,6 +482,7 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                 consumptionRate: l.consumptionRate ?? null,
                 consumptionUnit: l.consumptionUnit ?? null,
                 unitContent: l.unitContent ?? null,
+                identity: l.isPlate ? l.identity ?? null : null,
             })),
             discountPct: editor.discountPct,
             shippingCharge: editor.shippingCharge,
@@ -536,25 +549,9 @@ export function QuoteBuilder({ onSaved, seed }: { onSaved?: () => void; seed?: Q
                     materialType: payload.materialType,
                     areaM2: payload.areaM2,
                     validityDays: payload.validityDays,
-                    // Levhanın yoğunluğu belgede yazar (Gold Plus 50/70/90 gibi varyantlarda
-                    // müşteri ne aldığını görmeli). Katalogdan seçilmemiş serbest satıra not düşülmez.
-                    lines: payload.lines.map((l) => {
-                        const item = l.isPlate ? catalogItems.find((i) => i.key === l.catalogKey) : undefined;
-                        return {
-                            ...l,
-                            technicalNote: item ? quoteDensityNote(item.modelShortName) : null,
-                            // Paket içi adet ve levha ölçüsü (26 Ekim 2026).
-                            packageNote: item
-                                ? formatPackageSpecNote(item.packageM2, resolvePackageSpec({
-                                    brandName: item.brandName,
-                                    materialSlug: item.materialSlug,
-                                    modelShortName: item.modelShortName,
-                                    packageM2: item.packageM2,
-                                    packagePieces: item.packagePieces,
-                                }))
-                                : null,
-                        };
-                    }),
+                    // Levha kimliği kaydedilen kalemden gelir (ad, tür, yoğunluk, ölçü,
+                    // paket). Katalogdan seçilmemiş serbest satıra kimlik uydurulmaz.
+                    lines: payload.lines,
                     discountPct: payload.discountPct,
                     shippingCharge: payload.shippingCharge,
                     shippingMode: payload.shippingMode,

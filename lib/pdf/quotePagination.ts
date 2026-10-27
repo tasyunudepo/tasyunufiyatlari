@@ -50,13 +50,16 @@ export function paginateQuoteDocument(root: HTMLElement, parts: QuoteDocumentPar
     }
     let wrapper = open()
     let body = wrapper.querySelector('tbody') as HTMLElement
-    let placed = 0
+    // Önceki sayfalarda kalan satır sayısı: "devam" başlığı yalnız tablo
+    // gerçekten bölündüyse basılır.
+    let rowsOnEarlierPages = 0
 
     const carry = (row: HTMLElement) => {
       row.remove()
+      rowsOnEarlierPages += body.children.length
       if (!body.children.length) wrapper.remove()
       newPage()
-      if (placed) add(node(parts.continuationTitle))
+      if (rowsOnEarlierPages) add(node(parts.continuationTitle))
       wrapper = open()
       body = wrapper.querySelector('tbody') as HTMLElement
       body.append(row)
@@ -66,15 +69,15 @@ export function paginateQuoteDocument(root: HTMLElement, parts: QuoteDocumentPar
     for (const row of rows) {
       body.append(row)
       if (!fits()) carry(row)
-      placed += 1
     }
 
     if (!total) return
     current.append(total)
     if (fits()) return
+    // Standart (B4): tablonun son satırı ile toplam bloğu birlikte yerleşir.
+    // Sayfada tek satır kalmış olsa da toplam satırından ayrılmaz.
     total.remove()
-    if (body.children.length > 1) carry(body.lastElementChild as HTMLElement)
-    else newPage()
+    carry(body.lastElementChild as HTMLElement)
     add(total)
   }
 

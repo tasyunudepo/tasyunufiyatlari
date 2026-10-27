@@ -7,6 +7,7 @@ import { collapseRepeatedWords } from '@/lib/catalog/productLabel'
 import { buildAccountIdentityRows, getQuoteContact, getSellerIdentity } from '@/lib/pdf/sellerIdentity'
 import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import type { ShippingMode } from '@/lib/pricing/commercialRules'
+import { formatPlateLine } from '@/lib/quote/plateIdentity'
 import { formatTechnicalConsumption } from '@/lib/quote/technicalConsumption'
 import { formatDay } from '@/lib/quote/validity'
 
@@ -33,6 +34,13 @@ import { formatDay } from '@/lib/quote/validity'
 /** Ofis teklifinde ayrı kalem olarak yazılan nakliye satırının adı. */
 export const SHIPPING_LINE_DESCRIPTION = 'Nakliye'
 
+/**
+ * Nakliye ayrı kalem olarak yazıldığında belge ve WhatsApp mesajı aynı
+ * cümleyi kullanır. Eskiden PDF "toplama dahil", mesaj "fiyata dahil
+ * değildir; alıcıya aittir" diyordu (Astra, 27 Ekim 2026).
+ */
+export const SHIPPING_LINE_SENTENCE = 'Nakliye ayrı kalem olarak teklif toplamına dahildir.'
+
 export interface QuoteDocumentOptions {
   /** `buildQrOrderLink` bağlantısının karekodu (data URL). */
   qrDataUrl: string
@@ -41,7 +49,7 @@ export interface QuoteDocumentOptions {
 }
 
 export interface QuoteDocumentParts {
-  /** Tek kalemli teklif: sıkı düzen, tek sayfa hedefi. */
+  /** Tek kalemli teklif. Yalnız başlık ve kapsam cümlesini etkiler; düzen her teklifte aynıdır. */
   single: boolean
   header: string
   footer: string
@@ -134,7 +142,7 @@ function shippingCopy(mode: ShippingMode, city: string, hasShippingLine: boolean
   // Ofis teklifinde nakliye ayrı kalem yazıldıysa toplamın içindedir;
   // "alıcıya ait, toplama dahil değil" demek yanlış olur.
   if (hasShippingLine) {
-    return { tile: 'Ayrı kalem', sentence: 'Nakliye dökümde ayrı kalem olarak yer alır.', inTotal: true }
+    return { tile: 'Ayrı kalem', sentence: SHIPPING_LINE_SENTENCE, inTotal: true }
   }
   if (mode === 'included_in_sale_price') {
     return {
@@ -153,30 +161,63 @@ function shippingCopy(mode: ShippingMode, city: string, hasShippingLine: boolean
   return { tile: 'Alıcıya ait', sentence: 'Nakliye alıcıya aittir; teklif toplamına dahil değildir.', inTotal: false }
 }
 
-function rowHtml(it: PDFQuoteItem, index: number): string {
+// Kayıttaki satış birimi kodu belgede Türkçe kelimeyle yazılır. Kodda
+// olmayan birim ("torba" gibi) üretilmez; bilinmeyen kod olduğu gibi kalır.
+const UNIT_WORDS: Record<string, string> = {
+  PKT: 'paket',
+  PAKET: 'paket',
+  KUTU: 'kutu',
+  RULO: 'rulo',
+  KOVA: 'kova',
+  ADET: 'adet',
+  TORBA: 'torba',
+}
+const unitWord = (unit: string) => UNIT_WORDS[unit.trim().toLocaleUpperCase('tr-TR')] ?? unit
+
+interface RowContext {
+  /** Kimliği olmayan eski levha satırında tür grubu için malzeme etiketi. */
+  materialLabel: string
+  city: string
+}
+
+// Satır, teklif PDF standardının A bölümüne göre yazılır
+// (docs/standartlar/teklif-pdf-standardi.md): levhada ad, tür ve özellik
+// grupları; yardımcı malzemede ad ve sarfiyat; paket sayısı miktar sütununda.
+function rowHtml(it: PDFQuoteItem, index: number, ctx: RowContext): string {
   // 0 TL "pakete dahil" demektir. Levhada 0 görünürse hata anlaşılsın diye
   // fiyat basılır. NEGATİF fiyat paket içeriği DEĞİLDİR: ofis teklifinde
   // iskonto negatif kalem olarak yazılabilir ve tutarıyla görünmelidir.
   const isZeroPrice = it.unitPrice >= 0 && it.unitPrice < 0.01 && !it.isPlate
+  const isShipping = !it.isPlate && it.description === SHIPPING_LINE_DESCRIPTION
+  const plate = it.isPlate && it.identity ? formatPlateLine(it.identity, it.quantity, it.packageCount) : null
 
-  // Paket bilgisi yoksa "(0 PKT)" yazmak yanlış bilgi olur; hiç yazılmaz.
-  const description = it.isPlate && (it.packageCount ?? 0) > 0
-    ? `${it.description} (${it.packageCount} PKT)`
-    : it.description
+  let name = it.description
+  const details: string[] = []
+  if (plate) {
+    name = plate.title
+    details.push(plate.kind)
+    // Özellik satırı yalnız "·" ayraçlarında kırılır; "2,16 m²" ya da
+    // "60 × 120 cm" sayı ile birimin arasından bölünmez.
+    if (plate.specs) details.push(plate.specs.split(' · ').map((part) => part.replaceAll(' ', ' ')).join(' · '))
+  } else if (it.isPlate) {
+    // Kimliği olmayan eski kayıt: ad olduğu gibi, tür grubu malzemeden.
+    details.push(`${ctx.materialLabel} levha`)
+  } else if (isShipping) {
+    if (ctx.city) name = `${SHIPPING_LINE_DESCRIPTION} · ${ctx.city} teslim`
+  } else {
+    const consumption = formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit)
+    if (consumption !== '—') details.push(`Sarfiyat ${consumption}`)
+  }
+  const detail = details.map((d) => `<small>${escapeHtml(d)}</small>`).join('')
 
-  // Levha kendi alanını kaplar; "1 m²/m²" bilgi taşımaz, yazılmaz.
-  const consumption = it.isPlate ? '—' : formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit)
-  const consumptionDetail = consumption === '—' ? '' : `<small>m² sarfiyatı: ${escapeHtml(consumption)}</small>`
-  // Levhada yoğunluk müşterinin aldığı ürünü tanımlar (Gold Plus 50/70/90).
-  const technicalDetail = it.isPlate && it.technicalNote ? `<small>${escapeHtml(it.technicalNote)}</small>` : ''
-  // Paket içi adet ve levha ölçüsü: müşteri kaç paket ve ne aldığını görür (26 Ekim 2026).
-  const packageDetail = it.isPlate && it.packageNote ? `<small>${escapeHtml(it.packageNote)}</small>` : ''
-  const detail = consumptionDetail + packageDetail + technicalDetail
+  // Paket bilgisi yoksa "0 paket" yazmak yanlış bilgi olur; hiç yazılmaz.
+  const packages = it.isPlate && (it.packageCount ?? 0) > 0 ? `<small>${it.packageCount} paket</small>` : ''
+  const quantity = `${escapeHtml(fmtQty(it.quantity))} ${escapeHtml(unitWord(it.unit))}${packages}`
 
   const unitPrice = isZeroPrice ? '<span class="tq-in-package">Pakete dahil</span>' : escapeHtml(fmtMoney(it.unitPrice))
   const total = isZeroPrice ? '—' : `<b>${escapeHtml(fmtMoney(it.totalPrice))}</b>`
 
-  return `<tr><td><div class="tq-row-name"><span class="tq-row-no">${index + 1}</span><div><b>${escapeHtml(description)}</b>${detail}</div></div></td><td>${escapeHtml(fmtQty(it.quantity))}<small>${escapeHtml(it.unit)}</small></td><td>${unitPrice}</td><td>${total}</td></tr>`
+  return `<tr><td><div class="tq-row-name"><span class="tq-row-no">${index + 1}</span><div><b>${escapeHtml(name)}</b>${detail}</div></div></td><td>${quantity}</td><td>${unitPrice}</td><td>${total}</td></tr>`
 }
 
 export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOptions): QuoteDocumentParts {
@@ -201,7 +242,14 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
   const area = firstItem?.isPlate && firstItem.quantity > 0 ? firstItem.quantity : metrajValue
 
   const materialLabel = data.materialType === 'tasyunu' ? 'Taşyünü' : 'EPS'
-  const product = data.systemDescription || `${materialLabel} ${data.thickness} cm`
+  const plateItem = data.items.find((it) => it.isPlate) ?? null
+  const plateLine = plateItem?.identity ? formatPlateLine(plateItem.identity, plateItem.quantity, plateItem.packageCount) : null
+  // Ürün kartının adı: sette sistem adı; ofiste operatörün yazdığı başlık;
+  // yoksa levhanın standart adı ("Bonus Gold Plus 50 · 12 cm").
+  const ownTitle = data.systemDescription && data.systemDescription !== plateItem?.description ? data.systemDescription : null
+  // Levhası ve başlığı olmayan listede kalınlık yoktur: "Taşyünü cm" yazılmaz.
+  const product = (scope === 'set' ? data.systemDescription : ownTitle ?? plateLine?.title ?? data.systemDescription)
+    || (data.thickness ? `${materialLabel} ${data.thickness} cm` : 'Malzeme tedariki')
   const customer = data.customerCompany || data.relatedPerson
   const city = data.city || data.cityName || ''
   const place = data.district && `${city} / ${data.district}`.length <= 22 ? `${city} / ${data.district}` : city
@@ -213,7 +261,11 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
   // Nakliye satırı malzeme kalemi değildir; kalem sayısına girmez.
   const itemCount = data.items.filter((it) => !isShippingLine(it)).length
   const shipping = shippingCopy(shippingMode, city, hasShippingLine)
-  const m2Note = shipping.inTotal ? 'Nakliye dahil' : 'Nakliye hariç'
+  // Çok kalemli teklifte m² fiyatı levhanın değil bütün kalemlerin m²
+  // karşılığıdır; alt satır bunu söyler (standart, E2).
+  const m2Note = itemCount > 1
+    ? `Tüm kalemler · nakliye ${shipping.inTotal ? 'dahil' : 'hariç'}`
+    : shipping.inTotal ? 'Nakliye dahil' : 'Nakliye hariç'
   const m2Value = (value: number) => (value > 0 ? escapeHtml(fmtMoney(value)) : '—')
 
   const wa = escapeHtml(data.whatsappOrderLink)
@@ -240,12 +292,17 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
       ? { value: firstItem?.isPlate ? 'Levha' : '1 kalem', label: 'TEDARİK' }
       : { value: `${itemCount} kalem`, label: 'MALZEME' }
 
-  // Ürün kartının alt satırı: sihirbazda paket adı; adı ürünü tekrarlıyorsa malzeme ve kalınlık.
-  const baseProductNote = data.packageName && !product.includes(data.packageName)
-    ? `Paket: ${data.packageName}`
-    : [materialLabel, data.thickness ? `${data.thickness} cm` : ''].filter(Boolean).join(' · ')
-  const plateNote = data.items.find((it) => it.isPlate && it.technicalNote)?.technicalNote
-  const productNote = [baseProductNote, plateNote].filter(Boolean).join(' · ')
+  // Ürün kartının alt satırı kapsamı özetler: "Taşyünü levha" ya da
+  // "Taşyünü levha + 7 yardımcı malzeme". Yoğunluk kaynağıyla dökümde yazar,
+  // burada tekrar edilmez. Sihirbazın paket adı ("Dengeli Sistem") müşterinin
+  // seçtiği sistemdir ve kalır; ofisin iç adları basılmaz.
+  const plateKind = plateItem ? (plateLine?.kind.split(' · ')[0] ?? `${materialLabel} levha`) : null
+  const extraCount = data.items.filter((it) => !it.isPlate && !isShippingLine(it)).length
+  const coverage = plateKind
+    ? (extraCount ? `${plateKind} + ${extraCount} yardımcı malzeme` : plateKind)
+    : `${itemCount} kalem malzeme`
+  const tierName = scope === 'set' && data.packageName && !product.includes(data.packageName) ? `Paket: ${data.packageName}` : null
+  const productNote = [coverage, tierName].filter(Boolean).join(' · ')
   const phone = formatPhoneForDisplay(data.phone)
   const customerNote = data.customerCompany && data.relatedPerson
     ? `<small>${escapeHtml(data.relatedPerson)}</small><small class="tq-nowrap">${escapeHtml(phone)}</small>`
@@ -258,7 +315,7 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
 
   const footer = `<footer class="tq-footer"><span><span data-pdf-link="${escapeHtml(BUSINESS_INFO.url)}">Teklif: ${escapeHtml(seller.quoteSite)}</span> · <span data-pdf-link="${escapeHtml(BUSINESS_INFO.corporateUrl)}">Kurumsal: ${escapeHtml(seller.corporateSite)}</span></span><span>${ref} · <i class="tq-page-number"></i></span></footer>`
 
-  const context = `<div class="tq-context"><span>${escapeHtml(customer)} · ${escapeHtml(fmtQty(area))} m²${city ? ` · ${escapeHtml(city)}` : ''}</span><b>Genel toplam: ${total} · KDV dahil</b></div>`
+  const context = `<div class="tq-context"><span>${escapeHtml(customer)} · ${ref} · ${escapeHtml(fmtQty(area))} m²${city ? ` · ${escapeHtml(city)}` : ''}</span><b>Genel toplam: ${total} · KDV dahil</b></div>`
 
   // ── Üst bölüm: başlık, dört eşit rakam, kapsam kutucukları, kart ──
   const intro = block('intro', `<div><h1>${title}</h1><p class="tq-ref">Teklif No: <b>${ref}</b></p></div><div class="tq-meta"><span>Düzenlenme: ${issuedDay}</span>${validity ? `<span class="tq-valid-pill"><i>GEÇERLİLİK</i>${validity}</span>` : ''}</div>`)
@@ -282,7 +339,7 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
 
   // ── Döküm ve toplam ─────────────────────────────────────
   const tableHead = '<thead><tr><th>Ürün / ambalaj</th><th>Miktar</th><th>Birim fiyat<small>KDV hariç</small></th><th>Tutar<small>KDV hariç</small></th></tr></thead>'
-  const rows = data.items.map(rowHtml).join('')
+  const rows = data.items.map((it, i) => rowHtml(it, i, { materialLabel, city })).join('')
   const table = `<section class="tq-block tq-table" data-kind="table"><table>${tableHead}<tbody>${rows}</tbody></table></section>`
 
   const totals = block('total', `<p>${scopeSentence} Birim fiyatlar ve satır tutarları KDV hariçtir.</p><dl>`
@@ -339,8 +396,8 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
   // (data-pdf-link); adres basılı kopyada elle girilebilsin diye yazılıdır.
   const offers = buildPortfolioPdfItems()
     .map((item) => `<div><h3>${escapeHtml(item.title)}</h3><b class="tq-cross-price">${escapeHtml(item.amount)}</b><p>${escapeHtml(item.product)}</p>`
-      + (!single && item.vehicle ? `<p>${escapeHtml(item.vehicle)}</p>` : '')
-      + `<p>${escapeHtml(item.priceTerms)}${single ? '' : ` · Liste: ${escapeHtml(item.listDate)}`}</p>`
+      + (item.vehicle ? `<p>${escapeHtml(item.vehicle)}</p>` : '')
+      + `<p>${escapeHtml(item.priceTerms)} · Liste: ${escapeHtml(item.listDate)}</p>`
       + `<span class="tq-cross-link" data-pdf-link="${escapeHtml(item.href)}"><b>${escapeHtml(item.cta)}</b><small>${escapeHtml(item.linkLabel)}</small></span></div>`)
     .join('')
   const cross = block('cross', `<div class="tq-section-head"><h2>Alçı ve alçıpan da lazım mı?</h2><span>Ayrı malzeme teklifleri</span></div><div class="tq-cross-grid">${offers}</div><p class="tq-cross-note">Bu teklifin toplamına dahil değildir.</p>`)
@@ -349,12 +406,12 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
 
   const continuationTitle = `<section class="tq-block tq-continuation" data-kind="continuation"><p class="tq-eyebrow">MALZEME DÖKÜMÜ · DEVAM · ${ref}</p></section>`
 
-  // Önce döküm, sonra diğer bilgiler. Tek kalemli teklif de tablonun altında
-  // ara toplam, KDV ve genel toplamı yazar: üstteki kartta olması yetmedi,
-  // müşteri belgeyi "eksik" diye geri çevirdi (27 Ekim 2026).
-  const flow = single
-    ? [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross]
-    : [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross, contactLine]
+  // Önce döküm, sonra diğer bilgiler. Her teklif aynı akışı izler (standart,
+  // B bölümü): tek kalemli teklif için ayrı, sıkıştırılmış düzen yoktur.
+  // Tek kalemli teklif de tablonun altında ara toplam, KDV ve genel toplamı
+  // yazar: üstteki kartta olması yetmedi, müşteri belgeyi "eksik" diye geri
+  // çevirdi (27 Ekim 2026).
+  const flow = [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross, contactLine]
 
   return { single, header, footer, context, flow, tableHead, continuationTitle }
 }

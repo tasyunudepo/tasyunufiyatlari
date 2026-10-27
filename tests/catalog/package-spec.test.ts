@@ -10,6 +10,8 @@ import { buildQuoteDocument } from '@/lib/pdf/quoteDocument'
 import type { PDFQuoteData } from '@/lib/pdfGenerator'
 import { buildBonusPackageTable } from '@/lib/pricing/bonus/packageTable'
 import { lineFromCatalog } from '@/components/admin/quote-editor/useQuoteEditor'
+import { resolvePlateIdentity } from '@/lib/quote/plateIdentity'
+import { manualQuoteLineSchema } from '@/lib/schemas/manualQuote.schema'
 import type { CatalogItem } from '@/app/api/admin/catalog-items/route'
 
 // Emrah, 26 Ekim 2026: ofiste metraj tam pakete yuvarlansın, paket miktarı ve
@@ -116,22 +118,40 @@ describe('teklif PDF\'inde paket satırı', () => {
     items: [{
       description: 'Bonus Gold Plus 70 10 cm', quantity: 1200.96, unit: 'm²', consumptionRate: 1, consumptionUnit: 'm²/m²',
       unitPrice: 355.87, totalPrice: 427377.67, isPlate: true, packageCount: 417,
-      packageNote: 'Paket: 4 levha · 2,88 m² · Levha 60 × 120 cm', technicalNote: 'Yoğunluk: 70 kg/m³ · Föy beyanı',
+      identity: resolvePlateIdentity({
+        brandName: 'Bonus', modelShortName: 'Gold Plus 70', materialSlug: 'tasyunu', thicknessCm: 10, packageM2: 2.88, packagePieces: 4,
+      }),
     }],
   }
   const text = (html: string) => html.replace(/<style[\s\S]*?<\/style>/gu, '').replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim()
 
-  it('paket adedi, paket içeriği ve yoğunluk levha satırında bu sırayla yazar', () => {
+  // Standart A (27 Ekim 2026): ad, tür, özellik; paket sayısı miktar sütununda.
+  it('levha satırında ad, tür, yoğunluk, levha ölçüsü ve paket içeriği bu sırayla yazar', () => {
     const parts = buildQuoteDocument(base, { qrDataUrl: 'data:image/png;base64,QR', issuedAt: new Date('2026-10-26T10:00:00+03:00') })
     const doc = text([parts.header, parts.context, ...parts.flow, parts.footer].join('\n'))
-    expect(doc).toContain('Bonus Gold Plus 70 10 cm (417 PKT) Paket: 4 levha · 2,88 m² · Levha 60 × 120 cm Yoğunluk: 70 kg/m³ · Föy beyanı')
+    expect(doc).toContain(
+      'Bonus Gold Plus 70 · 10 cm Taşyünü levha · Giydirme cephe Yoğunluk 70 kg/m³ (föy beyanı) · Levha 60 × 120 cm · Pakette 4 levha = 2,88 m² 1.200,96 m² 417 paket',
+    )
   })
 
-  it('üç teklif yolu paket notunu belgeye taşır', () => {
+  it('üç teklif yolu levha kimliğini belgeye taşır', () => {
     const src = (f: string) => readFileSync(resolve(process.cwd(), f), 'utf8')
-    expect(src('app/ofis/tabs/quotes/QuoteBuilder.tsx')).toContain('packageNote: item\n')
-    expect(src('components/catalog/SingleProductQuoteButton.tsx')).toContain('packageNote:     formatPackageSpecNote(effectivePackageSizeM2')
-    expect(src('components/wizard/WizardCalculator.tsx')).toContain('packageNote: it.isPlate ? platePackageNote : null,')
-    expect(src('lib/quote/buildManualPdfData.ts')).toContain('packageNote: l.packageNote ?? null,')
+    expect(src('components/admin/quote-editor/useQuoteEditor.ts')).toContain('identity: identityFromCatalog(item),')
+    expect(src('app/ofis/tabs/quotes/QuoteBuilder.tsx')).toContain('identity: l.isPlate ? l.identity ?? null : null,')
+    expect(src('app/api/admin/quotes/manual/route.ts')).toContain('identity: l.identity ?? null,')
+    expect(src('components/catalog/SingleProductQuoteButton.tsx')).toContain('identity:        plateIdentity,')
+    expect(src('components/wizard/WizardCalculator.tsx')).toContain('identity: it.isPlate ? plateIdentity : null,')
+    expect(src('lib/quote/buildManualPdfData.ts')).toContain('identity: l.isPlate ? l.identity ?? null : null,')
+  })
+
+  it('katalogdan seçilen levha kimliği kalemle gelir; revize kaydı kimliği taşır', () => {
+    const item = {
+      key: 'levha-46-12', kind: 'levha', id: 46, thicknessCm: 12, label: 'Bonus Gold Plus 50 12 cm', fullName: 'Bonus Gold Plus 50',
+      brandName: 'Bonus', unit: 'm²', unitContent: null, packageM2: 2.16, packagePieces: 3, truckM2: null,
+      suggestedUnitPrice: 300, netCost: 270, materialSlug: 'tasyunu', modelShortName: 'Gold Plus 50',
+    } as unknown as CatalogItem
+    const line = lineFromCatalog(item, 1900)
+    expect(line.identity).toMatchObject({ name: 'Bonus Gold Plus 50', kind: 'Taşyünü levha · Giydirme cephe', piecesPerPackage: 3 })
+    expect(manualQuoteLineSchema.parse({ ...line, quantity: 1900.8 }).identity).toEqual(line.identity)
   })
 })

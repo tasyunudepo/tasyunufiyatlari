@@ -172,6 +172,8 @@ function buildContentColumns(
       consumptionRate: l.consumptionRate ?? null,
       consumptionUnit: l.consumptionUnit ?? null,
       unitContent: l.unitContent ?? null,
+      // Levha kimliği: revize ve çoğaltmada belge aynı bilgiyi basar.
+      identity: l.identity ?? null,
     })),
     manual: {
       title: d.title ?? null,

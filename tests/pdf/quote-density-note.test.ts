@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { buildQuoteDocument } from '@/lib/pdf/quoteDocument'
 import type { PDFQuoteData } from '@/lib/pdfGenerator'
+import { resolvePlateIdentity } from '@/lib/quote/plateIdentity'
 import { quoteDensityDisplay, quoteDensityNote } from '@/lib/technical-profiles'
 import { generateQuoteWhatsAppMessage } from '@/lib/utils/whatsapp'
 
@@ -68,7 +69,9 @@ const goldPlusQuote: PDFQuoteData = {
       totalPrice: 1678416.88,
       isPlate: true,
       packageCount: 1232,
-      technicalNote: quoteDensityNote('Gold Plus 70'),
+      identity: resolvePlateIdentity({
+        brandName: 'Bonus', modelShortName: 'Gold Plus 70', materialSlug: 'tasyunu', thicknessCm: 10, packageM2: 2.88, packagePieces: 4,
+      }),
     },
   ],
 }
@@ -81,14 +84,15 @@ const whole = (data: PDFQuoteData) => {
 }
 
 describe('teklif PDF\'inde levha yoğunluğu', () => {
-  it('levha satırında ve ürün kutusunda yoğunluk yazar', () => {
+  // Standart A (27 Ekim 2026): yoğunluk kaynağıyla levha satırının özellik
+  // grubunda yazar; ürün kartında tekrar edilmez.
+  it('levha satırında varyantın adı ve yoğunluğu kaynağıyla yazar', () => {
     const doc = whole(goldPlusQuote)
-    expect(doc).toContain('Bonus Gold Plus Taşyünü Giydirme Cephe Levhası (10 cm) (1232 PKT) Yoğunluk: 70 kg/m³ · Föy beyanı')
-    expect(doc).toContain('Taşyünü · 10 cm · Yoğunluk: 70 kg/m³ · Föy beyanı')
+    expect(doc).toContain('Bonus Gold Plus 70 · 10 cm Taşyünü levha · Giydirme cephe Yoğunluk 70 kg/m³ (föy beyanı)')
   })
 
-  it('not yoksa satıra boş satır ya da "Yoğunluk" yazılmaz', () => {
-    const items = goldPlusQuote.items.map((it) => ({ ...it, technicalNote: null }))
+  it('kimlik yoksa satıra boş satır ya da "Yoğunluk" yazılmaz', () => {
+    const items = goldPlusQuote.items.map((it) => ({ ...it, identity: null }))
     expect(whole({ ...goldPlusQuote, items })).not.toContain('Yoğunluk')
   })
 })
@@ -124,20 +128,22 @@ describe('üç teklif yolu yoğunluk notunu belgeye taşır', () => {
   it('ürün sayfası: seçilen varyant (override) önce gelir', () => {
     const s = source('components/catalog/SingleProductQuoteButton.tsx')
     expect(s).toContain('const densityModel     = modelNameOverride ?? product.model;')
-    expect(s).toContain('technicalNote:   densityNote,')
+    expect(s).toContain('modelShortName: densityModel,')
+    expect(s).toContain('identity:        plateIdentity,')
     expect(s).toContain('densityDisplay: quoteDensityDisplay(densityModel),')
   })
 
   it('hesaplayıcı: levha kalemine ve WhatsApp mesajına', () => {
     const s = source('components/wizard/WizardCalculator.tsx')
-    expect(s).toContain('technicalNote: it.isPlate ? quoteDensityNote(selectedModel) : null,')
+    expect(s).toContain('modelShortName: selectedModel,')
+    expect(s).toContain('identity: it.isPlate ? plateIdentity : null,')
     expect(s).toContain('densityDisplay: quoteDensityDisplay(selectedModel),')
   })
 
   it('ofis: katalogdan seçilen levhanın model adından', () => {
-    const ofis = source('app/ofis/tabs/quotes/QuoteBuilder.tsx')
-    expect(ofis).toContain('const item = l.isPlate ? catalogItems.find((i) => i.key === l.catalogKey) : undefined;')
-    expect(ofis).toContain('technicalNote: item ? quoteDensityNote(item.modelShortName) : null,')
-    expect(source('lib/quote/buildManualPdfData.ts')).toContain('technicalNote: l.technicalNote ?? null,')
+    expect(source('components/admin/quote-editor/useQuoteEditor.ts')).toContain('modelShortName: item.modelShortName,')
+    // Eski kayıtta kimlik yoksa ekran katalogdan tamamlar.
+    expect(source('app/ofis/tabs/quotes/QuoteBuilder.tsx')).toContain('if (!l.identity) patch.identity = identityFromCatalog(item);')
+    expect(source('lib/quote/buildManualPdfData.ts')).toContain('identity: l.isPlate ? l.identity ?? null : null,')
   })
 })

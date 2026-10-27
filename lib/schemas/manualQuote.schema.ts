@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { plateIdentitySchema } from '@/lib/quote/plateIdentity'
+
 // Elle teklif şeması — ofis yüzeyi içindir ve `apiQuoteSchema`'yı İMPORT ETMEZ.
 //
 // Neden ayrı: public teklif akışı `submit_quote_guarded` RPC'sinden geçiyor ve
@@ -50,6 +52,12 @@ export const manualQuoteLineSchema = z.object({
     .optional(),
   /** Paket içeriği (adet/kg) — çoğaltmada miktar yeniden hesabı için. */
   unitContent: z.number().min(0).max(100_000).nullable().optional(),
+  /**
+   * Levha kimliği (ad, tür, yoğunluk, ölçü, paket) — katalogdan seçildiği an
+   * çıkarılır ve kayıtta saklanır. Belge bunu basar; PDF anında katalog
+   * aranmaz (teklif PDF standardı, 27 Ekim 2026).
+   */
+  identity: plateIdentitySchema.nullable().optional(),
 })
 
 export type ManualQuoteLine = z.infer<typeof manualQuoteLineSchema>

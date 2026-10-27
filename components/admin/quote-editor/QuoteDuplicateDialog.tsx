@@ -10,6 +10,7 @@ import {
   createEmptyLine,
   type EditorLine,
 } from "@/components/admin/quote-editor/useQuoteEditor";
+import { plateIdentitySchema } from "@/lib/quote/plateIdentity";
 import type { TechnicalConsumptionUnit } from "@/lib/types";
 
 // Teklif çoğaltma.
@@ -72,6 +73,7 @@ interface KayitliKalem {
   consumptionRate?: number | null;
   consumptionUnit?: TechnicalConsumptionUnit | null;
   unitContent?: number | null;
+  identity?: unknown;
 }
 
 const KINDS = ["levha", "aksesuar", "hizmet", "serbest"] as const;
@@ -120,6 +122,8 @@ function kalemdenSatir(k: KayitliKalem, teklifKalinligi: number | null = null): 
     consumptionRate: k.consumptionRate != null ? Number(k.consumptionRate) : null,
     consumptionUnit: k.consumptionUnit ?? null,
     unitContent: k.unitContent != null ? Number(k.unitContent) : null,
+    // Kayıtlı levha kimliği taşınır; eski kayıtta yoksa ekran katalogdan tamamlar.
+    identity: k.isPlate === true ? plateIdentitySchema.safeParse(k.identity).data ?? null : null,
   };
 }
 

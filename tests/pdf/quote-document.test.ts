@@ -15,6 +15,7 @@ import {
 } from '@/lib/pdf/quoteDocument'
 import { QUOTE_DOCUMENT_CSS } from '@/lib/pdf/quoteDocumentStyles'
 import { buildManualPdfData } from '@/lib/quote/buildManualPdfData'
+import { resolvePlateIdentity } from '@/lib/quote/plateIdentity'
 import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 
 // Teklif PDF'inin şablonu (13 Ekim 2026, yuvarlak masa kararı):
@@ -152,7 +153,7 @@ describe('teklif PDF\'i: önce döküm, sonra diğer bilgiler', () => {
       grandTotal: 367298.88,
     }, options)
     expect(single.single).toBe(true)
-    expect(kinds(single.flow)).toEqual(['intro', 'hero', 'info', 'table', 'total', 'action', 'process', 'payment', 'trust', 'cross'])
+    expect(kinds(single.flow)).toEqual(['intro', 'hero', 'info', 'table', 'total', 'action', 'process', 'payment', 'trust', 'cross', 'contact'])
     expect(text(blockOf(single.flow, 'intro'))).toContain('LEVHA FİYAT TEKLİFİ')
     const total = text(blockOf(single.flow, 'total'))
     expect(total).toContain('Levha tedariki.')
@@ -187,7 +188,8 @@ describe('teklif PDF\'i: kapsam ve nakliye', () => {
     const buyer = { ...setQuote, shippingMode: 'buyer_pays' as const }
     expect(totalText(buyer)).toContain('Nakliye alıcıya aittir; teklif toplamına dahil değildir.')
     expect(heroText(buyer)).toContain('Alıcıya ait NAKLİYE')
-    expect(heroText(buyer)).toContain('Nakliye hariç')
+    // Çok kalemde m² fiyatı bütün kalemlerin karşılığıdır (standart, E2).
+    expect(heroText(buyer)).toContain('Tüm kalemler · nakliye hariç')
     expect(heroText(buyer)).not.toContain('KDV ve nakliye dahil')
   })
 
@@ -206,7 +208,9 @@ describe('teklif PDF\'i: kapsam ve nakliye', () => {
       shippingMode: 'buyer_pays',
       items: [...setQuote.items.slice(0, 2), { description: SHIPPING_LINE_DESCRIPTION, quantity: 1, unit: 'kalem', consumptionRate: 0, unitPrice: 18000, totalPrice: 18000, isPlate: false }],
     }
-    expect(totalText(withLine)).toContain('Nakliye dökümde ayrı kalem olarak yer alır.')
+    expect(totalText(withLine)).toContain('Nakliye ayrı kalem olarak teklif toplamına dahildir.')
+    // Görünen ad teslim ilini söyler; veri anahtarı "Nakliye" olarak kalır.
+    expect(text(blockOf(buildQuoteDocument(withLine, options).flow, 'table'))).toContain('3 Nakliye · İstanbul teslim 1 kalem')
     expect(totalText(withLine)).not.toContain('teklif toplamına dahil değildir')
     expect(heroText(withLine)).toContain('Ayrı kalem NAKLİYE')
     expect(heroText(withLine)).toContain('KDV ve nakliye dahil')
@@ -225,7 +229,7 @@ describe('teklif PDF\'i: kapsam ve nakliye', () => {
   it('döküm sonraki sayfaya taşarsa devam başlığı teklif numarasını taşır', () => {
     const parts = buildQuoteDocument(setQuote, options)
     expect(text(parts.continuationTitle)).toBe('MALZEME DÖKÜMÜ · DEVAM · TE-2026-000238')
-    expect(text(parts.context)).toContain('Burak Varol · 1.040 m² · İstanbul')
+    expect(text(parts.context)).toContain('Burak Varol · TE-2026-000238 · 1.040 m² · İstanbul')
     expect(text(parts.context)).toContain('Genel toplam: 565.052,50 ₺ · KDV dahil')
   })
 
@@ -275,12 +279,13 @@ describe('teklif PDF\'i: döküm satırları', () => {
   })
 
   // Sarfiyat teknik orandır; ambalaj adedi metraja bölünerek uydurulmaz.
-  it('aksesuarda m² sarfiyatı birimiyle yazılır; levhada yazılmaz', () => {
+  it('yardımcı malzemede sarfiyat birimiyle yazılır; levhada yazılmaz', () => {
     const table = text(tableOf(setQuote.items))
-    expect(table).toContain('m² sarfiyatı: 4 kg/m²')
-    expect(table).toContain('m² sarfiyatı: 0,5 mt/m²')
-    expect(table).not.toContain('m² sarfiyatı: 1 m²/m²')
-    expect(table).toContain('1 Optimix Karbonlu EPS 9 cm 1.040 m²')
+    expect(table).toContain('Sarfiyat 4 kg/m²')
+    expect(table).toContain('Sarfiyat 0,5 mt/m²')
+    expect(table).not.toContain('Sarfiyat 1 m²/m²')
+    // Kimliği olmayan eski levha satırı: ad olduğu gibi, tür grubu malzemeden.
+    expect(table).toContain('1 Optimix Karbonlu EPS 9 cm EPS levha 1.040 m²')
   })
 
   // Ofis teklifi (27 Temmuz 2026): negatif kalem "paket içeriği" değildir.
@@ -297,10 +302,12 @@ describe('teklif PDF\'i: döküm satırları', () => {
     expect(text(tableOf([{ ...plate, unitPrice: 0, totalPrice: 0 }, setQuote.items[1]]))).toContain('0,00 ₺')
   })
 
-  it('paket sayısı varsa yazılır, yoksa "(0 PKT)" yazılmaz', () => {
-    expect(text(tableOf([{ ...plate, packageCount: 224 }, setQuote.items[1]]))).toContain('(224 PKT)')
-    expect(text(tableOf([{ ...plate, packageCount: 0 }, setQuote.items[1]]))).not.toContain('PKT)')
-    expect(text(tableOf(setQuote.items))).not.toContain('PKT)')
+  // Standart A: paket sayısı adın yanında değil, miktar sütununda m²'nin altında.
+  it('paket sayısı varsa miktar sütununda yazılır, yoksa "0 paket" yazılmaz', () => {
+    expect(tableOf([{ ...plate, packageCount: 224 }, setQuote.items[1]])).toContain('<td>1.040 m²<small>224 paket</small></td>')
+    expect(text(tableOf([{ ...plate, packageCount: 224 }, setQuote.items[1]]))).not.toContain('PKT')
+    expect(tableOf([{ ...plate, packageCount: 0 }, setQuote.items[1]])).toContain('<td>1.040 m²</td>')
+    expect(text(tableOf(setQuote.items))).not.toContain('0 paket')
   })
 
   it('kural kaynakta değişmeden durur', () => {
@@ -309,6 +316,95 @@ describe('teklif PDF\'i: döküm satırları', () => {
     expect(source).not.toMatch(/it\.unitPrice === 0 \|\| it\.unitPrice < 0\.01/u)
     expect(source).toContain('(it.packageCount ?? 0) > 0')
     expect(source).toContain('formatTechnicalConsumption(it.consumptionRate, it.consumptionUnit)')
+  })
+})
+
+// Teklif PDF standardı (Emrah + Astra + Opus, 27 Ekim 2026):
+// docs/standartlar/teklif-pdf-standardi.md
+describe('teklif PDF standardı: ürün kimliği (A)', () => {
+  const goldPlus = resolvePlateIdentity({
+    brandName: 'Bonus', modelShortName: 'Gold Plus 50', materialSlug: 'tasyunu', thicknessCm: 12, packageM2: 2.16, packagePieces: 3,
+  })
+  const plateItem: PDFQuoteItem = {
+    description: 'Bonus Gold Plus 50 12 cm', quantity: 1900, unit: 'm²', consumptionRate: 1, consumptionUnit: 'm²/m²',
+    unitPrice: 283.87, totalPrice: 539353, isPlate: true, packageCount: 880, identity: goldPlus,
+  }
+  const shippingLine: PDFQuoteItem = { description: SHIPPING_LINE_DESCRIPTION, quantity: 1, unit: 'kalem', consumptionRate: 0, unitPrice: 4700, totalPrice: 4700, isPlate: false }
+  const doc = (items: PDFQuoteItem[], extra: Partial<PDFQuoteData> = {}) => buildQuoteDocument({
+    ...setQuote, accessoryBrandName: '', materialType: 'tasyunu', systemDescription: 'Bonus Gold Plus 50 12 cm', packageName: '', items, ...extra,
+  }, options)
+
+  it('levha satırı ad, tür ve özellik gruplarıyla yazılır; paket sayısı miktar sütunundadır', () => {
+    expect(text(blockOf(doc([plateItem]).flow, 'table'))).toContain(
+      '1 Bonus Gold Plus 50 · 12 cm Taşyünü levha · Giydirme cephe '
+      + 'Yoğunluk 50 kg/m³ (föy beyanı) · Levha 60 × 120 cm · Pakette 3 levha = 2,16 m² · 880 paket = 1.900,80 m² '
+      + '1.900 m² 880 paket 283,87 ₺ 539.353,00 ₺',
+    )
+  })
+
+  it('ürün kartı standart adı ve kapsamı yazar; iç adlar basılmaz', () => {
+    const single = text(blockOf(doc([plateItem], { packageName: 'Ofis Teklifi' }).flow, 'info'))
+    expect(single).toContain('ÜRÜN Bonus Gold Plus 50 · 12 cm Taşyünü levha ARA TOPLAM')
+    expect(single).not.toContain('Ofis Teklifi')
+    // Nakliye kalem sayısına girmez.
+    expect(text(blockOf(doc([plateItem, ...setQuote.items.slice(1, 3), shippingLine]).flow, 'info'))).toContain('Taşyünü levha + 2 yardımcı malzeme')
+    expect(text(blockOf(doc(setQuote.items.slice(1, 3)).flow, 'info'))).toContain('2 kalem malzeme')
+  })
+
+  it('levhası ve başlığı olmayan listede ürün kartı "Taşyünü cm" yazmaz', () => {
+    const info = text(blockOf(doc(setQuote.items.slice(1, 3), { systemDescription: undefined, thickness: '' }).flow, 'info'))
+    expect(info).toContain('ÜRÜN Malzeme tedariki 2 kalem malzeme')
+    expect(info).not.toContain(' cm')
+  })
+
+  it('kimliği olmayan levhada tür grubu kayıtlı malzemeden gelir', () => {
+    const legacy = { ...plateItem, identity: null }
+    expect(text(blockOf(doc([legacy], { materialType: 'eps' }).flow, 'table'))).toContain('1 Bonus Gold Plus 50 12 cm EPS levha 1.900 m² 880 paket')
+    expect(text(blockOf(doc([legacy], { materialType: 'eps' }).flow, 'info'))).toContain('EPS levha')
+  })
+
+  it('satış birimi kodu Türkçe kelimeyle yazılır; kayıtta olmayan birim üretilmez', () => {
+    const table = text(blockOf(doc([plateItem, { ...setQuote.items[1], unit: 'PKT' }, { ...setQuote.items[3], unit: 'KUTU' }]).flow, 'table'))
+    expect(table).toContain('167 paket')
+    expect(table).toContain('11 kutu')
+    expect(table).not.toContain('PKT')
+    expect(table).not.toContain('torba')
+  })
+})
+
+describe('teklif PDF standardı: boşluk ve sayfa (B)', () => {
+  const source = readFileSync(resolve(process.cwd(), 'lib/pdf/quoteDocument.ts'), 'utf8')
+
+  it('gövde 400, vurgu 600; 700 kullanılmaz', () => {
+    expect(QUOTE_DOCUMENT_CSS).not.toContain('font-weight:700')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq .tq-metric-value{font-size:23px;line-height:1.15;font-weight:600')
+  })
+
+  it('aralık tek yerden: grup içi 12 px, gruplar arası 24 px', () => {
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content{flex:1;min-height:0;display:flex;flex-direction:column}')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>*+*{margin-top:12px}')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>.tq-table,.tq-content>.tq-action,.tq-content>.tq-process,.tq-content>.tq-cross,.tq-content>.tq-contact{margin-top:24px}')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>*:first-child{margin-top:0}')
+  })
+
+  it('sayfa kenarı 40/32/28 px; tablo hücresi 9 × 10 px; sütunlar 52/14/16/18; zebra yok', () => {
+    expect(QUOTE_DOCUMENT_CSS).toContain('padding:32px 40px 28px')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq td{padding:9px 10px;')
+    expect(QUOTE_DOCUMENT_CSS).toContain('color:#fff;padding:9px 10px;')
+    for (const width of ['width:52%', 'width:14%', 'width:16%', 'width:18%']) expect(QUOTE_DOCUMENT_CSS).toContain(width)
+    expect(QUOTE_DOCUMENT_CSS).not.toContain('nth-child(even)')
+  })
+
+  it('tek kalemli teklif için ayrı düzen ya da gizlenen içerik yoktur', () => {
+    expect(QUOTE_DOCUMENT_CSS).not.toContain('tq-single')
+    expect(source).toContain('const flow = [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross, contactLine]')
+    expect(source).not.toMatch(/!single &&|single \? ''/u)
+  })
+
+  it('tablonun son satırı ile toplam bloğu birlikte yerleşir', () => {
+    const pagination = readFileSync(resolve(process.cwd(), 'lib/pdf/quotePagination.ts'), 'utf8')
+    expect(pagination).toContain('carry(body.lastElementChild as HTMLElement)\n    add(total)')
+    expect(pagination).not.toContain('else newPage()')
   })
 })
 
