@@ -94,6 +94,8 @@ export interface PDFQuoteData {
     shippingMode?: ShippingMode;
     shippingWarning?: string;
     specialOrderNote?: string;
+    /** Ofis teklifinde operatörün yazdığı not; belgede uyarı kutusunda basılır. */
+    quoteNote?: string;
 }
 
 function buildSafeFileName(data: PDFQuoteData): string {

@@ -290,7 +290,11 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
     + `<div><dt>KDV (%20)</dt><dd>${escapeHtml(fmtMoney(data.vatAmount))}</dd></div>`
     + `<div><dt>Genel toplam · KDV dahil</dt><dd>${total}</dd></div></dl>`)
 
+  // Ofis ekranındaki "Teklif notu (PDF'e girer)" alanı. 13 Ekim şablonunda
+  // basılmıyordu; kampanya ve nakliye açıklamaları müşteriye ulaşmıyordu (27 Ekim 2026).
+  const quoteNote = data.quoteNote?.trim()
   const notices = [
+    quoteNote ? `<p>${escapeHtml(quoteNote).replaceAll('\n', '<br>')}</p>` : '',
     data.shippingWarning ? `<p>${escapeHtml(data.shippingWarning)}</p>` : '',
     data.specialOrderNote ? `<p><b>Büyük metraj, özel teklif:</b> ${escapeHtml(data.specialOrderNote)}</p>` : '',
   ].filter(Boolean)

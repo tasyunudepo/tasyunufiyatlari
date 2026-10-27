@@ -146,6 +146,7 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
     // Başlık yoksa ürün kutusuna "Paket: Ofis Teklifi" yazılmaz; malzeme ve kalınlık görünür.
     packageName: input.title?.trim() || '',
     packageDescription: aciklama,
+    quoteNote: aciklama || undefined,
     plateBrandName: plateLine?.description.split(' ')[0] || '',
     accessoryBrandName: '',
     metraj: input.areaM2,

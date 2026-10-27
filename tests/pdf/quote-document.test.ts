@@ -14,6 +14,7 @@ import {
   formatPhoneForDisplay,
 } from '@/lib/pdf/quoteDocument'
 import { QUOTE_DOCUMENT_CSS } from '@/lib/pdf/quoteDocumentStyles'
+import { buildManualPdfData } from '@/lib/quote/buildManualPdfData'
 import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 
 // Teklif PDF'inin şablonu (13 Ekim 2026, yuvarlak masa kararı):
@@ -221,6 +222,32 @@ describe('teklif PDF\'i: kapsam ve nakliye', () => {
     expect(kinds(noted.flow)).toContain('notice')
     expect(text(blockOf(noted.flow, 'notice'))).toContain('Araç yarım dolu.')
     expect(text(blockOf(noted.flow, 'notice'))).toContain('Büyük metraj, özel teklif: Fabrika teyidi gerekir.')
+  })
+
+  it('ofis teklif notu belgede basılır; satır sonları korunur', () => {
+    const noted = buildQuoteDocument({ ...setQuote, quoteNote: 'Ekim kampanyası.\n4 Kasım 2026 Çarşamba gününe kadar geçerlidir.' }, options)
+    const notice = blockOf(noted.flow, 'notice')
+    expect(notice).toContain('Ekim kampanyası.<br>4 Kasım 2026 Çarşamba gününe kadar geçerlidir.')
+    expect(kinds(buildQuoteDocument({ ...setQuote, quoteNote: '   ' }, options).flow)).not.toContain('notice')
+  })
+
+  it('ofis ekranındaki teklif notu PDF verisine taşınır', () => {
+    const pdf = buildManualPdfData({
+      quoteCode: 'TE-2026-000999',
+      customerName: 'Deneme',
+      customerPhone: '05550000000',
+      cityName: 'Kocaeli',
+      notes: 'Siparişe nakliye dahildir.',
+      materialType: 'tasyunu',
+      areaM2: 100,
+      validityDays: 7,
+      lines: [{ description: 'Bonus Gold Plus 70 5 cm', quantity: 100, unit: 'm²', unitPrice: 168.05, isPlate: true }],
+      discountPct: 0,
+      shippingCharge: 0,
+      totals: { linesNet: 16805, discountAmount: 0, priceWithoutVat: 16805, vatAmount: 3361, totalPrice: 20166 },
+    })
+    expect(pdf.quoteNote).toBe('Siparişe nakliye dahildir.')
+    expect(text(blockOf(buildQuoteDocument(pdf, options).flow, 'notice'))).toContain('Siparişe nakliye dahildir.')
   })
 })
 
