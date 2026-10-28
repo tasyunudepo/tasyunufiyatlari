@@ -284,8 +284,9 @@ describe('teklif PDF\'i: döküm satırları', () => {
     expect(table).toContain('Sarfiyat 4 kg/m²')
     expect(table).toContain('Sarfiyat 0,5 mt/m²')
     expect(table).not.toContain('Sarfiyat 1 m²/m²')
-    // Kimliği olmayan eski levha satırı: ad olduğu gibi, tür grubu malzemeden.
-    expect(table).toContain('1 Optimix Karbonlu EPS 9 cm EPS levha 1.040 m²')
+    // Kimliği olmayan eski levha satırı: tür malzemeden gelir ve adın içine
+    // girer; ad türü zaten söylüyorsa tekrar edilmez (28 Ekim 2026).
+    expect(table).toContain('1 Optimix Karbonlu EPS 9 cm 1.040 m²')
   })
 
   // Ofis teklifi (27 Temmuz 2026): negatif kalem "paket içeriği" değildir.
@@ -334,12 +335,19 @@ describe('teklif PDF standardı: ürün kimliği (A)', () => {
     ...setQuote, accessoryBrandName: '', materialType: 'tasyunu', systemDescription: 'Bonus Gold Plus 50 12 cm', packageName: '', items, ...extra,
   }, options)
 
-  it('levha satırı ad, tür ve özellik gruplarıyla yazılır; paket sayısı miktar sütunundadır', () => {
-    expect(text(blockOf(doc([plateItem]).flow, 'table'))).toContain(
-      '1 Bonus Gold Plus 50 · 12 cm Taşyünü levha · Giydirme cephe '
-      + 'Yoğunluk 50 kg/m³ (föy beyanı) · Levha 60 × 120 cm · Pakette 3 levha = 2,16 m² · 880 paket = 1.900,80 m² '
+  // 28 Ekim 2026 (Emrah): "30 m² mala üç satır bilgi çok gereksiz". Tür ayrı
+  // satır açmaz, başlığa girer; altında tek özellik satırı kalır.
+  it('levha satırı: tür başlıkta, altında tek özellik satırı; paket sayısı miktar sütunundadır', () => {
+    const table = text(blockOf(doc([plateItem]).flow, 'table'))
+    expect(table).toContain(
+      '1 Bonus Gold Plus 50 taşyünü levha · 12 cm '
+      + 'Yoğunluk 50 kg/m³ · Levha 60 × 120 cm · Pakette 3 levha = 2,16 m² '
       + '1.900 m² 880 paket 283,87 ₺ 539.353,00 ₺',
     )
+    for (const gone of ['Giydirme cephe', 'föy beyanı', '880 paket = ']) expect(table).not.toContain(gone)
+    // Ürün hücresinde tek ayrıntı satırı (özellik) vardır.
+    const nameCell = blockOf(doc([plateItem]).flow, 'table').match(/<td>([\s\S]*?)<\/td>/u)?.[1] ?? ''
+    expect(nameCell.match(/<small>/gu)?.length).toBe(1)
   })
 
   it('ürün kartı standart adı ve kapsamı yazar; iç adlar basılmaz', () => {
@@ -380,17 +388,18 @@ describe('teklif PDF standardı: boşluk ve sayfa (B)', () => {
     expect(QUOTE_DOCUMENT_CSS).toContain('.tq .tq-metric-value{font-size:23px;line-height:1.15;font-weight:600')
   })
 
-  it('aralık tek yerden: grup içi 12 px, gruplar arası 24 px', () => {
+  // 28 Ekim 2026 (Emrah): "boşluklar çok fazla" — 12/24 px aralık 8/14 px oldu.
+  it('aralık tek yerden: grup içi 8 px, gruplar arası 14 px', () => {
     expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content{flex:1;min-height:0;display:flex;flex-direction:column}')
-    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>*+*{margin-top:12px}')
-    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>.tq-table,.tq-content>.tq-action,.tq-content>.tq-process,.tq-content>.tq-cross,.tq-content>.tq-contact{margin-top:24px}')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>*+*{margin-top:8px}')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>.tq-table,.tq-content>.tq-action,.tq-content>.tq-process,.tq-content>.tq-cross,.tq-content>.tq-contact{margin-top:14px}')
     expect(QUOTE_DOCUMENT_CSS).toContain('.tq-content>*:first-child{margin-top:0}')
   })
 
-  it('sayfa kenarı 40/32/28 px; tablo hücresi 9 × 10 px; sütunlar 52/14/16/18; zebra yok', () => {
-    expect(QUOTE_DOCUMENT_CSS).toContain('padding:32px 40px 28px')
-    expect(QUOTE_DOCUMENT_CSS).toContain('.tq td{padding:9px 10px;')
-    expect(QUOTE_DOCUMENT_CSS).toContain('color:#fff;padding:9px 10px;')
+  it('sayfa kenarı 36/24/20 px; tablo hücresi 5 × 10 px, başlık 6 × 10 px; sütunlar 52/14/16/18; zebra yok', () => {
+    expect(QUOTE_DOCUMENT_CSS).toContain('padding:24px 36px 20px')
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq td{padding:5px 10px;')
+    expect(QUOTE_DOCUMENT_CSS).toContain('color:#fff;padding:6px 10px;')
     for (const width of ['width:52%', 'width:14%', 'width:16%', 'width:18%']) expect(QUOTE_DOCUMENT_CSS).toContain(width)
     expect(QUOTE_DOCUMENT_CSS).not.toContain('nth-child(even)')
   })
@@ -405,6 +414,17 @@ describe('teklif PDF standardı: boşluk ve sayfa (B)', () => {
     const pagination = readFileSync(resolve(process.cwd(), 'lib/pdf/quotePagination.ts'), 'utf8')
     expect(pagination).toContain('carry(body.lastElementChild as HTMLElement)\n    add(total)')
     expect(pagination).not.toContain('else newPage()')
+  })
+
+  // 28 Ekim 2026 (Emrah): "boşlukları azalt, tek sayfaya sığdır". İkinci
+  // sayfaya taşan teklif sık düzende yeniden dizilir; sığmazsa normal düzen
+  // çok sayfalı kalır. Sık düzen içerik gizlemez, dört rakamın boyutuna dokunmaz.
+  it('ikinci sayfaya taşan teklif sık düzende denenir; içerik gizlenmez, rakam boyutu değişmez', () => {
+    const pagination = readFileSync(resolve(process.cwd(), 'lib/pdf/quotePagination.ts'), 'utf8')
+    expect(pagination).toMatch(/if \(normal\.length === 1\) return normal[\s\S]*classList\.add\('tq-dense'\)[\s\S]*if \(dense\.length === 1\) return dense[\s\S]*classList\.remove\('tq-dense'\)/u)
+    expect(QUOTE_DOCUMENT_CSS).toContain('.tq-dense td{')
+    expect(QUOTE_DOCUMENT_CSS).not.toMatch(/\.tq-dense[^{}]*\{[^}]*display:none/u)
+    expect(QUOTE_DOCUMENT_CSS).not.toMatch(/\.tq-dense[^{}]*tq-metric-value/u)
   })
 })
 

@@ -84,11 +84,14 @@ const whole = (data: PDFQuoteData) => {
 }
 
 describe('teklif PDF\'inde levha yoğunluğu', () => {
-  // Standart A (27 Ekim 2026): yoğunluk kaynağıyla levha satırının özellik
-  // grubunda yazar; ürün kartında tekrar edilmez.
-  it('levha satırında varyantın adı ve yoğunluğu kaynağıyla yazar', () => {
+  // Standart A (27 Ekim 2026): yoğunluk levha satırının özellik grubunda
+  // yazar; ürün kartında tekrar edilmez. 28 Ekim 2026 (Emrah): tolerans ve
+  // kaynak etiketi ("±%10 (föy beyanı)") ile uygulama alanı tabloya basılmaz.
+  it('levha satırında varyantın adı ve yoğunluğu yazar; kaynak etiketi ve uygulama alanı yazmaz', () => {
     const doc = whole(goldPlusQuote)
-    expect(doc).toContain('Bonus Gold Plus 70 · 10 cm Taşyünü levha · Giydirme cephe Yoğunluk 70 kg/m³ (föy beyanı)')
+    expect(doc).toContain('Bonus Gold Plus 70 taşyünü levha · 10 cm Yoğunluk 70 kg/m³ · Levha')
+    expect(doc).not.toContain('föy beyanı')
+    expect(doc).not.toContain('Giydirme cephe')
   })
 
   it('kimlik yoksa satıra boş satır ya da "Yoğunluk" yazılmaz', () => {

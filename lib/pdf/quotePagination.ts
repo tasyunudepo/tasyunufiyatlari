@@ -2,15 +2,32 @@ import type { QuoteDocumentParts } from '@/lib/pdf/quoteDocument'
 
 // Teklif bloklarını A4 sayfalarına yerleştirir.
 //
-// Kural: blok sığmazsa sonraki sayfaya taşınır; hiçbir şey küçültülmez.
+// Kural: blok sığmazsa sonraki sayfaya taşınır; yazı küçültülmez.
 // Döküm tablosu satır satır bölünür ve sonraki sayfada başlığıyla sürer.
 // Toplam bloğu son satırdan kopmaz: sığmazsa son satırı da yanına alıp
 // sonraki sayfaya geçer.
+//
+// Sık düzen (Emrah, 28 Ekim 2026: "boşlukları azalt, tek sayfaya sığdır"):
+// normal düzende ikinci sayfaya taşan teklif `tq-dense` sınıfıyla yeniden
+// dizilir. Tek sayfaya sığarsa o kullanılır; sığmazsa normal düzen çok
+// sayfalı kalır. İçerik çıkarılmaz, yalnız boşluklar ve ölçüler sıkılaşır.
 //
 // `root` belgede (ekran dışında da olsa) yerleşmiş olmalıdır; ölçüm gerçek
 // yerleşimden alınır. Yazı tipleri yüklendikten sonra çağrılır.
 
 export function paginateQuoteDocument(root: HTMLElement, parts: QuoteDocumentParts): HTMLElement[] {
+  const normal = layoutQuoteDocument(root, parts)
+  if (normal.length === 1) return normal
+  root.replaceChildren()
+  root.classList.add('tq-dense')
+  const dense = layoutQuoteDocument(root, parts)
+  if (dense.length === 1) return dense
+  root.replaceChildren()
+  root.classList.remove('tq-dense')
+  return layoutQuoteDocument(root, parts)
+}
+
+export function layoutQuoteDocument(root: HTMLElement, parts: QuoteDocumentParts): HTMLElement[] {
   const pages: HTMLElement[] = []
   let current!: HTMLElement
 
@@ -83,6 +100,19 @@ export function paginateQuoteDocument(root: HTMLElement, parts: QuoteDocumentPar
 
   newPage()
   const flow = parts.flow.map(node)
+  // Sık düzende eylem ve süreç sol, ödeme ve bayilik sağ sütunda yan yana durur.
+  if (root.classList.contains('tq-dense')) {
+    const pick = (kind: string) => flow.find((el) => el.dataset.kind === kind)
+    const [action, process, payment, trust] = ['action', 'process', 'payment', 'trust'].map(pick)
+    if (action && process && payment && trust) {
+      const pair = node('<section class="tq-block tq-pair" data-kind="pair"><div class="tq-pair-col"></div><div class="tq-pair-col"></div></section>')
+      const [left, right] = Array.from(pair.children) as HTMLElement[]
+      left.append(action, process)
+      right.append(payment, trust)
+      flow.splice(flow.indexOf(action), 1, pair)
+      for (const moved of [process, payment, trust]) flow.splice(flow.indexOf(moved), 1)
+    }
+  }
   for (let i = 0; i < flow.length; i += 1) {
     const element = flow[i]
     if (element.dataset.kind !== 'table') {

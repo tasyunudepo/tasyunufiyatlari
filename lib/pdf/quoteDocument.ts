@@ -7,7 +7,7 @@ import { collapseRepeatedWords } from '@/lib/catalog/productLabel'
 import { buildAccountIdentityRows, getQuoteContact, getSellerIdentity } from '@/lib/pdf/sellerIdentity'
 import type { PDFQuoteData, PDFQuoteItem } from '@/lib/pdfGenerator'
 import type { ShippingMode } from '@/lib/pricing/commercialRules'
-import { formatPlateLine } from '@/lib/quote/plateIdentity'
+import { formatPlateLine, plateTypeWords } from '@/lib/quote/plateIdentity'
 import { formatTechnicalConsumption } from '@/lib/quote/technicalConsumption'
 import { formatDay } from '@/lib/quote/validity'
 
@@ -189,19 +189,20 @@ function rowHtml(it: PDFQuoteItem, index: number, ctx: RowContext): string {
   // iskonto negatif kalem olarak yazılabilir ve tutarıyla görünmelidir.
   const isZeroPrice = it.unitPrice >= 0 && it.unitPrice < 0.01 && !it.isPlate
   const isShipping = !it.isPlate && it.description === SHIPPING_LINE_DESCRIPTION
-  const plate = it.isPlate && it.identity ? formatPlateLine(it.identity, it.quantity, it.packageCount) : null
+  const plate = it.isPlate && it.identity ? formatPlateLine(it.identity) : null
 
   let name = it.description
   const details: string[] = []
   if (plate) {
-    name = plate.title
-    details.push(plate.kind)
+    // Tür ayrı satır açmaz, başlığa girer (Emrah, 28 Ekim 2026).
+    name = plate.rowTitle
     // Özellik satırı yalnız "·" ayraçlarında kırılır; "2,16 m²" ya da
     // "60 × 120 cm" sayı ile birimin arasından bölünmez.
     if (plate.specs) details.push(plate.specs.split(' · ').map((part) => part.replaceAll(' ', ' ')).join(' · '))
   } else if (it.isPlate) {
-    // Kimliği olmayan eski kayıt: ad olduğu gibi, tür grubu malzemeden.
-    details.push(`${ctx.materialLabel} levha`)
+    // Kimliği olmayan eski kayıt: tür malzemeden, adın içinde.
+    const typeWords = plateTypeWords(`${ctx.materialLabel} levha`, it.description)
+    if (typeWords) name = `${it.description} ${typeWords}`
   } else if (isShipping) {
     if (ctx.city) name = `${SHIPPING_LINE_DESCRIPTION} · ${ctx.city} teslim`
   } else {
@@ -243,7 +244,7 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
 
   const materialLabel = data.materialType === 'tasyunu' ? 'Taşyünü' : 'EPS'
   const plateItem = data.items.find((it) => it.isPlate) ?? null
-  const plateLine = plateItem?.identity ? formatPlateLine(plateItem.identity, plateItem.quantity, plateItem.packageCount) : null
+  const plateLine = plateItem?.identity ? formatPlateLine(plateItem.identity) : null
   // Ürün kartının adı: sette sistem adı; ofiste operatörün yazdığı başlık;
   // yoksa levhanın standart adı ("Bonus Gold Plus 50 · 12 cm").
   const ownTitle = data.systemDescription && data.systemDescription !== plateItem?.description ? data.systemDescription : null

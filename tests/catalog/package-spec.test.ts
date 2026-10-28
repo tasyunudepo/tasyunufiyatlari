@@ -125,12 +125,13 @@ describe('teklif PDF\'inde paket satırı', () => {
   }
   const text = (html: string) => html.replace(/<style[\s\S]*?<\/style>/gu, '').replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim()
 
-  // Standart A (27 Ekim 2026): ad, tür, özellik; paket sayısı miktar sütununda.
-  it('levha satırında ad, tür, yoğunluk, levha ölçüsü ve paket içeriği bu sırayla yazar', () => {
+  // Standart A (27 Ekim 2026; 28 Ekim'de Emrah sıkılaştırdı): tür başlıkta,
+  // altında tek özellik satırı; paket sayısı miktar sütununda.
+  it('levha satırında ad ve tür, sonra yoğunluk, levha ölçüsü ve paket içeriği bu sırayla yazar', () => {
     const parts = buildQuoteDocument(base, { qrDataUrl: 'data:image/png;base64,QR', issuedAt: new Date('2026-10-26T10:00:00+03:00') })
     const doc = text([parts.header, parts.context, ...parts.flow, parts.footer].join('\n'))
     expect(doc).toContain(
-      'Bonus Gold Plus 70 · 10 cm Taşyünü levha · Giydirme cephe Yoğunluk 70 kg/m³ (föy beyanı) · Levha 60 × 120 cm · Pakette 4 levha = 2,88 m² 1.200,96 m² 417 paket',
+      'Bonus Gold Plus 70 taşyünü levha · 10 cm Yoğunluk 70 kg/m³ · Levha 60 × 120 cm · Pakette 4 levha = 2,88 m² 1.200,96 m² 417 paket',
     )
   })
 

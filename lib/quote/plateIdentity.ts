@@ -109,23 +109,37 @@ export interface PlateLineText {
   title: string
   /** Tür grubu: "Taşyünü levha · Giydirme cephe". */
   kind: string
+  /** Tablo satırının başlığı, tür adın içinde: "Bonus Gold Plus 50 taşyünü levha · 12 cm". */
+  rowTitle: string
   /** Özellik grubu; bilinen parça yoksa null. */
   specs: string | null
 }
 
 /**
- * Levha satırının üç bilgi grubu. Paket karşılığı fiyatlandırılan metrajdan
- * farklıysa özellik grubuna "880 paket = 1.900,80 m²" eklenir; fiyatlandırılan
- * miktar değiştirilmez.
+ * Malzeme ve levha türü ("EPS levha", "taşyünü levha"), ad zaten
+ * söylüyorsa null. Baştaki kelime kısaltma değilse küçük harfle başlar.
  */
-export function formatPlateLine(
-  identity: PlateIdentity,
-  quantityM2: number,
-  packageCount: number | null | undefined,
-): PlateLineText {
-  const title = identity.thicknessCm
-    ? `${identity.name} · ${cmFormat.format(identity.thicknessCm)} cm`
-    : identity.name
+export function plateTypeWords(kind: string, name: string): string | null {
+  const base = kind.split(' · ')[0]?.trim() ?? ''
+  if (!base || base === 'Levha') return null
+  const lowerName = name.toLocaleLowerCase('tr-TR')
+  const words = base.toLocaleLowerCase('tr-TR').split(' ')
+  if (words.some((word) => lowerName.includes(word))) return null
+  const [first, ...rest] = base.split(' ')
+  return [first === first.toLocaleUpperCase('tr-TR') ? first : lowerFirst(first), ...rest].join(' ')
+}
+
+/**
+ * Levha satırı (Emrah, 28 Ekim 2026: "30 m² mala üç satır bilgi çok
+ * gereksiz"): tür başlığa girer, altında tek özellik satırı kalır. Uygulama
+ * alanı, yoğunluğun tolerans ve kaynak etiketi ile paket karşılığı tabloya
+ * basılmaz; paket sayısı miktar sütunundadır.
+ */
+export function formatPlateLine(identity: PlateIdentity): PlateLineText {
+  const thickness = identity.thicknessCm ? ` · ${cmFormat.format(identity.thicknessCm)} cm` : ''
+  const title = `${identity.name}${thickness}`
+  const typeWords = plateTypeWords(identity.kind, identity.name)
+  const rowTitle = `${identity.name}${typeWords ? ` ${typeWords}` : ''}${thickness}`
 
   const pieceWord = identity.pieceLabel === 'rulo' ? 'Rulo' : 'Levha'
   const packageText = identity.packageM2
@@ -133,19 +147,17 @@ export function formatPlateLine(
       ? `Pakette ${identity.piecesPerPackage} ${identity.pieceLabel} = ${m2Format.format(identity.packageM2)} m²`
       : `Paket ${m2Format.format(identity.packageM2)} m²`
     : null
-
-  const count = Number(packageCount)
-  const packedM2 = identity.packageM2 && count > 0 ? Math.round(count * identity.packageM2 * 100) / 100 : null
-  const packedText = packedM2 != null && Math.abs(packedM2 - quantityM2) >= 0.01
-    ? `${count} paket = ${m2Format.format(packedM2)} m²`
-    : null
+  // "Yoğunluk 150 kg/m³ ±%10 (föy beyanı)" → "Yoğunluk 150 kg/m³".
+  const density = identity.density
+    ?.replace(/\s*\([^)]*\)\s*$/u, '')
+    .replace(/\s*±\s*%?\s*[\d.,]+\s*%?/u, '')
+    .trim() || null
 
   const parts = [
-    identity.density,
+    density,
     identity.boardSize ? `${pieceWord} ${identity.boardSize}` : null,
     packageText,
-    packedText,
   ].filter(Boolean)
 
-  return { title, kind: identity.kind, specs: parts.length ? parts.join(' · ') : null }
+  return { title, kind: identity.kind, rowTitle, specs: parts.length ? parts.join(' · ') : null }
 }

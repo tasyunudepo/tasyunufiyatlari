@@ -182,7 +182,7 @@ export default function SingleProductQuoteButton({
         district:           formData.district,
         // Ürün kartı levhanın standart adını taşır: "Bonus Gold Plus 70 · 10 cm".
         systemDescription:  plateIdentity
-          ? formatPlateLine(plateIdentity, areaM2, computedPackageCount).title
+          ? formatPlateLine(plateIdentity).title
           : `${brandProductName}${activeThickness ? ` — ${thickness} cm` : ''}`,
         isShippingIncluded,
         shippingMode: isShippingIncluded
