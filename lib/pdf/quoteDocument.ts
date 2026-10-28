@@ -413,5 +413,11 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
   // çevirdi (27 Ekim 2026).
   const flow = [intro, hero, info, table, totals, ...notice, action, process, payment, trust, cross, contactLine]
 
-  return { single, header, footer, context, flow, tableHead, continuationTitle }
+  // Teklifte alçı ya da alçıpan zaten varsa alçı tanıtım kutusu basılmaz:
+  // TE-2026-000272'de kutu, teklifteki makine alçısından ucuz bir makine
+  // alçısını öneriyordu (Emrah, 28 Ekim 2026). Levha satırı sayılmaz:
+  // "Bonus Desibel Alçı Kaplı" bir taşyünü levhasıdır.
+  const hasGypsumLine = data.items.some((it) => !it.isPlate && /al[çc][ıi]/u.test(it.description.toLocaleLowerCase('tr-TR')))
+
+  return { single, header, footer, context, flow: hasGypsumLine ? flow.filter((b) => b !== cross) : flow, tableHead, continuationTitle }
 }

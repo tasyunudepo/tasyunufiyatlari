@@ -597,3 +597,36 @@ describe('teklif PDF\'i: termin süresi', () => {
     expect(body).toContain(ORDER_PROCESS_TEXT.shippingPlan)
   })
 })
+
+// 28 Ekim 2026 (Emrah): teklif zaten alçı ya da alçıpan içeriyorsa alttaki
+// "Alçı ve alçıpan da lazım mı?" kutusu basılmaz. TE-2026-000272'de kutu,
+// teklifteki makine alçısından ucuz bir makine alçısını öneriyordu.
+describe('teklif PDF\'i: teklifte alçı varsa alçı tanıtım kutusu basılmaz', () => {
+  const serbest = (description: string, quantity: number, unit: string, unitPrice: number): PDFQuoteItem => ({
+    description, quantity, unit, consumptionRate: 0, unitPrice, totalPrice: Math.round(quantity * unitPrice * 100) / 100, isPlate: false,
+  })
+  const withItems = (...items: PDFQuoteItem[]): PDFQuoteData => ({ ...setQuote, items: [...setQuote.items, ...items] })
+  const hasCross = (data: PDFQuoteData) => {
+    const flow = buildQuoteDocument(data, options).flow
+    return kinds(flow).includes('cross') || flow.join('').includes('Alçı ve alçıpan da lazım mı?')
+  }
+
+  it('makine alçısı kalemi varsa kutu basılmaz', () => {
+    expect(hasCross(withItems(serbest('Entegre Alçımatik Makine Alçı Sıvası 35kg · 1.200 m², 1 cm (10 kg/m²) · 7 palet', 350, 'TORBA', 144.38)))).toBe(false)
+  })
+
+  it('alçıpan kalemi varsa kutu basılmaz (büyük harf ve ASCII yazım dahil)', () => {
+    expect(hasCross(withItems(serbest('DALSAN BEYAZ ALÇIPAN 12,5 MM', 200, 'ADET', 180)))).toBe(false)
+    expect(hasCross(withItems(serbest('Saten alci 25 kg', 40, 'TORBA', 150)))).toBe(false)
+  })
+
+  it('alçı içermeyen teklifte kutu yerinde kalır', () => {
+    expect(hasCross(setQuote)).toBe(true)
+    expect(hasCross(withItems(serbest("Tuğla 13,5'luk · 21 palet × 336 adet · nakliye dahil", 7056, 'ADET', 9.36)))).toBe(true)
+  })
+
+  it('adında "Alçı Kaplı" geçen taşyünü levhası kutuyu gizlemez', () => {
+    const desibel: PDFQuoteItem = { ...plate, description: 'Bonus Desibel Alçı Kaplı Kompozit Taşyünü Levha 5 cm' }
+    expect(hasCross({ ...setQuote, items: [desibel, ...setQuote.items.slice(1)] })).toBe(true)
+  })
+})
