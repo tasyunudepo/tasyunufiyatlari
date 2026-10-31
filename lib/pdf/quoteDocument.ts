@@ -239,17 +239,24 @@ export function buildQuoteDocument(input: PDFQuoteData, options: QuoteDocumentOp
   // m² fiyatı (KDV hariç taban): veride yoksa KDV HARİÇ ara toplamdan hesaplanır.
   const calculatedM2Price = resolveNetM2Price(data, metrajValue)
   // Metraj: levha kalemi varsa teslim edilen alan (paket katına yuvarlanmış), yoksa girilen metraj.
+  // Birden çok levha varsa hepsinin toplamıdır (30 Ekim 2026).
   const firstItem = data.items[0]
-  const area = firstItem?.isPlate && firstItem.quantity > 0 ? firstItem.quantity : metrajValue
+  const plateItems = data.items.filter((it) => it.isPlate)
+  const plateArea = Math.round(plateItems.reduce((sum, it) => (it.quantity > 0 ? sum + it.quantity : sum), 0) * 100) / 100
+  const area = plateArea > 0 ? plateArea : metrajValue
 
   const materialLabel = data.materialType === 'tasyunu' ? 'Taşyünü' : 'EPS'
-  const plateItem = data.items.find((it) => it.isPlate) ?? null
+  const plateItem = plateItems[0] ?? null
   const plateLine = plateItem?.identity ? formatPlateLine(plateItem.identity) : null
   // Ürün kartının adı: sette sistem adı; ofiste operatörün yazdığı başlık;
-  // yoksa levhanın standart adı ("Bonus Gold Plus 50 · 12 cm").
+  // yoksa levhanın standart adı ("Bonus Gold Plus 50 · 12 cm"); birden çok
+  // levhada hepsi yazılır.
   const ownTitle = data.systemDescription && data.systemDescription !== plateItem?.description ? data.systemDescription : null
+  const plateTitle = plateItems.length > 1
+    ? plateItems.map((it) => (it.identity ? formatPlateLine(it.identity).title : it.description)).join(' + ')
+    : plateLine?.title
   // Levhası ve başlığı olmayan listede kalınlık yoktur: "Taşyünü cm" yazılmaz.
-  const product = (scope === 'set' ? data.systemDescription : ownTitle ?? plateLine?.title ?? data.systemDescription)
+  const product = (scope === 'set' ? data.systemDescription : ownTitle ?? plateTitle ?? data.systemDescription)
     || (data.thickness ? `${materialLabel} ${data.thickness} cm` : 'Malzeme tedariki')
   const customer = data.customerCompany || data.relatedPerson
   const city = data.city || data.cityName || ''

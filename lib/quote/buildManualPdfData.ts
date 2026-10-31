@@ -119,7 +119,11 @@ export function buildManualPdfData(input: ManualPdfInput, now = new Date()): PDF
   // varsa fiyatlandırılan levha metrajı (tam pakete yuvarlanmış), yoksa iş
   // metrajı. Eskiden pay ile payda ayrıydı: 3.548,16 m² levhada m² fiyatı
   // 3.548 m²'ye bölünüyor, birim fiyat 446,78 iken üstte 446,80 yazıyordu.
-  const pricedArea = plateLine && plateLine.quantity > 0 ? plateLine.quantity : input.areaM2
+  // Birden çok levha varsa payda hepsinin toplamıdır (30 Ekim 2026).
+  const plateArea = Math.round(
+    input.lines.reduce((sum, l) => (l.isPlate && l.quantity > 0 ? sum + l.quantity : sum), 0) * 100,
+  ) / 100
+  const pricedArea = plateArea > 0 ? plateArea : input.areaM2
   const pricePerM2 = pricedArea > 0
     ? roundToKurus(input.totals.priceWithoutVat / pricedArea)
     : 0

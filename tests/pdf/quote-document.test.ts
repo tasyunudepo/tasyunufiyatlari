@@ -650,3 +650,57 @@ describe('teklif PDF\'i: teklifte alçı varsa alçı tanıtım kutusu basılmaz
     expect(hasCross({ ...setQuote, items: [desibel, ...setQuote.items.slice(1)] })).toBe(true)
   })
 })
+
+// 30 Ekim 2026, CINEMApink teklifi: iki levhalı teklifte üst kart yalnız ilk
+// levhayı metraj sayıyordu; 15.006 m² yerine 7.502,4 m², m² fiyatı iki katı.
+describe('teklif PDF\'i: birden çok levhalı teklif', () => {
+  const pdf = buildManualPdfData({
+    quoteCode: 'TE-2026-000999',
+    customerName: 'Deneme',
+    customerCompany: null,
+    customerPhone: '05550000000',
+    cityName: 'İzmir',
+    materialType: 'tasyunu',
+    areaM2: 7500,
+    validityDays: 5,
+    lines: [
+      { description: 'Bonus Gold Plus 50 4 cm', quantity: 7502.4, unit: 'm²', unitPrice: 105.04, isPlate: true, thicknessCm: 4 },
+      { description: 'Bonus F 120 4 cm', quantity: 7503.84, unit: 'm²', unitPrice: 222.8, isPlate: true, thicknessCm: 4 },
+    ],
+    discountPct: 0,
+    shippingCharge: 0,
+    totals: { linesNet: 2459907.65, discountAmount: 0, priceWithoutVat: 2459907.65, vatAmount: 491981.53, totalPrice: 2951889.18 },
+  })
+
+  it('metraj ve m² fiyatının paydası levhaların toplamıdır', () => {
+    expect(pdf.metraj).toBe(15006.24)
+    expect(pdf.pricePerM2).toBe(163.93)
+  })
+
+  it('üst kart levha toplamını yazar, ilk levhayı değil', () => {
+    const header = text(buildQuoteDocument(pdf, options).flow.join(' '))
+    expect(header).toContain('15.006,24 m²')
+    expect(header).toContain('163,93 ₺')
+    expect(header).not.toContain('327,88 ₺')
+    expect(header).toContain('Bonus Gold Plus 50 4 cm + Bonus F 120 4 cm')
+  })
+
+  it('tek levhalı teklifte metraj değişmez', () => {
+    const tek = buildManualPdfData({
+      quoteCode: 'TE-2026-000998',
+      customerName: 'Deneme',
+      customerCompany: null,
+      customerPhone: '05550000000',
+      cityName: 'İzmir',
+      materialType: 'tasyunu',
+      areaM2: 7500,
+      validityDays: 5,
+      lines: [{ description: 'Bonus Gold Plus 50 4 cm', quantity: 7502.4, unit: 'm²', unitPrice: 105.04, isPlate: true, thicknessCm: 4 }],
+      discountPct: 0,
+      shippingCharge: 0,
+      totals: { linesNet: 788052.1, discountAmount: 0, priceWithoutVat: 788052.1, vatAmount: 157610.42, totalPrice: 945662.52 },
+    })
+    expect(tek.metraj).toBe(7502.4)
+    expect(tek.pricePerM2).toBe(105.04)
+  })
+})
