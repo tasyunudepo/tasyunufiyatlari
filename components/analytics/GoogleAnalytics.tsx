@@ -37,7 +37,9 @@ export default function GoogleAnalytics({ measurementId }: Props) {
       {/* 2) GA4 gtag.js — yalnız gerçek alan adında yüklenir (17 Ekim 2026). Yerelde (127.0.0.1) koşan otomatik
           testler gerçek etiketi yükleyip düğmelere basıyor, Google bunları ziyaretçi ve temas sayıyordu (16 Eki:
           284 kişi / 18 temas görünen günde gerçek 117 kişi / 3 temas). gtag yine tanımlı kalır: olaylar dataLayer'a
-          düşer, ağa gitmez. Ölçüm bekçisi gerçek alan adıyla (--resolve) koştuğu için etiket yüklenir. */}
+          düşer, ağa gitmez. Ölçüm bekçisi gerçek alan adıyla (--resolve) koştuğu için etiket yüklenir.
+          GCR ziyaret ve temas kaydı (6 Kasım 2026): alcifiyatlari.com/_temas/t.js aynı koşulla yüklenir; şehir, operatör,
+          cihaz ve yolculuğu tutar, WhatsApp mesajına "Talep no" ekler. Alçı panelinin Ziyaretçiler ekranında ve GCR'de okunur. */}
       <Script id="ga-init" strategy="afterInteractive">{`
         (function () {
           if (!${REAL_HOST_PATTERN}.test(location.hostname)) { window.__gaSkippedHost = location.hostname; return; }
@@ -45,6 +47,10 @@ export default function GoogleAnalytics({ measurementId }: Props) {
           s.async = true;
           s.src = 'https://www.googletagmanager.com/gtag/js?id=${measurementId}';
           document.head.appendChild(s);
+          var t = document.createElement('script');
+          t.async = true;
+          t.src = 'https://alcifiyatlari.com/_temas/t.js';
+          document.head.appendChild(t);
           gtag('js', new Date());
           gtag('config', '${measurementId}', {
             anonymize_ip: true,
